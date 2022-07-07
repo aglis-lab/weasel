@@ -10,6 +10,12 @@ set(WEASEL_LIBS
     # ARCH64
     LLVMAArch64Info
 
+    LLVMAArch64AsmParser
+    LLVMAArch64CodeGen
+    LLVMAArch64Desc
+    LLVMAArch64Disassembler
+    LLVMAArch64Utils
+
     # ARM INFO
     LLVMARMInfo
     LLVMARMAsmParser

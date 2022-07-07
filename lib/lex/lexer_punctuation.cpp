@@ -1,6 +1,6 @@
 #include "weasel/lex/lexer.h"
 
-std::shared_ptr<weasel::Token> weasel::Lexer::getPunctuation()
+weasel::Token *weasel::Lexer::getPunctuation()
 {
     auto *lastBuffer = _currentBuffer - 1;
 

@@ -1,7 +1,7 @@
 #include <iostream>
 #include "weasel/lex/lexer.h"
 
-std::shared_ptr<weasel::Token> weasel::Lexer::getKeyword(char *startBuffer, char *endBuffer)
+weasel::Token *weasel::Lexer::getKeyword(char *startBuffer, char *endBuffer)
 {
     if (compareBuffer(startBuffer, endBuffer, "parallel"))
     {

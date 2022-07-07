@@ -9,7 +9,7 @@ namespace weasel
         size_t _size;
 
     private:
-        // I copy paste the implementation from
+        // I fork the implementation from
         // https://github.com/d0k/mappedfile
         char *mapFile(const char *path, size_t *length);
 

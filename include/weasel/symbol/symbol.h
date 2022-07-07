@@ -54,16 +54,16 @@ namespace weasel
     private:
         SymbolTable() = default;
 
-        static std::vector<std::shared_ptr<Attribute>> _table;
+        static std::vector<Attribute *> _table;
         static std::vector<unsigned> _lookup;
 
     public:
         static void reset();
         static void enterScope();
         static bool exitScope();
-        static void insert(const std::string& key, const std::shared_ptr<Attribute>& attr);
-        static std::shared_ptr<Attribute> get(const std::string& key);
-        static std::shared_ptr<Attribute> getLastFunction();
+        static void insert(const std::string &key, Attribute *attr);
+        static Attribute *get(const std::string &key);
+        static Attribute *getLastFunction();
 
         static inline std::vector<unsigned> getLookup() { return _lookup; }
     };
@@ -77,14 +77,14 @@ namespace weasel
     class Error
     {
     private:
-        std::shared_ptr<Token> _token;
+        Token *_token;
         std::string _msg;
 
     public:
-        Error(std::shared_ptr<Token> token, std::string &msg) : _token(std::move(token)), _msg(msg) {}
-        Error(std::shared_ptr<Token> token, const char *msg) : _token(std::move(token)), _msg(std::string(msg)) {}
+        Error(Token *token, std::string &msg) : _token(token), _msg(msg) {}
+        Error(Token *token, const char *msg) : _token(token), _msg(std::string(msg)) {}
 
-        std::shared_ptr<Token> getToken() const { return _token; }
+        Token *getToken() const { return _token; }
         std::string getMessage() const { return _msg; }
     };
 
@@ -94,12 +94,12 @@ namespace weasel
     private:
         ErrorTable() = default;
 
-        static std::vector<std::shared_ptr<Error>> _errors;
+        static std::vector<Error> _errors;
 
     public:
         static void showErrors();
-        static std::vector<std::shared_ptr<Error>> getErrors() { return _errors; }
-        static std::nullptr_t addError(const std::shared_ptr<Token>& token, std::string msg);
+        static std::vector<Error> getErrors() { return _errors; }
+        static std::nullptr_t addError(Token *token, std::string msg);
     };
 
 } // namespace weasel

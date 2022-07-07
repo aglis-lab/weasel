@@ -2,9 +2,9 @@
 #include "weasel/ir/context.h"
 #include "weasel/symbol/symbol.h"
 
-std::shared_ptr<weasel::StatementExpression> weasel::Parser::parseFunctionBody()
+weasel::StatementExpression *weasel::Parser::parseFunctionBody()
 {
-    auto stmt = std::make_shared<StatementExpression>();
+    auto stmt = new StatementExpression();
 
     // Enter statement scope
     {
@@ -40,7 +40,7 @@ std::shared_ptr<weasel::StatementExpression> weasel::Parser::parseFunctionBody()
     return stmt;
 }
 
-std::shared_ptr<weasel::Expression> weasel::Parser::parseStatement()
+weasel::Expression *weasel::Parser::parseStatement()
 {
     // Compound Statement Expression
     if (getCurrentToken()->isKind(TokenKind::TokenDelimOpenCurlyBracket))
@@ -72,24 +72,24 @@ std::shared_ptr<weasel::Expression> weasel::Parser::parseStatement()
     return expr;
 }
 
-std::shared_ptr<weasel::Expression> weasel::Parser::parseLiteralExpression()
+weasel::Expression *weasel::Parser::parseLiteralExpression()
 {
     auto token = getCurrentToken();
     if (token->isKind(TokenKind::TokenLitBool))
     {
-        return std::make_shared<BoolLiteralExpression>(token, token->getValue() == "true");
+        return new BoolLiteralExpression(token, token->getValue() == "true");
     }
 
     if (token->isKind(TokenKind::TokenLitChar))
     {
         auto val = std::stoi(token->getValue());
-        return std::make_shared<NumberLiteralExpression>(token, val, 8);
+        return new NumberLiteralExpression(token, val, 8);
     }
 
     if (token->isKind(TokenKind::TokenLitNumber))
     {
         auto value = strtoll(token->getValue().c_str(), nullptr, 10);
-        return std::make_shared<NumberLiteralExpression>(token, value);
+        return new NumberLiteralExpression(token, value);
     }
 
     if (token->isKind(TokenKind::TokenLitString))
@@ -115,13 +115,13 @@ std::shared_ptr<weasel::Expression> weasel::Parser::parseLiteralExpression()
             }
         }
 
-        return std::make_shared<StringLiteralExpression>(token, value);
+        return new StringLiteralExpression(token, value);
     }
 
-    return std::make_shared<NilLiteralExpression>(getCurrentToken());
+    return new NilLiteralExpression(getCurrentToken());
 }
 
-std::shared_ptr<weasel::Expression> weasel::Parser::parseFunctionCallExpression(const std::shared_ptr<weasel::Attribute> &attr)
+weasel::Expression *weasel::Parser::parseFunctionCallExpression(weasel::Attribute *attr)
 {
     auto callToken = getCurrentToken();
     if (!getNextToken()->isKind(TokenKind::TokenDelimOpenParen))
@@ -129,7 +129,7 @@ std::shared_ptr<weasel::Expression> weasel::Parser::parseFunctionCallExpression(
         return ErrorTable::addError(getCurrentToken(), "Expected ( for function call");
     }
 
-    std::vector<std::shared_ptr<Expression>> args;
+    std::vector<Expression *> args;
     if (!getNextToken()->isKind(TokenKind::TokenDelimCloseParen))
     {
         while (true)
@@ -157,10 +157,10 @@ std::shared_ptr<weasel::Expression> weasel::Parser::parseFunctionCallExpression(
         }
     }
 
-    return std::make_shared<CallExpression>(callToken, callToken->getValue(), args);
+    return new CallExpression(callToken, callToken->getValue(), args);
 }
 
-std::shared_ptr<weasel::Expression> weasel::Parser::parseIdentifierExpression()
+weasel::Expression *weasel::Parser::parseIdentifierExpression()
 {
     auto identifier = getCurrentToken()->getValue();
     auto attr = SymbolTable::get(identifier);
@@ -183,14 +183,14 @@ std::shared_ptr<weasel::Expression> weasel::Parser::parseIdentifierExpression()
             getNextToken(); // eat [
             auto indexExpr = parseExpression();
 
-            return std::make_shared<ArrayExpression>(indexExpr->getToken(), identifier, indexExpr);
+            return new ArrayExpression(indexExpr->getToken(), identifier, indexExpr);
         }
     }
 
-    return std::make_shared<VariableExpression>(getCurrentToken(), identifier);
+    return new VariableExpression(getCurrentToken(), identifier);
 }
 
-std::shared_ptr<weasel::Expression> weasel::Parser::parseParenExpression()
+weasel::Expression *weasel::Parser::parseParenExpression()
 {
     getNextToken(); // eat (
     auto expr = parseExpression();
@@ -208,9 +208,9 @@ std::shared_ptr<weasel::Expression> weasel::Parser::parseParenExpression()
     return expr;
 }
 
-std::shared_ptr<weasel::Expression> weasel::Parser::parseArrayExpression()
+weasel::Expression *weasel::Parser::parseArrayExpression()
 {
-    auto expr = std::make_shared<ArrayLiteralExpression>();
+    auto expr = new ArrayLiteralExpression();
 
     getNextToken(); // eat [
     while (!getCurrentToken()->isKind(TokenKind::TokenDelimCloseSquareBracket))
@@ -226,7 +226,7 @@ std::shared_ptr<weasel::Expression> weasel::Parser::parseArrayExpression()
     return expr;
 }
 
-std::shared_ptr<weasel::Expression> weasel::Parser::parsePrimaryExpression()
+weasel::Expression *weasel::Parser::parsePrimaryExpression()
 {
     if (getCurrentToken()->isLiteral())
     {
@@ -247,7 +247,7 @@ std::shared_ptr<weasel::Expression> weasel::Parser::parsePrimaryExpression()
     {
         if (getNextToken()->isKind(TokenKind::TokenIdentifier))
         {
-            return std::make_shared<VariableExpression>(getCurrentToken(), getCurrentToken()->getValue(), true);
+            return new VariableExpression(getCurrentToken(), getCurrentToken()->getValue(), true);
         }
 
         return ErrorTable::addError(getCurrentToken(), "Expected Variable Identifier for address of");
@@ -261,7 +261,7 @@ std::shared_ptr<weasel::Expression> weasel::Parser::parsePrimaryExpression()
     return ErrorTable::addError(getCurrentToken(), "Expected expression");
 }
 
-std::shared_ptr<weasel::Expression> weasel::Parser::parseExpression()
+weasel::Expression *weasel::Parser::parseExpression()
 {
     auto lhs = parsePrimaryExpression();
     if (!lhs)
@@ -277,7 +277,7 @@ std::shared_ptr<weasel::Expression> weasel::Parser::parseExpression()
     return parseBinaryOperator(__defaultPrecOrder, lhs);
 }
 
-std::shared_ptr<weasel::Expression> weasel::Parser::parseBinaryOperator(unsigned precOrder, std::shared_ptr<Expression> lhs)
+weasel::Expression *weasel::Parser::parseBinaryOperator(unsigned precOrder, Expression *lhs)
 {
     while (true)
     {
@@ -307,11 +307,11 @@ std::shared_ptr<weasel::Expression> weasel::Parser::parseBinaryOperator(unsigned
             return ErrorTable::addError(getCurrentToken(), "Expected RHS Expression 2");
         }
 
-        lhs = std::make_shared<BinaryOperatorExpression>(binOp, lhs, rhs);
+        lhs = new BinaryOperatorExpression(binOp, lhs, rhs);
     }
 }
 
-std::shared_ptr<weasel::Expression> weasel::Parser::parseReturnStatement()
+weasel::Expression *weasel::Parser::parseReturnStatement()
 {
     auto retToken = getCurrentToken();
     getNextToken(); // eat 'return'
@@ -325,12 +325,12 @@ std::shared_ptr<weasel::Expression> weasel::Parser::parseReturnStatement()
         return ErrorTable::addError(errToken, "Expected expression for return statement.");
     }
 
-    return std::make_shared<ReturnExpression>(retToken, expr);
+    return new ReturnExpression(retToken, expr);
 }
 
-std::shared_ptr<weasel::Expression> weasel::Parser::parseCompoundStatement()
+weasel::Expression *weasel::Parser::parseCompoundStatement()
 {
-    auto stmt = std::make_shared<StatementExpression>();
+    auto stmt = new StatementExpression();
 
     // Enter Statement Scope
     {
@@ -365,7 +365,7 @@ std::shared_ptr<weasel::Expression> weasel::Parser::parseCompoundStatement()
 // let 'identifier'             = &'expr'
 // let 'identifier' [<size>]'datatype'
 // let 'identifier'             = []
-std::shared_ptr<weasel::Expression> weasel::Parser::parseDeclarationExpression()
+weasel::Expression *weasel::Parser::parseDeclarationExpression()
 {
     auto qualifier = getQualifier();
     auto qualToken = getCurrentToken();
@@ -412,12 +412,12 @@ std::shared_ptr<weasel::Expression> weasel::Parser::parseDeclarationExpression()
                 attrKind = AttributeKind::SymbolVariable;
             }
 
-            auto attr = std::make_shared<Attribute>(identifier, AttributeScope::ScopeLocal, attrKind, type);
+            auto attr = new Attribute(identifier, AttributeScope::ScopeLocal, attrKind, type);
             SymbolTable::insert(identifier, attr);
         }
 
         // Create Variable with Default Value
-        return std::make_shared<DeclarationExpression>(qualToken, identifier, qualifier, type);
+        return new DeclarationExpression(qualToken, identifier, qualifier, type);
     }
 
     // Equal
@@ -460,9 +460,9 @@ std::shared_ptr<weasel::Expression> weasel::Parser::parseDeclarationExpression()
             }
         }
 
-        auto attr = std::make_shared<Attribute>(identifier, AttributeScope::ScopeLocal, attrKind, type);
+        auto attr = new Attribute(identifier, AttributeScope::ScopeLocal, attrKind, type);
         SymbolTable::insert(identifier, attr);
     }
 
-    return std::make_shared<DeclarationExpression>(qualToken, identifier, qualifier, type, val);
+    return new DeclarationExpression(qualToken, identifier, qualifier, type, val);
 }

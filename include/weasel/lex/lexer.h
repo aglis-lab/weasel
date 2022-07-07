@@ -14,7 +14,7 @@ namespace weasel
         char *_endBuffer;
         char *_currentBuffer;
 
-        std::shared_ptr<Token> _currentToken;
+        Token *_currentToken;
         SourceLocation _location;
 
     private:
@@ -27,19 +27,19 @@ namespace weasel
 
         // TODO: Handle special character fir parseCharacter or string
         // Token section
-        std::shared_ptr<Token> getToken();
-        std::shared_ptr<Token> createToken(TokenKind kind, char *startBuffer, char *endBuffer);
-        std::shared_ptr<Token> getType(char *startBuffer, char *endBuffer);
-        std::shared_ptr<Token> getKeyword(char *startBuffer, char *endBuffer);
-        std::shared_ptr<Token> getPunctuation();
-        std::shared_ptr<Token> getStringLiteral();
-        std::shared_ptr<Token> getCharacterLiteral();
+        Token *getToken();
+        Token *createToken(TokenKind kind, char *startBuffer, char *endBuffer);
+        Token *getType(char *startBuffer, char *endBuffer);
+        Token *getKeyword(char *startBuffer, char *endBuffer);
+        Token *getPunctuation();
+        Token *getStringLiteral();
+        Token *getCharacterLiteral();
 
     public:
         Lexer(FileManager *fileManager);
 
-        std::shared_ptr<Token> getNextToken(bool skipSpace = false, bool eat = false);
-        std::shared_ptr<Token> getCurrentToken() const { return _currentToken; }
+        Token *getNextToken(bool skipSpace = false, bool eat = false);
+        Token *getCurrentToken() const { return _currentToken; }
         bool expect(TokenKind kind);
     };
 

@@ -26,12 +26,12 @@ namespace weasel
     public:
         explicit Metadata(llvm::LLVMContext *context);
 
-        void initParallelModule(llvm::Module *module) {
-            initModule(module);
+        // void initParallelModule(llvm::Module *module) {
+        //     initModule(module);
 
-            module->getOrInsertNamedMetadata("opencl.ocl.version")->addOperand(getCLVersionMetadata());
-            module->getOrInsertNamedMetadata("opencl.spir.version")->addOperand(getCLVersionMetadata());
-        }
+        //     module->getOrInsertNamedMetadata("opencl.ocl.version")->addOperand(getCLVersionMetadata());
+        //     module->getOrInsertNamedMetadata("opencl.spir.version")->addOperand(getCLVersionMetadata());
+        // }
 
         void initModule(llvm::Module *module)
         {

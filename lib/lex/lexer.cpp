@@ -78,12 +78,12 @@ bool weasel::Lexer::expect(weasel::TokenKind kind)
     return ok;
 }
 
-std::shared_ptr<weasel::Token> weasel::Lexer::createToken(weasel::TokenKind kind, char *startBuffer, char *endBuffer)
+weasel::Token *weasel::Lexer::createToken(weasel::TokenKind kind, char *startBuffer, char *endBuffer)
 {
-    return std::make_shared<Token>(kind, _location, startBuffer, endBuffer);
+    return new Token(kind, _location, startBuffer, endBuffer);
 }
 
-std::shared_ptr<weasel::Token> weasel::Lexer::getNextToken(bool skipSpace, bool eat)
+weasel::Token *weasel::Lexer::getNextToken(bool skipSpace, bool eat)
 {
     do
     {
@@ -93,7 +93,7 @@ std::shared_ptr<weasel::Token> weasel::Lexer::getNextToken(bool skipSpace, bool 
     return _currentToken;
 }
 
-std::shared_ptr<weasel::Token> weasel::Lexer::getToken()
+weasel::Token *weasel::Lexer::getToken()
 {
     if (_currentBuffer == _endBuffer)
     {

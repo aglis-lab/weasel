@@ -6,32 +6,29 @@
 #include "weasel/symbol/symbol.h"
 
 // parse
-void weasel::Parser::parse()
+std::vector<weasel::Function *> weasel::Parser::parse()
 {
+    std::vector<weasel::Function *> funs;
+
     while (!getNextToken(true)->isKind(TokenKind::TokenEOF))
     {
 
         // Parallel Function
+        // TODO: Need add parallel function
         if (getCurrentToken()->isKind(TokenKind::TokenKeyParallel))
         {
-            auto funParallel = parsePrallelFunction();
-            if (funParallel)
-            {
-                _parallelCount++;
-
-                addFunction(funParallel);
-            }
-            continue;
+            std::cout << "Function Parallel no supported yet!\n";
+            exit(1);
         }
 
         // Extern Function
         if (getCurrentToken()->isKind(TokenKind::TokenKeyExtern))
         {
             getNextToken(); // eat 'extern'
-            auto func = parseFunction();
-            if (func)
+            auto fun = parseFunction();
+            if (fun != nullptr)
             {
-                addFunction(func);
+                funs.push_back(fun);
             }
             continue;
         }
@@ -40,9 +37,9 @@ void weasel::Parser::parse()
         if (getCurrentToken()->isKind(TokenKind::TokenKeyFun))
         {
             auto fun = parseFunction();
-            if (fun)
+            if (fun != nullptr)
             {
-                addFunction(fun);
+                funs.push_back(fun);
             }
             continue;
         }
@@ -52,10 +49,12 @@ void weasel::Parser::parse()
         auto token = getCurrentToken();
         std::cout << "Parser -> " << token->getLocation().row << "/" << token->getLocation().col << "<>" << token->getTokenKindToInt() << ":" << token->getValue() << "\n";
     }
+
+    return funs;
 }
 
 // get Next Token Until
-std::shared_ptr<weasel::Token> weasel::Parser::getNextTokenUntil(weasel::TokenKind kind)
+weasel::Token *weasel::Parser::getNextTokenUntil(weasel::TokenKind kind)
 {
     if (getCurrentToken()->isKind(kind))
     {
@@ -79,7 +78,7 @@ std::shared_ptr<weasel::Token> weasel::Parser::getNextTokenUntil(weasel::TokenKi
 }
 
 // Get Next Token
-std::shared_ptr<weasel::Token> weasel::Parser::getNextToken(bool skipSpace)
+weasel::Token *weasel::Parser::getNextToken(bool skipSpace)
 {
     return _lexer->getNextToken(skipSpace);
 }

@@ -12,17 +12,18 @@ namespace weasel
     class Codegen
     {
     private:
-        std::unique_ptr<Context> _context;
-        std::vector<std::shared_ptr<Function>> _funs;
+        Context *_context;
+        std::vector<Function *> _funs;
         std::string _err;
-        bool _isParallel;
+
+        // bool _isParallel;
 
     public:
-        Codegen(std::unique_ptr<Context> context, std::vector<std::shared_ptr<Function>> funs);
+        Codegen(Context *context, std::vector<Function *> funs);
 
-        bool compile(const std::string &spirvIR = "");
+        bool compile();
 
-        std::string createSpirv();
+        // std::string createSpirv();
         void createObject(char *outputFile) const;
 
     public:

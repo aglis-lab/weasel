@@ -3,20 +3,20 @@
 #include "weasel/ir/context.h"
 #include "weasel/symbol/symbol.h"
 
-std::shared_ptr<weasel::Function> weasel::Parser::parsePrallelFunction()
-{
-    auto parallelType = ParallelType::ParallelFunction;
-    if (getNextToken(true)->isKind(TokenKind::TokenKeyKernel))
-    {
-        parallelType = ParallelType::ParallelKernel;
+// weasel::Function *weasel::Parser::parsePrallelFunction()
+// {
+//     auto parallelType = ParallelType::ParallelFunction;
+//     if (getNextToken(true)->isKind(TokenKind::TokenKeyKernel))
+//     {
+//         parallelType = ParallelType::ParallelKernel;
 
-        getNextToken(true); // eat kernel
-    }
+//         getNextToken(true); // eat kernel
+//     }
 
-    return parseFunction(parallelType);
-}
+//     return parseFunction(parallelType);
+// }
 
-std::shared_ptr<weasel::Function> weasel::Parser::parseFunction(ParallelType parallelType)
+weasel::Function *weasel::Parser::parseFunction(ParallelType parallelType)
 {
     auto fun = parseDeclareFunction();
     if (!fun)
@@ -58,7 +58,7 @@ std::shared_ptr<weasel::Function> weasel::Parser::parseFunction(ParallelType par
                 attrKind = AttributeKind::SymbolArray;
             }
 
-            auto attr = std::make_shared<Attribute>(argName, AttributeScope::ScopeParam, attrKind, ty);
+            auto attr = new Attribute(argName, AttributeScope::ScopeParam, attrKind, ty);
 
             SymbolTable::insert(argName, attr);
         }
@@ -89,7 +89,7 @@ std::shared_ptr<weasel::Function> weasel::Parser::parseFunction(ParallelType par
 }
 
 // extern 'fun' identifier '(' args ')' funTy
-std::shared_ptr<weasel::Function> weasel::Parser::parseDeclareFunction()
+weasel::Function *weasel::Parser::parseDeclareFunction()
 {
     auto isInline = false;
     if (getCurrentToken()->isKind(TokenKind::TokenKeyInline))
@@ -124,7 +124,7 @@ std::shared_ptr<weasel::Function> weasel::Parser::parseDeclareFunction()
     }
 
     getNextToken(); // eat '('
-    std::vector<std::shared_ptr<weasel::FunctionArgument>> args;
+    std::vector<weasel::FunctionArgument *> args;
     auto isVararg = false;
 
     while (!getCurrentToken()->isKind(TokenKind::TokenDelimCloseParen))
@@ -153,7 +153,7 @@ std::shared_ptr<weasel::Function> weasel::Parser::parseDeclareFunction()
             return ErrorTable::addError(getCurrentToken(), "Expected type in function argument");
         }
 
-        args.push_back(std::make_shared<FunctionArgument>(idenToken, identifier, type));
+        args.push_back(new FunctionArgument(idenToken, identifier, type));
 
         if (!getCurrentToken()->isKind(TokenKind::TokenPuncComma))
         {
@@ -176,12 +176,12 @@ std::shared_ptr<weasel::Function> weasel::Parser::parseDeclareFunction()
         returnType = llvm::Type::getVoidTy(*getContext());
     }
 
-    auto funTy = std::make_shared<FunctionType>(returnType, args, isVararg);
-    auto fun = std::make_shared<Function>(funIdentifier, funTy);
+    auto funTy = new FunctionType(returnType, args, isVararg);
+    auto fun = new Function(funIdentifier, funTy);
 
     // Create Symbol for the function
     {
-        SymbolTable::insert(funIdentifier, std::make_shared<Attribute>(funIdentifier, AttributeScope::ScopeGlobal, AttributeKind::SymbolFunction, returnType));
+        SymbolTable::insert(funIdentifier, new Attribute(funIdentifier, AttributeScope::ScopeGlobal, AttributeKind::SymbolFunction, returnType));
     }
 
     fun->setIsInline(isInline);

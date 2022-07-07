@@ -22,9 +22,9 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    auto *filePath = argv[1];
-    auto *outputPath = argv[2];
-    auto *fileManager = new weasel::FileManager(filePath);
+    auto filePath = argv[1];
+    auto outputPath = argv[2];
+    auto fileManager = new weasel::FileManager(filePath);
     if (!fileManager->isValid())
     {
         std::cout << filePath << " Not exist\n";
@@ -32,21 +32,21 @@ int main(int argc, char *argv[])
     }
 
     // Initialize LLVM TO BULK
-    // llvm::InitializeAllTargetInfos();
+    llvm::InitializeAllTargetInfos();
     llvm::InitializeNativeTarget();
     llvm::InitializeNativeTargetAsmParser();
     llvm::InitializeNativeTargetAsmPrinter();
 
-    auto *llvmContext = new llvm::LLVMContext();
-    auto lexer = std::make_unique<weasel::Lexer>(fileManager);
-    auto parser = new weasel::Parser(llvmContext, std::move(lexer));
+    auto llvmContext = new llvm::LLVMContext();
+    auto lexer = new weasel::Lexer(fileManager);
+    auto parser = new weasel::Parser(llvmContext, lexer);
 
     // Parse into AST
-    parser->parse();
+    auto funs = parser->parse();
 
     // Prepare for codegen
-    auto context = std::make_unique<weasel::Context>(llvmContext, "CodeModule");
-    auto codegen = std::make_unique<weasel::Codegen>(std::move(context), parser->getFunctions());
+    auto context = new weasel::Context(llvmContext, "codeModule");
+    auto codegen = new weasel::Codegen(context, funs);
 
     weasel::SymbolTable::reset();
     if (!codegen->compile())

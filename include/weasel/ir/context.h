@@ -30,10 +30,10 @@ namespace weasel
         llvm::LLVMContext *_context;
         llvm::IRBuilder<> *_builder;
         Function *_currentFunction = nullptr;
-
-        bool _isHostCL = false;
-        bool _isParallel = false;
         unsigned long _counter = 0;
+
+        // bool _isHostCL = false;
+        // bool _isParallel = false;
 
     private:
         llvm::MDNode *getTBAA(llvm::Type *type) const;
@@ -44,11 +44,11 @@ namespace weasel
         llvm::MDNode *getTBAALong() const;
         llvm::MDNode *getTBAAPointer() const;
 
-        void parallelRun() const;
-        void parallelInit() const;
-        void parallelInitkernel(const std::string &kernelName);
-        void parallelInitArgument(llvm::Value *arr, int size) const;
-        void parallelDestroy() const;
+        // void parallelRun() const;
+        // void parallelInit() const;
+        // void parallelInitkernel(const std::string &kernelName);
+        // void parallelInitArgument(llvm::Value *arr, int size) const;
+        // void parallelDestroy() const;
 
     public:
         explicit Context(llvm::LLVMContext *context, const std::string &moduleName, bool isParallel = false);
@@ -58,8 +58,8 @@ namespace weasel
         llvm::IRBuilder<> *getBuilder() const { return _builder; }
         llvm::MDBuilder *getMDBuilder() const { return _mdBuilder; }
 
-        void setHostCL(bool val) { _isHostCL = val; }
-        bool isParallel() const { return _isParallel; }
+        // void setHostCL(bool val) { _isHostCL = val; }
+        // bool isParallel() const { return _isParallel; }
 
         llvm::Value *castIntegerType(llvm::Value *lhs, llvm::Value *rhs) const;
         llvm::Value *castIntegerType(llvm::Value *value, llvm::Type *castTy);

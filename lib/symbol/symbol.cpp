@@ -2,9 +2,9 @@
 #include "weasel/symbol/symbol.h"
 
 /// Symbol Init ///
-std::vector<std::shared_ptr<weasel::Error>> weasel::ErrorTable::_errors;
+std::vector<weasel::Error> weasel::ErrorTable::_errors;
 std::vector<unsigned> weasel::SymbolTable::_lookup;
-std::vector<std::shared_ptr<weasel::Attribute>> weasel::SymbolTable::_table;
+std::vector<weasel::Attribute *> weasel::SymbolTable::_table;
 
 /// Symbol Function ///
 void weasel::SymbolTable::enterScope()
@@ -29,7 +29,7 @@ bool weasel::SymbolTable::exitScope()
     return true;
 }
 
-void weasel::SymbolTable::insert(const std::string &key, const std::shared_ptr<Attribute> &attr)
+void weasel::SymbolTable::insert(const std::string &key, Attribute *attr)
 {
     if (_lookup.empty())
     {
@@ -40,7 +40,7 @@ void weasel::SymbolTable::insert(const std::string &key, const std::shared_ptr<A
     _lookup[_lookup.size() - 1]++;
 }
 
-std::shared_ptr<weasel::Attribute> weasel::SymbolTable::get(const std::string &key)
+weasel::Attribute *weasel::SymbolTable::get(const std::string &key)
 {
     auto i = (int)_table.size() - 1;
     for (; i >= 0; i--)
@@ -54,7 +54,7 @@ std::shared_ptr<weasel::Attribute> weasel::SymbolTable::get(const std::string &k
     return nullptr;
 }
 
-std::shared_ptr<weasel::Attribute> weasel::SymbolTable::getLastFunction()
+weasel::Attribute *weasel::SymbolTable::getLastFunction()
 {
     auto i = (int)_table.size() - 1;
     for (; i >= 0; i--)
@@ -85,9 +85,9 @@ void weasel::SymbolTable::reset()
     enterScope(); // Enter Global Scope
 }
 
-std::nullptr_t weasel::ErrorTable::addError(const std::shared_ptr<Token> &token, std::string msg)
+std::nullptr_t weasel::ErrorTable::addError(Token *token, std::string msg)
 {
-    _errors.push_back(std::make_shared<Error>(token, msg));
+    _errors.push_back(Error(token, msg));
     return nullptr;
 }
 
@@ -99,12 +99,12 @@ void weasel::ErrorTable::showErrors()
     }
     else
     {
-        for (const auto &item : _errors)
+        for (const auto item : _errors)
         {
-            auto token = item->getToken();
+            auto token = item.getToken();
             auto loc = token->getLocation();
 
-            std::cerr << "Error : " << item->getMessage() << " but found " << token->getValue() << " kind of " << token->getTokenKindToInt();
+            std::cerr << "Error : " << item.getMessage() << " but found " << token->getValue() << " kind of " << token->getTokenKindToInt();
             std::cerr << " At (" << loc.row << ":" << loc.col << ")\n";
         }
     }

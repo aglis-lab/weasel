@@ -5,7 +5,7 @@ import "parallel"
 // HETEROGENEOUS PROGRAMMING Function
 fun parallel get_global_id(const i int) ulong {} // Get Global ID
 
-parallel kernel
+// TODO: V2 -> We didn't need any extra keyword (parallel or kernel)
 fun Mul(data *float) {
     let global = parallel.global
     let threadCount = parallel.thread
@@ -26,14 +26,16 @@ fun Main() {
 
     // Print Code
     // No ';' needed to end the statement
-    print("Hello World")
+    print("Hello World\n")
+    print("Date {}\n", 9)
+    print("Year {1}\n", 2022)
 
     // We use keyword 'let', 'final', and 'const'
     // Stack Memory Declaration
     let car Car
 
     // Heap Memory Definition
-    let car2 = new Car()
+    let car2 = new Car
 
     // Call Internal Function
     car.Move()
@@ -41,20 +43,27 @@ fun Main() {
     // Call Function by Reference
     car2.Crash()
 
-    // HETEROGENEOUS PROGRAMMING Function call //
-    // The Language automaticly understand how to handle local or global data
-    // We need to map data address into lookup gpu memory
-    // We use already defined data in memory or use new one if not yet copy
-    @parallel{
-        global: 4000
-        block: 32,
-        thread: 128,
-    }
-    Mul(data)
+    // store data from host to device
+    let dataGpu = store(data)
 
-    load(data)      // load data from device to host
-    store(data)     // store data from host to device
-    release(data)   // release the device memory
+    // HETEROGENEOUS PROGRAMMING Function call //
+    // In V2 compiler or system will automaticly understand
+    // To execute this function on device hardware accelerator
+
+    // Global = 4000
+    // Block = 32
+    // Thread = 128
+    Mul<<4000, 32, 128>>(dataGpu)
+
+    // Load data from device to host
+    load(dataGpu, data)
+
+    // Load data from device to host
+    data = load(dataGpu)
+
+    // release the device memory
+    // release(dataGpu)
+    // GPU Memory should be release automaticly when no further references
 }
 
 // We not support 'class' but struct

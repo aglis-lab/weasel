@@ -3,6 +3,7 @@
 cmake_minimum_required(VERSION 3.15)
 project(weasel VERSION 0.0.1)
 
+# CMAKE LINKER
 set(CMAKE_LINKER ld.lld)
 
 # LLVM SPIRV
@@ -11,9 +12,15 @@ set(LLVM_SPIRV_INCLUDE_DIR ${LLVM_SPIRV_DIR}/include)
 set(LLVM_SPIRV_LIB_DIR ${LLVM_SPIRV_DIR}/build/lib/SPIRV)
 
 # LLVM
-set(LLVM_DIR /usr/lib/llvm-13/lib/cmake/llvm/)
+set(LLVM_DIR /opt/homebrew/opt/llvm@13/lib/cmake/llvm/)
 set(WEASEL_DIR ${CMAKE_SOURCE_DIR}/cmake)
 
+# CXX
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+# LLVM FIND PACKAGE
 find_package(LLVM REQUIRED CONFIG)
 
 list(APPEND CMAKE_MODULE_PATH ${LLVM_CMAKE_DIR})
@@ -37,5 +44,5 @@ include_directories(include)
 # Weasel Directories
 add_subdirectory(tools)
 add_subdirectory(lib)
-add_subdirectory(libparallel)
+# add_subdirectory(libparallel)
 # add_subdirectory(unittests)

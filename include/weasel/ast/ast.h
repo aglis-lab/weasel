@@ -76,13 +76,13 @@ namespace weasel
     class Expression
     {
     protected:
-        std::shared_ptr<Token> _token; // Token each expression
+        Token *_token; // Token each expression
 
     public:
         Expression() = default;
-        explicit Expression(std::shared_ptr<Token> token) : _token(std::move(token)) {}
+        explicit Expression(Token *token) : _token(token) {}
 
-        std::shared_ptr<Token> getToken() const { return _token; }
+        Token *getToken() const { return _token; }
 
         virtual llvm::Value *codegen(Context *context) = 0;
         // virtual ~Expression() = 0;
@@ -97,7 +97,7 @@ namespace weasel
         unsigned _size;
 
     public:
-        LiteralExpression(std::shared_ptr<Token> token, LiteralType type, unsigned width, unsigned size = 1) : Expression(std::move(token)), _type(type), _width(width), _size(size) {}
+        LiteralExpression(Token *token, LiteralType type, unsigned width, unsigned size = 1) : Expression(token), _type(type), _width(width), _size(size) {}
     };
 
 } // namespace weasel
@@ -113,12 +113,12 @@ namespace weasel
     class ReturnExpression : public Expression
     {
     private:
-        std::shared_ptr<Expression> _value;
+        Expression *_value;
 
     public:
-        ReturnExpression(std::shared_ptr<Token> token, std::shared_ptr<Expression> value) : Expression(std::move(token)), _value(std::move(value)) {}
+        ReturnExpression(Token *token, Expression *value) : Expression(token), _value(value) {}
 
-        std::shared_ptr<Expression> getValue() const { return _value; }
+        Expression *getValue() const { return _value; }
 
         llvm::Value *codegen(Context *context) override;
     };
@@ -127,13 +127,13 @@ namespace weasel
     class CallExpression : public Expression
     {
         std::string _identifier;
-        std::vector<std::shared_ptr<Expression>> _args;
+        std::vector<Expression *> _args;
 
     public:
-        CallExpression(std::shared_ptr<Token> token, std::string identifier, std::vector<std::shared_ptr<Expression>> args) : Expression(std::move(token)), _identifier(std::move(identifier)), _args(std::move(args)) {}
+        CallExpression(Token *token, std::string identifier, std::vector<Expression *> args) : Expression(token), _identifier(identifier), _args(args) {}
 
         std::string getIdentifier() const { return _identifier; }
-        std::vector<std::shared_ptr<Expression>> getArguments() const { return _args; }
+        std::vector<Expression *> getArguments() const { return _args; }
 
         llvm::Value *codegen(Context *context) override;
     };
@@ -146,7 +146,7 @@ namespace weasel
         bool _addressOf;
 
     public:
-        VariableExpression(std::shared_ptr<Token> token, std::string identifier, bool addressOf = false) : Expression(std::move(token)), _identifier(std::move(identifier)), _addressOf(addressOf) {}
+        VariableExpression(Token *token, std::string identifier, bool addressOf = false) : Expression(token), _identifier(identifier), _addressOf(addressOf) {}
 
         std::string getIdentifier() const { return _identifier; }
         bool isAddressOf() const { return _addressOf; }
@@ -157,12 +157,12 @@ namespace weasel
     class ArrayExpression : public VariableExpression
     {
     private:
-        std::shared_ptr<Expression> _indexExpr;
+        Expression *_indexExpr;
 
     public:
-        ArrayExpression(std::shared_ptr<Token> token, std::string identifier, std::shared_ptr<Expression> indexExpr, bool addressOf = false) : VariableExpression(std::move(token), std::move(identifier), addressOf), _indexExpr(std::move(indexExpr)) {}
+        ArrayExpression(Token *token, std::string identifier, Expression *indexExpr, bool addressOf = false) : VariableExpression(token, identifier, addressOf), _indexExpr(indexExpr) {}
 
-        std::shared_ptr<Expression> getIndex() const { return _indexExpr; }
+        Expression *getIndex() const { return _indexExpr; }
 
         llvm::Value *codegen(Context *context) override;
     };
@@ -174,13 +174,13 @@ namespace weasel
         std::string _identifier;
         Qualifier _qualifier;
         llvm::Type *_type;
-        std::shared_ptr<Expression> _value;
+        Expression *_value;
 
     public:
-        DeclarationExpression(std::shared_ptr<Token> token, std::string identifier, Qualifier qualifier, llvm::Type *type = nullptr, std::shared_ptr<Expression> value = nullptr) : Expression(std::move(token)), _identifier(std::move(identifier)), _qualifier(qualifier), _type(type), _value(std::move(value)) {}
+        DeclarationExpression(Token *token, std::string identifier, Qualifier qualifier, llvm::Type *type = nullptr, Expression *value = nullptr) : Expression(token), _identifier(identifier), _qualifier(qualifier), _type(type), _value(value) {}
 
         std::string getIdentifier() const { return _identifier; }
-        std::shared_ptr<Expression> getValue() const { return _value; }
+        Expression *getValue() const { return _value; }
         llvm::Type *getType() const { return _type; }
         Qualifier getQualifier() const { return _qualifier; }
 
@@ -194,7 +194,7 @@ namespace weasel
         long long _value; // 64 bit(8 bytes)
 
     public:
-        NumberLiteralExpression(std::shared_ptr<Token> token, long long value, unsigned width = 32) : LiteralExpression(std::move(token), LiteralType::LiteralNumber, width), _value(value) {}
+        NumberLiteralExpression(Token *token, long long value, unsigned width = 32) : LiteralExpression(token, LiteralType::LiteralNumber, width), _value(value) {}
 
         long long getValue() const { return _value; }
 
@@ -208,7 +208,7 @@ namespace weasel
         bool _value;
 
     public:
-        BoolLiteralExpression(std::shared_ptr<Token> token, bool value) : LiteralExpression(token, LiteralType::LiteralBool, 1), _value(value) {}
+        BoolLiteralExpression(Token *token, bool value) : LiteralExpression(token, LiteralType::LiteralBool, 1), _value(value) {}
 
         bool getValue() const { return _value; }
 
@@ -222,7 +222,7 @@ namespace weasel
         std::string _value;
 
     public:
-        StringLiteralExpression(std::shared_ptr<Token> token, const std::string &value) : LiteralExpression(std::move(token), LiteralType::LiteralString, 8, value.size()), _value(value) {}
+        StringLiteralExpression(Token *token, const std::string &value) : LiteralExpression(token, LiteralType::LiteralString, 8, value.size()), _value(value) {}
 
         std::string getValue() const { return _value; }
 
@@ -233,7 +233,7 @@ namespace weasel
     class NilLiteralExpression : public LiteralExpression
     {
     public:
-        explicit NilLiteralExpression(std::shared_ptr<Token> token) : LiteralExpression(std::move(token), LiteralType::LiteralNil, 64) {}
+        explicit NilLiteralExpression(Token *token) : LiteralExpression(token, LiteralType::LiteralNil, 64) {}
 
         llvm::Value *codegen(Context *context) override;
     };
@@ -242,16 +242,16 @@ namespace weasel
     class BinaryOperatorExpression : public Expression
     {
     private:
-        std::shared_ptr<Token> _operator;
-        std::shared_ptr<Expression> _lhs;
-        std::shared_ptr<Expression> _rhs;
+        Token *_operator;
+        Expression *_lhs;
+        Expression *_rhs;
 
     public:
-        BinaryOperatorExpression(std::shared_ptr<Token> op, std::shared_ptr<Expression> lhs, std::shared_ptr<Expression> rhs) : _operator(std::move(op)), _lhs(std::move(lhs)), _rhs(std::move(rhs)) {}
+        BinaryOperatorExpression(Token *op, Expression *lhs, Expression *rhs) : _operator(op), _lhs(lhs), _rhs(rhs) {}
 
-        std::shared_ptr<Token> getOperator() const { return _operator; }
-        std::shared_ptr<Expression> getLHS() const { return _lhs; }
-        std::shared_ptr<Expression> getRHS() const { return _rhs; }
+        Token *getOperator() const { return _operator; }
+        Expression *getLHS() const { return _lhs; }
+        Expression *getRHS() const { return _rhs; }
 
         llvm::Value *codegen(Context *context) override;
     };
@@ -260,11 +260,11 @@ namespace weasel
     class UnaryOperatorExpression : public Expression
     {
     private:
-        std::shared_ptr<Token> _lhs;
-        std::shared_ptr<Expression> _rhs;
+        Token *_lhs;
+        Expression *_rhs;
 
     public:
-        UnaryOperatorExpression(std::shared_ptr<Token> lhs, std::shared_ptr<Expression> rhs) : _lhs(std::move(lhs)), _rhs(std::move(rhs)) {}
+        UnaryOperatorExpression(Token *lhs, Expression *rhs) : _lhs(lhs), _rhs(rhs) {}
 
         llvm::Value *codegen(Context *context) override { return nullptr; }
     };
@@ -273,14 +273,14 @@ namespace weasel
     class ArrayLiteralExpression : public Expression
     {
     private:
-        std::vector<std::shared_ptr<Expression>> _items;
+        std::vector<Expression *> _items;
 
     public:
         ArrayLiteralExpression() = default;
-        explicit ArrayLiteralExpression(std::vector<std::shared_ptr<Expression>> items) : _items(std::move(items)) {}
+        explicit ArrayLiteralExpression(std::vector<Expression *> items) : _items(items) {}
 
-        void addItem(const std::shared_ptr<Expression> &item) { _items.push_back(item); }
-        std::vector<std::shared_ptr<Expression>> getItems() const { return _items; }
+        void addItem(Expression *item) { _items.push_back(item); }
+        std::vector<Expression *> getItems() const { return _items; }
 
         llvm::Value *codegen(Context *context) override;
     };
@@ -298,13 +298,13 @@ namespace weasel
     class StatementExpression : public Expression
     {
     private:
-        std::vector<std::shared_ptr<Expression>> _body;
+        std::vector<Expression *> _body;
 
     public:
         StatementExpression() = default;
 
-        void addBody(const std::shared_ptr<Expression> &expr) { _body.push_back(expr); }
-        std::vector<std::shared_ptr<Expression>> getBody() const { return _body; }
+        void addBody(Expression *expr) { _body.push_back(expr); }
+        std::vector<Expression *> getBody() const { return _body; }
 
         llvm::Value *codegen(Context *context) override;
     };
@@ -322,14 +322,14 @@ namespace weasel
     class FunctionArgument
     {
     private:
-        std::shared_ptr<Token> _token;
+        Token *_token;
         std::string _argName;
         llvm::Type *_type;
 
     public:
-        FunctionArgument(std::shared_ptr<Token> token, std::string argName, llvm::Type *type) : _token(std::move(token)), _argName(std::move(argName)), _type(type) {}
+        FunctionArgument(Token *token, std::string argName, llvm::Type *type) : _token(token), _argName(argName), _type(type) {}
 
-        std::shared_ptr<Token> getToken() const { return _token; }
+        Token *getToken() const { return _token; }
         llvm::Type *getArgumentType() const { return _type; }
         std::string getArgumentName() const { return _argName; }
     };
@@ -338,14 +338,14 @@ namespace weasel
     class FunctionType
     {
     private:
-        std::vector<std::shared_ptr<FunctionArgument>> _args;
+        std::vector<FunctionArgument *> _args;
         llvm::Type *_retType;
         bool _isVararg;
 
     public:
-        FunctionType(llvm::Type *returnType, std::vector<std::shared_ptr<FunctionArgument>> args, bool vararg) : _args(std::move(args)), _retType(returnType), _isVararg(vararg) {}
+        FunctionType(llvm::Type *returnType, std::vector<FunctionArgument *> args, bool vararg) : _args(args), _retType(returnType), _isVararg(vararg) {}
 
-        std::vector<std::shared_ptr<FunctionArgument>> getArgs() const { return _args; }
+        std::vector<FunctionArgument *> getArgs() const { return _args; }
         llvm::Type *getReturnType() const { return _retType; }
 
         bool getIsVararg() const { return _isVararg; }
@@ -356,21 +356,21 @@ namespace weasel
     {
     private:
         std::string _identifier;
-        std::shared_ptr<FunctionType> _funcTy;
-        std::shared_ptr<StatementExpression> _body;
+        FunctionType *_funcTy;
+        StatementExpression *_body;
         bool _isDefine = false;
         bool _isInline = false;
         ParallelType _parallelType;
 
     public:
-        Function(std::string identifier, std::shared_ptr<FunctionType> funcTy, ParallelType parallelTy = ParallelType::None) : _identifier(std::move(identifier)), _funcTy(std::move(funcTy)), _parallelType(parallelTy) {}
+        Function(std::string identifier, FunctionType *funcTy, ParallelType parallelTy = ParallelType::None) : _identifier(identifier), _funcTy(funcTy), _parallelType(parallelTy) {}
 
         std::string getIdentifier() const { return _identifier; }
-        std::shared_ptr<FunctionType> getFunctionType() const { return _funcTy; }
-        std::vector<std::shared_ptr<FunctionArgument>> getArgs() const { return _funcTy->getArgs(); }
+        FunctionType *getFunctionType() const { return _funcTy; }
+        std::vector<FunctionArgument *> getArgs() const { return _funcTy->getArgs(); }
 
-        std::shared_ptr<StatementExpression> getBody() const { return _body; }
-        void setBody(std::shared_ptr<StatementExpression> body) { _body = body; }
+        StatementExpression *getBody() const { return _body; }
+        void setBody(StatementExpression *body) { _body = body; }
 
         void setIsDefine(bool val) { _isDefine = val; }
         bool isDefine() const { return _isDefine; }

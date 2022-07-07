@@ -32,7 +32,7 @@ fun Main() {
     // Stack Memory Declaration
     let car Car
 
-    // Heap Memory Declaration
+    // Heap Memory Definition
     let car2 = new Car()
 
     // Call Internal Function

@@ -11,20 +11,6 @@ void weasel::Parser::ignoreNewline()
     }
 }
 
-std::vector<std::shared_ptr<weasel::Function>> weasel::Parser::getParallelFunctions()
-{
-    std::vector<std::shared_ptr<Function>> funs(_parallelCount);
-    unsigned idx = 0;
-
-    for (const auto &item : _funs) {
-        if (item->getParallelType() != ParallelType::None) {
-            funs[idx++] = item;
-        }
-    }
-
-    return funs;
-}
-
 llvm::Type *weasel::Parser::parseDataType()
 {
     // Pointer
