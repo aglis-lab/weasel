@@ -10,19 +10,19 @@ std::vector<weasel::Function *> weasel::Parser::parse()
 {
     std::vector<weasel::Function *> funs;
 
-    while (!getNextToken(true)->isKind(TokenKind::TokenEOF))
+    while (!getNextToken(true).isKind(TokenKind::TokenEOF))
     {
 
         // Parallel Function
         // TODO: Need add parallel function
-        if (getCurrentToken()->isKind(TokenKind::TokenKeyParallel))
+        if (getCurrentToken().isKind(TokenKind::TokenKeyParallel))
         {
             std::cout << "Function Parallel no supported yet!\n";
             exit(1);
         }
 
         // Extern Function
-        if (getCurrentToken()->isKind(TokenKind::TokenKeyExtern))
+        if (getCurrentToken().isKind(TokenKind::TokenKeyExtern))
         {
             getNextToken(); // eat 'extern'
             auto fun = parseFunction();
@@ -34,7 +34,7 @@ std::vector<weasel::Function *> weasel::Parser::parse()
         }
 
         // Function
-        if (getCurrentToken()->isKind(TokenKind::TokenKeyFun))
+        if (getCurrentToken().isKind(TokenKind::TokenKeyFun))
         {
             auto fun = parseFunction();
             if (fun != nullptr)
@@ -47,38 +47,39 @@ std::vector<weasel::Function *> weasel::Parser::parse()
         // TODO: Doing Global Variable
         // For latter implementation
         auto token = getCurrentToken();
-        std::cout << "Parser -> " << token->getLocation().row << "/" << token->getLocation().col << "<>" << token->getTokenKindToInt() << ":" << token->getValue() << "\n";
+        std::cout << "Parser -> " << token.getLocation().row << "/" << token.getLocation().col << "<>" << token.getTokenKindToInt() << ":" << token.getValue() << "\n";
     }
 
     return funs;
 }
 
 // get Next Token Until
-weasel::Token *weasel::Parser::getNextTokenUntil(weasel::TokenKind kind)
+weasel::Token weasel::Parser::getNextTokenUntil(weasel::TokenKind kind)
 {
-    if (getCurrentToken()->isKind(kind))
+    if (getCurrentToken().isKind(kind))
     {
         return getCurrentToken();
     }
 
-    while (auto token = getNextToken())
+    while (true)
     {
-        if (token->isKind(kind))
+        auto token = getNextToken();
+        if (token.isKind(kind))
         {
             return token;
         }
 
-        if (token->isKind(TokenKind::TokenEOF))
+        if (token.isKind(TokenKind::TokenEOF) || token.isUndefined())
         {
             break;
         }
     }
 
-    return nullptr;
+    return Token::empty();
 }
 
 // Get Next Token
-weasel::Token *weasel::Parser::getNextToken(bool skipSpace)
+weasel::Token weasel::Parser::getNextToken(bool skipSpace)
 {
     return _lexer->getNextToken(skipSpace);
 }

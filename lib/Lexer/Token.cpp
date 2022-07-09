@@ -1,4 +1,4 @@
-#include "weasel/ir/context.h"
+#include "weasel/IR/Context.h"
 #include "weasel/Lexer/Token.h"
 #include "weasel/AST/AST.h"
 

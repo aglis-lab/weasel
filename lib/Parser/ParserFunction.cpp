@@ -30,12 +30,12 @@ weasel::Function *weasel::Parser::parseFunction(ParallelType parallelType)
     }
 
     // Ignore new line
-    if (getCurrentToken()->isKind(TokenKind::TokenSpaceNewline))
+    if (getCurrentToken().isKind(TokenKind::TokenSpaceNewline))
     {
         getNextToken(true);
     }
 
-    if (!getCurrentToken()->isKind(TokenKind::TokenDelimOpenCurlyBracket))
+    if (!getCurrentToken().isKind(TokenKind::TokenDelimOpenCurlyBracket))
     {
         return ErrorTable::addError(getCurrentToken(), "Expected {");
     }
@@ -92,33 +92,33 @@ weasel::Function *weasel::Parser::parseFunction(ParallelType parallelType)
 weasel::Function *weasel::Parser::parseDeclareFunction()
 {
     auto isInline = false;
-    if (getCurrentToken()->isKind(TokenKind::TokenKeyInline))
+    if (getCurrentToken().isKind(TokenKind::TokenKeyInline))
     {
         isInline = true;
 
         getNextToken();
     }
 
-    if (!getCurrentToken()->isKind(TokenKind::TokenKeyFun))
+    if (!getCurrentToken().isKind(TokenKind::TokenKeyFun))
     {
         return ErrorTable::addError(getCurrentToken(), "Expected fun keyword");
     }
 
     // get next and eat 'fun'
-    if (!getNextToken()->isKind(TokenKind::TokenIdentifier))
+    if (!getNextToken().isKind(TokenKind::TokenIdentifier))
     {
         return ErrorTable::addError(getCurrentToken(), "Expected an identifier");
     }
 
     // Check Symbol Table
-    auto funIdentifier = getCurrentToken()->getValue();
+    auto funIdentifier = getCurrentToken().getValue();
     if (SymbolTable::get(funIdentifier) != nullptr)
     {
         return ErrorTable::addError(getCurrentToken(), "Function already declared");
     }
 
     getNextToken(); // eat 'identifier'
-    if (!getCurrentToken()->isKind(TokenKind::TokenDelimOpenParen))
+    if (!getCurrentToken().isKind(TokenKind::TokenDelimOpenParen))
     {
         return ErrorTable::addError(getCurrentToken(), "Expected (");
     }
@@ -127,7 +127,7 @@ weasel::Function *weasel::Parser::parseDeclareFunction()
     std::vector<weasel::FunctionArgument *> args;
     auto isVararg = false;
 
-    while (!getCurrentToken()->isKind(TokenKind::TokenDelimCloseParen))
+    while (!getCurrentToken().isKind(TokenKind::TokenDelimCloseParen))
     {
         if (isVararg)
         {
@@ -135,13 +135,13 @@ weasel::Function *weasel::Parser::parseDeclareFunction()
         }
 
         auto idenToken = getCurrentToken();
-        if (!getCurrentToken()->isKind(TokenKind::TokenIdentifier))
+        if (!getCurrentToken().isKind(TokenKind::TokenIdentifier))
         {
             return ErrorTable::addError(getCurrentToken(), "Expected identifier in function argument");
         }
 
-        auto identifier = getCurrentToken()->getValue();
-        if (getNextToken()->isKind(TokenKind::TokenPuncDotThree))
+        auto identifier = getCurrentToken().getValue();
+        if (getNextToken().isKind(TokenKind::TokenPuncDotThree))
         {
             isVararg = true;
             getNextToken(); // eat ...
@@ -155,7 +155,7 @@ weasel::Function *weasel::Parser::parseDeclareFunction()
 
         args.push_back(new FunctionArgument(idenToken, identifier, type));
 
-        if (!getCurrentToken()->isKind(TokenKind::TokenPuncComma))
+        if (!getCurrentToken().isKind(TokenKind::TokenPuncComma))
         {
             break;
         }
@@ -163,7 +163,7 @@ weasel::Function *weasel::Parser::parseDeclareFunction()
         getNextToken(); // eat ','
     }
 
-    if (!getCurrentToken()->isKind(TokenKind::TokenDelimCloseParen))
+    if (!getCurrentToken().isKind(TokenKind::TokenDelimCloseParen))
     {
         return ErrorTable::addError(getCurrentToken(), "Expected ) in function argument");
     }

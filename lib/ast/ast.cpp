@@ -1,5 +1,5 @@
-#include "weasel/ast/ast.h"
-#include "weasel/ir/context.h"
+#include "weasel/AST/AST.h"
+#include "weasel/IR/Context.h"
 
 // Expression Codegen
 llvm::Value *weasel::NumberLiteralExpression::codegen(Context *c)

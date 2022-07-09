@@ -1,6 +1,6 @@
 #include "weasel/Lexer/Lexer.h"
 
-weasel::Token *weasel::Lexer::getPunctuation()
+weasel::Token weasel::Lexer::getPunctuation()
 {
     auto *lastBuffer = _currentBuffer - 1;
 
@@ -160,7 +160,7 @@ weasel::Token *weasel::Lexer::getPunctuation()
                 return createToken(TokenKind::TokenPuncDotThree, lastBuffer, lastBuffer + 3);
             }
 
-            return nullptr;
+            return Token::empty();
         }
 
         return createToken(TokenKind::TokenPuncDot, lastBuffer, lastBuffer + 1);
@@ -217,6 +217,6 @@ weasel::Token *weasel::Lexer::getPunctuation()
     }
 
     default:
-        return nullptr;
+        return Token::empty();
     }
 }

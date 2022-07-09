@@ -48,7 +48,7 @@ namespace weasel
         Expression *_value;
 
     public:
-        ReturnExpression(Token *token, Expression *value) : Expression(token), _value(value) {}
+        ReturnExpression(Token token, Expression *value) : Expression(token), _value(value) {}
 
         Expression *getValue() const { return _value; }
 
@@ -62,7 +62,7 @@ namespace weasel
         std::vector<Expression *> _args;
 
     public:
-        CallExpression(Token *token, std::string identifier, std::vector<Expression *> args) : Expression(token), _identifier(identifier), _args(args) {}
+        CallExpression(Token token, std::string identifier, std::vector<Expression *> args) : Expression(token), _identifier(identifier), _args(args) {}
 
         std::string getIdentifier() const { return _identifier; }
         std::vector<Expression *> getArguments() const { return _args; }
@@ -78,7 +78,7 @@ namespace weasel
         bool _addressOf;
 
     public:
-        VariableExpression(Token *token, std::string identifier, bool addressOf = false) : Expression(token), _identifier(identifier), _addressOf(addressOf) {}
+        VariableExpression(Token token, std::string identifier, bool addressOf = false) : Expression(token), _identifier(identifier), _addressOf(addressOf) {}
 
         std::string getIdentifier() const { return _identifier; }
         bool isAddressOf() const { return _addressOf; }
@@ -92,7 +92,7 @@ namespace weasel
         Expression *_indexExpr;
 
     public:
-        ArrayExpression(Token *token, std::string identifier, Expression *indexExpr, bool addressOf = false) : VariableExpression(token, identifier, addressOf), _indexExpr(indexExpr) {}
+        ArrayExpression(Token token, std::string identifier, Expression *indexExpr, bool addressOf = false) : VariableExpression(token, identifier, addressOf), _indexExpr(indexExpr) {}
 
         Expression *getIndex() const { return _indexExpr; }
 
@@ -109,7 +109,7 @@ namespace weasel
         Expression *_value;
 
     public:
-        DeclarationExpression(Token *token, std::string identifier, Qualifier qualifier, llvm::Type *type = nullptr, Expression *value = nullptr) : Expression(token), _identifier(identifier), _qualifier(qualifier), _type(type), _value(value) {}
+        DeclarationExpression(Token token, std::string identifier, Qualifier qualifier, llvm::Type *type = nullptr, Expression *value = nullptr) : Expression(token), _identifier(identifier), _qualifier(qualifier), _type(type), _value(value) {}
 
         std::string getIdentifier() const { return _identifier; }
         Expression *getValue() const { return _value; }
@@ -126,7 +126,7 @@ namespace weasel
         long long _value; // 64 bit(8 bytes)
 
     public:
-        NumberLiteralExpression(Token *token, long long value, unsigned width = 32) : LiteralExpression(token, LiteralType::LiteralNumber, width), _value(value) {}
+        NumberLiteralExpression(Token token, long long value, unsigned width = 32) : LiteralExpression(token, LiteralType::LiteralNumber, width), _value(value) {}
 
         long long getValue() const { return _value; }
 
@@ -140,7 +140,7 @@ namespace weasel
         bool _value;
 
     public:
-        BoolLiteralExpression(Token *token, bool value) : LiteralExpression(token, LiteralType::LiteralBool, 1), _value(value) {}
+        BoolLiteralExpression(Token token, bool value) : LiteralExpression(token, LiteralType::LiteralBool, 1), _value(value) {}
 
         bool getValue() const { return _value; }
 
@@ -154,7 +154,7 @@ namespace weasel
         std::string _value;
 
     public:
-        StringLiteralExpression(Token *token, const std::string &value) : LiteralExpression(token, LiteralType::LiteralString, 8, value.size()), _value(value) {}
+        StringLiteralExpression(Token token, const std::string &value) : LiteralExpression(token, LiteralType::LiteralString, 8, value.size()), _value(value) {}
 
         std::string getValue() const { return _value; }
 
@@ -165,7 +165,7 @@ namespace weasel
     class NilLiteralExpression : public LiteralExpression
     {
     public:
-        explicit NilLiteralExpression(Token *token) : LiteralExpression(token, LiteralType::LiteralNil, 64) {}
+        explicit NilLiteralExpression(Token token) : LiteralExpression(token, LiteralType::LiteralNil, 64) {}
 
         llvm::Value *codegen(Context *context) override;
     };
@@ -174,14 +174,14 @@ namespace weasel
     class BinaryOperatorExpression : public Expression
     {
     private:
-        Token *_operator;
+        Token _operator;
         Expression *_lhs;
         Expression *_rhs;
 
     public:
-        BinaryOperatorExpression(Token *op, Expression *lhs, Expression *rhs) : _operator(op), _lhs(lhs), _rhs(rhs) {}
+        BinaryOperatorExpression(Token op, Expression *lhs, Expression *rhs) : _operator(op), _lhs(lhs), _rhs(rhs) {}
 
-        Token *getOperator() const { return _operator; }
+        Token getOperator() const { return _operator; }
         Expression *getLHS() const { return _lhs; }
         Expression *getRHS() const { return _rhs; }
 
@@ -192,11 +192,11 @@ namespace weasel
     class UnaryOperatorExpression : public Expression
     {
     private:
-        Token *_lhs;
+        Token _lhs;
         Expression *_rhs;
 
     public:
-        UnaryOperatorExpression(Token *lhs, Expression *rhs) : _lhs(lhs), _rhs(rhs) {}
+        UnaryOperatorExpression(Token lhs, Expression *rhs) : _lhs(lhs), _rhs(rhs) {}
 
         llvm::Value *codegen(Context *context) override { return nullptr; }
     };

@@ -34,13 +34,13 @@ namespace weasel
     class Expression
     {
     protected:
-        Token *_token; // Token each expression
+        Token _token; // Token each expression
 
     public:
         Expression() = default;
-        explicit Expression(Token *token) : _token(token) {}
+        explicit Expression(Token token) : _token(token) {}
 
-        Token *getToken() const { return _token; }
+        Token getToken() const { return _token; }
 
         virtual llvm::Value *codegen(Context *context) = 0;
         // virtual ~Expression() = 0;
@@ -55,7 +55,7 @@ namespace weasel
         unsigned _size;
 
     public:
-        LiteralExpression(Token *token, LiteralType type, unsigned width, unsigned size = 1) : Expression(token), _type(type), _width(width), _size(size) {}
+        LiteralExpression(Token token, LiteralType type, unsigned width, unsigned size = 1) : Expression(token), _type(type), _width(width), _size(size) {}
     };
 
 } // namespace weasel

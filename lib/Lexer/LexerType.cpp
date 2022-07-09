@@ -1,6 +1,6 @@
 #include "weasel/Lexer/Lexer.h"
 
-weasel::Token *weasel::Lexer::getType(char *startBuffer, char *endBuffer)
+weasel::Token weasel::Lexer::getType(char *startBuffer, char *endBuffer)
 {
     TokenKind kind;
     if (compareBuffer(startBuffer, endBuffer, "rune"))
@@ -65,7 +65,7 @@ weasel::Token *weasel::Lexer::getType(char *startBuffer, char *endBuffer)
     }
     else
     {
-        return nullptr;
+        return Token::empty();
     }
 
     return createToken(kind, startBuffer, endBuffer);

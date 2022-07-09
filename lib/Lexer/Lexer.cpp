@@ -64,12 +64,12 @@ bool weasel::Lexer::expect(weasel::TokenKind kind)
     auto *lastBuffer = _currentBuffer;
     auto ok = true;
     auto token = getToken();
-    while (token->isKind(TokenKind::TokenSpaceNewline))
+    while (token.isKind(TokenKind::TokenSpaceNewline))
     {
         token = getToken();
     }
 
-    if (!token->isKind(kind))
+    if (!token.isKind(kind))
     {
         ok = false;
     }
@@ -78,22 +78,23 @@ bool weasel::Lexer::expect(weasel::TokenKind kind)
     return ok;
 }
 
-weasel::Token *weasel::Lexer::createToken(weasel::TokenKind kind, char *startBuffer, char *endBuffer)
+weasel::Token weasel::Lexer::createToken(weasel::TokenKind kind, char *startBuffer, char *endBuffer)
 {
-    return new Token(kind, _location, startBuffer, endBuffer);
+    return Token(kind, _location, startBuffer, endBuffer);
 }
 
-weasel::Token *weasel::Lexer::getNextToken(bool skipSpace, bool eat)
+weasel::Token weasel::Lexer::getNextToken(bool skipSpace, bool eat)
 {
+
     do
     {
         _currentToken = getToken();
-    } while (_currentToken->isKind(TokenKind::TokenSpaceNewline) && skipSpace);
+    } while (_currentToken.isKind(TokenKind::TokenSpaceNewline) && skipSpace);
 
     return _currentToken;
 }
 
-weasel::Token *weasel::Lexer::getToken()
+weasel::Token weasel::Lexer::getToken()
 {
     if (_currentBuffer == _endBuffer)
     {
@@ -124,17 +125,17 @@ weasel::Token *weasel::Lexer::getToken()
             ;
 
         /// Check Keyword ///
-        auto ty = getKeyword(start, _currentBuffer);
-        if (ty)
+        auto token = getKeyword(start, _currentBuffer);
+        if (!token.isUndefined())
         {
-            return ty;
+            return token;
         }
 
         // Check if data type
-        ty = getType(start, _currentBuffer);
-        if (ty)
+        token = getType(start, _currentBuffer);
+        if (!token.isUndefined())
         {
-            return ty;
+            return token;
         }
 
         TokenKind kind = TokenKind::TokenIdentifier;
@@ -220,10 +221,10 @@ weasel::Token *weasel::Lexer::getToken()
 
     if (ispunct(*lastBuffer))
     {
-        auto puncToken = getPunctuation();
-        if (puncToken)
+        auto token = getPunctuation();
+        if (!token.isUndefined())
         {
-            return puncToken;
+            return token;
         }
     }
 

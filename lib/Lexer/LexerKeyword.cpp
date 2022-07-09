@@ -1,7 +1,7 @@
 #include <iostream>
 #include "weasel/Lexer/Lexer.h"
 
-weasel::Token *weasel::Lexer::getKeyword(char *startBuffer, char *endBuffer)
+weasel::Token weasel::Lexer::getKeyword(char *startBuffer, char *endBuffer)
 {
     if (compareBuffer(startBuffer, endBuffer, "parallel"))
     {
@@ -52,5 +52,5 @@ weasel::Token *weasel::Lexer::getKeyword(char *startBuffer, char *endBuffer)
         return createToken(TokenKind::TokenKeyFor, startBuffer, endBuffer);
     }
 
-    return nullptr;
+    return Token::empty();
 }

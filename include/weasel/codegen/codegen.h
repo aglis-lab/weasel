@@ -4,7 +4,7 @@
 #include <memory>
 #include "llvm/IR/LLVMContext.h"
 #include "weasel/AST/AST.h"
-#include "weasel/IR/context.h"
+#include "weasel/IR/Context.h"
 
 namespace weasel
 {

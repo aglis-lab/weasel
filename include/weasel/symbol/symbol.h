@@ -77,14 +77,14 @@ namespace weasel
     class Error
     {
     private:
-        Token *_token;
+        Token _token;
         std::string _msg;
 
     public:
-        Error(Token *token, std::string &msg) : _token(token), _msg(msg) {}
-        Error(Token *token, const char *msg) : _token(token), _msg(std::string(msg)) {}
+        Error(Token token, std::string &msg) : _token(token), _msg(msg) {}
+        Error(Token token, const char *msg) : _token(token), _msg(std::string(msg)) {}
 
-        Token *getToken() const { return _token; }
+        Token getToken() const { return _token; }
         std::string getMessage() const { return _msg; }
     };
 
@@ -99,7 +99,7 @@ namespace weasel
     public:
         static void showErrors();
         static std::vector<Error> getErrors() { return _errors; }
-        static std::nullptr_t addError(Token *token, std::string msg);
+        static std::nullptr_t addError(Token token, std::string msg);
     };
 
 } // namespace weasel

@@ -12,11 +12,11 @@ weasel::StatementExpression *weasel::Parser::parseFunctionBody()
     }
 
     getNextToken(true); // eat '{'
-    while (!getCurrentToken()->isKind(TokenKind::TokenDelimCloseCurlyBracket))
+    while (!getCurrentToken().isKind(TokenKind::TokenDelimCloseCurlyBracket))
     {
         auto expr = parseStatement();
 
-        if (!getCurrentToken()->isKind(TokenKind::TokenDelimCloseCurlyBracket))
+        if (!getCurrentToken().isKind(TokenKind::TokenDelimCloseCurlyBracket))
         {
             if (expr)
             {
@@ -43,19 +43,19 @@ weasel::StatementExpression *weasel::Parser::parseFunctionBody()
 weasel::Expression *weasel::Parser::parseStatement()
 {
     // Compound Statement Expression
-    if (getCurrentToken()->isKind(TokenKind::TokenDelimOpenCurlyBracket))
+    if (getCurrentToken().isKind(TokenKind::TokenDelimOpenCurlyBracket))
     {
         return parseCompoundStatement();
     }
 
     // Variable Definition Expression
-    if (getCurrentToken()->isKeyDefinition())
+    if (getCurrentToken().isKeyDefinition())
     {
         return parseDeclarationExpression();
     }
 
     // Return Expression
-    if (getCurrentToken()->isKind(TokenKind::TokenKeyReturn))
+    if (getCurrentToken().isKind(TokenKind::TokenKeyReturn))
     {
         return parseReturnStatement();
     }
@@ -75,27 +75,27 @@ weasel::Expression *weasel::Parser::parseStatement()
 weasel::Expression *weasel::Parser::parseLiteralExpression()
 {
     auto token = getCurrentToken();
-    if (token->isKind(TokenKind::TokenLitBool))
+    if (token.isKind(TokenKind::TokenLitBool))
     {
-        return new BoolLiteralExpression(token, token->getValue() == "true");
+        return new BoolLiteralExpression(token, token.getValue() == "true");
     }
 
-    if (token->isKind(TokenKind::TokenLitChar))
+    if (token.isKind(TokenKind::TokenLitChar))
     {
-        auto val = std::stoi(token->getValue());
+        auto val = std::stoi(token.getValue());
         return new NumberLiteralExpression(token, val, 8);
     }
 
-    if (token->isKind(TokenKind::TokenLitNumber))
+    if (token.isKind(TokenKind::TokenLitNumber))
     {
-        auto value = strtoll(token->getValue().c_str(), nullptr, 10);
+        auto value = strtoll(token.getValue().c_str(), nullptr, 10);
         return new NumberLiteralExpression(token, value);
     }
 
-    if (token->isKind(TokenKind::TokenLitString))
+    if (token.isKind(TokenKind::TokenLitString))
     {
-        auto *currentBuffer = token->getStartBuffer();
-        auto *endBuffer = token->getEndBuffer();
+        auto *currentBuffer = token.getStartBuffer();
+        auto *endBuffer = token.getEndBuffer();
         std::string value = "";
 
         while (endBuffer - currentBuffer > 0)
@@ -124,13 +124,13 @@ weasel::Expression *weasel::Parser::parseLiteralExpression()
 weasel::Expression *weasel::Parser::parseFunctionCallExpression(weasel::Attribute *attr)
 {
     auto callToken = getCurrentToken();
-    if (!getNextToken()->isKind(TokenKind::TokenDelimOpenParen))
+    if (!getNextToken().isKind(TokenKind::TokenDelimOpenParen))
     {
         return ErrorTable::addError(getCurrentToken(), "Expected ( for function call");
     }
 
     std::vector<Expression *> args;
-    if (!getNextToken()->isKind(TokenKind::TokenDelimCloseParen))
+    if (!getNextToken().isKind(TokenKind::TokenDelimCloseParen))
     {
         while (true)
         {
@@ -143,12 +143,12 @@ weasel::Expression *weasel::Parser::parseFunctionCallExpression(weasel::Attribut
                 return ErrorTable::addError(getCurrentToken(), "Expected argument expression");
             }
 
-            if (getCurrentToken()->isKind(TokenKind::TokenDelimCloseParen))
+            if (getCurrentToken().isKind(TokenKind::TokenDelimCloseParen))
             {
                 break;
             }
 
-            if (!getCurrentToken()->isKind(TokenKind::TokenPuncComma))
+            if (!getCurrentToken().isKind(TokenKind::TokenPuncComma))
             {
                 return ErrorTable::addError(getCurrentToken(), "Expected ) or , in argument list");
             }
@@ -157,12 +157,12 @@ weasel::Expression *weasel::Parser::parseFunctionCallExpression(weasel::Attribut
         }
     }
 
-    return new CallExpression(callToken, callToken->getValue(), args);
+    return new CallExpression(callToken, callToken.getValue(), args);
 }
 
 weasel::Expression *weasel::Parser::parseIdentifierExpression()
 {
-    auto identifier = getCurrentToken()->getValue();
+    auto identifier = getCurrentToken().getValue();
     auto attr = SymbolTable::get(identifier);
     if (!attr)
     {
@@ -199,7 +199,7 @@ weasel::Expression *weasel::Parser::parseParenExpression()
         return ErrorTable::addError(getCurrentToken(), "Expected expression inside after (..");
     }
 
-    if (!getCurrentToken()->isKind(TokenKind::TokenDelimCloseParen))
+    if (!getCurrentToken().isKind(TokenKind::TokenDelimCloseParen))
     {
         return ErrorTable::addError(getCurrentToken(), "Expected )");
     }
@@ -213,11 +213,11 @@ weasel::Expression *weasel::Parser::parseArrayExpression()
     auto expr = new ArrayLiteralExpression();
 
     getNextToken(); // eat [
-    while (!getCurrentToken()->isKind(TokenKind::TokenDelimCloseSquareBracket))
+    while (!getCurrentToken().isKind(TokenKind::TokenDelimCloseSquareBracket))
     {
         expr->addItem(parseLiteralExpression());
 
-        if (getNextToken()->isKind(TokenKind::TokenPuncComma))
+        if (getNextToken().isKind(TokenKind::TokenPuncComma))
         {
             getNextToken();
         }
@@ -228,32 +228,32 @@ weasel::Expression *weasel::Parser::parseArrayExpression()
 
 weasel::Expression *weasel::Parser::parsePrimaryExpression()
 {
-    if (getCurrentToken()->isLiteral())
+    if (getCurrentToken().isLiteral())
     {
         return parseLiteralExpression();
     }
 
-    if (getCurrentToken()->isKind(TokenKind::TokenIdentifier))
+    if (getCurrentToken().isKind(TokenKind::TokenIdentifier))
     {
         return parseIdentifierExpression();
     }
 
-    if (getCurrentToken()->isKind(TokenKind::TokenDelimOpenParen))
+    if (getCurrentToken().isKind(TokenKind::TokenDelimOpenParen))
     {
         return parseParenExpression();
     }
 
-    if (getCurrentToken()->isKind(TokenKind::TokenOperatorAnd))
+    if (getCurrentToken().isKind(TokenKind::TokenOperatorAnd))
     {
-        if (getNextToken()->isKind(TokenKind::TokenIdentifier))
+        if (getNextToken().isKind(TokenKind::TokenIdentifier))
         {
-            return new VariableExpression(getCurrentToken(), getCurrentToken()->getValue(), true);
+            return new VariableExpression(getCurrentToken(), getCurrentToken().getValue(), true);
         }
 
         return ErrorTable::addError(getCurrentToken(), "Expected Variable Identifier for address of");
     }
 
-    if (getCurrentToken()->isKind(TokenKind::TokenDelimOpenSquareBracket))
+    if (getCurrentToken().isKind(TokenKind::TokenDelimOpenSquareBracket))
     {
         return parseArrayExpression();
     }
@@ -269,7 +269,7 @@ weasel::Expression *weasel::Parser::parseExpression()
         return ErrorTable::addError(getCurrentToken(), "Expected LHS");
     }
 
-    if (getNextToken()->isKind(TokenKind::TokenSpaceNewline))
+    if (getNextToken().isKind(TokenKind::TokenSpaceNewline))
     {
         return lhs;
     }
@@ -282,12 +282,12 @@ weasel::Expression *weasel::Parser::parseBinaryOperator(unsigned precOrder, Expr
     while (true)
     {
         auto binOp = getCurrentToken();
-        if (!binOp->isOperator() || binOp->isNewline())
+        if (!binOp.isOperator() || binOp.isNewline())
         {
             return lhs;
         }
 
-        auto prec = binOp->getPrecedence();
+        auto prec = binOp.getPrecedence();
         if (prec.order > precOrder)
         {
             return lhs;
@@ -338,7 +338,7 @@ weasel::Expression *weasel::Parser::parseCompoundStatement()
     }
 
     getNextToken(true); // eat '{'
-    while (!getCurrentToken()->isKind(TokenKind::TokenDelimCloseCurlyBracket))
+    while (!getCurrentToken().isKind(TokenKind::TokenDelimCloseCurlyBracket))
     {
         auto expr = parseExpression();
         if (!expr)
@@ -371,7 +371,7 @@ weasel::Expression *weasel::Parser::parseDeclarationExpression()
     auto qualToken = getCurrentToken();
 
     getNextToken(); // eat qualifier(let, final, const)
-    if (!getCurrentToken()->isKind(TokenKind::TokenIdentifier))
+    if (!getCurrentToken().isKind(TokenKind::TokenIdentifier))
     {
         auto errToken = getCurrentToken();
 
@@ -379,12 +379,12 @@ weasel::Expression *weasel::Parser::parseDeclarationExpression()
         return ErrorTable::addError(errToken, "Expected an identifier");
     }
 
-    auto identifier = getCurrentToken()->getValue();
+    auto identifier = getCurrentToken().getValue();
 
     getNextToken(); // eat 'identifier' and get next token
 
     auto *type = parseDataType();
-    if (getCurrentToken()->isKind(TokenKind::TokenSpaceNewline))
+    if (getCurrentToken().isKind(TokenKind::TokenSpaceNewline))
     {
         if (!type)
         {
@@ -421,7 +421,7 @@ weasel::Expression *weasel::Parser::parseDeclarationExpression()
     }
 
     // Equal
-    if (!getCurrentToken()->isKind(TokenKind::TokenOperatorEqual))
+    if (!getCurrentToken().isKind(TokenKind::TokenOperatorEqual))
     {
         auto errToken = getCurrentToken();
 
@@ -431,7 +431,7 @@ weasel::Expression *weasel::Parser::parseDeclarationExpression()
 
     // Get Value
     getNextToken(); // eat 'Equal Sign'
-    if (getCurrentToken()->isKind(TokenKind::TokenSpaceNewline))
+    if (getCurrentToken().isKind(TokenKind::TokenSpaceNewline))
     {
         return ErrorTable::addError(getCurrentToken(), "Expected RHS Value Expression but got 'New line'");
     }

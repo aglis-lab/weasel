@@ -1,6 +1,6 @@
 #include "weasel/Lexer/Lexer.h"
 
-weasel::Token *weasel::Lexer::getStringLiteral()
+weasel::Token weasel::Lexer::getStringLiteral()
 {
     auto *start = getNextBuffer(); // eat double quote (")
     while (*getNextBuffer() != '"')
@@ -12,17 +12,17 @@ weasel::Token *weasel::Lexer::getStringLiteral()
     return createToken(TokenKind::TokenLitString, start, endString);
 }
 
-weasel::Token *weasel::Lexer::getCharacterLiteral()
+weasel::Token weasel::Lexer::getCharacterLiteral()
 {
     auto *start = getNextBuffer(); // eat single quote (')
     if (*start == '\'')
     {
-        return nullptr;
+        return Token::empty();
     }
 
     if (*getNextBuffer() != '\'')
     {
-        return nullptr;
+        return Token::empty();
     }
 
     getNextBuffer(); // eat single quote (')

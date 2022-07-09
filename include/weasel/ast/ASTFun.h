@@ -15,14 +15,14 @@ namespace weasel
     class FunctionArgument
     {
     private:
-        Token *_token;
+        Token _token;
         std::string _argName;
         llvm::Type *_type;
 
     public:
-        FunctionArgument(Token *token, std::string argName, llvm::Type *type) : _token(token), _argName(argName), _type(type) {}
+        FunctionArgument(Token token, std::string argName, llvm::Type *type) : _token(token), _argName(argName), _type(type) {}
 
-        Token *getToken() const { return _token; }
+        Token getToken() const { return _token; }
         llvm::Type *getArgumentType() const { return _type; }
         std::string getArgumentName() const { return _argName; }
     };

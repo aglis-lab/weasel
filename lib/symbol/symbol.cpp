@@ -1,5 +1,5 @@
 #include <iostream>
-#include "weasel/symbol/symbol.h"
+#include "weasel/Symbol/Symbol.h"
 
 /// Symbol Init ///
 std::vector<weasel::Error> weasel::ErrorTable::_errors;
@@ -85,7 +85,7 @@ void weasel::SymbolTable::reset()
     enterScope(); // Enter Global Scope
 }
 
-std::nullptr_t weasel::ErrorTable::addError(Token *token, std::string msg)
+std::nullptr_t weasel::ErrorTable::addError(Token token, std::string msg)
 {
     _errors.push_back(Error(token, msg));
     return nullptr;
@@ -99,12 +99,12 @@ void weasel::ErrorTable::showErrors()
     }
     else
     {
-        for (const auto item : _errors)
+        for (const auto &item : _errors)
         {
             auto token = item.getToken();
-            auto loc = token->getLocation();
+            auto loc = token.getLocation();
 
-            std::cerr << "Error : " << item.getMessage() << " but found " << token->getValue() << " kind of " << token->getTokenKindToInt();
+            std::cerr << "Error : " << item.getMessage() << " but found " << token.getValue() << " kind of " << token.getTokenKindToInt();
             std::cerr << " At (" << loc.row << ":" << loc.col << ")\n";
         }
     }

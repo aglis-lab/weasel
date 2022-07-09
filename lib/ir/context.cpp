@@ -2,9 +2,9 @@
 #include "llvm/IR/Function.h"
 #include "llvm/IR/Constant.h"
 #include "llvm/IR/Module.h"
-#include "weasel/ir/context.h"
-#include "weasel/symbol/symbol.h"
-#include "weasel/config/config.h"
+#include "weasel/IR/Context.h"
+#include "weasel/Symbol/Symbol.h"
+#include "weasel/Config/Config.h"
 
 weasel::Context::Context(llvm::LLVMContext *context, const std::string &moduleName, bool isParallel)
 {
@@ -324,7 +324,7 @@ llvm::Value *weasel::Context::codegen(BinaryOperatorExpression *expr)
     //     castIntegerType(lhs, rhs);
     // }
 
-    switch (token->getTokenKind())
+    switch (token.getTokenKind())
     {
     case TokenKind::TokenOperatorStar:
         return getBuilder()->CreateMul(lhs, rhs, lhs->getName());

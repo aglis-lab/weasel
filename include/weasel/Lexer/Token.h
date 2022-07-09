@@ -165,8 +165,10 @@ namespace weasel
         SourceLocation _location;
 
     public:
-        Token(TokenKind kind, SourceLocation &location, char *startToken, char *endToken) : _startBuffer(startToken), _endBuffer(endToken), _kind(kind), _location(location) {}
+        Token(TokenKind kind, SourceLocation location, char *startToken, char *endToken) : _startBuffer(startToken), _endBuffer(endToken), _kind(kind), _location(location) {}
+        Token() : _kind(TokenKind::TokenUndefined) {}
 
+        inline bool isUndefined() const { return _kind == TokenKind::TokenUndefined; }
         inline bool isKind(TokenKind type) const { return type == _kind; }
         inline bool isDataType() const { return _kind >= TokenKind::TokenTyVoid && _kind <= TokenKind::TokenTyDecimal; }
         inline bool isKeyDefinition() const { return (_kind == TokenKind::TokenKeyLet || _kind == TokenKind::TokenKeyFinal || _kind == TokenKind::TokenKeyConst); }
@@ -187,6 +189,8 @@ namespace weasel
 
         // TODO: Need to support Right to Left Associativity
         Precedence getPrecedence();
+
+        inline static Token empty() { return Token(); }
 
     public:
         // Need to implement 128 float type

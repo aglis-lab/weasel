@@ -17,10 +17,10 @@ namespace weasel
     private:
         bool expectToken(TokenKind kind) { return _lexer->expect(kind); }
 
-        Qualifier getQualifier() const { return getCurrentToken()->getQualifier(); }
-        Token *getCurrentToken() const { return _lexer->getCurrentToken(); }
-        Token *getNextToken(bool skipSpace = false);
-        Token *getNextTokenUntil(TokenKind kind);
+        Qualifier getQualifier() const { return getCurrentToken().getQualifier(); }
+        Token getCurrentToken() const { return _lexer->getCurrentToken(); }
+        Token getNextToken(bool skipSpace = false);
+        Token getNextTokenUntil(TokenKind kind);
 
         // Function
         Function *parseDeclareFunction();

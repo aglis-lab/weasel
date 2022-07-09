@@ -64,6 +64,20 @@ fun Main() {
     // release the device memory
     // release(dataGpu)
     // GPU Memory should be release automaticly when no further references
+
+    // Looping
+    for true {
+        // Do something
+    }
+
+    for ; ; {
+        // Do something
+    }
+
+    switch car {
+        case 1: // Do something
+        default: // Do something
+    }
 }
 
 // We not support 'class' but struct

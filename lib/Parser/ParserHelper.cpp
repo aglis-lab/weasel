@@ -5,7 +5,7 @@
 
 void weasel::Parser::ignoreNewline()
 {
-    if (getCurrentToken()->isNewline())
+    if (getCurrentToken().isNewline())
     {
         getNextToken(true);
     }
@@ -14,45 +14,45 @@ void weasel::Parser::ignoreNewline()
 llvm::Type *weasel::Parser::parseDataType()
 {
     // Pointer
-    if (getCurrentToken()->isKind(TokenKind::TokenOperatorStar))
+    if (getCurrentToken().isKind(TokenKind::TokenOperatorStar))
     {
-        if (!getNextToken()->isDataType())
+        if (!getNextToken().isDataType())
         {
             return ErrorTable::addError(getCurrentToken(), "Expected data type after pointer type");
         }
 
-        auto *type = getCurrentToken()->toType(*getContext(), true);
+        auto *type = getCurrentToken().toType(*getContext(), true);
 
         getNextToken();
         return type;
     }
 
     // Array
-    if (getCurrentToken()->isKind(TokenKind::TokenDelimOpenSquareBracket))
+    if (getCurrentToken().isKind(TokenKind::TokenDelimOpenSquareBracket))
     {
-        if (!getNextToken()->isKind(TokenKind::TokenLitNumber))
+        if (!getNextToken().isKind(TokenKind::TokenLitNumber))
         {
             return ErrorTable::addError(getCurrentToken(), "Expected size of array");
         }
 
-        auto numStr = getCurrentToken()->getValue();
+        auto numStr = getCurrentToken().getValue();
         if (!weasel::Number::isInteger(numStr))
         {
             return ErrorTable::addError(getCurrentToken(), "Number is not a valid integer");
         }
 
-        if (!getNextToken()->isKind(TokenKind::TokenDelimCloseSquareBracket))
+        if (!getNextToken().isKind(TokenKind::TokenDelimCloseSquareBracket))
         {
             return ErrorTable::addError(getCurrentToken(), "Expected ] for array type");
         }
 
-        if (!getNextToken()->isDataType())
+        if (!getNextToken().isDataType())
         {
             return ErrorTable::addError(getCurrentToken(), "Expected data type after [...]");
         }
 
         auto num = weasel::Number::toInteger(numStr);
-        auto *type = getCurrentToken()->toType(*getContext());
+        auto *type = getCurrentToken().toType(*getContext());
         auto *arrTy = llvm::ArrayType::get(type, num);
 
         getNextToken();
@@ -61,7 +61,7 @@ llvm::Type *weasel::Parser::parseDataType()
     }
 
     // Normal Data Type or no datatype
-    auto *type = getCurrentToken()->toType(*getContext());
+    auto *type = getCurrentToken().toType(*getContext());
     if (type == nullptr)
     {
         return nullptr;
