@@ -1,6 +1,6 @@
 #include <iostream>
 #include <cassert>
-#include "weasel/lex/lexer.h"
+#include "weasel/Lexer/Lexer.h"
 
 weasel::Lexer::Lexer(FileManager *fileManager)
 {

@@ -1,6 +1,6 @@
-#include "weasel/parse/parser.h"
-#include "weasel/ir/context.h"
-#include "weasel/symbol/symbol.h"
+#include "weasel/Parser/Parser.h"
+#include "weasel/IR/Context.h"
+#include "weasel/Symbol/Symbol.h"
 
 weasel::StatementExpression *weasel::Parser::parseFunctionBody()
 {

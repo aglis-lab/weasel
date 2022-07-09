@@ -1,7 +1,7 @@
 #include <llvm/IR/DerivedTypes.h>
-#include "weasel/basic/number.h"
-#include "weasel/parse/parser.h"
-#include "weasel/symbol/symbol.h"
+#include "weasel/Basic/Number.h"
+#include "weasel/Parser/Parser.h"
+#include "weasel/Symbol/Symbol.h"
 
 void weasel::Parser::ignoreNewline()
 {

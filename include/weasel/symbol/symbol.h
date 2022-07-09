@@ -2,7 +2,7 @@
 #include <vector>
 #include <string>
 #include "llvm/IR/Value.h"
-#include "weasel/lex/token.h"
+#include "weasel/Lexer/Lexer.h"
 
 namespace weasel
 {

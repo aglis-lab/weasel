@@ -13,10 +13,10 @@
 #include <llvm/IR/Verifier.h>
 #include <llvm/IR/LegacyPassManager.h>
 #include <LLVMSPIRVLib.h>
-#include "weasel/symbol/symbol.h"
-#include "weasel/codegen/codegen.h"
-#include "weasel/passes/passes.h"
-#include "weasel/metadata/metadata.h"
+#include "weasel/Symbol/Symbol.h"
+#include "weasel/Codegen/Codegen.h"
+#include "weasel/Passes/Passes.h"
+#include "weasel/Metadata/Metadata.h"
 
 weasel::Codegen::Codegen(Context *context, std::vector<Function *> funs)
 {

@@ -1,4 +1,4 @@
-#include "weasel/lex/lexer.h"
+#include "weasel/Lexer/Lexer.h"
 
 weasel::Token *weasel::Lexer::getPunctuation()
 {

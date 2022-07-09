@@ -1,3 +1,4 @@
+#include <iostream>
 #include <sstream>
 #include <llvm/Support/TargetSelect.h>
 #include <llvm/ADT/STLExtras.h>
@@ -7,12 +8,12 @@
 #include <llvm/Support/Host.h>
 #include <llvm/Analysis/TargetLibraryInfo.h>
 #include <llvm/IR/LegacyPassManager.h>
-#include "weasel/parse/parser.h"
-#include "weasel/ir/context.h"
-#include "weasel/ast/ast.h"
-#include "weasel/symbol/symbol.h"
-#include "weasel/basic/filemanager.h"
-#include "weasel/codegen/codegen.h"
+#include "weasel/Parser/Parser.h"
+#include "weasel/IR/Context.h"
+#include "weasel/AST/AST.h"
+#include "weasel/Symbol/Symbol.h"
+#include "weasel/Basic/FileManager.h"
+#include "weasel/Codegen/Codegen.h"
 
 int main(int argc, char *argv[])
 {

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "weasel/ast/ast.h"
-#include "weasel/lex/lexer.h"
+#include "weasel/AST/AST.h"
+#include "weasel/Lexer/Lexer.h"
 
 namespace weasel
 {

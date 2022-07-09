@@ -3,9 +3,8 @@
 #include <vector>
 #include <memory>
 #include "llvm/IR/LLVMContext.h"
-#include "weasel/ast/ast.h"
-#include "weasel/ir/context.h"
-#include "weasel/config/config.h"
+#include "weasel/AST/AST.h"
+#include "weasel/IR/context.h"
 
 namespace weasel
 {

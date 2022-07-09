@@ -1,6 +1,6 @@
 #include "weasel/ir/context.h"
-#include "weasel/lex/token.h"
-#include "weasel/ast/ast.h"
+#include "weasel/Lexer/Token.h"
+#include "weasel/AST/AST.h"
 
 llvm::Type *weasel::Token::toType(llvm::LLVMContext &c, bool pointerTy) const
 {

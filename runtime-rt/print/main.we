@@ -1,6 +1,10 @@
 extern fun printf(msg *byte, param ...*int) int {}
 
 fun main() {
-    printf("Hulla ")
+    let i = 32.0
+    let n = 32
+    let b bool = false
+
+    printf("Hulla %d", b)
     printf("Hello World\n")
 }

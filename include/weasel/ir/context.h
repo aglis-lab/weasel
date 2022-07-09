@@ -9,7 +9,7 @@
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/MDBuilder.h"
-#include "weasel/ast/ast.h"
+#include "weasel/AST/AST.h"
 
 namespace weasel
 {
