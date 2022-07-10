@@ -13,7 +13,6 @@ namespace weasel
     {
     private:
         Lexer *_lexer;
-        llvm::LLVMContext *_context;
 
     private:
         bool expectToken(TokenKind kind) { return _lexer->expect(kind); }
@@ -47,10 +46,7 @@ namespace weasel
         Expression *parseArrayExpression();
 
     public:
-        Parser(llvm::LLVMContext *c, Lexer *lexer) : _lexer(lexer), _context(c) {}
-
-        // getContext
-        llvm::LLVMContext *getContext() const { return _context; }
+        Parser(Lexer *lexer) : _lexer(lexer) {}
 
         // Helper
         Type *parseDataType();

@@ -1,8 +1,7 @@
-#include <iostream>
-#include <llvm/IR/Type.h>
+#include "weasel/IR/Context.h"
 #include "weasel/Type/Type.h"
 
 llvm::Type *weasel::Type::codegen(weasel::Context *context)
 {
-    context->codegen(this);
+    return context->codegen(this);
 }

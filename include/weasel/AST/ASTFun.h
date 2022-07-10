@@ -6,6 +6,7 @@
 namespace llvm
 {
     class Type;
+    class Function;
 } // namespace llvm
 
 // Function PART

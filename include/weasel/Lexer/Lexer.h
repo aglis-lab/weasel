@@ -1,7 +1,5 @@
 #pragma once
 
-#include <fstream>
-#include <memory>
 #include "weasel/Lexer/Token.h"
 #include "weasel/Basic/FileManager.h"
 

@@ -15,14 +15,11 @@ namespace weasel
         std::vector<Function *> _funs;
         std::string _err;
 
-        // bool _isParallel;
-
     public:
         Codegen(Context *context, std::vector<Function *> funs);
 
         bool compile();
 
-        // std::string createSpirv();
         void createObject(char *outputFile) const;
 
     public:

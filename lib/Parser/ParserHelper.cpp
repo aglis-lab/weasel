@@ -1,6 +1,7 @@
 #include "weasel/Basic/Number.h"
 #include "weasel/Parser/Parser.h"
 #include "weasel/Symbol/Symbol.h"
+#include <iostream>
 
 void weasel::Parser::ignoreNewline()
 {
@@ -19,9 +20,6 @@ weasel::Type *weasel::Parser::parseDataType()
         {
             return ErrorTable::addError(getCurrentToken(), "Expected data type after pointer type");
         }
-
-        // Eat Current Token
-        getNextToken();
 
         auto containedType = getCurrentToken().toType();
         auto type = Type::getPointerType(containedType);

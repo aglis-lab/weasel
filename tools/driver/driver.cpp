@@ -38,14 +38,15 @@ int main(int argc, char *argv[])
     llvm::InitializeNativeTargetAsmParser();
     llvm::InitializeNativeTargetAsmPrinter();
 
-    auto llvmContext = new llvm::LLVMContext();
+    // Prepare Lexer and Parser
     auto lexer = new weasel::Lexer(fileManager);
-    auto parser = new weasel::Parser(llvmContext, lexer);
+    auto parser = new weasel::Parser(lexer);
 
     // Parse into AST
     auto funs = parser->parse();
 
     // Prepare for codegen
+    auto llvmContext = new llvm::LLVMContext();
     auto context = new weasel::Context(llvmContext, "codeModule");
     auto codegen = new weasel::Codegen(context, funs);
 

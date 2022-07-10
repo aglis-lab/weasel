@@ -13,7 +13,6 @@ weasel::StatementExpression *weasel::Parser::parseFunctionBody()
         SymbolTable::enterScope();
     }
 
-    std::cout << "ParseExpr: To Function Body\n";
     while (!getCurrentToken().isKind(TokenKind::TokenDelimCloseCurlyBracket))
     {
         auto expr = parseStatement();
@@ -32,15 +31,13 @@ weasel::StatementExpression *weasel::Parser::parseFunctionBody()
 
         ignoreNewline();
     }
-    std::cout << "ParseExpr: Exit Function Body " << getCurrentToken().getValue() << std::endl;
+
     getNextToken(); // eat '}'
 
     // Exit statement scope
     {
         SymbolTable::exitScope();
     }
-
-    std::cout << "Exit from function Body\n";
 
     return stmt;
 }
@@ -125,8 +122,6 @@ weasel::Expression *weasel::Parser::parseLiteralExpression()
                 currentBuffer += 1;
             }
         }
-
-        std::cout << "ParserExpr.cpp : String Literal : " << value << std::endl;
 
         return new StringLiteralExpression(token, value);
     }

@@ -60,8 +60,8 @@ weasel::Function *weasel::Parser::parseFunction()
         }
     }
 
-    std::cout << "Parse Function : " << getCurrentToken().getValue() << std::endl;
     getNextToken(true); // eat {
+
     auto body = parseFunctionBody();
 
     // Exit parameter scope
@@ -88,7 +88,6 @@ weasel::Function *weasel::Parser::parseFunction()
 // extern 'fun' identifier '(' args ')' funTy
 weasel::Function *weasel::Parser::parseDeclareFunction()
 {
-    std::cout << "Parser Function: In Parse Declaration Function : " << getCurrentToken().getTokenKindToInt() << std::endl;
     // get next and eat 'fun'
     if (!getNextToken().isKind(TokenKind::TokenIdentifier))
     {
@@ -131,15 +130,15 @@ weasel::Function *weasel::Parser::parseDeclareFunction()
             getNextToken(); // eat ...
         }
 
-        auto *type = parseDataType();
-        if (!type)
+        auto type = parseDataType();
+        if (type == nullptr)
         {
             return ErrorTable::addError(getCurrentToken(), "Expected type in function argument");
         }
 
         args.push_back(new FunctionArgument(idenToken, identifier, type));
 
-        if (!getCurrentToken().isKind(TokenKind::TokenPuncComma))
+        if (!getNextToken().isKind(TokenKind::TokenPuncComma))
         {
             break;
         }
@@ -160,8 +159,6 @@ weasel::Function *weasel::Parser::parseDeclareFunction()
         returnType = Type::getVoidType();
     }
 
-    std::cout << "Return Type is void : " << returnType->isVoidType() << std::endl;
-
     auto funTy = new FunctionType(returnType, args, isVararg);
     auto fun = new Function(identifier, funTy);
 
@@ -169,8 +166,6 @@ weasel::Function *weasel::Parser::parseDeclareFunction()
     {
         SymbolTable::insert(identifier, new Attribute(identifier, AttributeScope::ScopeGlobal, AttributeKind::SymbolFunction, returnType));
     }
-
-    std::cout << "Parse Function : Exit from declaration\n";
 
     return fun;
 }

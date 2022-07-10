@@ -13,24 +13,19 @@ std::vector<weasel::Function *> weasel::Parser::parse()
     while (!getNextToken(true).isKind(TokenKind::TokenEOF))
     {
         // Function
-        if (getCurrentToken().isKind(TokenKind::TokenKeyFun))
+        if (!getCurrentToken().isKind(TokenKind::TokenKeyFun))
         {
-            std::cout << "Parser.cpp: Token Function\n";
-            auto fun = parseFunction();
-            if (fun != nullptr)
-            {
-                funs.push_back(fun);
-            }
+            // TODO: Doing Global Variable
+            // For latter implementation
+            auto token = getCurrentToken();
+            std::cout << "Parser -> " << token.getLocation().row << "/" << token.getLocation().col << " <> " << token.getTokenKindToInt() << " : " << token.getValue() << "\n";
+
             continue;
         }
 
-        // TODO: Doing Global Variable
-        // For latter implementation
-        auto token = getCurrentToken();
-        std::cout << "Parser -> " << token.getLocation().row << "/" << token.getLocation().col << " <> " << token.getTokenKindToInt() << " : " << token.getValue() << "\n";
+        auto fun = parseFunction();
+        funs.push_back(fun);
     }
-
-    std::cout << "Parser.cpp : Exit from parse\n";
 
     return funs;
 }

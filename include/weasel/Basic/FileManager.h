@@ -1,5 +1,8 @@
 #pragma once
 
+// I modify the implementation from
+// https://github.com/d0k/mappedfile
+
 namespace weasel
 {
     class FileManager
@@ -9,8 +12,6 @@ namespace weasel
         size_t _size;
 
     private:
-        // I fork the implementation from
-        // https://github.com/d0k/mappedfile
         char *mapFile(const char *path, size_t *length);
 
     public:

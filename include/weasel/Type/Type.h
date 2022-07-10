@@ -1,7 +1,5 @@
 #pragma once
 
-#include "weasel/IR/Context.h"
-
 namespace llvm
 {
     class Type;
@@ -9,6 +7,8 @@ namespace llvm
 
 namespace weasel
 {
+    class Context;
+
     enum class TypeID
     {
         // Primitive Types

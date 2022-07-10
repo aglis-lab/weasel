@@ -1,4 +1,3 @@
-#include <iostream>
 #include <llvm/IR/Function.h>
 #include <llvm/IR/Constant.h>
 #include <llvm/IR/Module.h>
@@ -14,6 +13,38 @@ weasel::Context::Context(llvm::LLVMContext *context, const std::string &moduleNa
     _builder = new llvm::IRBuilder<>(*_context);
 }
 
+llvm::Type *weasel::Context::codegen(weasel::Type *type)
+{
+    if (type->isIntegerType())
+    {
+        return getBuilder()->getIntNTy(type->getTypeWidth());
+    }
+
+    if (type->isVoidType())
+    {
+        return getBuilder()->getVoidTy();
+    }
+
+    if (type->isDoubleType())
+    {
+        return getBuilder()->getDoubleTy();
+    }
+
+    if (type->isArrayType())
+    {
+        auto containedType = type->getContainedType()->codegen(this);
+        return llvm::ArrayType::get(containedType, type->getTypeWidth());
+    }
+
+    if (type->isPointerType())
+    {
+        auto containedType = type->getContainedType()->codegen(this);
+        return llvm::PointerType::get(containedType, type->getTypeWidth());
+    }
+
+    return nullptr;
+}
+
 llvm::Function *weasel::Context::codegen(weasel::Function *funAST)
 {
     _currentFunction = funAST;
@@ -26,7 +57,6 @@ llvm::Function *weasel::Context::codegen(weasel::Function *funAST)
     auto argsLength = funArgs.size() - (isVararg ? 1 : 0);
 
     // Set Arguments
-    std::cout << "Parsing Type\n";
     for (size_t i = 0; i < argsLength; i++)
     {
         auto arg = funArgs[i]->getArgumentType();
@@ -34,7 +64,6 @@ llvm::Function *weasel::Context::codegen(weasel::Function *funAST)
 
         args.push_back(argV);
     }
-    std::cout << "After Parsing\n";
 
     auto linkage = llvm::GlobalValue::LinkageTypes::ExternalLinkage;
     auto funTyLLVM = llvm::FunctionType::get(retTy->codegen(this), args, isVararg);
@@ -167,8 +196,6 @@ llvm::Value *weasel::Context::codegen(CallExpression *expr)
         }
     }
 
-    std::cout << "Context.cpp: codegen callfunction\n";
-
     auto call = getBuilder()->CreateCall(fun, argsV);
     call->setCallingConv(llvm::CallingConv::C);
 
@@ -196,8 +223,6 @@ llvm::Value *weasel::Context::codegen(DeclarationExpression *expr)
     llvm::Value *value = nullptr;
     auto declType = expr->getType();
     auto valueType = expr->getValue()->getType();
-
-    std::cerr << "Token Kind : " << expr->getToken().getTokenKindToInt() << std::endl;
 
     // auto exprValue = expr->getValue();
     // if (exprValue != nullptr)
@@ -306,7 +331,6 @@ llvm::Value *weasel::Context::codegen(BinaryOperatorExpression *expr)
         return getBuilder()->CreateLoad(allocLhs->getType(), allocLhs);
     }
     default:
-        std::cout << "HELLO ERROR\n";
         return nullptr;
     }
 }

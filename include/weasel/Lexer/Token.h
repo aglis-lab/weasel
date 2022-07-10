@@ -2,12 +2,7 @@
 
 #include <string>
 #include "weasel/Type/Type.h"
-
-template <typename Enumeration>
-auto enumToInt(Enumeration const value) -> typename std::underlying_type<Enumeration>::type
-{
-    return static_cast<typename std::underlying_type<Enumeration>::type>(value);
-}
+#include "weasel/Basic/Enum.h"
 
 #define __defaultPrecOrder 20
 

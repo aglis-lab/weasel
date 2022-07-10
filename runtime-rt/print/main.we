@@ -1,4 +1,4 @@
-fun printf(msg *byte, param ...*int) int {}
+fun printf(msg *byte, param ...*long) int {}
 
 fun main() {
     // let b = 10

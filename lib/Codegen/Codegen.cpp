@@ -59,15 +59,12 @@ bool weasel::Codegen::compile()
             return false;
         }
 
-        std::cout << "Codegen.cpp: Codegen Function\n";
         auto fun = item->codegen(_context);
         if (fun == nullptr)
         {
             _err = "Cannot codegen function " + identifier + "\n";
             return false;
         }
-
-        std::cout << "Codegen.cpp: Exit Codegen Function\n";
 
         if (llvm::verifyFunction(*fun, &llvm::errs()))
         {

@@ -1,10 +1,11 @@
 //
 // Created by zaen on 27/06/21.
 //
-#include "weasel/metadata/metadata.h"
-#include "weasel/config/config.h"
+#include "weasel/Metadata/Metadata.h"
+#include "weasel/Config/Config.h"
 
-weasel::Metadata::Metadata(llvm::LLVMContext *context) {
+weasel::Metadata::Metadata(llvm::LLVMContext *context)
+{
     _context = context;
     _builder = new llvm::MDBuilder(*context);
 }
@@ -22,8 +23,8 @@ llvm::Metadata *weasel::Metadata::getVersionMetadata()
 llvm::MDNode *weasel::Metadata::getCLVersionMetadata()
 {
     auto metas = std::vector<llvm::Metadata *>{
-            getBuilder()->createConstant(llvm::ConstantInt::get(llvm::Type::getInt32Ty(*getContext()), 2)),
-            getBuilder()->createConstant(llvm::ConstantInt::get(llvm::Type::getInt32Ty(*getContext()), 0)),
+        getBuilder()->createConstant(llvm::ConstantInt::get(llvm::Type::getInt32Ty(*getContext()), 2)),
+        getBuilder()->createConstant(llvm::ConstantInt::get(llvm::Type::getInt32Ty(*getContext()), 0)),
     };
     return llvm::MDNode::get(*getContext(), metas);
 }
