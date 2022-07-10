@@ -3,6 +3,6 @@ fun printf(msg *byte, param ...*long) int {}
 fun main() {
     // let b = 10
     
-    printf("Hulla\n")
+    test("Hulla\n")
     // printf("Hello World\n")
 }

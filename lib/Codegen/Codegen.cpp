@@ -108,6 +108,8 @@ bool weasel::Codegen::compile()
     {
         std::cerr << "\n=> Error Information\n";
         ErrorTable::showErrors();
+
+        return false;
     }
 
     return true;
@@ -155,8 +157,8 @@ void weasel::Codegen::createObject(char *outputFile) const
     auto pass = llvm::legacy::PassManager();
     auto fileType = llvm::CodeGenFileType::CGFT_ObjectFile;
     auto targetTriple = getModule()->getTargetTriple();
-    auto *target = llvm::TargetRegistry::lookupTarget(targetTriple, err);
-    if (!target)
+    auto target = llvm::TargetRegistry::lookupTarget(targetTriple, err);
+    if (target == nullptr)
     {
         llvm::errs() << err;
         exit(1);
@@ -179,5 +181,6 @@ void weasel::Codegen::createObject(char *outputFile) const
         llvm::errs() << "Pass Manager failed";
         exit(1);
     }
+
     dest.flush();
 }
