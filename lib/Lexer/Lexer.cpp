@@ -55,7 +55,6 @@ char *weasel::Lexer::getNextBuffer(size_t slide)
 
 void weasel::Lexer::setCurrentBuffer(char *buffer)
 {
-    assert(buffer < _currentBuffer);
     _currentBuffer -= _currentBuffer - buffer;
 }
 
@@ -155,14 +154,33 @@ weasel::Token weasel::Lexer::getToken()
     }
 
     // Check if Number
-    if (isdigit(*_currentBuffer) || (*_currentBuffer == '.' && isdigit(*(_currentBuffer + 1))))
+    if (isdigit(*_currentBuffer) || (*_currentBuffer == '.' && isdigit(checkNextBuffer())))
     {
-        auto *start = _currentBuffer;
-        while (isdigit(*getNextBuffer()) || *_currentBuffer == '.')
-            ;
+        auto start = _currentBuffer;
+        auto numDot = 0;
+
+        do
+        {
+            if (*_currentBuffer == '.')
+            {
+                numDot++;
+            }
+
+            getNextBuffer();
+        } while (isdigit(*_currentBuffer) || *_currentBuffer == '.');
+
+        if (numDot >= 2)
+        {
+            return createToken(TokenKind::TokenUndefined, start, _currentBuffer);
+        }
+
+        if (numDot == 1)
+        {
+            return createToken(TokenKind::TokenLitFloat, start, _currentBuffer);
+        }
 
         // Number Literal
-        return createToken(TokenKind::TokenLitNumber, start, _currentBuffer);
+        return createToken(TokenKind::TokenLitInteger, start, _currentBuffer);
     }
 
     // String Literal

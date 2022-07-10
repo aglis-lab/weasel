@@ -30,7 +30,7 @@ llvm::Type *weasel::Parser::parseDataType()
     // Array
     if (getCurrentToken().isKind(TokenKind::TokenDelimOpenSquareBracket))
     {
-        if (!getNextToken().isKind(TokenKind::TokenLitNumber))
+        if (!getNextToken().isKind(TokenKind::TokenLitInteger))
         {
             return ErrorTable::addError(getCurrentToken(), "Expected size of array");
         }

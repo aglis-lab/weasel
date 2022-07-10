@@ -53,10 +53,10 @@ namespace weasel
         StatementExpression *_body;
         bool _isDefine = false;
         bool _isInline = false;
-        ParallelType _parallelType;
+        // ParallelType _parallelType;
 
     public:
-        Function(std::string identifier, FunctionType *funcTy, ParallelType parallelTy = ParallelType::None) : _identifier(identifier), _funcTy(funcTy), _parallelType(parallelTy) {}
+        Function(std::string identifier, FunctionType *funcTy) : _identifier(identifier), _funcTy(funcTy) {}
 
         std::string getIdentifier() const { return _identifier; }
         FunctionType *getFunctionType() const { return _funcTy; }
@@ -71,8 +71,8 @@ namespace weasel
         void setIsInline(bool val) { _isInline = val; }
         bool isInline() const { return _isInline; }
 
-        void setParallelType(ParallelType parallelType) { _parallelType = parallelType; }
-        ParallelType getParallelType() const { return _parallelType; }
+        // void setParallelType(ParallelType parallelType) { _parallelType = parallelType; }
+        // ParallelType getParallelType() const { return _parallelType; }
 
     public:
         llvm::Function *codegen(Context *c);

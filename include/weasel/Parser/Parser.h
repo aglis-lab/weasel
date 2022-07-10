@@ -24,7 +24,7 @@ namespace weasel
 
         // Function
         Function *parseDeclareFunction();
-        Function *parseFunction(ParallelType parallelType = ParallelType::None);
+        Function *parseFunction();
 
         // Statement
         StatementExpression *parseFunctionBody();

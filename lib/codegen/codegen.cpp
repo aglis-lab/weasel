@@ -1,6 +1,7 @@
 //
 // Created by zaen on 27/06/21.
 //
+#include <iostream>
 #include <fstream>
 #include <llvm/IR/Function.h>
 #include <llvm/Target/TargetOptions.h>
@@ -12,7 +13,6 @@
 #include <llvm/Bitcode/BitcodeWriter.h>
 #include <llvm/IR/Verifier.h>
 #include <llvm/IR/LegacyPassManager.h>
-#include <LLVMSPIRVLib.h>
 #include "weasel/Symbol/Symbol.h"
 #include "weasel/Codegen/Codegen.h"
 #include "weasel/Passes/Passes.h"

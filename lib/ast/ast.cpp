@@ -1,12 +1,38 @@
 #include "weasel/AST/AST.h"
 #include "weasel/IR/Context.h"
 
-// Expression Codegen
+// Literal
 llvm::Value *weasel::NumberLiteralExpression::codegen(Context *c)
 {
     return c->codegen(this);
 }
 
+llvm::Value *weasel::FloatLiteralExpression::codegen(Context *c)
+{
+    return c->codegen(this);
+}
+
+llvm::Value *weasel::BoolLiteralExpression::codegen(Context *c)
+{
+    return c->codegen(this);
+}
+
+llvm::Value *weasel::CharLiteralExpression::codegen(Context *c)
+{
+    return c->codegen(this);
+}
+
+llvm::Value *weasel::ArrayLiteralExpression::codegen(Context *c)
+{
+    return c->codegen(this);
+}
+
+llvm::Value *weasel::StringLiteralExpression::codegen(Context *c)
+{
+    return c->codegen(this);
+}
+
+// Statement
 llvm::Value *weasel::DeclarationExpression::codegen(Context *c)
 {
     return c->codegen(this);
@@ -27,11 +53,6 @@ llvm::Value *weasel::ArrayExpression::codegen(Context *c)
     return c->codegen(this);
 }
 
-llvm::Value *weasel::StringLiteralExpression::codegen(Context *c)
-{
-    return c->codegen(this);
-}
-
 llvm::Value *weasel::BinaryOperatorExpression::codegen(Context *c)
 {
     return c->codegen(this);
@@ -43,11 +64,6 @@ llvm::Value *weasel::CallExpression::codegen(Context *c)
 }
 
 llvm::Value *weasel::ReturnExpression::codegen(Context *c)
-{
-    return c->codegen(this);
-}
-
-llvm::Value *weasel::ArrayLiteralExpression::codegen(Context *c)
 {
     return c->codegen(this);
 }

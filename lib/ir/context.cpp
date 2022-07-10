@@ -22,7 +22,7 @@ llvm::Function *weasel::Context::codegen(weasel::Function *funAST)
     auto isVararg = funAST->getFunctionType()->getIsVararg();
     auto funArgs = funAST->getArgs();
     auto retTy = funAST->getFunctionType()->getReturnType();
-    auto parallelType = funAST->getParallelType();
+    // auto parallelType = funAST->getParallelType();
     auto args = std::vector<llvm::Type *>();
     auto argsLength = funArgs.size() - (isVararg ? 1 : 0);
 
@@ -45,14 +45,14 @@ llvm::Function *weasel::Context::codegen(weasel::Function *funAST)
     }
 
     funLLVM->setDSOLocal(true);
-    if (parallelType == ParallelType::ParallelKernel)
-    {
-        funLLVM->setCallingConv(llvm::CallingConv::SPIR_KERNEL);
-    }
-    else if (parallelType == ParallelType::ParallelFunction)
-    {
-        funLLVM->setCallingConv(llvm::CallingConv::SPIR_FUNC);
-    }
+    // if (parallelType == ParallelType::ParallelKernel)
+    // {
+    //     funLLVM->setCallingConv(llvm::CallingConv::SPIR_KERNEL);
+    // }
+    // else if (parallelType == ParallelType::ParallelFunction)
+    // {
+    //     funLLVM->setCallingConv(llvm::CallingConv::SPIR_FUNC);
+    // }
 
     // if (parallelFun)
     // {
@@ -86,13 +86,11 @@ llvm::Function *weasel::Context::codegen(weasel::Function *funAST)
 
             item.setName(argName);
 
-            if ((paramTy->isPointerTy() || paramTy->isArrayTy()) && parallelType != ParallelType::None)
-            {
-                item.addAttr(llvm::Attribute::AttrKind::NoCapture);
-
-                // TODO: Add Modifier const or final
-                item.addAttr(llvm::Attribute::AttrKind::ReadOnly);
-            }
+            // if ((paramTy->isPointerTy() || paramTy->isArrayTy()) && parallelType != ParallelType::None)
+            // {
+            //     item.addAttr(llvm::Attribute::AttrKind::NoCapture);
+            //     item.addAttr(llvm::Attribute::AttrKind::ReadOnly);
+            // }
 
             auto attrKind = AttributeKind::SymbolVariable;
             if (paramTy->isArrayTy())
@@ -179,56 +177,6 @@ llvm::Value *weasel::Context::codegen(CallExpression *expr)
     return call;
 }
 
-llvm::Value *weasel::Context::codegen(NumberLiteralExpression *expr) const
-{
-    return getBuilder()->getInt32(expr->getValue());
-}
-
-llvm::Value *weasel::Context::codegen(ArrayLiteralExpression *expr)
-{
-    auto items = expr->getItems();
-    auto numItem = items.size();
-    auto *valueTy = llvm::ArrayType::get(getBuilder()->getInt32Ty(), numItem);
-    auto *valueNull = llvm::Constant::getNullValue(valueTy);
-    auto valueArr = std::vector<llvm::Constant *>(numItem);
-    auto i = 0;
-
-    while (auto *c = valueNull->getAggregateElement(i))
-    {
-        if (auto *constVal = llvm::dyn_cast<llvm::Constant>(items[i]->codegen(this)))
-        {
-            valueArr[i] = constVal;
-        }
-        else
-        {
-            valueArr[i] = c;
-        }
-
-        i++;
-    }
-
-    auto init = llvm::ConstantArray::get(valueTy, valueArr);
-    auto linkage = llvm::GlobalVariable::LinkageTypes::PrivateLinkage;
-    auto *gv = new llvm::GlobalVariable(*getModule(), valueTy, true, linkage, init);
-    auto dataLayout = llvm::DataLayout(getModule());
-    auto alignNum = dataLayout.getPrefTypeAlignment(valueTy);
-
-    gv->setAlignment(llvm::Align(std::max((unsigned int)16, alignNum)));
-    gv->setUnnamedAddr(llvm::GlobalValue::UnnamedAddr::Local);
-
-    return getBuilder()->CreateLoad(gv->getType(), gv);
-}
-
-llvm::Value *weasel::Context::codegen(StringLiteralExpression *expr) const
-{
-    auto *str = getBuilder()->CreateGlobalString(expr->getValue());
-    std::vector<llvm::Value *> idxList;
-    idxList.push_back(getBuilder()->getInt64(0));
-    idxList.push_back(getBuilder()->getInt64(0));
-
-    return llvm::ConstantExpr::getGetElementPtr(str->getType()->getElementType(), str, idxList, true);
-}
-
 llvm::Value *weasel::Context::codegen() const
 {
     return llvm::ConstantPointerNull::getNullValue(getBuilder()->getInt8PtrTy());
@@ -239,6 +187,8 @@ llvm::Value *weasel::Context::codegen(DeclarationExpression *expr)
     // Get Value Representation
     llvm::Value *value = nullptr;
     llvm::Type *declTy = expr->getType();
+
+    std::cerr << "Token Kind : " << expr->getToken().getTokenKindToInt() << std::endl;
 
     auto exprValue = expr->getValue();
     if (exprValue != nullptr)
@@ -391,7 +341,7 @@ llvm::Value *weasel::Context::codegen(VariableExpression *expr) const
     // Get Allocator from Symbol Table
     auto varName = expr->getIdentifier();
     auto attr = SymbolTable::get(varName);
-    if (!attr)
+    if (attr == nullptr)
     {
         return ErrorTable::addError(expr->getToken(), "Variable " + varName + " Not declared");
     }
@@ -453,12 +403,12 @@ llvm::Value *weasel::Context::codegen(ArrayExpression *expr)
 
     auto *loadIns = getBuilder()->CreateLoad(elemIndex->getType(), elemIndex, varName);
 
-    if (_currentFunction->getParallelType() != ParallelType::None)
-    {
-        auto *node = getTBAA(loadIns->getType());
-        auto *mdTBAA = getMDBuilder()->createTBAAStructTagNode(node, node, 0);
-        loadIns->setMetadata(llvm::LLVMContext::MD_tbaa, mdTBAA);
-    }
+    // if (_currentFunction->getParallelType() != ParallelType::None)
+    // {
+    //     auto *node = getTBAA(loadIns->getType());
+    //     auto *mdTBAA = getMDBuilder()->createTBAAStructTagNode(node, node, 0);
+    //     loadIns->setMetadata(llvm::LLVMContext::MD_tbaa, mdTBAA);
+    // }
 
     return loadIns;
 }

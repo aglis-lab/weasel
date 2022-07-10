@@ -67,15 +67,19 @@ namespace weasel
         std::string getDefaultLabel();
 
     public:
-        llvm::Value *codegen(VariableExpression *expr) const;
+        llvm::Value *codegen(BoolLiteralExpression *expr) const;
+        llvm::Value *codegen(CharLiteralExpression *expr) const;
         llvm::Value *codegen(NumberLiteralExpression *expr) const;
+        llvm::Value *codegen(FloatLiteralExpression *expr) const;
+        llvm::Value *codegen(StringLiteralExpression *expr) const;
+        llvm::Value *codegen(ArrayLiteralExpression *expr);
+
+        llvm::Value *codegen(VariableExpression *expr) const;
         llvm::Value *codegen(StatementExpression *expr);
         llvm::Value *codegen(CallExpression *expr);
         llvm::Value *codegen(ReturnExpression *expr);
         llvm::Value *codegen(DeclarationExpression *expr);
-        llvm::Value *codegen(StringLiteralExpression *expr) const;
         llvm::Value *codegen() const;
-        llvm::Value *codegen(ArrayLiteralExpression *expr);
         llvm::Value *codegen(ArrayExpression *expr);
         // TODO: Need to implement modulo operator
         llvm::Value *codegen(BinaryOperatorExpression *expr);

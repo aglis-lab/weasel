@@ -16,7 +16,7 @@
 //     return parseFunction(parallelType);
 // }
 
-weasel::Function *weasel::Parser::parseFunction(ParallelType parallelType)
+weasel::Function *weasel::Parser::parseFunction()
 {
     auto fun = parseDeclareFunction();
     if (!fun)
@@ -24,10 +24,10 @@ weasel::Function *weasel::Parser::parseFunction(ParallelType parallelType)
         return nullptr;
     }
 
-    if (parallelType == ParallelType::ParallelKernel && !fun->getFunctionType()->getReturnType()->isVoidTy())
-    {
-        return ErrorTable::addError(getCurrentToken(), "Parallel Kernel just work on void function");
-    }
+    // if (parallelType == ParallelType::ParallelKernel && !fun->getFunctionType()->getReturnType()->isVoidTy())
+    // {
+    //     return ErrorTable::addError(getCurrentToken(), "Parallel Kernel just work on void function");
+    // }
 
     // Ignore new line
     if (getCurrentToken().isKind(TokenKind::TokenSpaceNewline))
@@ -82,7 +82,7 @@ weasel::Function *weasel::Parser::parseFunction(ParallelType parallelType)
         fun->setIsDefine(true);
     }
 
-    fun->setParallelType(parallelType);
+    // fun->setParallelType(parallelType);
     fun->setBody(body);
 
     return fun;

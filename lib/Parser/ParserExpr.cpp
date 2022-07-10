@@ -82,14 +82,20 @@ weasel::Expression *weasel::Parser::parseLiteralExpression()
 
     if (token.isKind(TokenKind::TokenLitChar))
     {
-        auto val = std::stoi(token.getValue());
-        return new NumberLiteralExpression(token, val, 8);
+        auto val = token.getValue()[0];
+        return new CharLiteralExpression(token, val);
     }
 
-    if (token.isKind(TokenKind::TokenLitNumber))
+    if (token.isKind(TokenKind::TokenLitInteger))
     {
         auto value = strtoll(token.getValue().c_str(), nullptr, 10);
         return new NumberLiteralExpression(token, value);
+    }
+
+    if (token.isKind(TokenKind::TokenLitFloat))
+    {
+        auto value = std::stof(token.getValue());
+        return new FloatLiteralExpression(token, value);
     }
 
     if (token.isKind(TokenKind::TokenLitString))

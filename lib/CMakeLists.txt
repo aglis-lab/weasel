@@ -4,6 +4,7 @@ add_library(WeaselLib STATIC
     Basic/Number.cpp
     Codegen/Codegen.cpp
     IR/Context.cpp
+    IR/ContextLiteral.cpp
     IR/ContextHelper.cpp
     Lexer/Lexer.cpp
     Lexer/LexerType.cpp

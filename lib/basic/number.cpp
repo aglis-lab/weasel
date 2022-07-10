@@ -1,4 +1,4 @@
-#include "weasel/basic/number.h"
+#include "weasel/Basic/Number.h"
 
 long long weasel::Number::toInteger(std::string val)
 {
@@ -9,7 +9,8 @@ bool weasel::Number::isInteger(std::string val)
 {
     for (size_t i = 0; i < val.size(); i++)
     {
-        if (!isdigit(val[i])) return false;
+        if (!isdigit(val[i]))
+            return false;
     }
 
     return true;
@@ -21,12 +22,16 @@ bool weasel::Number::isFloat(std::string val)
     for (size_t i = 0; i < val.size(); i++)
     {
         auto c = val[i];
-        if (c == '.') {
-            if (dot) {
+        if (c == '.')
+        {
+            if (dot)
+            {
                 return false;
             }
             dot = true;
-        } else if (!isdigit(val[i])) {
+        }
+        else if (!isdigit(val[i]))
+        {
             return false;
         }
     }

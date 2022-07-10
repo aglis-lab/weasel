@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include "llvm/IR/Type.h"
+#include <llvm/IR/Type.h>
 
 template <typename Enumeration>
 auto enumToInt(Enumeration const value) -> typename std::underlying_type<Enumeration>::type
@@ -40,7 +40,8 @@ namespace weasel
         // Data Literal -> Value of data type
         TokenLitNil,
         TokenLitBool,
-        TokenLitNumber,
+        TokenLitInteger,
+        TokenLitFloat,
         TokenLitChar,
         TokenLitString,
 

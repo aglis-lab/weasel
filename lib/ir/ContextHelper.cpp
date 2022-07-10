@@ -1,5 +1,5 @@
-#include "weasel/ir/context.h"
-#include "weasel/config/config.h"
+#include "weasel/IR/Context.h"
+#include "weasel/Config/Config.h"
 
 std::string weasel::Context::getDefaultLabel()
 {
