@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include <llvm/IR/Type.h>
+#include "weasel/Type/Type.h"
 
 template <typename Enumeration>
 auto enumToInt(Enumeration const value) -> typename std::underlying_type<Enumeration>::type
@@ -194,8 +194,7 @@ namespace weasel
         inline static Token empty() { return Token(); }
 
     public:
-        // Need to implement 128 float type
-        llvm::Type *toType(llvm::LLVMContext &c, bool pointerTy = false) const;
+        Type *toType() const;
     };
 
 } // namespace weasel

@@ -11,7 +11,7 @@ namespace weasel
         long long _value; // 64 bit(8 bytes)
 
     public:
-        NumberLiteralExpression(Token token, long long value, unsigned width = 32) : LiteralExpression(token, width), _value(value) {}
+        NumberLiteralExpression(Token token, long long value, unsigned width = 32) : LiteralExpression(token, Type::getIntegerType(width)), _value(value) {}
 
         long long getValue() const { return _value; }
 
@@ -22,12 +22,12 @@ namespace weasel
     class FloatLiteralExpression : public LiteralExpression
     {
     private:
-        double _value; // 64 bit(8 bytes)
+        float _value; // 64 bit(8 bytes)
 
     public:
-        FloatLiteralExpression(Token token, double value, unsigned width = 64) : LiteralExpression(token, width), _value(value) {}
+        FloatLiteralExpression(Token token, double value) : LiteralExpression(token, Type::getFloatType()), _value(value) {}
 
-        double getValue() const { return _value; }
+        float getValue() const { return _value; }
 
         llvm::Value *codegen(Context *context) override;
     };
@@ -39,7 +39,7 @@ namespace weasel
         bool _value;
 
     public:
-        BoolLiteralExpression(Token token, bool value) : LiteralExpression(token, 1), _value(value) {}
+        BoolLiteralExpression(Token token, bool value) : LiteralExpression(token, Type::getIntegerType(1)), _value(value) {}
 
         bool getValue() const { return _value; }
 
@@ -53,7 +53,7 @@ namespace weasel
         char _value;
 
     public:
-        CharLiteralExpression(Token token, char value) : LiteralExpression(token, 8), _value(value) {}
+        CharLiteralExpression(Token token, char value) : LiteralExpression(token, Type::getIntegerType(8)), _value(value) {}
 
         char getValue() const { return _value; }
 
@@ -67,7 +67,7 @@ namespace weasel
         std::string _value;
 
     public:
-        StringLiteralExpression(Token token, const std::string &value) : LiteralExpression(token, 8, value.size()), _value(value) {}
+        StringLiteralExpression(Token token, const std::string &value) : LiteralExpression(token, Type::getArrayType(Type::getIntegerType(8), value.size())), _value(value) {}
 
         std::string getValue() const { return _value; }
 
@@ -78,7 +78,7 @@ namespace weasel
     class NilLiteralExpression : public LiteralExpression
     {
     public:
-        explicit NilLiteralExpression(Token token) : LiteralExpression(token, 64) {}
+        NilLiteralExpression(Token token) : LiteralExpression(token, Type::getPointerType(nullptr)) {}
 
         llvm::Value *codegen(Context *context) override;
     };

@@ -70,7 +70,7 @@ llvm::Value *weasel::ReturnExpression::codegen(Context *c)
 
 llvm::Value *weasel::NilLiteralExpression::codegen(Context *c)
 {
-    return c->codegen();
+    return c->codegen(this);
 }
 
 llvm::Function *weasel::Function::codegen(Context *c)

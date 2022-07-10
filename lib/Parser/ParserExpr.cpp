@@ -1,7 +1,9 @@
+#include <iostream>
 #include "weasel/Parser/Parser.h"
 #include "weasel/IR/Context.h"
 #include "weasel/Symbol/Symbol.h"
 
+//  {}
 weasel::StatementExpression *weasel::Parser::parseFunctionBody()
 {
     auto stmt = new StatementExpression();
@@ -11,7 +13,7 @@ weasel::StatementExpression *weasel::Parser::parseFunctionBody()
         SymbolTable::enterScope();
     }
 
-    getNextToken(true); // eat '{'
+    std::cout << "ParseExpr: To Function Body\n";
     while (!getCurrentToken().isKind(TokenKind::TokenDelimCloseCurlyBracket))
     {
         auto expr = parseStatement();
@@ -30,12 +32,15 @@ weasel::StatementExpression *weasel::Parser::parseFunctionBody()
 
         ignoreNewline();
     }
+    std::cout << "ParseExpr: Exit Function Body " << getCurrentToken().getValue() << std::endl;
     getNextToken(); // eat '}'
 
     // Exit statement scope
     {
         SymbolTable::exitScope();
     }
+
+    std::cout << "Exit from function Body\n";
 
     return stmt;
 }
@@ -61,7 +66,7 @@ weasel::Expression *weasel::Parser::parseStatement()
     }
 
     auto expr = parseExpression();
-    if (!expr)
+    if (expr == nullptr)
     {
         auto errToken = getCurrentToken();
 
@@ -120,6 +125,8 @@ weasel::Expression *weasel::Parser::parseLiteralExpression()
                 currentBuffer += 1;
             }
         }
+
+        std::cout << "ParserExpr.cpp : String Literal : " << value << std::endl;
 
         return new StringLiteralExpression(token, value);
     }
@@ -389,10 +396,10 @@ weasel::Expression *weasel::Parser::parseDeclarationExpression()
 
     getNextToken(); // eat 'identifier' and get next token
 
-    auto *type = parseDataType();
+    auto type = parseDataType();
     if (getCurrentToken().isKind(TokenKind::TokenSpaceNewline))
     {
-        if (!type)
+        if (type == nullptr)
         {
             return ErrorTable::addError(getCurrentToken(), "Data Type Expected for default value declaration");
         }
@@ -405,11 +412,11 @@ weasel::Expression *weasel::Parser::parseDeclarationExpression()
         // Insert Symbol Table
         {
             AttributeKind attrKind;
-            if (type->isArrayTy())
+            if (type->isArrayType())
             {
                 attrKind = AttributeKind::SymbolArray;
             }
-            else if (type->isPointerTy())
+            else if (type->isPointerType())
             {
                 attrKind = AttributeKind::SymbolPointer;
             }
@@ -456,11 +463,11 @@ weasel::Expression *weasel::Parser::parseDeclarationExpression()
         AttributeKind attrKind = AttributeKind::SymbolVariable;
         if (type)
         {
-            if (type->isArrayTy())
+            if (type->isArrayType())
             {
                 attrKind = AttributeKind::SymbolArray;
             }
-            else if (type->isPointerTy())
+            else if (type->isPointerType())
             {
                 attrKind = AttributeKind::SymbolPointer;
             }

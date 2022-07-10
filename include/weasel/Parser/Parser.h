@@ -2,6 +2,7 @@
 
 #include "weasel/AST/AST.h"
 #include "weasel/Lexer/Lexer.h"
+#include "weasel/Type/Type.h"
 
 namespace weasel
 {
@@ -52,7 +53,7 @@ namespace weasel
         llvm::LLVMContext *getContext() const { return _context; }
 
         // Helper
-        llvm::Type *parseDataType();
+        Type *parseDataType();
 
         void ignoreNewline();
 

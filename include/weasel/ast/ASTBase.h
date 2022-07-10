@@ -1,7 +1,12 @@
 #pragma once
 
-#include <llvm/IR/Value.h>
 #include "weasel/Lexer/Token.h"
+#include "weasel/Type/Type.h"
+
+namespace llvm
+{
+    class Value;
+} // namespace llvm
 
 // Expression Base Type
 namespace weasel
@@ -11,12 +16,15 @@ namespace weasel
     {
     protected:
         Token _token; // Token each expression
+        Type *_type;
 
     public:
         Expression() = default;
-        explicit Expression(Token token) : _token(token) {}
+        Expression(Token token) : _token(token) {}
+        Expression(Token token, Type *type) : _token(token), _type(type) {}
 
         Token getToken() const { return _token; }
+        Type *getType() const { return _type; }
 
         virtual llvm::Value *codegen(Context *context) = 0;
     };
@@ -24,12 +32,7 @@ namespace weasel
     // Literal Expression
     class LiteralExpression : public Expression
     {
-    protected:
-        unsigned _width; // width in bit
-        unsigned _size;  // size or length of array
-
     public:
-        LiteralExpression(Token token, unsigned width, unsigned size = 1) : Expression(token), _width(width), _size(size) {}
+        LiteralExpression(Token token, Type *type) : Expression(token, type) {}
     };
-
 } // namespace weasel

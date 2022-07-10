@@ -2,52 +2,55 @@
 #include "weasel/Lexer/Token.h"
 #include "weasel/AST/AST.h"
 
-llvm::Type *weasel::Token::toType(llvm::LLVMContext &c, bool pointerTy) const
+weasel::Type *weasel::Token::toType() const
 {
-    llvm::Type *type = nullptr;
-    if (isKind(TokenKind::TokenTyByte) || isKind(TokenKind::TokenTySbyte))
-    {
-        type = llvm::Type::getInt8Ty(c);
-    }
-    else if (isKind(TokenKind::TokenTyShort) || isKind(TokenKind::TokenTyUshort))
-    {
-        type = llvm::Type::getInt16Ty(c);
-    }
-    else if (isKind(TokenKind::TokenTyInt) || isKind(TokenKind::TokenTyUint))
-    {
-        type = llvm::Type::getInt32Ty(c);
-    }
-    else if (isKind(TokenKind::TokenTyLong) || isKind(TokenKind::TokenTyUlong))
-    {
-        type = llvm::Type::getInt64Ty(c);
-    }
-    else if (isKind(TokenKind::TokenTyInt128) || isKind(TokenKind::TokenTyUnt128))
-    {
-        type = llvm::Type::getInt128Ty(c);
-    }
-    else if (isKind(TokenKind::TokenTyFloat))
-    {
-        type = llvm::Type::getFloatTy(c);
-    }
-    else if (isKind(TokenKind::TokenTyDouble))
-    {
-        type = llvm::Type::getDoubleTy(c);
-    }
-    else if (isKind(TokenKind::TokenTyBool))
-    {
-        type = llvm::Type::getInt1Ty(c);
-    }
-    else if (isKind(TokenKind::TokenTyVoid))
-    {
-        type = llvm::Type::getVoidTy(c);
-    }
+    Type *type = nullptr;
 
-    if (pointerTy)
+    switch (_kind)
     {
-        return llvm::PointerType::get(type, 0);
-    }
+    // BOOL //
+    case TokenKind::TokenTyBool:
+        return Type::getIntegerType(1);
 
-    return type;
+    // INTEGER //
+    case TokenKind::TokenTyByte:
+        return Type::getIntegerType(8, false);
+
+    case TokenKind::TokenTySbyte:
+        return Type::getIntegerType(8);
+
+    case TokenKind::TokenTyShort:
+        return Type::getIntegerType(16);
+
+    case TokenKind::TokenTyUshort:
+        return Type::getIntegerType(16, false);
+
+    case TokenKind::TokenTyInt:
+        return Type::getIntegerType(32);
+
+    case TokenKind::TokenTyUint:
+        return Type::getIntegerType(32, false);
+
+    case TokenKind::TokenTyLong:
+        return Type::getIntegerType(64);
+
+    case TokenKind::TokenTyUlong:
+        return Type::getIntegerType(64, false);
+
+    // FLOATING POINT //
+    case TokenKind::TokenTyFloat:
+        return Type::getFloatType();
+
+    case TokenKind::TokenTyDouble:
+        return Type::getDoubleType();
+
+    // VOID //
+    case TokenKind::TokenTyVoid:
+        return Type::getVoidType();
+
+    default:
+        return nullptr;
+    }
 }
 
 weasel::Qualifier weasel::Token::getQualifier() const

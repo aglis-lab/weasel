@@ -1,8 +1,8 @@
-extern fun printf(msg *byte, param ...*int) int {}
+fun printf(msg *byte, param ...*int) int {}
 
 fun main() {
-    let b double = 10.
-
-    printf("Hulla %f\n", b)
-    printf("Hello World\n")
+    // let b = 10
+    
+    printf("Hulla\n")
+    // printf("Hello World\n")
 }

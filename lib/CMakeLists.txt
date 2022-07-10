@@ -18,5 +18,6 @@ add_library(WeaselLib STATIC
     Parser/ParserFunction.cpp
     Parser/ParserExpr.cpp
     Parser/ParserHelper.cpp
+    Type/Type.cpp
     Symbol/Symbol.cpp
 )

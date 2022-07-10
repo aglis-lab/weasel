@@ -12,30 +12,10 @@ std::vector<weasel::Function *> weasel::Parser::parse()
 
     while (!getNextToken(true).isKind(TokenKind::TokenEOF))
     {
-
-        // Parallel Function
-        // TODO: Need add parallel function
-        if (getCurrentToken().isKind(TokenKind::TokenKeyParallel))
-        {
-            std::cout << "Function Parallel no supported yet!\n";
-            exit(1);
-        }
-
-        // Extern Function
-        if (getCurrentToken().isKind(TokenKind::TokenKeyExtern))
-        {
-            getNextToken(); // eat 'extern'
-            auto fun = parseFunction();
-            if (fun != nullptr)
-            {
-                funs.push_back(fun);
-            }
-            continue;
-        }
-
         // Function
         if (getCurrentToken().isKind(TokenKind::TokenKeyFun))
         {
+            std::cout << "Parser.cpp: Token Function\n";
             auto fun = parseFunction();
             if (fun != nullptr)
             {
@@ -47,8 +27,10 @@ std::vector<weasel::Function *> weasel::Parser::parse()
         // TODO: Doing Global Variable
         // For latter implementation
         auto token = getCurrentToken();
-        std::cout << "Parser -> " << token.getLocation().row << "/" << token.getLocation().col << "<>" << token.getTokenKindToInt() << ":" << token.getValue() << "\n";
+        std::cout << "Parser -> " << token.getLocation().row << "/" << token.getLocation().col << " <> " << token.getTokenKindToInt() << " : " << token.getValue() << "\n";
     }
+
+    std::cout << "Parser.cpp : Exit from parse\n";
 
     return funs;
 }

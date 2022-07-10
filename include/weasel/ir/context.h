@@ -3,12 +3,12 @@
 #include <map>
 #include <string>
 #include <sstream>
-#include "llvm/IR/Value.h"
-#include "llvm/IR/Constant.h"
-#include "llvm/IR/Module.h"
-#include "llvm/IR/LLVMContext.h"
-#include "llvm/IR/IRBuilder.h"
-#include "llvm/IR/MDBuilder.h"
+#include <llvm/IR/Value.h>
+#include <llvm/IR/Constant.h>
+#include <llvm/IR/Module.h>
+#include <llvm/IR/LLVMContext.h>
+#include <llvm/IR/IRBuilder.h>
+#include <llvm/IR/MDBuilder.h>
 #include "weasel/AST/AST.h"
 
 namespace weasel
@@ -67,6 +67,8 @@ namespace weasel
         std::string getDefaultLabel();
 
     public:
+        llvm::Type *codegen(Type *type) const;
+
         llvm::Value *codegen(BoolLiteralExpression *expr) const;
         llvm::Value *codegen(CharLiteralExpression *expr) const;
         llvm::Value *codegen(NumberLiteralExpression *expr) const;
@@ -79,7 +81,7 @@ namespace weasel
         llvm::Value *codegen(CallExpression *expr);
         llvm::Value *codegen(ReturnExpression *expr);
         llvm::Value *codegen(DeclarationExpression *expr);
-        llvm::Value *codegen() const;
+        llvm::Value *codegen(NilLiteralExpression *expr) const;
         llvm::Value *codegen(ArrayExpression *expr);
         // TODO: Need to implement modulo operator
         llvm::Value *codegen(BinaryOperatorExpression *expr);

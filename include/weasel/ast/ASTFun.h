@@ -17,13 +17,13 @@ namespace weasel
     private:
         Token _token;
         std::string _argName;
-        llvm::Type *_type;
+        Type *_type;
 
     public:
-        FunctionArgument(Token token, std::string argName, llvm::Type *type) : _token(token), _argName(argName), _type(type) {}
+        FunctionArgument(Token token, std::string argName, Type *type) : _token(token), _argName(argName), _type(type) {}
 
         Token getToken() const { return _token; }
-        llvm::Type *getArgumentType() const { return _type; }
+        Type *getArgumentType() const { return _type; }
         std::string getArgumentName() const { return _argName; }
     };
 
@@ -32,14 +32,14 @@ namespace weasel
     {
     private:
         std::vector<FunctionArgument *> _args;
-        llvm::Type *_retType;
+        Type *_retType;
         bool _isVararg;
 
     public:
-        FunctionType(llvm::Type *returnType, std::vector<FunctionArgument *> args, bool vararg) : _args(args), _retType(returnType), _isVararg(vararg) {}
+        FunctionType(Type *returnType, std::vector<FunctionArgument *> args, bool vararg) : _args(args), _retType(returnType), _isVararg(vararg) {}
 
         std::vector<FunctionArgument *> getArgs() const { return _args; }
-        llvm::Type *getReturnType() const { return _retType; }
+        Type *getReturnType() const { return _retType; }
 
         bool getIsVararg() const { return _isVararg; }
     };

@@ -31,11 +31,11 @@ namespace weasel
         std::string _identifier;
         AttributeScope _scope;
         AttributeKind _kind;
-        llvm::Type *_type = nullptr;   // Used when lexical process
+        Type *_type = nullptr;         // Used when lexical process
         llvm::Value *_value = nullptr; // used when LLVM Codegen process or semantically process
 
     public:
-        Attribute(std::string identifier, AttributeScope scope, AttributeKind kind, llvm::Type *type) : _identifier(std::move(identifier)), _scope(scope), _kind(kind), _type(type) {}
+        Attribute(std::string identifier, AttributeScope scope, AttributeKind kind, Type *type) : _identifier(std::move(identifier)), _scope(scope), _kind(kind), _type(type) {}
         Attribute(std::string identifier, AttributeScope scope, AttributeKind kind, llvm::Value *value) : _identifier(std::move(identifier)), _scope(scope), _kind(kind), _value(value) {}
 
         inline bool isKind(AttributeKind kind) const { return _kind == kind; }
@@ -44,7 +44,7 @@ namespace weasel
         inline AttributeKind getKind() const { return _kind; }
         inline AttributeScope getScope() const { return _scope; }
         inline std::string getIdentifier() const { return _identifier; }
-        inline llvm::Type *getType() const { return _type; }
+        inline Type *getType() const { return _type; }
         inline llvm::Value *getValue() const { return _value; }
     };
 

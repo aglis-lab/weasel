@@ -1,4 +1,3 @@
-#include <llvm/IR/DerivedTypes.h>
 #include "weasel/Basic/Number.h"
 #include "weasel/Parser/Parser.h"
 #include "weasel/Symbol/Symbol.h"
@@ -11,7 +10,7 @@ void weasel::Parser::ignoreNewline()
     }
 }
 
-llvm::Type *weasel::Parser::parseDataType()
+weasel::Type *weasel::Parser::parseDataType()
 {
     // Pointer
     if (getCurrentToken().isKind(TokenKind::TokenOperatorStar))
@@ -21,9 +20,12 @@ llvm::Type *weasel::Parser::parseDataType()
             return ErrorTable::addError(getCurrentToken(), "Expected data type after pointer type");
         }
 
-        auto *type = getCurrentToken().toType(*getContext(), true);
-
+        // Eat Current Token
         getNextToken();
+
+        auto containedType = getCurrentToken().toType();
+        auto type = Type::getPointerType(containedType);
+
         return type;
     }
 
@@ -51,22 +53,22 @@ llvm::Type *weasel::Parser::parseDataType()
             return ErrorTable::addError(getCurrentToken(), "Expected data type after [...]");
         }
 
-        auto num = weasel::Number::toInteger(numStr);
-        auto *type = getCurrentToken().toType(*getContext());
-        auto *arrTy = llvm::ArrayType::get(type, num);
-
+        // Eat Current Token
         getNextToken();
 
-        return arrTy;
+        auto num = weasel::Number::toInteger(numStr);
+        auto containedType = getCurrentToken().toType();
+
+        return Type::getArrayType(containedType, num);
     }
 
     // Normal Data Type or no datatype
-    auto *type = getCurrentToken().toType(*getContext());
-    if (type == nullptr)
+    auto type = getCurrentToken().toType();
+    if (type != nullptr)
     {
-        return nullptr;
+        // Remove Current Token
+        getNextToken();
     }
-    getNextToken();
 
     return type;
 }

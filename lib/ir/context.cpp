@@ -1,7 +1,7 @@
 #include <iostream>
-#include "llvm/IR/Function.h"
-#include "llvm/IR/Constant.h"
-#include "llvm/IR/Module.h"
+#include <llvm/IR/Function.h>
+#include <llvm/IR/Constant.h>
+#include <llvm/IR/Module.h>
 #include "weasel/IR/Context.h"
 #include "weasel/Symbol/Symbol.h"
 #include "weasel/Config/Config.h"
@@ -22,21 +22,23 @@ llvm::Function *weasel::Context::codegen(weasel::Function *funAST)
     auto isVararg = funAST->getFunctionType()->getIsVararg();
     auto funArgs = funAST->getArgs();
     auto retTy = funAST->getFunctionType()->getReturnType();
-    // auto parallelType = funAST->getParallelType();
     auto args = std::vector<llvm::Type *>();
     auto argsLength = funArgs.size() - (isVararg ? 1 : 0);
 
     // Set Arguments
+    std::cout << "Parsing Type\n";
     for (size_t i = 0; i < argsLength; i++)
     {
         auto arg = funArgs[i]->getArgumentType();
+        auto argV = arg->codegen(this);
 
-        args.push_back(arg);
+        args.push_back(argV);
     }
+    std::cout << "After Parsing\n";
 
     auto linkage = llvm::GlobalValue::LinkageTypes::ExternalLinkage;
-    auto *funTyLLVM = llvm::FunctionType::get(retTy, args, isVararg);
-    auto *funLLVM = llvm::Function::Create(funTyLLVM, linkage, funName, *getModule());
+    auto funTyLLVM = llvm::FunctionType::get(retTy->codegen(this), args, isVararg);
+    auto funLLVM = llvm::Function::Create(funTyLLVM, linkage, funName, *getModule());
 
     if (funAST->isInline())
     {
@@ -71,7 +73,7 @@ llvm::Function *weasel::Context::codegen(weasel::Function *funAST)
 
     if (funAST->isDefine())
     {
-        auto *entry = llvm::BasicBlock::Create(*getContext(), "", funLLVM);
+        auto entry = llvm::BasicBlock::Create(*getContext(), "", funLLVM);
         getBuilder()->SetInsertPoint(entry);
 
         // Enter to parameter scope
@@ -93,11 +95,11 @@ llvm::Function *weasel::Context::codegen(weasel::Function *funAST)
             // }
 
             auto attrKind = AttributeKind::SymbolVariable;
-            if (paramTy->isArrayTy())
+            if (paramTy->isArrayType())
             {
                 attrKind = AttributeKind::SymbolArray;
             }
-            else if (paramTy->isPointerTy())
+            else if (paramTy->isPointerType())
             {
                 attrKind = AttributeKind::SymbolPointer;
             }
@@ -126,6 +128,7 @@ llvm::Function *weasel::Context::codegen(weasel::Function *funAST)
     return funLLVM;
 }
 
+// TODO: Not Implemented Yet
 llvm::Value *weasel::Context::codegen(StatementExpression *expr)
 {
     // Enter to new statement
@@ -146,6 +149,7 @@ llvm::Value *weasel::Context::codegen(StatementExpression *expr)
     return nullptr;
 }
 
+// TODO: Not Fully Implemented
 llvm::Value *weasel::Context::codegen(CallExpression *expr)
 {
     auto identifier = expr->getIdentifier();
@@ -163,21 +167,25 @@ llvm::Value *weasel::Context::codegen(CallExpression *expr)
         }
     }
 
-    auto *call = getBuilder()->CreateCall(fun, argsV);
-    if (fun->hasFnAttribute(llvm::Attribute::AttrKind::Convergent))
-    {
-        call->setCallingConv(llvm::CallingConv::SPIR_FUNC);
-        call->setTailCall();
-    }
-    else
-    {
-        call->setCallingConv(llvm::CallingConv::C);
-    }
+    std::cout << "Context.cpp: codegen callfunction\n";
+
+    auto call = getBuilder()->CreateCall(fun, argsV);
+    call->setCallingConv(llvm::CallingConv::C);
+
+    // if (fun->hasFnAttribute(llvm::Attribute::AttrKind::Convergent))
+    // {
+    //     call->setCallingConv(llvm::CallingConv::SPIR_FUNC);
+    //     call->setTailCall();
+    // }
+    // else
+    // {
+    //     call->setCallingConv(llvm::CallingConv::C);
+    // }
 
     return call;
 }
 
-llvm::Value *weasel::Context::codegen() const
+llvm::Value *weasel::Context::codegen(NilLiteralExpression *expr) const
 {
     return llvm::ConstantPointerNull::getNullValue(getBuilder()->getInt8PtrTy());
 }
@@ -186,77 +194,76 @@ llvm::Value *weasel::Context::codegen(DeclarationExpression *expr)
 {
     // Get Value Representation
     llvm::Value *value = nullptr;
-    llvm::Type *declTy = expr->getType();
+    auto declType = expr->getType();
+    auto valueType = expr->getValue()->getType();
 
     std::cerr << "Token Kind : " << expr->getToken().getTokenKindToInt() << std::endl;
 
-    auto exprValue = expr->getValue();
-    if (exprValue != nullptr)
-    {
-        if ((value = exprValue->codegen(this)) != nullptr)
-        {
-            if (value->getType()->getTypeID() == llvm::Type::TypeID::VoidTyID)
-            {
-                return ErrorTable::addError(exprValue->getToken(), "Cannot assign void to a variable");
-            }
-
-            if (value->getValueID() == llvm::Value::ConstantPointerNullVal && declTy)
-            {
-                value = llvm::ConstantPointerNull::getNullValue(declTy);
-            }
-
-            if (declTy)
-            {
-                auto compareTy = compareType(declTy, value->getType());
-                if (compareTy == CompareType::Different)
-                {
-                    return ErrorTable::addError(exprValue->getToken(), "Cannot assign, expression type is different");
-                }
-
-                if (compareTy == CompareType::Casting)
-                {
-                    value = castIntegerType(value, declTy);
-                }
-            }
-            else
-            {
-                declTy = value->getType();
-            }
-        }
-    }
+    // auto exprValue = expr->getValue();
+    // if (exprValue != nullptr)
+    // {
+    //     if ((value = exprValue->codegen(this)) != nullptr)
+    //     {
+    //         if (value->getType()->getTypeID() == llvm::Type::TypeID::VoidTyID)
+    //         {
+    //             return ErrorTable::addError(exprValue->getToken(), "Cannot assign void to a variable");
+    //         }
+    //         if (value->getValueID() == llvm::Value::ConstantPointerNullVal && declType)
+    //         {
+    //             value = llvm::ConstantPointerNull::getNullValue(declTy);
+    //         }
+    //         if (declTy)
+    //         {
+    //             auto compareTy = compareType(declTy, value->getType());
+    //             if (compareTy == CompareType::Different)
+    //             {
+    //                 return ErrorTable::addError(exprValue->getToken(), "Cannot assign, expression type is different");
+    //             }
+    //             if (compareTy == CompareType::Casting)
+    //             {
+    //                 value = castIntegerType(value, declTy);
+    //             }
+    //         }
+    //         else
+    //         {
+    //             declTy = value->getType();
+    //         }
+    //     }
+    // }
 
     // Allocating Address for declaration
     auto varName = expr->getIdentifier();
-    auto *alloc = getBuilder()->CreateAlloca(declTy, nullptr, varName);
+    // auto alloc = getBuilder()->CreateAlloca(declTy, nullptr, varName);
 
     // Add Variable Declaration to symbol table
-    {
-        AttributeKind attrKind;
-        if (declTy->isArrayTy())
-        {
-            attrKind = AttributeKind::SymbolArray;
-        }
-        else if (declTy->isPointerTy())
-        {
-            attrKind = AttributeKind::SymbolPointer;
-        }
-        else
-        {
-            attrKind = AttributeKind::SymbolVariable;
-        }
+    // {
+    //     AttributeKind attrKind;
+    //     if (declType->isArrayType())
+    //     {
+    //         attrKind = AttributeKind::SymbolArray;
+    //     }
+    //     else if (declType->isPointerType())
+    //     {
+    //         attrKind = AttributeKind::SymbolPointer;
+    //     }
+    //     else
+    //     {
+    //         attrKind = AttributeKind::SymbolVariable;
+    //     }
+    //     auto attr = new Attribute(varName, AttributeScope::ScopeLocal, attrKind, alloc);
+    //     SymbolTable::insert(varName, attr);
+    // }
 
-        auto attr = new Attribute(varName, AttributeScope::ScopeLocal, attrKind, alloc);
-        SymbolTable::insert(varName, attr);
-    }
+    // if (value)
+    // {
+    //     getBuilder()->CreateStore(value, alloc);
+    // }
 
-    if (value)
-    {
-        getBuilder()->CreateStore(value, alloc);
-    }
-
-    return alloc;
+    // return alloc;
+    return nullptr;
 }
 
+// TODO: Need Type Check and conversion
 llvm::Value *weasel::Context::codegen(BinaryOperatorExpression *expr)
 {
     auto token = expr->getOperator();
@@ -304,6 +311,7 @@ llvm::Value *weasel::Context::codegen(BinaryOperatorExpression *expr)
     }
 }
 
+// TODO: Check Function Return Type and Return Type
 llvm::Value *weasel::Context::codegen(ReturnExpression *expr)
 {
     if (!expr->getValue())
@@ -360,6 +368,7 @@ llvm::Value *weasel::Context::codegen(VariableExpression *expr) const
     return getBuilder()->CreateLoad(alloc->getType(), alloc, varName);
 }
 
+// TODO: String as array of byte
 llvm::Value *weasel::Context::codegen(ArrayExpression *expr)
 {
     // Get Allocator from Symbol Table

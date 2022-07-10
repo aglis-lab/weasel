@@ -49,12 +49,16 @@ int main(int argc, char *argv[])
     auto context = new weasel::Context(llvmContext, "codeModule");
     auto codegen = new weasel::Codegen(context, funs);
 
+    std::cout << "Try to compile\n";
+
     weasel::SymbolTable::reset();
     if (!codegen->compile())
     {
         std::cerr << "Codegen Compile : " << codegen->getError() << "\n";
         exit(1);
     }
+
+    llvm::errs() << llvmContext;
 
     // Compile to Object
     codegen->createObject(outputPath);

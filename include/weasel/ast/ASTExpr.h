@@ -105,16 +105,15 @@ namespace weasel
     private:
         std::string _identifier;
         Qualifier _qualifier;
-        llvm::Type *_type;
         Expression *_value;
 
     public:
-        DeclarationExpression(Token token, std::string identifier, Qualifier qualifier, llvm::Type *type = nullptr, Expression *value = nullptr) : Expression(token), _identifier(identifier), _qualifier(qualifier), _type(type), _value(value) {}
+        DeclarationExpression(Token token, std::string identifier, Qualifier qualifier, Type *type, Expression *value = nullptr) : Expression(token, type), _identifier(identifier), _qualifier(qualifier), _value(value) {}
 
-        std::string getIdentifier() const { return _identifier; }
-        Expression *getValue() const { return _value; }
-        llvm::Type *getType() const { return _type; }
         Qualifier getQualifier() const { return _qualifier; }
+        std::string getIdentifier() const { return _identifier; }
+
+        Expression *getValue() const { return _value; }
 
         llvm::Value *codegen(Context *context) override;
     };

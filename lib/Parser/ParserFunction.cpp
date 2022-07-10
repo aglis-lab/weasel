@@ -1,3 +1,4 @@
+#include <iostream>
 #include <llvm/IR/Type.h>
 #include "weasel/Parser/Parser.h"
 #include "weasel/IR/Context.h"
@@ -19,15 +20,10 @@
 weasel::Function *weasel::Parser::parseFunction()
 {
     auto fun = parseDeclareFunction();
-    if (!fun)
+    if (fun == nullptr)
     {
         return nullptr;
     }
-
-    // if (parallelType == ParallelType::ParallelKernel && !fun->getFunctionType()->getReturnType()->isVoidTy())
-    // {
-    //     return ErrorTable::addError(getCurrentToken(), "Parallel Kernel just work on void function");
-    // }
 
     // Ignore new line
     if (getCurrentToken().isKind(TokenKind::TokenSpaceNewline))
@@ -49,11 +45,11 @@ weasel::Function *weasel::Parser::parseFunction()
             auto ty = arg->getArgumentType();
 
             auto attrKind = AttributeKind::SymbolVariable;
-            if (ty->isPointerTy())
+            if (ty->isPointerType())
             {
                 attrKind = AttributeKind::SymbolPointer;
             }
-            else if (ty->isArrayTy())
+            else if (ty->isArrayType())
             {
                 attrKind = AttributeKind::SymbolArray;
             }
@@ -64,6 +60,8 @@ weasel::Function *weasel::Parser::parseFunction()
         }
     }
 
+    std::cout << "Parse Function : " << getCurrentToken().getValue() << std::endl;
+    getNextToken(true); // eat {
     auto body = parseFunctionBody();
 
     // Exit parameter scope
@@ -82,7 +80,6 @@ weasel::Function *weasel::Parser::parseFunction()
         fun->setIsDefine(true);
     }
 
-    // fun->setParallelType(parallelType);
     fun->setBody(body);
 
     return fun;
@@ -91,19 +88,7 @@ weasel::Function *weasel::Parser::parseFunction()
 // extern 'fun' identifier '(' args ')' funTy
 weasel::Function *weasel::Parser::parseDeclareFunction()
 {
-    auto isInline = false;
-    if (getCurrentToken().isKind(TokenKind::TokenKeyInline))
-    {
-        isInline = true;
-
-        getNextToken();
-    }
-
-    if (!getCurrentToken().isKind(TokenKind::TokenKeyFun))
-    {
-        return ErrorTable::addError(getCurrentToken(), "Expected fun keyword");
-    }
-
+    std::cout << "Parser Function: In Parse Declaration Function : " << getCurrentToken().getTokenKindToInt() << std::endl;
     // get next and eat 'fun'
     if (!getNextToken().isKind(TokenKind::TokenIdentifier))
     {
@@ -111,14 +96,13 @@ weasel::Function *weasel::Parser::parseDeclareFunction()
     }
 
     // Check Symbol Table
-    auto funIdentifier = getCurrentToken().getValue();
-    if (SymbolTable::get(funIdentifier) != nullptr)
+    auto identifier = getCurrentToken().getValue();
+    if (SymbolTable::get(identifier) != nullptr)
     {
         return ErrorTable::addError(getCurrentToken(), "Function already declared");
     }
 
-    getNextToken(); // eat 'identifier'
-    if (!getCurrentToken().isKind(TokenKind::TokenDelimOpenParen))
+    if (!getNextToken().isKind(TokenKind::TokenDelimOpenParen))
     {
         return ErrorTable::addError(getCurrentToken(), "Expected (");
     }
@@ -170,21 +154,23 @@ weasel::Function *weasel::Parser::parseDeclareFunction()
 
     getNextToken(); // eat )
 
-    auto *returnType = parseDataType();
-    if (!returnType)
+    auto returnType = parseDataType();
+    if (returnType == nullptr)
     {
-        returnType = llvm::Type::getVoidTy(*getContext());
+        returnType = Type::getVoidType();
     }
 
+    std::cout << "Return Type is void : " << returnType->isVoidType() << std::endl;
+
     auto funTy = new FunctionType(returnType, args, isVararg);
-    auto fun = new Function(funIdentifier, funTy);
+    auto fun = new Function(identifier, funTy);
 
     // Create Symbol for the function
     {
-        SymbolTable::insert(funIdentifier, new Attribute(funIdentifier, AttributeScope::ScopeGlobal, AttributeKind::SymbolFunction, returnType));
+        SymbolTable::insert(identifier, new Attribute(identifier, AttributeScope::ScopeGlobal, AttributeKind::SymbolFunction, returnType));
     }
 
-    fun->setIsInline(isInline);
+    std::cout << "Parse Function : Exit from declaration\n";
 
     return fun;
 }
