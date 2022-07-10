@@ -22,6 +22,12 @@ llvm::Value *weasel::Context::codegen(FloatLiteralExpression *expr) const
     return llvm::ConstantFP::get(floatTy, expr->getValue());
 }
 
+llvm::Value *weasel::Context::codegen(DoubleLiteralExpression *expr) const
+{
+    auto doubleTy = getBuilder()->getDoubleTy();
+    return llvm::ConstantFP::get(doubleTy, expr->getValue());
+}
+
 llvm::Value *weasel::Context::codegen(StringLiteralExpression *expr) const
 {
     auto *str = getBuilder()->CreateGlobalString(expr->getValue());

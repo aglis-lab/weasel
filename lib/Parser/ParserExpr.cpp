@@ -100,6 +100,12 @@ weasel::Expression *weasel::Parser::parseLiteralExpression()
         return new FloatLiteralExpression(token, value);
     }
 
+    if (token.isKind(TokenKind::TokenLitDouble))
+    {
+        auto value = std::stod(token.getValue());
+        return new DoubleLiteralExpression(token, value);
+    }
+
     if (token.isKind(TokenKind::TokenLitString))
     {
         auto *currentBuffer = token.getStartBuffer();
@@ -392,6 +398,7 @@ weasel::Expression *weasel::Parser::parseDeclarationExpression()
     getNextToken(); // eat 'identifier' and get next token
 
     auto type = parseDataType();
+
     if (getCurrentToken().isKind(TokenKind::TokenSpaceNewline))
     {
         if (type == nullptr)

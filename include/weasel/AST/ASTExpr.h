@@ -110,10 +110,9 @@ namespace weasel
     public:
         DeclarationExpression(Token token, std::string identifier, Qualifier qualifier, Type *type, Expression *value = nullptr) : Expression(token, type), _identifier(identifier), _qualifier(qualifier), _value(value) {}
 
-        Qualifier getQualifier() const { return _qualifier; }
-        std::string getIdentifier() const { return _identifier; }
-
-        Expression *getValue() const { return _value; }
+        inline Qualifier getQualifier() const { return _qualifier; }
+        inline std::string getIdentifier() const { return _identifier; }
+        inline Expression *getValue() const { return _value; }
 
         llvm::Value *codegen(Context *context) override;
     };

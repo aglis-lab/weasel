@@ -22,12 +22,26 @@ namespace weasel
     class FloatLiteralExpression : public LiteralExpression
     {
     private:
-        float _value; // 64 bit(8 bytes)
+        float _value; // 32 bit(4 bytes)
 
     public:
         FloatLiteralExpression(Token token, double value) : LiteralExpression(token, Type::getFloatType()), _value(value) {}
 
         float getValue() const { return _value; }
+
+        llvm::Value *codegen(Context *context) override;
+    };
+
+    // Float Literal Expression
+    class DoubleLiteralExpression : public LiteralExpression
+    {
+    private:
+        double _value; // 64 bit(8 bytes)
+
+    public:
+        DoubleLiteralExpression(Token token, double value) : LiteralExpression(token, Type::getDoubleType()), _value(value) {}
+
+        double getValue() const { return _value; }
 
         llvm::Value *codegen(Context *context) override;
     };

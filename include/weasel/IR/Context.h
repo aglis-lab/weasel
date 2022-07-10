@@ -73,6 +73,7 @@ namespace weasel
         llvm::Value *codegen(CharLiteralExpression *expr) const;
         llvm::Value *codegen(NumberLiteralExpression *expr) const;
         llvm::Value *codegen(FloatLiteralExpression *expr) const;
+        llvm::Value *codegen(DoubleLiteralExpression *expr) const;
         llvm::Value *codegen(StringLiteralExpression *expr) const;
         llvm::Value *codegen(ArrayLiteralExpression *expr);
 

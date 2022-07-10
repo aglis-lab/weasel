@@ -174,8 +174,20 @@ weasel::Token weasel::Lexer::getToken()
             return createToken(TokenKind::TokenUndefined, start, _currentBuffer);
         }
 
-        if (numDot == 1)
+        if (*_currentBuffer == 'd')
         {
+            getNextBuffer(); // eat 'd' for double
+
+            return createToken(TokenKind::TokenLitDouble, start, _currentBuffer);
+        }
+
+        if (numDot == 1 || *_currentBuffer == 'f')
+        {
+            if (*_currentBuffer == 'f')
+            {
+                getNextBuffer(); // eat 'f' if exist
+            }
+
             return createToken(TokenKind::TokenLitFloat, start, _currentBuffer);
         }
 

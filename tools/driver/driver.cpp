@@ -63,4 +63,16 @@ int main(int argc, char *argv[])
 
     // Compile to Object
     codegen->createObject(outputPath);
+
+    // Print out module
+    std::error_code errCode;
+    llvm::raw_fd_ostream dest(std::string(outputPath) + ".ir", errCode, llvm::sys::fs::OF_None);
+    if (errCode)
+    {
+        llvm::errs() << "Could not open file : " << errCode.message() << "\n";
+        exit(1);
+    }
+
+    dest << *codegen->getModule();
+    dest.flush();
 }

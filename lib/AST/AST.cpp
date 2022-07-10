@@ -7,6 +7,11 @@ llvm::Value *weasel::NumberLiteralExpression::codegen(Context *c)
     return c->codegen(this);
 }
 
+llvm::Value *weasel::DoubleLiteralExpression::codegen(Context *c)
+{
+    return c->codegen(this);
+}
+
 llvm::Value *weasel::FloatLiteralExpression::codegen(Context *c)
 {
     return c->codegen(this);

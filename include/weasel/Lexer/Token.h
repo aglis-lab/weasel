@@ -37,6 +37,7 @@ namespace weasel
         TokenLitBool,
         TokenLitInteger,
         TokenLitFloat,
+        TokenLitDouble,
         TokenLitChar,
         TokenLitString,
 

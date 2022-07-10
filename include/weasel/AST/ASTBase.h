@@ -23,8 +23,9 @@ namespace weasel
         Expression(Token token) : _token(token) {}
         Expression(Token token, Type *type) : _token(token), _type(type) {}
 
-        Token getToken() const { return _token; }
-        Type *getType() const { return _type; }
+        inline Token getToken() const { return _token; }
+        inline Type *getType() const { return _type; }
+        inline void setType(Type *type) { _type = type; }
 
         virtual llvm::Value *codegen(Context *context) = 0;
     };

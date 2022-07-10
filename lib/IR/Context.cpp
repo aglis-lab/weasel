@@ -1,3 +1,4 @@
+#include <iostream>
 #include <llvm/IR/Function.h>
 #include <llvm/IR/Constant.h>
 #include <llvm/IR/Module.h>
@@ -15,14 +16,19 @@ weasel::Context::Context(llvm::LLVMContext *context, const std::string &moduleNa
 
 llvm::Type *weasel::Context::codegen(weasel::Type *type)
 {
+    if (type->isVoidType())
+    {
+        return getBuilder()->getVoidTy();
+    }
+
     if (type->isIntegerType())
     {
         return getBuilder()->getIntNTy(type->getTypeWidth());
     }
 
-    if (type->isVoidType())
+    if (type->isFloatType())
     {
-        return getBuilder()->getVoidTy();
+        return getBuilder()->getFloatTy();
     }
 
     if (type->isDoubleType())
@@ -220,9 +226,14 @@ llvm::Value *weasel::Context::codegen(NilLiteralExpression *expr) const
 llvm::Value *weasel::Context::codegen(DeclarationExpression *expr)
 {
     // Get Value Representation
-    llvm::Value *value = nullptr;
     auto declType = expr->getType();
-    auto valueType = expr->getValue()->getType();
+    auto valueExpr = expr->getValue();
+
+    if (declType == nullptr && valueExpr != nullptr && valueExpr->getType() != nullptr)
+    {
+        declType = new Type(*valueExpr->getType());
+        expr->setType(declType);
+    }
 
     // auto exprValue = expr->getValue();
     // if (exprValue != nullptr)
@@ -258,34 +269,67 @@ llvm::Value *weasel::Context::codegen(DeclarationExpression *expr)
 
     // Allocating Address for declaration
     auto varName = expr->getIdentifier();
-    // auto alloc = getBuilder()->CreateAlloca(declTy, nullptr, varName);
+    auto declTypeV = declType->codegen(this);
+    auto alloc = getBuilder()->CreateAlloca(declTypeV, nullptr, varName);
+
+    // Default Value
+    if (valueExpr == nullptr)
+    {
+        // Default Value for integer
+        if (declType->isIntegerType())
+        {
+            auto constantVal = llvm::ConstantInt::get(declTypeV, 0, declType->isSigned());
+            getBuilder()->CreateStore(constantVal, alloc);
+        }
+    }
+    else
+    {
+        auto valueType = valueExpr->getType();
+        if (valueType->isVoidType())
+        {
+            return ErrorTable::addError(valueExpr->getToken(), "Cannot assign void to a variable");
+        }
+
+        if (declType != nullptr && declType->getTypeID() != valueType->getTypeID())
+        {
+            return ErrorTable::addError(valueExpr->getToken(), "Cannot assign to different type");
+        }
+
+        if (declType != nullptr && declType->getTypeWidth() != valueType->getTypeWidth())
+        {
+            return ErrorTable::addError(valueExpr->getToken(), "Cannot assign to different size type");
+        }
+
+        auto valueV = valueExpr->codegen(this);
+        getBuilder()->CreateStore(valueV, alloc);
+    }
 
     // Add Variable Declaration to symbol table
-    // {
-    //     AttributeKind attrKind;
-    //     if (declType->isArrayType())
-    //     {
-    //         attrKind = AttributeKind::SymbolArray;
-    //     }
-    //     else if (declType->isPointerType())
-    //     {
-    //         attrKind = AttributeKind::SymbolPointer;
-    //     }
-    //     else
-    //     {
-    //         attrKind = AttributeKind::SymbolVariable;
-    //     }
-    //     auto attr = new Attribute(varName, AttributeScope::ScopeLocal, attrKind, alloc);
-    //     SymbolTable::insert(varName, attr);
-    // }
+    {
+        AttributeKind attrKind;
+        if (declType->isArrayType())
+        {
+            attrKind = AttributeKind::SymbolArray;
+        }
+        else if (declType->isPointerType())
+        {
+            attrKind = AttributeKind::SymbolPointer;
+        }
+        else
+        {
+            attrKind = AttributeKind::SymbolVariable;
+        }
+        auto attr = new Attribute(varName, AttributeScope::ScopeLocal, attrKind, alloc);
+        SymbolTable::insert(varName, attr);
+    }
 
+    // auto value = expr->getValue();
     // if (value)
     // {
     //     getBuilder()->CreateStore(value, alloc);
     // }
 
-    // return alloc;
-    return nullptr;
+    return alloc;
 }
 
 // TODO: Need Type Check and conversion

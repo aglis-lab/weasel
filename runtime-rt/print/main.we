@@ -1,8 +1,7 @@
 fun printf(msg *byte, param ...*long) int {}
 
 fun main() {
-    // let b = 10
-    
-    test("Hulla\n")
-    // printf("Hello World\n")
+    let b = 321d
+    b = 333d
+    printf("Hello World %f\n", b)
 }

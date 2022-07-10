@@ -38,6 +38,7 @@ namespace weasel
     public:
         inline TypeID getTypeID() const { return _typeId; }
         inline unsigned getTypeWidth() const { return _width; }
+        inline bool isSigned() const { return _isSigned; }
 
         inline bool isFloatType() const { return _typeId == TypeID::FloatType; }
         inline bool isDoubleType() const { return _typeId == TypeID::DoubleType; }
@@ -53,8 +54,8 @@ namespace weasel
         // Generator
         static Type *getVoidType() { return new Type(TypeID::VoidType, nullptr); }
         static Type *getIntegerType(unsigned width = 32, bool isSign = true) { return new Type(TypeID::IntegerType, width, isSign); }
-        static Type *getFloatType() { return new Type(TypeID::IntegerType, 32); }
-        static Type *getDoubleType() { return new Type(TypeID::IntegerType, 64); }
+        static Type *getFloatType() { return new Type(TypeID::FloatType, 32); }
+        static Type *getDoubleType() { return new Type(TypeID::DoubleType, 64); }
         static Type *getPointerType(Type *containedType) { return new Type(TypeID::PointerType, containedType); }
         static Type *getArrayType(Type *containedType, unsigned width) { return new Type(TypeID::ArrayType, containedType, width); }
 
