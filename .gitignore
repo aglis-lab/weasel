@@ -22,3 +22,4 @@ runtime-rt/*.spv
 .idea
 .vscode
 .vs
+.DS_Store
