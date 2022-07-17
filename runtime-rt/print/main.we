@@ -1,9 +1,10 @@
 fun printf(msg *byte, param ...*long) int {}
 
-fun main() {
-    {
-        printf("Hello\n")
-    } let a = 12
+fun hello() {
+    printf("Hello\n")
+}
 
-    printf("Value: %d\n", a)
+fun main() {
+    let a = 12d
+    printf("Value: %f\n", a)
 }

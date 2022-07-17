@@ -82,23 +82,6 @@ llvm::Function *weasel::Context::codegen(weasel::Function *funAST)
     }
 
     funLLVM->setDSOLocal(true);
-    // if (parallelType == ParallelType::ParallelKernel)
-    // {
-    //     funLLVM->setCallingConv(llvm::CallingConv::SPIR_KERNEL);
-    // }
-    // else if (parallelType == ParallelType::ParallelFunction)
-    // {
-    //     funLLVM->setCallingConv(llvm::CallingConv::SPIR_FUNC);
-    // }
-
-    // if (parallelFun)
-    // {
-    //     funLLVM->setUnnamedAddr(llvm::GlobalValue::UnnamedAddr::Local);
-    //     funLLVM->addFnAttr(llvm::Attribute::AttrKind::NoUnwind);
-    //     funLLVM->addFnAttr(llvm::Attribute::AttrKind::Convergent);
-    //     funLLVM->addFnAttr(llvm::Attribute::AttrKind::NoRecurse);
-    //     funLLVM->addFnAttr(llvm::Attribute::AttrKind::NoFree);
-    // }
 
     // Add Function to symbol table
     {
@@ -209,16 +192,6 @@ llvm::Value *weasel::Context::codegen(CallExpression *expr)
     auto call = getBuilder()->CreateCall(fun, argsV);
     call->setCallingConv(llvm::CallingConv::C);
 
-    // if (fun->hasFnAttribute(llvm::Attribute::AttrKind::Convergent))
-    // {
-    //     call->setCallingConv(llvm::CallingConv::SPIR_FUNC);
-    //     call->setTailCall();
-    // }
-    // else
-    // {
-    //     call->setCallingConv(llvm::CallingConv::C);
-    // }
-
     return call;
 }
 
@@ -238,38 +211,6 @@ llvm::Value *weasel::Context::codegen(DeclarationExpression *expr)
         declType = new Type(*valueExpr->getType());
         expr->setType(declType);
     }
-
-    // auto exprValue = expr->getValue();
-    // if (exprValue != nullptr)
-    // {
-    //     if ((value = exprValue->codegen(this)) != nullptr)
-    //     {
-    //         if (value->getType()->getTypeID() == llvm::Type::TypeID::VoidTyID)
-    //         {
-    //             return ErrorTable::addError(exprValue->getToken(), "Cannot assign void to a variable");
-    //         }
-    //         if (value->getValueID() == llvm::Value::ConstantPointerNullVal && declType)
-    //         {
-    //             value = llvm::ConstantPointerNull::getNullValue(declTy);
-    //         }
-    //         if (declTy)
-    //         {
-    //             auto compareTy = compareType(declTy, value->getType());
-    //             if (compareTy == CompareType::Different)
-    //             {
-    //                 return ErrorTable::addError(exprValue->getToken(), "Cannot assign, expression type is different");
-    //             }
-    //             if (compareTy == CompareType::Casting)
-    //             {
-    //                 value = castIntegerType(value, declTy);
-    //             }
-    //         }
-    //         else
-    //         {
-    //             declTy = value->getType();
-    //         }
-    //     }
-    // }
 
     // Allocating Address for declaration
     auto varName = expr->getIdentifier();
@@ -340,46 +281,67 @@ llvm::Value *weasel::Context::codegen(DeclarationExpression *expr)
 llvm::Value *weasel::Context::codegen(BinaryOperatorExpression *expr)
 {
     auto token = expr->getOperator();
-    auto *rhs = expr->getRHS()->codegen(this);
-    auto *lhs = expr->getLHS()->codegen(this);
-    // auto compareTy = compareType(lhs->getType(), rhs->getType());
+    auto lhs = expr->getLHS();
+    auto rhs = expr->getRHS();
 
-    // if (compareTy == CompareType::Different)
-    // {
-    //     return logErrorV(std::string("type LHS != type RHS"));
-    // }
-
-    // if (compareTy == CompareType::Casting)
-    // {
-    //     castIntegerType(lhs, rhs);
-    // }
-
-    switch (token.getTokenKind())
+    // Checking Type
+    if (lhs->getType()->getTypeID() != rhs->getType()->getTypeID())
     {
-    case TokenKind::TokenOperatorStar:
-        return getBuilder()->CreateMul(lhs, rhs, lhs->getName());
-    case TokenKind::TokenOperatorSlash:
-        return getBuilder()->CreateSDiv(lhs, rhs, lhs->getName());
-    // case TokenKind::TokenPuncPercent: return llvm::BinaryOperator::
-    case TokenKind::TokenOperatorPlus:
-        return getBuilder()->CreateAdd(lhs, rhs, lhs->getName());
-    case TokenKind::TokenOperatorMinus:
-        return getBuilder()->CreateSub(lhs, rhs, lhs->getName());
-    case TokenKind::TokenOperatorEqual:
+        ErrorTable::addError(expr->getLHS()->getToken(), "Data type look different");
+
+        return lhs->codegen(this);
+    }
+
+    auto lhsVal = lhs->codegen(this);
+    auto rhsVal = rhs->codegen(this);
+
+    if (token.isKind(TokenKind::TokenOperatorEqual))
     {
-        auto *loadLhs = llvm::dyn_cast<llvm::LoadInst>(lhs);
+        auto loadLhs = llvm::dyn_cast<llvm::LoadInst>(lhsVal);
         if (!loadLhs)
         {
             return ErrorTable::addError(expr->getLHS()->getToken(), "LHS not valid");
         }
 
-        auto *allocLhs = loadLhs->getPointerOperand();
-        getBuilder()->CreateStore(rhs, allocLhs);
+        auto allocLhs = loadLhs->getPointerOperand();
+        getBuilder()->CreateStore(rhsVal, allocLhs);
 
         return getBuilder()->CreateLoad(allocLhs->getType(), allocLhs);
     }
+
+    if (lhs->getType()->isFloatType())
+    {
+        switch (token.getTokenKind())
+        {
+        case TokenKind::TokenOperatorStar:
+            return getBuilder()->CreateFMul(lhsVal, rhsVal, lhsVal->getName());
+        case TokenKind::TokenOperatorSlash:
+            return getBuilder()->CreateFDiv(lhsVal, rhsVal, lhsVal->getName());
+        // case TokenKind::TokenPuncPercent: return llvm::BinaryOperator::
+        case TokenKind::TokenOperatorPlus:
+            return getBuilder()->CreateFAdd(lhsVal, rhsVal, lhsVal->getName());
+        case TokenKind::TokenOperatorMinus:
+            return getBuilder()->CreateFAdd(lhsVal, rhsVal, lhsVal->getName());
+        default:
+            ErrorTable::addError(expr->getLHS()->getToken(), "Not Yet Implemented Operator");
+            return lhsVal;
+        }
+    }
+
+    switch (token.getTokenKind())
+    {
+    case TokenKind::TokenOperatorStar:
+        return getBuilder()->CreateMul(lhsVal, rhsVal, lhsVal->getName());
+    case TokenKind::TokenOperatorSlash:
+        return getBuilder()->CreateSDiv(lhsVal, rhsVal, lhsVal->getName());
+    // case TokenKind::TokenPuncPercent: return llvm::BinaryOperator::
+    case TokenKind::TokenOperatorPlus:
+        return getBuilder()->CreateAdd(lhsVal, rhsVal, lhsVal->getName());
+    case TokenKind::TokenOperatorMinus:
+        return getBuilder()->CreateSub(lhsVal, rhsVal, lhsVal->getName());
     default:
-        return nullptr;
+        ErrorTable::addError(expr->getLHS()->getToken(), "Not Yet Implemented Operator");
+        return lhsVal;
     }
 }
 
@@ -483,13 +445,6 @@ llvm::Value *weasel::Context::codegen(ArrayExpression *expr)
     }
 
     auto *loadIns = getBuilder()->CreateLoad(elemIndex->getType(), elemIndex, varName);
-
-    // if (_currentFunction->getParallelType() != ParallelType::None)
-    // {
-    //     auto *node = getTBAA(loadIns->getType());
-    //     auto *mdTBAA = getMDBuilder()->createTBAAStructTagNode(node, node, 0);
-    //     loadIns->setMetadata(llvm::LLVMContext::MD_tbaa, mdTBAA);
-    // }
 
     return loadIns;
 }

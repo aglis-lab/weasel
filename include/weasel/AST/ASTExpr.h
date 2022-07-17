@@ -126,14 +126,13 @@ namespace weasel
     class BinaryOperatorExpression : public Expression
     {
     private:
-        Token _operator;
         Expression *_lhs;
         Expression *_rhs;
 
     public:
-        BinaryOperatorExpression(Token op, Expression *lhs, Expression *rhs) : _operator(op), _lhs(lhs), _rhs(rhs) {}
+        BinaryOperatorExpression(Token op, Expression *lhs, Expression *rhs) : Expression(op, lhs->getType()), _lhs(lhs), _rhs(rhs) {}
 
-        Token getOperator() const { return _operator; }
+        Token getOperator() const { return getToken(); }
         Expression *getLHS() const { return _lhs; }
         Expression *getRHS() const { return _rhs; }
 
