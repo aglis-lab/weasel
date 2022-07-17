@@ -1,4 +1,5 @@
 #include <iostream>
+#include <iomanip>
 #include <sstream>
 #include <llvm/Support/TargetSelect.h>
 #include <llvm/ADT/STLExtras.h>
@@ -14,6 +15,21 @@
 #include "weasel/Symbol/Symbol.h"
 #include "weasel/Basic/FileManager.h"
 #include "weasel/Codegen/Codegen.h"
+
+void debug(std::vector<weasel::Function *> funs)
+{
+    std::cout << std::endl
+              << std::setfill('=') << std::setw(40) << "=" << std::endl
+              << std::endl;
+    for (auto &fun : funs)
+    {
+        fun->debug(0);
+    }
+
+    std::cout << std::endl
+              << std::setfill('=') << std::setw(40) << "=" << std::endl
+              << std::endl;
+}
 
 int main(int argc, char *argv[])
 {
@@ -44,6 +60,9 @@ int main(int argc, char *argv[])
 
     // Parse into AST
     auto funs = parser->parse();
+
+    // TODO: Debugging
+    debug(funs);
 
     // Prepare for codegen
     auto llvmContext = new llvm::LLVMContext();

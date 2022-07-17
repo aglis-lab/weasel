@@ -6,7 +6,6 @@
 
 namespace weasel
 {
-    class Context;
     class Attribute;
 
     class Parser
@@ -27,10 +26,12 @@ namespace weasel
         Function *parseFunction();
 
         // Statement
-        StatementExpression *parseFunctionBody();
         Expression *parseStatement();
-        Expression *parseCompoundStatement();
+        StatementExpression *parseCompoundStatement();
         Expression *parseReturnStatement();
+
+        // Condition Statement
+        // Expression *parseIfStatement();
 
         // Expression
         Expression *parseExpression();

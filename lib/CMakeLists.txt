@@ -1,7 +1,9 @@
 add_library(WeaselLib STATIC
     AST/AST.cpp
+    AST/ASTDebug.cpp
     Basic/FileManager.cpp
     Basic/Number.cpp
+    Basic/Cast.cpp
     Codegen/Codegen.cpp
     IR/Context.cpp
     IR/ContextLiteral.cpp

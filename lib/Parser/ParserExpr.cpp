@@ -3,45 +3,6 @@
 #include "weasel/IR/Context.h"
 #include "weasel/Symbol/Symbol.h"
 
-//  {}
-weasel::StatementExpression *weasel::Parser::parseFunctionBody()
-{
-    auto stmt = new StatementExpression();
-
-    // Enter statement scope
-    {
-        SymbolTable::enterScope();
-    }
-
-    while (!getCurrentToken().isKind(TokenKind::TokenDelimCloseCurlyBracket))
-    {
-        auto expr = parseStatement();
-
-        if (!getCurrentToken().isKind(TokenKind::TokenDelimCloseCurlyBracket))
-        {
-            if (expr)
-            {
-                stmt->addBody(expr);
-            }
-            else
-            {
-                ErrorTable::addError(getCurrentToken(), "Expected statement");
-            }
-        }
-
-        ignoreNewline();
-    }
-
-    getNextToken(); // eat '}'
-
-    // Exit statement scope
-    {
-        SymbolTable::exitScope();
-    }
-
-    return stmt;
-}
-
 weasel::Expression *weasel::Parser::parseStatement()
 {
     // Compound Statement Expression
@@ -62,6 +23,12 @@ weasel::Expression *weasel::Parser::parseStatement()
         return parseReturnStatement();
     }
 
+    // If Statement
+    // if (getCurrentToken().isKind(TokenKind::TokenKeyIf))
+    // {
+    //     return parseIfStatement();
+    // }
+
     auto expr = parseExpression();
     if (expr == nullptr)
     {
@@ -72,6 +39,65 @@ weasel::Expression *weasel::Parser::parseStatement()
     }
 
     return expr;
+}
+
+weasel::StatementExpression *weasel::Parser::parseCompoundStatement()
+{
+    if (!getCurrentToken().isKind(TokenKind::TokenDelimOpenCurlyBracket))
+    {
+        return nullptr;
+    }
+
+    auto stmt = new StatementExpression();
+    if (getNextToken(true).isKind(TokenKind::TokenDelimCloseCurlyBracket))
+    {
+        getNextToken();
+        return stmt;
+    }
+
+    // Enter statement scope
+    {
+        SymbolTable::enterScope();
+    }
+
+    do
+    {
+        auto expr = parseStatement();
+        if (expr != nullptr)
+        {
+            stmt->addBody(expr);
+        }
+        else
+        {
+            ErrorTable::addError(getCurrentToken(), "Expected statement");
+        }
+
+        if (getCurrentToken().isKind(TokenKind::TokenDelimCloseCurlyBracket))
+        {
+            break;
+        }
+
+        if (expr->isCompoundExpression() && !getCurrentToken().isNewline())
+        {
+            continue;
+        }
+
+        if (!getCurrentToken().isNewline())
+        {
+            ErrorTable::addError(getCurrentToken(), "Expected New Line");
+        }
+
+        getNextToken(true);
+    } while (!getCurrentToken().isKind(TokenKind::TokenDelimCloseCurlyBracket));
+
+    getNextToken(); // eat '}'
+
+    // Exit statement scope
+    {
+        SymbolTable::exitScope();
+    }
+
+    return stmt;
 }
 
 weasel::Expression *weasel::Parser::parseLiteralExpression()
@@ -170,6 +196,10 @@ weasel::Expression *weasel::Parser::parseFunctionCallExpression(weasel::Attribut
             getNextToken();
         }
     }
+
+    // TODO: We should eat ')'
+    std::cout << "Function Call: '" << callToken.getValue() << "' with current token ";
+    std::cout << getCurrentToken().getValue() << std::endl;
 
     return new CallExpression(callToken, callToken.getValue(), args);
 }
@@ -278,7 +308,7 @@ weasel::Expression *weasel::Parser::parsePrimaryExpression()
 weasel::Expression *weasel::Parser::parseExpression()
 {
     auto lhs = parsePrimaryExpression();
-    if (!lhs)
+    if (lhs == nullptr)
     {
         return ErrorTable::addError(getCurrentToken(), "Expected LHS");
     }
@@ -342,36 +372,6 @@ weasel::Expression *weasel::Parser::parseReturnStatement()
     return new ReturnExpression(retToken, expr);
 }
 
-weasel::Expression *weasel::Parser::parseCompoundStatement()
-{
-    auto stmt = new StatementExpression();
-
-    // Enter Statement Scope
-    {
-        SymbolTable::enterScope();
-    }
-
-    getNextToken(true); // eat '{'
-    while (!getCurrentToken().isKind(TokenKind::TokenDelimCloseCurlyBracket))
-    {
-        auto expr = parseExpression();
-        if (!expr)
-        {
-            return ErrorTable::addError(getCurrentToken(), "Expected statement");
-        }
-
-        stmt->addBody(expr);
-    }
-    getNextToken(true); // eat '}'
-
-    // Exit Statement Scope
-    {
-        SymbolTable::exitScope();
-    }
-
-    return stmt;
-}
-
 // let 'identifier' 'datatype'  = 'expr'
 // let 'identifier' 'datatype'
 // let 'identifier'             = 'expr'
@@ -398,7 +398,6 @@ weasel::Expression *weasel::Parser::parseDeclarationExpression()
     getNextToken(); // eat 'identifier' and get next token
 
     auto type = parseDataType();
-
     if (getCurrentToken().isKind(TokenKind::TokenSpaceNewline))
     {
         if (type == nullptr)

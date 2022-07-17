@@ -108,7 +108,7 @@ llvm::Function *weasel::Context::codegen(weasel::Function *funAST)
 
     if (funAST->isDefine())
     {
-        auto entry = llvm::BasicBlock::Create(*getContext(), "", funLLVM);
+        auto entry = llvm::BasicBlock::Create(*getContext(), getDefaultLabel(), funLLVM);
         getBuilder()->SetInsertPoint(entry);
 
         // Enter to parameter scope
@@ -173,7 +173,7 @@ llvm::Value *weasel::Context::codegen(StatementExpression *expr)
 
     for (auto &item : expr->getBody())
     {
-        item->codegen(this);
+        auto val = item->codegen(this);
     }
 
     // Exit from statement
@@ -182,6 +182,10 @@ llvm::Value *weasel::Context::codegen(StatementExpression *expr)
     }
 
     return nullptr;
+}
+
+llvm::Value *weasel::Context::codegen(IfStatementExpression *expr)
+{
 }
 
 // TODO: Not Fully Implemented

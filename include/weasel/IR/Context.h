@@ -85,6 +85,9 @@ namespace weasel
         llvm::Value *codegen(NilLiteralExpression *expr) const;
         llvm::Value *codegen(ArrayExpression *expr);
 
+        // Condition Statement
+        llvm::Value *codegen(IfStatementExpression *expr);
+
         // TODO: Need to implement modulo operator
         llvm::Value *codegen(BinaryOperatorExpression *expr);
         llvm::Function *codegen(Function *func);

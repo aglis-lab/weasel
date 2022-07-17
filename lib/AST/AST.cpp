@@ -48,6 +48,11 @@ llvm::Value *weasel::StatementExpression::codegen(Context *c)
     return c->codegen(this);
 }
 
+llvm::Value *weasel::IfStatementExpression::codegen(Context *c)
+{
+    return c->codegen(this);
+}
+
 llvm::Value *weasel::VariableExpression::codegen(Context *c)
 {
     return c->codegen(this);
@@ -81,4 +86,10 @@ llvm::Value *weasel::NilLiteralExpression::codegen(Context *c)
 llvm::Function *weasel::Function::codegen(Context *c)
 {
     return c->codegen(this);
+}
+
+// Some Type Checking
+bool weasel::Expression::isCompoundExpression()
+{
+    return dynamic_cast<weasel::StatementExpression *>(this) != nullptr;
 }

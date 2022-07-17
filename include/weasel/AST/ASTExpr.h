@@ -53,6 +53,7 @@ namespace weasel
         Expression *getValue() const { return _value; }
 
         llvm::Value *codegen(Context *context) override;
+        void debug(int shift) override;
     };
 
     // Call Expression
@@ -68,6 +69,7 @@ namespace weasel
         std::vector<Expression *> getArguments() const { return _args; }
 
         llvm::Value *codegen(Context *context) override;
+        void debug(int shift) override;
     };
 
     // Variable Expression
@@ -84,6 +86,7 @@ namespace weasel
         bool isAddressOf() const { return _addressOf; }
 
         llvm::Value *codegen(Context *context) override;
+        void debug(int shift) override;
     };
 
     class ArrayExpression : public VariableExpression
@@ -97,6 +100,7 @@ namespace weasel
         Expression *getIndex() const { return _indexExpr; }
 
         llvm::Value *codegen(Context *context) override;
+        void debug(int shift) override;
     };
 
     // Declaration Expression
@@ -115,6 +119,7 @@ namespace weasel
         inline Expression *getValue() const { return _value; }
 
         llvm::Value *codegen(Context *context) override;
+        void debug(int shift) override;
     };
 
     // Binary Operator Expression
@@ -133,6 +138,7 @@ namespace weasel
         Expression *getRHS() const { return _rhs; }
 
         llvm::Value *codegen(Context *context) override;
+        void debug(int shift) override;
     };
 
     // Unary Operator Expression
@@ -146,6 +152,7 @@ namespace weasel
         UnaryOperatorExpression(Token lhs, Expression *rhs) : _lhs(lhs), _rhs(rhs) {}
 
         llvm::Value *codegen(Context *context) override { return nullptr; }
+        void debug(int shift) override;
     };
 
     // Array Expression
@@ -162,6 +169,7 @@ namespace weasel
         std::vector<Expression *> getItems() const { return _items; }
 
         llvm::Value *codegen(Context *context) override;
+        void debug(int shift) override;
     };
 
 } // namespace weasel
@@ -186,6 +194,20 @@ namespace weasel
         std::vector<Expression *> getBody() const { return _body; }
 
         llvm::Value *codegen(Context *context) override;
+        void debug(int shift) override;
+    };
+
+    class IfStatementExpression : Expression
+    {
+    private:
+        Expression *_condition;
+        StatementExpression *_statement;
+
+    public:
+        IfStatementExpression(Expression *condition, StatementExpression *statement) : _condition(condition), _statement(statement) {}
+
+        llvm::Value *codegen(Context *context) override;
+        void debug(int shift) override;
     };
 
 } // namespace weasel

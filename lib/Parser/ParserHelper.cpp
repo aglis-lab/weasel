@@ -24,6 +24,9 @@ weasel::Type *weasel::Parser::parseDataType()
         auto containedType = getCurrentToken().toType();
         auto type = Type::getPointerType(containedType);
 
+        // Remove current token data type
+        getNextToken();
+
         return type;
     }
 

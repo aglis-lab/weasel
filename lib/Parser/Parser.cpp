@@ -10,7 +10,7 @@ std::vector<weasel::Function *> weasel::Parser::parse()
 {
     std::vector<weasel::Function *> funs;
 
-    while (!getNextToken(true).isKind(TokenKind::TokenEOF))
+    while (!getNextToken().isKind(TokenKind::TokenEOF))
     {
         // Function
         if (!getCurrentToken().isKind(TokenKind::TokenKeyFun))

@@ -4,19 +4,6 @@
 #include "weasel/IR/Context.h"
 #include "weasel/Symbol/Symbol.h"
 
-// weasel::Function *weasel::Parser::parsePrallelFunction()
-// {
-//     auto parallelType = ParallelType::ParallelFunction;
-//     if (getNextToken(true)->isKind(TokenKind::TokenKeyKernel))
-//     {
-//         parallelType = ParallelType::ParallelKernel;
-
-//         getNextToken(true); // eat kernel
-//     }
-
-//     return parseFunction(parallelType);
-// }
-
 weasel::Function *weasel::Parser::parseFunction()
 {
     auto fun = parseDeclareFunction();
@@ -60,9 +47,7 @@ weasel::Function *weasel::Parser::parseFunction()
         }
     }
 
-    getNextToken(true); // eat {
-
-    auto body = parseFunctionBody();
+    auto body = parseCompoundStatement();
 
     // Exit parameter scope
     {
@@ -85,7 +70,7 @@ weasel::Function *weasel::Parser::parseFunction()
     return fun;
 }
 
-// extern 'fun' identifier '(' args ')' funTy
+// 'fun' identifier '(' args ')' funTy
 weasel::Function *weasel::Parser::parseDeclareFunction()
 {
     // get next and eat 'fun'
@@ -138,7 +123,7 @@ weasel::Function *weasel::Parser::parseDeclareFunction()
 
         args.push_back(new FunctionArgument(idenToken, identifier, type));
 
-        if (!getNextToken().isKind(TokenKind::TokenPuncComma))
+        if (!getCurrentToken().isKind(TokenKind::TokenPuncComma))
         {
             break;
         }

@@ -16,6 +16,7 @@ namespace weasel
         long long getValue() const { return _value; }
 
         llvm::Value *codegen(Context *context) override;
+        void debug(int shift) override;
     };
 
     // Float Literal Expression
@@ -30,6 +31,7 @@ namespace weasel
         float getValue() const { return _value; }
 
         llvm::Value *codegen(Context *context) override;
+        void debug(int shift) override;
     };
 
     // Float Literal Expression
@@ -44,6 +46,7 @@ namespace weasel
         double getValue() const { return _value; }
 
         llvm::Value *codegen(Context *context) override;
+        void debug(int shift) override;
     };
 
     // Boolean Literal Expression
@@ -58,6 +61,7 @@ namespace weasel
         bool getValue() const { return _value; }
 
         llvm::Value *codegen(Context *context) override;
+        void debug(int shift) override;
     };
 
     // Character Literal Expression
@@ -72,6 +76,7 @@ namespace weasel
         char getValue() const { return _value; }
 
         llvm::Value *codegen(Context *context) override;
+        void debug(int shift) override;
     };
 
     // String Literal Expression
@@ -86,6 +91,7 @@ namespace weasel
         std::string getValue() const { return _value; }
 
         llvm::Value *codegen(Context *context) override;
+        void debug(int shift) override;
     };
 
     // Nil Literal Expression
@@ -95,6 +101,7 @@ namespace weasel
         NilLiteralExpression(Token token) : LiteralExpression(token, Type::getPointerType(nullptr)) {}
 
         llvm::Value *codegen(Context *context) override;
+        void debug(int shift) override;
     };
 
 } // namespace weasel

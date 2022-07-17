@@ -46,7 +46,7 @@ namespace weasel
     };
 
     // Func
-    class Function
+    class Function : public ASTDebug
     {
     private:
         std::string _identifier;
@@ -77,6 +77,9 @@ namespace weasel
 
     public:
         llvm::Function *codegen(Context *c);
+
+    public:
+        void debug(int shift);
     };
 
 } // namespace weasel

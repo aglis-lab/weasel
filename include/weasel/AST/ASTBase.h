@@ -2,6 +2,7 @@
 
 #include "weasel/Lexer/Token.h"
 #include "weasel/Type/Type.h"
+#include "weasel/Basic/Cast.h"
 
 namespace llvm
 {
@@ -11,8 +12,21 @@ namespace llvm
 // Expression Base Type
 namespace weasel
 {
+    // For debugging purpose
+    class ASTDebug
+    {
+    protected:
+        int defaultShift = 2;
+
+    protected:
+        void printDebug(const std::string &val, int shift);
+
+    public:
+        virtual void debug(int shift) = 0;
+    };
+
     // Expression
-    class Expression
+    class Expression : public ASTDebug
     {
     protected:
         Token _token; // Token each expression
@@ -28,6 +42,9 @@ namespace weasel
         inline void setType(Type *type) { _type = type; }
 
         virtual llvm::Value *codegen(Context *context) = 0;
+
+    public:
+        bool isCompoundExpression();
     };
 
     // Literal Expression

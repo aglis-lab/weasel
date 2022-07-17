@@ -178,7 +178,8 @@ void weasel::Codegen::createObject(char *outputFile) const
 
     if (!pass.run(*getModule()))
     {
-        llvm::errs() << "Pass Manager failed";
+        llvm::errs() << "Pass Manager failed\n";
+        llvm::errs() << *getModule();
         exit(1);
     }
 
