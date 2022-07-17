@@ -309,7 +309,7 @@ llvm::Value *weasel::Context::codegen(BinaryOperatorExpression *expr)
         return getBuilder()->CreateLoad(allocLhs->getType(), allocLhs);
     }
 
-    if (lhs->getType()->isFloatType())
+    if (lhs->getType()->isFloatType() || lhs->getType()->isDoubleType())
     {
         switch (token.getTokenKind())
         {
