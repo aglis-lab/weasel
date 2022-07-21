@@ -31,7 +31,7 @@ namespace weasel
         Expression *parseReturnStatement();
 
         // Condition Statement
-        // Expression *parseIfStatement();
+        Expression *parseIfStatement();
 
         // Expression
         Expression *parseExpression();

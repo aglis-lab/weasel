@@ -6,7 +6,7 @@
 #include "weasel/Symbol/Symbol.h"
 #include "weasel/Config/Config.h"
 
-weasel::Context::Context(llvm::LLVMContext *context, const std::string &moduleName, bool isParallel)
+weasel::Context::Context(llvm::LLVMContext *context, const std::string &moduleName)
 {
     _context = context;
     _module = new llvm::Module(moduleName, *_context);
@@ -59,8 +59,8 @@ llvm::Function *weasel::Context::codegen(weasel::Function *funAST)
     auto isVararg = funAST->getFunctionType()->getIsVararg();
     auto funArgs = funAST->getArgs();
     auto retTy = funAST->getFunctionType()->getReturnType();
-    auto args = std::vector<llvm::Type *>();
     auto argsLength = funArgs.size() - (isVararg ? 1 : 0);
+    auto args = std::vector<llvm::Type *>(argsLength);
 
     // Set Arguments
     for (size_t i = 0; i < argsLength; i++)
@@ -68,7 +68,7 @@ llvm::Function *weasel::Context::codegen(weasel::Function *funAST)
         auto arg = funArgs[i]->getArgumentType();
         auto argV = arg->codegen(this);
 
-        args.push_back(argV);
+        args[i] = argV;
     }
 
     auto linkage = llvm::GlobalValue::LinkageTypes::ExternalLinkage;
@@ -85,13 +85,13 @@ llvm::Function *weasel::Context::codegen(weasel::Function *funAST)
 
     // Add Function to symbol table
     {
-        auto attr = new Attribute(funName, AttributeScope::ScopeGlobal, AttributeKind::SymbolFunction, funLLVM);
+        auto attr = new Attribute(funName, AttributeScope::ScopeGlobal, AttributeKind::SymbolFunction, funLLVM, retTy);
         SymbolTable::insert(funName, attr);
     }
 
     if (funAST->isDefine())
     {
-        auto entry = llvm::BasicBlock::Create(*getContext(), getDefaultLabel(), funLLVM);
+        auto entry = llvm::BasicBlock::Create(*getContext(), "entry", funLLVM);
         getBuilder()->SetInsertPoint(entry);
 
         // Enter to parameter scope
@@ -101,16 +101,10 @@ llvm::Function *weasel::Context::codegen(weasel::Function *funAST)
         for (auto &item : funLLVM->args())
         {
             auto argExpr = funArgs[idx++];
-            auto *paramTy = argExpr->getArgumentType();
+            auto paramTy = argExpr->getArgumentType();
             auto argName = argExpr->getArgumentName();
 
             item.setName(argName);
-
-            // if ((paramTy->isPointerTy() || paramTy->isArrayTy()) && parallelType != ParallelType::None)
-            // {
-            //     item.addAttr(llvm::Attribute::AttrKind::NoCapture);
-            //     item.addAttr(llvm::Attribute::AttrKind::ReadOnly);
-            // }
 
             auto attrKind = AttributeKind::SymbolVariable;
             if (paramTy->isArrayType())
@@ -122,7 +116,7 @@ llvm::Function *weasel::Context::codegen(weasel::Function *funAST)
                 attrKind = AttributeKind::SymbolPointer;
             }
 
-            auto attr = new Attribute(argName, AttributeScope::ScopeParam, attrKind, &item);
+            auto attr = new Attribute(argName, AttributeScope::ScopeParam, attrKind, &item, paramTy);
             SymbolTable::insert(argName, attr);
         }
 
@@ -146,7 +140,6 @@ llvm::Function *weasel::Context::codegen(weasel::Function *funAST)
     return funLLVM;
 }
 
-// TODO: Not Implemented Yet
 llvm::Value *weasel::Context::codegen(StatementExpression *expr)
 {
     // Enter to new statement
@@ -167,11 +160,38 @@ llvm::Value *weasel::Context::codegen(StatementExpression *expr)
     return nullptr;
 }
 
-llvm::Value *weasel::Context::codegen(IfStatementExpression *expr)
+llvm::Value *weasel::Context::codegen(ConditionStatementExpression *expr)
 {
+    auto cond = expr->getCondition();
+    auto body = expr->getBody();
+    auto condType = cond->getType();
+
+    if (!condType->isBooleanType())
+    {
+        return ErrorTable::addError(cond->getToken(), "Expected Boolean Type");
+    }
+
+    auto curBranch = getBuilder()->GetInsertBlock();
+    auto parentFun = curBranch->getParent();
+    auto ifBranch = llvm::BasicBlock::Create(*this->getContext(), "", parentFun);
+    auto thenBranch = llvm::BasicBlock::Create(*this->getContext());
+
+    auto condVal = cond->codegen(this);
+    llvm::BranchInst::Create(ifBranch, thenBranch, condVal, curBranch);
+
+    getBuilder()->SetInsertPoint(ifBranch);
+    body->codegen(this);
+    getBuilder()->CreateBr(thenBranch);
+
+    // Emit Then Branch
+    parentFun->getBasicBlockList().push_back(thenBranch);
+    getBuilder()->SetInsertPoint(thenBranch);
+
+    // TODO: Calculate PHI
+
+    return nullptr;
 }
 
-// TODO: Not Fully Implemented
 llvm::Value *weasel::Context::codegen(CallExpression *expr)
 {
     auto identifier = expr->getIdentifier();
@@ -264,15 +284,9 @@ llvm::Value *weasel::Context::codegen(DeclarationExpression *expr)
         {
             attrKind = AttributeKind::SymbolVariable;
         }
-        auto attr = new Attribute(varName, AttributeScope::ScopeLocal, attrKind, alloc);
+        auto attr = new Attribute(varName, AttributeScope::ScopeLocal, attrKind, alloc, declType);
         SymbolTable::insert(varName, attr);
     }
-
-    // auto value = expr->getValue();
-    // if (value)
-    // {
-    //     getBuilder()->CreateStore(value, alloc);
-    // }
 
     return alloc;
 }
@@ -378,7 +392,7 @@ llvm::Value *weasel::Context::codegen(ReturnExpression *expr)
     return getBuilder()->CreateRet(val);
 }
 
-llvm::Value *weasel::Context::codegen(VariableExpression *expr) const
+llvm::Value *weasel::Context::codegen(VariableExpression *expr)
 {
     // Get Allocator from Symbol Table
     auto varName = expr->getIdentifier();
@@ -388,7 +402,7 @@ llvm::Value *weasel::Context::codegen(VariableExpression *expr) const
         return ErrorTable::addError(expr->getToken(), "Variable " + varName + " Not declared");
     }
 
-    auto *alloc = attr->getValue();
+    auto alloc = attr->getValue();
     if (expr->isAddressOf())
     {
         return alloc;
@@ -399,7 +413,8 @@ llvm::Value *weasel::Context::codegen(VariableExpression *expr) const
         return alloc;
     }
 
-    return getBuilder()->CreateLoad(alloc->getType(), alloc, varName);
+    auto type = attr->getType()->codegen(this);
+    return getBuilder()->CreateLoad(type, alloc, varName);
 }
 
 // TODO: String as array of byte
@@ -408,7 +423,7 @@ llvm::Value *weasel::Context::codegen(ArrayExpression *expr)
     // Get Allocator from Symbol Table
     auto varName = expr->getIdentifier();
     auto attr = SymbolTable::get(varName);
-    auto *alloc = attr->getValue();
+    auto alloc = attr->getValue();
     auto indexValue = expr->getIndex()->codegen(this);
     auto longTy = getBuilder()->getInt64Ty();
 

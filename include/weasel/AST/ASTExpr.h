@@ -80,7 +80,7 @@ namespace weasel
         bool _addressOf;
 
     public:
-        VariableExpression(Token token, std::string identifier, bool addressOf = false) : Expression(token), _identifier(identifier), _addressOf(addressOf) {}
+        VariableExpression(Token token, std::string identifier, Type *type, bool addressOf = false) : Expression(token, type), _identifier(identifier), _addressOf(addressOf) {}
 
         std::string getIdentifier() const { return _identifier; }
         bool isAddressOf() const { return _addressOf; }
@@ -95,7 +95,7 @@ namespace weasel
         Expression *_indexExpr;
 
     public:
-        ArrayExpression(Token token, std::string identifier, Expression *indexExpr, bool addressOf = false) : VariableExpression(token, identifier, addressOf), _indexExpr(indexExpr) {}
+        ArrayExpression(Token token, std::string identifier, Expression *indexExpr, bool addressOf = false) : VariableExpression(token, identifier, nullptr, addressOf), _indexExpr(indexExpr) {}
 
         Expression *getIndex() const { return _indexExpr; }
 
@@ -196,14 +196,17 @@ namespace weasel
         void debug(int shift) override;
     };
 
-    class IfStatementExpression : Expression
+    class ConditionStatementExpression : public Expression
     {
     private:
         Expression *_condition;
         StatementExpression *_statement;
 
     public:
-        IfStatementExpression(Expression *condition, StatementExpression *statement) : _condition(condition), _statement(statement) {}
+        ConditionStatementExpression(Token token, Expression *condition, StatementExpression *statement) : Expression(token), _condition(condition), _statement(statement) {}
+
+        inline Expression *getCondition() const { return _condition; }
+        inline StatementExpression *getBody() const { return _statement; }
 
         llvm::Value *codegen(Context *context) override;
         void debug(int shift) override;

@@ -11,6 +11,9 @@ namespace weasel
 
     enum class TypeID
     {
+        // No Type
+        NoType,
+
         // Primitive Types
         FloatType,
         DoubleType,
@@ -40,6 +43,7 @@ namespace weasel
         inline unsigned getTypeWidth() const { return _width; }
         inline bool isSigned() const { return _isSigned; }
 
+        inline bool isBooleanType() const { return isIntegerType() && _width == 1; }
         inline bool isFloatType() const { return _typeId == TypeID::FloatType; }
         inline bool isDoubleType() const { return _typeId == TypeID::DoubleType; }
 

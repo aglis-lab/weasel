@@ -1,7 +1,15 @@
-extern fun printf(msg *byte, param ...*int) int { }
+extern fun printf(msg *byte, param ...*long) int { }
+
+fun hello() {
+    printf("Hello World\n")
+}
 
 fun main() {
-    let n = 12
-    let i = n
-    printf("Hello World %d\n", i)
+    hello()
+
+    if i {
+        hello()
+    }
+
+    hello()
 }

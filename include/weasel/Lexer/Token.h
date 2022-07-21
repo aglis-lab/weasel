@@ -165,6 +165,7 @@ namespace weasel
         Token(TokenKind kind, SourceLocation location, char *startToken, char *endToken) : _startBuffer(startToken), _endBuffer(endToken), _kind(kind), _location(location) {}
         Token() : _kind(TokenKind::TokenUndefined) {}
 
+        // Fast Checking //
         inline bool isUndefined() const { return _kind == TokenKind::TokenUndefined; }
         inline bool isKind(TokenKind type) const { return type == _kind; }
         inline bool isDataType() const { return _kind >= TokenKind::TokenTyVoid && _kind <= TokenKind::TokenTyDecimal; }
@@ -172,7 +173,12 @@ namespace weasel
         inline bool isLiteral() const { return _kind >= TokenKind::TokenLitNil && _kind <= TokenKind::TokenLitString; }
         inline bool isOperator() const { return _kind >= TokenKind::TokenOperatorStart && _kind <= TokenKind::TokenOperatorEnd; }
         inline bool isNewline() const { return _kind == TokenKind::TokenSpaceNewline; }
+        inline bool isOpenParen() const { return _kind == TokenKind::TokenDelimOpenParen; }
+        inline bool isCloseParen() const { return _kind == TokenKind::TokenDelimCloseParen; }
+        inline bool isOpenCurly() const { return _kind == TokenKind::TokenDelimOpenCurlyBracket; }
+        inline bool isCloseCurly() const { return _kind == TokenKind::TokenDelimCloseCurlyBracket; }
 
+        // Buffer //
         inline char *getStartBuffer() const { return _startBuffer; }
         inline char *getEndBuffer() const { return _endBuffer; }
 

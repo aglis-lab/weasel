@@ -51,7 +51,7 @@ namespace weasel
         // void parallelDestroy() const;
 
     public:
-        explicit Context(llvm::LLVMContext *context, const std::string &moduleName, bool isParallel = false);
+        explicit Context(llvm::LLVMContext *context, const std::string &moduleName);
 
         llvm::LLVMContext *getContext() const { return _context; }
         llvm::Module *getModule() const { return _module; }
@@ -77,7 +77,7 @@ namespace weasel
         llvm::Value *codegen(StringLiteralExpression *expr) const;
         llvm::Value *codegen(ArrayLiteralExpression *expr);
 
-        llvm::Value *codegen(VariableExpression *expr) const;
+        llvm::Value *codegen(VariableExpression *expr);
         llvm::Value *codegen(StatementExpression *expr);
         llvm::Value *codegen(CallExpression *expr);
         llvm::Value *codegen(ReturnExpression *expr);
@@ -86,9 +86,8 @@ namespace weasel
         llvm::Value *codegen(ArrayExpression *expr);
 
         // Condition Statement
-        llvm::Value *codegen(IfStatementExpression *expr);
+        llvm::Value *codegen(ConditionStatementExpression *expr);
 
-        // TODO: Need to implement modulo operator
         llvm::Value *codegen(BinaryOperatorExpression *expr);
         llvm::Function *codegen(Function *func);
     };

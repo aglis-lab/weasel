@@ -36,7 +36,8 @@ namespace weasel
 
     public:
         Attribute(std::string identifier, AttributeScope scope, AttributeKind kind, Type *type) : _identifier(std::move(identifier)), _scope(scope), _kind(kind), _type(type) {}
-        Attribute(std::string identifier, AttributeScope scope, AttributeKind kind, llvm::Value *value) : _identifier(std::move(identifier)), _scope(scope), _kind(kind), _value(value) {}
+
+        Attribute(std::string identifier, AttributeScope scope, AttributeKind kind, llvm::Value *value, Type *type) : _identifier(std::move(identifier)), _scope(scope), _kind(kind), _value(value), _type(type) {}
 
         inline bool isKind(AttributeKind kind) const { return _kind == kind; }
         inline bool isScope(AttributeScope scope) const { return _scope == scope; }

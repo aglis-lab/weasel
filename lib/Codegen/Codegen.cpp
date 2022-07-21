@@ -27,28 +27,7 @@ weasel::Codegen::Codegen(Context *context, std::vector<Function *> funs)
 
 bool weasel::Codegen::compile()
 {
-    // if (_funs.empty())
-    //     return _isParallel;
-
-    // auto isHostCL = !_isParallel && !spirvIR.empty();
-    // if (isHostCL)
-    // {
-    //     auto *builder = _context->getBuilder();
-    //     auto *value = builder->getInt32(spirvIR.size());
-    //     auto linkage = llvm::GlobalVariable::LinkageTypes::PrivateLinkage;
-    //     auto *spirvSource = builder->CreateGlobalString(spirvIR, WEASEL_KERNEL_SOURCE_NAME + std::string(".str"), 0, getModule());
-    //     auto idxList = std::vector<llvm::Value *>{
-    //         builder->getInt64(0),
-    //         builder->getInt64(0)};
-    //     auto *gep = llvm::ConstantExpr::getGetElementPtr(spirvSource->getType()->getElementType(), spirvSource, idxList, true);
-
-    //     new llvm::GlobalVariable(*getModule(), builder->getInt8PtrTy(), true, linkage, gep, WEASEL_KERNEL_SOURCE_NAME);
-    //     new llvm::GlobalVariable(*getModule(), builder->getInt32Ty(), true, linkage, value, WEASEL_KERNEL_SOURCE_SIZE_NAME);
-    // }
-
-    // _context->setHostCL(isHostCL);
-
-    auto pass = Passes(getModule());
+    // auto pass = Passes(getModule());
     for (const auto &item : _funs)
     {
         auto identifier = item->getIdentifier();
@@ -72,7 +51,7 @@ bool weasel::Codegen::compile()
             return false;
         }
 
-        pass.run(*fun);
+        // pass.run(*fun);
     }
 
     auto cpu = "generic";
@@ -114,34 +93,6 @@ bool weasel::Codegen::compile()
 
     return true;
 }
-
-// std::string weasel::Codegen::createSpirv()
-// {
-//     std::ostringstream ir;
-//     if (!_isParallel)
-//     {
-//         return "";
-//     }
-
-//     if (_funs.empty())
-//     {
-//         return "";
-//     }
-
-//     if (!llvm::regularizeLlvmForSpirv(getModule(), _err))
-//     {
-//         return "";
-//     }
-
-//     if (!llvm::writeSpirv(getModule(), ir, _err))
-//     {
-//         return "";
-//     }
-
-//     ir.flush();
-
-//     return ir.str();
-// }
 
 void weasel::Codegen::createObject(char *outputFile) const
 {

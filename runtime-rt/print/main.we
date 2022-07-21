@@ -5,6 +5,6 @@ fun hello() {
 }
 
 fun main() {
-    let a = (12d + 3d) * 2d
-    printf("Value: %f\n", a)
+    printf("Test\n")
+    hello()
 }

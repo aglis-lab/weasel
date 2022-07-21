@@ -24,10 +24,10 @@ weasel::Expression *weasel::Parser::parseStatement()
     }
 
     // If Statement
-    // if (getCurrentToken().isKind(TokenKind::TokenKeyIf))
-    // {
-    //     return parseIfStatement();
-    // }
+    if (getCurrentToken().isKind(TokenKind::TokenKeyIf))
+    {
+        return parseIfStatement();
+    }
 
     auto expr = parseExpression();
     if (expr == nullptr)
@@ -39,6 +39,35 @@ weasel::Expression *weasel::Parser::parseStatement()
     }
 
     return expr;
+}
+
+weasel::Expression *weasel::Parser::parseIfStatement()
+{
+    auto token = getCurrentToken();
+
+    getNextToken(); // eat 'if'
+
+    auto expr = parsePrimaryExpression();
+    if (expr == nullptr)
+    {
+        auto errToken = getCurrentToken();
+
+        getNextTokenUntil(TokenKind::TokenSpaceNewline);
+        ErrorTable::addError(errToken, "Invalid condition expression");
+    }
+
+    getNextToken(true); // eat ')'
+
+    auto body = parseCompoundStatement();
+    if (body == nullptr)
+    {
+        auto errToken = getCurrentToken();
+
+        getNextTokenUntil(TokenKind::TokenSpaceNewline);
+        ErrorTable::addError(errToken, "Invalid if body statement expression");
+    }
+
+    return new ConditionStatementExpression(token, expr, body);
 }
 
 weasel::StatementExpression *weasel::Parser::parseCompoundStatement()
@@ -227,13 +256,14 @@ weasel::Expression *weasel::Parser::parseIdentifierExpression()
             getNextToken(); // eat [
             auto indexExpr = parseExpression();
 
-            return new ArrayExpression(indexExpr->getToken(), identifier, indexExpr);
+            return new ArrayExpression(indexExpr->getToken(), identifier, indexExpr, attr->getType());
         }
     }
 
-    return new VariableExpression(getCurrentToken(), identifier);
+    return new VariableExpression(getCurrentToken(), identifier, attr->getType());
 }
 
+// TODO: Need to consume last ')'
 weasel::Expression *weasel::Parser::parseParenExpression()
 {
     getNextToken(); // eat (
@@ -243,7 +273,7 @@ weasel::Expression *weasel::Parser::parseParenExpression()
         return ErrorTable::addError(getCurrentToken(), "Expected expression inside after (..");
     }
 
-    if (!getCurrentToken().isKind(TokenKind::TokenDelimCloseParen))
+    if (!getCurrentToken().isCloseParen())
     {
         return ErrorTable::addError(getCurrentToken(), "Expected )");
     }
@@ -291,7 +321,7 @@ weasel::Expression *weasel::Parser::parsePrimaryExpression()
     {
         if (getNextToken().isKind(TokenKind::TokenIdentifier))
         {
-            return new VariableExpression(getCurrentToken(), getCurrentToken().getValue(), true);
+            return parseIdentifierExpression();
         }
 
         return ErrorTable::addError(getCurrentToken(), "Expected Variable Identifier for address of");
@@ -459,19 +489,21 @@ weasel::Expression *weasel::Parser::parseDeclarationExpression()
         return ErrorTable::addError(errToken, "Expected RHS Value Expression but got not valid expression");
     }
 
+    if (type == nullptr)
+    {
+        type = val->getType();
+    }
+
     // Insert Symbol Table
     {
         AttributeKind attrKind = AttributeKind::SymbolVariable;
-        if (type)
+        if (type->isArrayType())
         {
-            if (type->isArrayType())
-            {
-                attrKind = AttributeKind::SymbolArray;
-            }
-            else if (type->isPointerType())
-            {
-                attrKind = AttributeKind::SymbolPointer;
-            }
+            attrKind = AttributeKind::SymbolArray;
+        }
+        else if (type->isPointerType())
+        {
+            attrKind = AttributeKind::SymbolPointer;
         }
 
         auto attr = new Attribute(identifier, AttributeScope::ScopeLocal, attrKind, type);

@@ -61,9 +61,12 @@ void weasel::StatementExpression::debug(int shift)
     }
 }
 
-// TODO: Not Implemented Yet
-void weasel::IfStatementExpression::debug(int shift)
+void weasel::ConditionStatementExpression::debug(int shift)
 {
+    this->printDebug("If Statement", shift);
+    _condition->debug(shift);
+
+    _statement->debug(shift + this->defaultShift);
 }
 
 void weasel::VariableExpression::debug(int shift)

@@ -48,7 +48,7 @@ llvm::Value *weasel::StatementExpression::codegen(Context *c)
     return c->codegen(this);
 }
 
-llvm::Value *weasel::IfStatementExpression::codegen(Context *c)
+llvm::Value *weasel::ConditionStatementExpression::codegen(Context *c)
 {
     return c->codegen(this);
 }

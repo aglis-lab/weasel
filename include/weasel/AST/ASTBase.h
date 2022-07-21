@@ -40,6 +40,7 @@ namespace weasel
         inline Token getToken() const { return _token; }
         inline Type *getType() const { return _type; }
         inline void setType(Type *type) { _type = type; }
+        inline bool isNoType() const { return _type == nullptr; }
 
         virtual llvm::Value *codegen(Context *context) = 0;
 
