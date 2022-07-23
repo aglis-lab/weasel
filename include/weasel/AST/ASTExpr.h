@@ -130,7 +130,14 @@ namespace weasel
         Expression *_rhs;
 
     public:
-        BinaryOperatorExpression(Token op, Expression *lhs, Expression *rhs) : Expression(op, lhs->getType()), _lhs(lhs), _rhs(rhs) {}
+        BinaryOperatorExpression(Token op, Expression *lhs, Expression *rhs) : Expression(op, lhs->getType()), _lhs(lhs), _rhs(rhs)
+        {
+            auto isSigned = lhs->getType()->isSigned() && rhs->getType()->isSigned();
+            if (op.isComparison())
+            {
+                this->_type = Type::getIntegerType(1, isSigned);
+            }
+        }
 
         Token getOperator() const { return getToken(); }
         Expression *getLHS() const { return _lhs; }

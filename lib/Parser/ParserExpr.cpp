@@ -47,16 +47,14 @@ weasel::Expression *weasel::Parser::parseIfStatement()
 
     getNextToken(); // eat 'if'
 
-    auto expr = parsePrimaryExpression();
+    auto expr = parseExpression();
     if (expr == nullptr)
     {
         auto errToken = getCurrentToken();
 
         getNextTokenUntil(TokenKind::TokenSpaceNewline);
-        ErrorTable::addError(errToken, "Invalid condition expression");
+        return ErrorTable::addError(errToken, "Invalid condition expression");
     }
-
-    getNextToken(true); // eat ')'
 
     auto body = parseCompoundStatement();
     if (body == nullptr)
@@ -64,7 +62,7 @@ weasel::Expression *weasel::Parser::parseIfStatement()
         auto errToken = getCurrentToken();
 
         getNextTokenUntil(TokenKind::TokenSpaceNewline);
-        ErrorTable::addError(errToken, "Invalid if body statement expression");
+        return ErrorTable::addError(errToken, "Invalid if body statement expression");
     }
 
     return new ConditionStatementExpression(token, expr, body);
@@ -237,7 +235,7 @@ weasel::Expression *weasel::Parser::parseIdentifierExpression()
 {
     auto identifier = getCurrentToken().getValue();
     auto attr = SymbolTable::get(identifier);
-    if (!attr)
+    if (attr == nullptr)
     {
         return ErrorTable::addError(getCurrentToken(), "Variable not yet declared");
     }

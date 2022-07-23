@@ -27,7 +27,7 @@ weasel::Codegen::Codegen(Context *context, std::vector<Function *> funs)
 
 bool weasel::Codegen::compile()
 {
-    // auto pass = Passes(getModule());
+    auto pass = Passes(getModule());
     for (const auto &item : _funs)
     {
         auto identifier = item->getIdentifier();
@@ -51,7 +51,7 @@ bool weasel::Codegen::compile()
             return false;
         }
 
-        // pass.run(*fun);
+        pass.run(*fun);
     }
 
     auto cpu = "generic";

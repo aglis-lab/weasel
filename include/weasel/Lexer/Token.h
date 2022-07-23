@@ -61,38 +61,40 @@ namespace weasel
         TokenTyDecimal, // 16 byte // Floating Point
 
         // Punctuation
-        TokenOperatorStart,
-        TokenOperatorPlus,            // +
-        TokenOperatorMinus,           // -
-        TokenOperatorStar,            // *
-        TokenOperatorSlash,           // /
-        TokenOperatorPercent,         // %
-        TokenOperatorCaret,           // ^
-        TokenOperatorNot,             // !
-        TokenOperatorAnd,             // &
-        TokenOperatorOr,              // |
-        TokenOperatorAndAnd,          // &&
-        TokenOperatorOror,            // ||
-        TokenOperatorShiftLeft,       // <<
-        TokenOperatorShiftRight,      // >>
-        TokenOperatorPlusEqual,       // +=
-        TokenOperatorMinusEqual,      // -=
-        TokenOperatorStarEqual,       // *=
-        TokenOperatorSlashEqual,      // /=
-        TokenOperatorPercentEqual,    // %=
-        TokenOperatorCaretEqual,      // ^=
-        TokenOperatorNotEqual,        // !=
-        TokenOperatorAndEqual,        // &=
-        TokenOperatorOrEqual,         // |=
-        TokenOperatorShiftLeftEqual,  // <<=
-        TokenOperatorShiftRightEqual, // >>=
-        TokenOperatorEqual,           // =
-        TokenOperatorEqualEqual,      // ==
-        TokenOperatorLessThan,        // <
-        TokenOperatorGreaterThen,     // >
-        TokenOperatorLessEqual,       // <=
-        TokenOperatorGreaterEqual,    // >=
-        TokenOperatorEnd,
+        TokenOperatorStart,            // START OPERATOR
+        TokenOperatorPlus,             // +
+        TokenOperatorMinus,            // -
+        TokenOperatorStar,             // *
+        TokenOperatorSlash,            // /
+        TokenOperatorPercent,          // %
+        TokenOperatorCaret,            // ^
+        TokenOperatorNot,              // !
+        TokenOperatorAnd,              // &
+        TokenOperatorOr,               // |
+        TokenOperatorAndAnd,           // &&
+        TokenOperatorOror,             // ||
+        TokenOperatorShiftLeft,        // <<
+        TokenOperatorShiftRight,       // >>
+        TokenOperatorPlusEqual,        // +=
+        TokenOperatorMinusEqual,       // -=
+        TokenOperatorStarEqual,        // *=
+        TokenOperatorSlashEqual,       // /=
+        TokenOperatorPercentEqual,     // %=
+        TokenOperatorCaretEqual,       // ^=
+        TokenOperatorAndEqual,         // &=
+        TokenOperatorOrEqual,          // |=
+        TokenOperatorShiftLeftEqual,   // <<=
+        TokenOperatorShiftRightEqual,  // >>=
+        TokenOperatorEqual,            // =
+        TokenOperatorStartComparation, // START COMPARATOR
+        TokenOperatorLessThan,         // <
+        TokenOperatorGreaterThen,      // >
+        TokenOperatorEqualEqual,       // ==
+        TokenOperatorNotEqual,         // !=
+        TokenOperatorLessEqual,        // <=
+        TokenOperatorGreaterEqual,     // >=
+        TokenOperatorEndComparation,   // END COMPARATOR
+        TokenOperatorEnd,              // END OPERATOR
 
         TokenPuncDot,       // .
         TokenPuncDotThree,  // ...
@@ -166,17 +168,26 @@ namespace weasel
         Token() : _kind(TokenKind::TokenUndefined) {}
 
         // Fast Checking //
+        inline bool isDataType() { return _kind >= TokenKind::TokenTyVoid && _kind <= TokenKind::TokenTyDecimal; }
+        inline bool isKeyDefinition() { return (_kind == TokenKind::TokenKeyLet || _kind == TokenKind::TokenKeyFinal || _kind == TokenKind::TokenKeyConst); }
+        inline bool isLiteral() { return _kind >= TokenKind::TokenLitNil && _kind <= TokenKind::TokenLitString; }
+        inline bool isOperator() { return _kind >= TokenKind::TokenOperatorStart && _kind <= TokenKind::TokenOperatorEnd; }
         inline bool isUndefined() const { return _kind == TokenKind::TokenUndefined; }
         inline bool isKind(TokenKind type) const { return type == _kind; }
-        inline bool isDataType() const { return _kind >= TokenKind::TokenTyVoid && _kind <= TokenKind::TokenTyDecimal; }
-        inline bool isKeyDefinition() const { return (_kind == TokenKind::TokenKeyLet || _kind == TokenKind::TokenKeyFinal || _kind == TokenKind::TokenKeyConst); }
-        inline bool isLiteral() const { return _kind >= TokenKind::TokenLitNil && _kind <= TokenKind::TokenLitString; }
-        inline bool isOperator() const { return _kind >= TokenKind::TokenOperatorStart && _kind <= TokenKind::TokenOperatorEnd; }
         inline bool isNewline() const { return _kind == TokenKind::TokenSpaceNewline; }
         inline bool isOpenParen() const { return _kind == TokenKind::TokenDelimOpenParen; }
         inline bool isCloseParen() const { return _kind == TokenKind::TokenDelimCloseParen; }
         inline bool isOpenCurly() const { return _kind == TokenKind::TokenDelimOpenCurlyBracket; }
         inline bool isCloseCurly() const { return _kind == TokenKind::TokenDelimCloseCurlyBracket; }
+
+        // Operator Comparator //
+        inline bool isComparison() { return _kind >= TokenKind::TokenOperatorStartComparation && _kind <= TokenKind::TokenOperatorEndComparation; }
+        inline bool isComparisonLessThan() const { return _kind == TokenKind::TokenOperatorLessThan; }
+        inline bool isComparisonGreaterThan() const { return _kind == TokenKind::TokenOperatorGreaterThen; }
+        inline bool isComparisonEqualEqual() const { return _kind == TokenKind::TokenOperatorEqualEqual; }
+        inline bool isComparisonNotEqual() const { return _kind == TokenKind::TokenOperatorNotEqual; }
+        inline bool isComparisonLessEqual() const { return _kind == TokenKind::TokenOperatorLessEqual; }
+        inline bool isComparisonGreaterEqual() const { return _kind == TokenKind::TokenOperatorGreaterEqual; }
 
         // Buffer //
         inline char *getStartBuffer() const { return _startBuffer; }

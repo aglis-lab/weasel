@@ -294,7 +294,7 @@ llvm::Value *weasel::Context::codegen(DeclarationExpression *expr)
 // TODO: Need Type Check and conversion
 llvm::Value *weasel::Context::codegen(BinaryOperatorExpression *expr)
 {
-    auto token = expr->getOperator();
+    auto opToken = expr->getOperator();
     auto lhs = expr->getLHS();
     auto rhs = expr->getRHS();
 
@@ -306,10 +306,112 @@ llvm::Value *weasel::Context::codegen(BinaryOperatorExpression *expr)
         return lhs->codegen(this);
     }
 
+    // Checking Unsigned Type and Signed Type
+    if (lhs->getType()->isSigned() != rhs->getType()->isSigned())
+    {
+        ErrorTable::addError(expr->getLHS()->getToken(), "Data signed look different");
+
+        return lhs->codegen(this);
+    }
+
     auto lhsVal = lhs->codegen(this);
     auto rhsVal = rhs->codegen(this);
+    auto isFloat = lhs->getType()->isFloatType() || lhs->getType()->isDoubleType();
+    auto isSigned = expr->getType()->isSigned();
 
-    if (token.isKind(TokenKind::TokenOperatorEqual))
+    if (opToken.isComparison())
+    {
+        switch (opToken.getTokenKind())
+        {
+        case TokenKind::TokenOperatorLessThan:
+        {
+            if (isFloat)
+            {
+                return getBuilder()->CreateFCmpOLT(lhsVal, rhsVal);
+            }
+
+            if (isSigned)
+            {
+                return getBuilder()->CreateICmpSLT(lhsVal, rhsVal);
+            }
+
+            return getBuilder()->CreateICmpULT(lhsVal, rhsVal);
+        }
+        case TokenKind::TokenOperatorGreaterThen:
+        {
+            if (isFloat)
+            {
+                return getBuilder()->CreateFCmpOGT(lhsVal, rhsVal);
+            }
+
+            if (isSigned)
+            {
+                return getBuilder()->CreateICmpSGT(lhsVal, rhsVal);
+            }
+
+            return getBuilder()->CreateICmpUGT(lhsVal, rhsVal);
+        }
+        case TokenKind::TokenOperatorEqualEqual:
+        {
+            if (isFloat)
+            {
+                return getBuilder()->CreateFCmpOLT(lhsVal, rhsVal);
+            }
+
+            if (isSigned)
+            {
+                return getBuilder()->CreateICmpSLT(lhsVal, rhsVal);
+            }
+
+            return getBuilder()->CreateICmpULT(lhsVal, rhsVal);
+        }
+        case TokenKind::TokenOperatorNotEqual:
+        {
+            if (isFloat)
+            {
+                return getBuilder()->CreateFCmpONE(lhsVal, rhsVal);
+            }
+
+            return getBuilder()->CreateICmpNE(lhsVal, rhsVal);
+        }
+        case TokenKind::TokenOperatorLessEqual:
+        {
+
+            if (isFloat)
+            {
+                return getBuilder()->CreateFCmpOLE(lhsVal, rhsVal);
+            }
+
+            if (isSigned)
+            {
+                return getBuilder()->CreateICmpSLE(lhsVal, rhsVal);
+            }
+
+            return getBuilder()->CreateICmpULE(lhsVal, rhsVal);
+        }
+        case TokenKind::TokenOperatorGreaterEqual:
+        {
+
+            if (isFloat)
+            {
+                return getBuilder()->CreateFCmpOGE(lhsVal, rhsVal);
+            }
+
+            if (isSigned)
+            {
+                return getBuilder()->CreateICmpSGE(lhsVal, rhsVal);
+            }
+
+            return getBuilder()->CreateICmpUGE(lhsVal, rhsVal);
+        }
+        default:
+        {
+            return nullptr;
+        }
+        }
+    }
+
+    if (opToken.isKind(TokenKind::TokenOperatorEqual))
     {
         auto loadLhs = llvm::dyn_cast<llvm::LoadInst>(lhsVal);
         if (!loadLhs)
@@ -323,9 +425,9 @@ llvm::Value *weasel::Context::codegen(BinaryOperatorExpression *expr)
         return getBuilder()->CreateLoad(allocLhs->getType(), allocLhs);
     }
 
-    if (lhs->getType()->isFloatType() || lhs->getType()->isDoubleType())
+    if (isFloat)
     {
-        switch (token.getTokenKind())
+        switch (opToken.getTokenKind())
         {
         case TokenKind::TokenOperatorStar:
             return getBuilder()->CreateFMul(lhsVal, rhsVal, lhsVal->getName());
@@ -342,7 +444,7 @@ llvm::Value *weasel::Context::codegen(BinaryOperatorExpression *expr)
         }
     }
 
-    switch (token.getTokenKind())
+    switch (opToken.getTokenKind())
     {
     case TokenKind::TokenOperatorStar:
         return getBuilder()->CreateMul(lhsVal, rhsVal, lhsVal->getName());

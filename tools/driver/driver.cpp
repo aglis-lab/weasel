@@ -84,7 +84,7 @@ int main(int argc, char *argv[])
         codegen->createObject(outputPath);
     }
 
-    llvm::errs() << *codegen->getModule();
+    // llvm::errs() << *codegen->getModule();
 
     if (!isSuccess)
     {
