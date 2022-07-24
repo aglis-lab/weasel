@@ -1,3 +1,4 @@
+#include <iostream>
 #include "weasel/Parser/Parser.h"
 #include "weasel/Symbol/Symbol.h"
 
@@ -91,29 +92,71 @@ weasel::Expression *weasel::Parser::parseLoopingStatement()
 
 weasel::Expression *weasel::Parser::parseConditionStatement()
 {
+    auto conditions = std::vector<Expression *>();
+    auto stmts = std::vector<StatementExpression *>();
     auto token = getCurrentToken();
 
-    getNextToken(); // eat 'if'
-
-    auto expr = parseExpression();
-    if (expr == nullptr)
+    while (true)
     {
-        auto errToken = getCurrentToken();
+        auto isElseCondition = true;
+        if (getCurrentToken().isKeyIf())
+        {
+            getNextToken(); // eat 'if'
 
-        getNextTokenUntil(TokenKind::TokenSpaceNewline);
-        return ErrorTable::addError(errToken, "Invalid condition expression");
+            isElseCondition = false;
+        }
+
+        if (!isElseCondition)
+        {
+            auto expr = parseExpression();
+            if (expr == nullptr)
+            {
+                auto errToken = getCurrentToken();
+
+                getNextTokenUntil(TokenKind::TokenSpaceNewline);
+                return ErrorTable::addError(errToken, "Invalid condition expression");
+            }
+
+            conditions.push_back(expr);
+        }
+
+        auto body = parseCompoundStatement();
+        if (body == nullptr)
+        {
+            auto errToken = getCurrentToken();
+
+            getNextTokenUntil(TokenKind::TokenSpaceNewline);
+            return ErrorTable::addError(errToken, "Invalid if body statement expression");
+        }
+
+        stmts.push_back(body);
+
+        std::cout << "Condition : " << isElseCondition << std::endl;
+
+        if (isElseCondition)
+        {
+            break;
+        }
+
+        std::cout << "Else : " << getCurrentToken().getValue() << std::endl;
+        if (getCurrentToken().isKeyElse())
+        {
+            getNextToken(true); // eat 'else'
+            continue;
+        }
+
+        std::cout << "Expect Else : " << isExpectElse() << std::endl;
+        if (isExpectElse())
+        {
+            getNextToken(true); // eat
+            getNextToken(true); // eat 'else'
+            continue;
+        }
+
+        break;
     }
 
-    auto body = parseCompoundStatement();
-    if (body == nullptr)
-    {
-        auto errToken = getCurrentToken();
-
-        getNextTokenUntil(TokenKind::TokenSpaceNewline);
-        return ErrorTable::addError(errToken, "Invalid if body statement expression");
-    }
-
-    return new ConditionStatement(token, expr, body);
+    return new ConditionStatement(token, conditions, stmts);
 }
 
 weasel::StatementExpression *weasel::Parser::parseCompoundStatement()

@@ -200,6 +200,10 @@ namespace weasel
         inline bool isKeyBreak() const { return _kind == TokenKind::TokenKeyBreak; }
         inline bool isKeyContinue() const { return _kind == TokenKind::TokenKeyContinue; }
 
+        // Condition //
+        inline bool isKeyElse() const { return _kind == TokenKind::TokenKeyElse; }
+        inline bool isKeyIf() const { return _kind == TokenKind::TokenKeyIf; }
+
         // Buffer //
         inline char *getStartBuffer() const { return _startBuffer; }
         inline char *getEndBuffer() const { return _endBuffer; }

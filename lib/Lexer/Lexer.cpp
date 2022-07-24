@@ -60,7 +60,7 @@ void weasel::Lexer::setCurrentBuffer(char *buffer)
 
 bool weasel::Lexer::expect(weasel::TokenKind kind)
 {
-    auto *lastBuffer = _currentBuffer;
+    auto lastBuffer = _currentBuffer;
     auto ok = true;
     auto token = getToken();
     while (token.isKind(TokenKind::TokenSpaceNewline))

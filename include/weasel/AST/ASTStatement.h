@@ -24,14 +24,15 @@ namespace weasel
     class ConditionStatement : public Expression
     {
     private:
-        Expression *_condition;
-        StatementExpression *_statement;
+        std::vector<Expression *> _conditions;
+        std::vector<StatementExpression *> _statements;
 
     public:
-        ConditionStatement(const Token &token, Expression *condition, StatementExpression *statement) : Expression(token), _condition(condition), _statement(statement) {}
+        ConditionStatement(const Token &token, const std::vector<Expression *> &conditions, const std::vector<StatementExpression *> &statements) : Expression(token), _conditions(conditions), _statements(statements) {}
 
-        inline Expression *getCondition() const { return _condition; }
-        inline StatementExpression *getBody() const { return _statement; }
+        inline std::vector<Expression *> getConditions() const { return _conditions; }
+        inline std::vector<StatementExpression *> getStatements() const { return _statements; }
+        inline bool isElseExist() const { return _conditions.size() < _statements.size(); }
 
         llvm::Value *codegen(Context *context) override;
         void debug(int shift) override;

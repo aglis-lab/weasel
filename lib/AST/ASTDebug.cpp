@@ -124,9 +124,18 @@ void weasel::StatementExpression::debug(int shift)
 void weasel::ConditionStatement::debug(int shift)
 {
     this->printDebug("If Statement", shift);
-    _condition->debug(shift);
+    this->printDebug("If Conditions", shift);
+    for (auto &item : getConditions())
+    {
+        item->debug(shift + defaultShift);
+    }
 
-    _statement->debug(shift + this->defaultShift);
+    this->printDebug("If Body", shift);
+    for (auto &item : getStatements())
+    {
+        this->printDebug("Body", shift);
+        item->debug(shift + defaultShift);
+    }
 }
 
 void weasel::LoopingStatement::debug(int shift)

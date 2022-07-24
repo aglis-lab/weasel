@@ -16,6 +16,7 @@ namespace weasel
 
     private:
         bool expectToken(TokenKind kind) { return _lexer->expect(kind); }
+        bool isExpectElse() { return expectToken(TokenKind::TokenKeyElse); }
 
         Qualifier getQualifier() const { return getCurrentToken().getQualifier(); }
         Token getCurrentToken() const { return _lexer->getCurrentToken(); }

@@ -24,43 +24,76 @@ llvm::Value *weasel::Context::codegen(StatementExpression *expr)
 
 llvm::Value *weasel::Context::codegen(ConditionStatement *expr)
 {
-    auto cond = expr->getCondition();
-    auto body = expr->getBody();
-    auto condType = cond->getType();
+    auto conditions = expr->getConditions();
+    auto statements = expr->getStatements();
+    auto count = conditions.size();
+    auto parentFun = getBuilder()->GetInsertBlock()->getParent();
+    auto endBlock = llvm::BasicBlock::Create(*getContext());
 
-    if (!condType->isBooleanType())
+    for (int i = 0; i < count; i++)
     {
-        return ErrorTable::addError(cond->getToken(), "Expected Boolean Type");
+        auto condition = conditions[i];
+        auto statement = statements[i];
+        auto conditionType = condition->getType();
+        if (!conditionType->isBooleanType())
+        {
+            return ErrorTable::addError(condition->getToken(), "Expected Boolean Type");
+        }
+
+        auto currentBlock = getBuilder()->GetInsertBlock();
+        auto bodyBlock = llvm::BasicBlock::Create(*getContext(), "", parentFun);
+        auto nextBlock = llvm::BasicBlock::Create(*getContext());
+
+        // Create Condition Branch
+        getBuilder()->CreateCondBr(condition->codegen(this), bodyBlock, nextBlock);
+
+        // Set Insert Point
+        getBuilder()->SetInsertPoint(bodyBlock);
+
+        // Codegen Body
+        statement->codegen(this);
+
+        // Jump to Next Block
+        if (!getBuilder()->GetInsertBlock()->back().isTerminator())
+        {
+            getBuilder()->CreateBr(endBlock);
+        }
+
+        // Add Next Block to Fuction
+        parentFun->getBasicBlockList().push_back(nextBlock);
+
+        // Set Insert point
+        getBuilder()->SetInsertPoint(nextBlock);
     }
 
-    auto currentBlock = getBuilder()->GetInsertBlock();
-    auto parentFun = currentBlock->getParent();
-    auto bodyBlock = llvm::BasicBlock::Create(*this->getContext(), "", parentFun);
-    auto lastBlock = llvm::BasicBlock::Create(*this->getContext(), "", parentFun);
+    if (expr->isElseExist())
+    {
+        auto statement = statements.back();
+        auto elseBlock = llvm::BasicBlock::Create(*getContext(), "", parentFun);
 
-    // Create Condition Branch
-    auto condVal = cond->codegen(this);
-    llvm::BranchInst::Create(bodyBlock, lastBlock, condVal, currentBlock);
+        getBuilder()->CreateBr(elseBlock);
+        getBuilder()->SetInsertPoint(elseBlock);
 
-    // Change to If Body Block
-    getBuilder()->SetInsertPoint(bodyBlock);
+        statement->codegen(this);
+    }
 
-    // Codegen Body
-    body->codegen(this);
+    // Jump to Next Block
     if (!getBuilder()->GetInsertBlock()->back().isTerminator())
     {
-        getBuilder()->CreateBr(lastBlock);
+        getBuilder()->CreateBr(endBlock);
     }
 
-    // Emit Then Branch
-    getBuilder()->SetInsertPoint(lastBlock);
+    // Add End Block to Fuction
+    parentFun->getBasicBlockList().push_back(endBlock);
+
+    // Set Insert point
+    getBuilder()->SetInsertPoint(endBlock);
 
     // TODO: Calculate PHI
 
     return nullptr;
 }
 
-// TODO: Need More type of for variations
 llvm::Value *weasel::Context::codegen(LoopingStatement *expr)
 {
     auto isInfinity = expr->isInfinityCondition();

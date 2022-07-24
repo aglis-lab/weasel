@@ -25,7 +25,7 @@ namespace weasel
         bool isIdentifier(char c, bool num = false);
         inline bool isValidBuffer() const { return _endBuffer - _currentBuffer > 0; }
 
-        // TODO: Handle special character fir parseCharacter or string
+        // TODO: Handle special character for parseCharacter or string
         // Token section
         Token getToken();
         Token createToken(TokenKind kind, char *startBuffer, char *endBuffer);
