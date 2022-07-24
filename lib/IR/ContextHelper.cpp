@@ -6,6 +6,44 @@ std::string weasel::Context::getDefaultLabel()
     return std::to_string(_counter++);
 }
 
+// Weasel Type System to llvm Type System
+llvm::Type *weasel::Context::codegen(weasel::Type *type)
+{
+    if (type->isVoidType())
+    {
+        return getBuilder()->getVoidTy();
+    }
+
+    if (type->isIntegerType())
+    {
+        return getBuilder()->getIntNTy(type->getTypeWidth());
+    }
+
+    if (type->isFloatType())
+    {
+        return getBuilder()->getFloatTy();
+    }
+
+    if (type->isDoubleType())
+    {
+        return getBuilder()->getDoubleTy();
+    }
+
+    if (type->isArrayType())
+    {
+        auto containedType = type->getContainedType()->codegen(this);
+        return llvm::ArrayType::get(containedType, type->getTypeWidth());
+    }
+
+    if (type->isPointerType())
+    {
+        auto containedType = type->getContainedType()->codegen(this);
+        return llvm::PointerType::get(containedType, type->getTypeWidth());
+    }
+
+    return nullptr;
+}
+
 // Compare Type Helpter
 weasel::CompareType weasel::Context::compareType(llvm::Type *lhsType, llvm::Type *rhsType)
 {

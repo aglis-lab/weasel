@@ -104,4 +104,21 @@ namespace weasel
         void debug(int shift) override;
     };
 
+    // Array Expression
+    class ArrayLiteralExpression : public Expression
+    {
+    private:
+        std::vector<Expression *> _items;
+
+    public:
+        ArrayLiteralExpression() = default;
+        explicit ArrayLiteralExpression(std::vector<Expression *> items) : _items(items) {}
+
+        void addItem(Expression *item) { _items.push_back(item); }
+        std::vector<Expression *> getItems() const { return _items; }
+
+        llvm::Value *codegen(Context *context) override;
+        void debug(int shift) override;
+    };
+
 } // namespace weasel

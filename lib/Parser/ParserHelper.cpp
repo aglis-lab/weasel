@@ -21,7 +21,7 @@ weasel::Type *weasel::Parser::parseDataType()
             return ErrorTable::addError(getCurrentToken(), "Expected data type after pointer type");
         }
 
-        auto containedType = getCurrentToken().toType();
+        auto containedType = Type::create(getCurrentToken());
         auto type = Type::getPointerType(containedType);
 
         // Remove current token data type
@@ -57,14 +57,15 @@ weasel::Type *weasel::Parser::parseDataType()
         // Eat Current Token
         getNextToken();
 
-        auto num = weasel::Number::toInteger(numStr);
-        auto containedType = getCurrentToken().toType();
+        auto num = Number::toInteger(numStr);
+        auto containedType = Type::create(getCurrentToken());
 
         return Type::getArrayType(containedType, num);
     }
 
     // Normal Data Type or no datatype
-    auto type = getCurrentToken().toType();
+    // auto type = getCurrentToken().toType();
+    auto type = Type::create(getCurrentToken());
     if (type != nullptr)
     {
         // Remove Current Token

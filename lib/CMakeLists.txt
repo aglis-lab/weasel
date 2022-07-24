@@ -6,6 +6,7 @@ add_library(WeaselLib STATIC
     Basic/Cast.cpp
     Codegen/Codegen.cpp
     IR/Context.cpp
+    IR/ContextStatement.cpp
     IR/ContextLiteral.cpp
     IR/ContextHelper.cpp
     Lexer/Lexer.cpp
@@ -18,7 +19,8 @@ add_library(WeaselLib STATIC
     Passes/Passes.cpp
     Parser/Parser.cpp
     Parser/ParserFunction.cpp
-    Parser/ParserExpr.cpp
+    Parser/ParserExpression.cpp
+    Parser/ParserStatement.cpp
     Parser/ParserHelper.cpp
     Type/Type.cpp
     Symbol/Symbol.cpp

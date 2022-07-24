@@ -2,57 +2,6 @@
 #include "weasel/Lexer/Token.h"
 #include "weasel/AST/AST.h"
 
-weasel::Type *weasel::Token::toType() const
-{
-    Type *type = nullptr;
-
-    switch (_kind)
-    {
-    // BOOL //
-    case TokenKind::TokenTyBool:
-        return Type::getIntegerType(1);
-
-    // INTEGER //
-    case TokenKind::TokenTyByte:
-        return Type::getIntegerType(8, false);
-
-    case TokenKind::TokenTySbyte:
-        return Type::getIntegerType(8);
-
-    case TokenKind::TokenTyShort:
-        return Type::getIntegerType(16);
-
-    case TokenKind::TokenTyUshort:
-        return Type::getIntegerType(16, false);
-
-    case TokenKind::TokenTyInt:
-        return Type::getIntegerType(32);
-
-    case TokenKind::TokenTyUint:
-        return Type::getIntegerType(32, false);
-
-    case TokenKind::TokenTyLong:
-        return Type::getIntegerType(64);
-
-    case TokenKind::TokenTyUlong:
-        return Type::getIntegerType(64, false);
-
-    // FLOATING POINT //
-    case TokenKind::TokenTyFloat:
-        return Type::getFloatType();
-
-    case TokenKind::TokenTyDouble:
-        return Type::getDoubleType();
-
-    // VOID //
-    case TokenKind::TokenTyVoid:
-        return Type::getVoidType();
-
-    default:
-        return nullptr;
-    }
-}
-
 weasel::Qualifier weasel::Token::getQualifier() const
 {
     switch (getTokenKind())

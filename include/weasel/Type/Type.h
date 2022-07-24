@@ -8,12 +8,10 @@ namespace llvm
 namespace weasel
 {
     class Context;
+    class Token;
 
     enum class TypeID
     {
-        // No Type
-        NoType,
-
         // Primitive Types
         FloatType,
         DoubleType,
@@ -39,7 +37,15 @@ namespace weasel
         Type(TypeID typeId, unsigned width, bool isSign = true) : _typeId(typeId), _width(width), _isSigned(isSign) {}
 
     public:
-        inline TypeID getTypeID() const { return _typeId; }
+        // Create Type From Token
+        static Type *create(const Token &token);
+
+    public:
+        inline TypeID
+        getTypeID() const
+        {
+            return _typeId;
+        }
         inline unsigned getTypeWidth() const { return _width; }
         inline bool isSigned() const { return _isSigned; }
 
@@ -62,6 +68,9 @@ namespace weasel
         static Type *getDoubleType() { return new Type(TypeID::DoubleType, 64); }
         static Type *getPointerType(Type *containedType) { return new Type(TypeID::PointerType, containedType); }
         static Type *getArrayType(Type *containedType, unsigned width) { return new Type(TypeID::ArrayType, containedType, width); }
+
+        // Check Type
+        bool isEqual(Type *type);
 
     public:
         llvm::Type *codegen(Context *context);

@@ -12,6 +12,7 @@ namespace weasel
     {
     private:
         Lexer *_lexer;
+        Function *_currentFunction;
 
     private:
         bool expectToken(TokenKind kind) { return _lexer->expect(kind); }
@@ -28,10 +29,8 @@ namespace weasel
         // Statement
         Expression *parseStatement();
         StatementExpression *parseCompoundStatement();
-        Expression *parseReturnStatement();
-
-        // Condition Statement
-        Expression *parseIfStatement();
+        Expression *parseConditionStatement();
+        Expression *parseLoopingStatement();
 
         // Expression
         Expression *parseExpression();
@@ -39,6 +38,9 @@ namespace weasel
         Expression *parseDeclarationExpression();
         Expression *parseFunctionCallExpression(Attribute *attr);
         Expression *parseParenExpression();
+        Expression *parseReturnExpression();
+        Expression *parseBreakExpression();
+        Expression *parseContinueExpression();
 
         // Expression Literal
         Expression *parseLiteralExpression();

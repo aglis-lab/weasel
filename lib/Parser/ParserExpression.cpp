@@ -1,6 +1,5 @@
 #include <iostream>
 #include "weasel/Parser/Parser.h"
-#include "weasel/IR/Context.h"
 #include "weasel/Symbol/Symbol.h"
 
 weasel::Expression *weasel::Parser::parseStatement()
@@ -20,13 +19,31 @@ weasel::Expression *weasel::Parser::parseStatement()
     // Return Expression
     if (getCurrentToken().isKind(TokenKind::TokenKeyReturn))
     {
-        return parseReturnStatement();
+        return parseReturnExpression();
+    }
+
+    // Break Expression
+    if (getCurrentToken().isKeyBreak())
+    {
+        return parseBreakExpression();
+    }
+
+    // Continue Expression
+    if (getCurrentToken().isKeyContinue())
+    {
+        return parseContinueExpression();
     }
 
     // If Statement
     if (getCurrentToken().isKind(TokenKind::TokenKeyIf))
     {
-        return parseIfStatement();
+        return parseConditionStatement();
+    }
+
+    // For Statement
+    if (getCurrentToken().isKeyFor())
+    {
+        return parseLoopingStatement();
     }
 
     auto expr = parseExpression();
@@ -39,92 +56,6 @@ weasel::Expression *weasel::Parser::parseStatement()
     }
 
     return expr;
-}
-
-weasel::Expression *weasel::Parser::parseIfStatement()
-{
-    auto token = getCurrentToken();
-
-    getNextToken(); // eat 'if'
-
-    auto expr = parseExpression();
-    if (expr == nullptr)
-    {
-        auto errToken = getCurrentToken();
-
-        getNextTokenUntil(TokenKind::TokenSpaceNewline);
-        return ErrorTable::addError(errToken, "Invalid condition expression");
-    }
-
-    auto body = parseCompoundStatement();
-    if (body == nullptr)
-    {
-        auto errToken = getCurrentToken();
-
-        getNextTokenUntil(TokenKind::TokenSpaceNewline);
-        return ErrorTable::addError(errToken, "Invalid if body statement expression");
-    }
-
-    return new ConditionStatementExpression(token, expr, body);
-}
-
-weasel::StatementExpression *weasel::Parser::parseCompoundStatement()
-{
-    if (!getCurrentToken().isKind(TokenKind::TokenDelimOpenCurlyBracket))
-    {
-        return nullptr;
-    }
-
-    auto stmt = new StatementExpression();
-    if (getNextToken(true).isKind(TokenKind::TokenDelimCloseCurlyBracket))
-    {
-        getNextToken();
-        return stmt;
-    }
-
-    // Enter statement scope
-    {
-        SymbolTable::enterScope();
-    }
-
-    do
-    {
-        auto expr = parseStatement();
-        if (expr != nullptr)
-        {
-            stmt->addBody(expr);
-        }
-        else
-        {
-            ErrorTable::addError(getCurrentToken(), "Expected statement");
-        }
-
-        if (getCurrentToken().isKind(TokenKind::TokenDelimCloseCurlyBracket))
-        {
-            break;
-        }
-
-        if (expr->isCompoundExpression() && !getCurrentToken().isNewline())
-        {
-            continue;
-        }
-
-        if (!getCurrentToken().isNewline())
-        {
-            ErrorTable::addError(getCurrentToken(), "Expected New Line");
-        }
-
-        getNextToken(true);
-    } while (!getCurrentToken().isKind(TokenKind::TokenDelimCloseCurlyBracket));
-
-    getNextToken(); // eat '}'
-
-    // Exit statement scope
-    {
-        SymbolTable::exitScope();
-    }
-
-    return stmt;
 }
 
 weasel::Expression *weasel::Parser::parseLiteralExpression()
@@ -237,6 +168,7 @@ weasel::Expression *weasel::Parser::parseIdentifierExpression()
     auto attr = SymbolTable::get(identifier);
     if (attr == nullptr)
     {
+        std::cout << "Catch you\n";
         return ErrorTable::addError(getCurrentToken(), "Variable not yet declared");
     }
 
@@ -383,30 +315,18 @@ weasel::Expression *weasel::Parser::parseBinaryOperator(unsigned precOrder, Expr
     }
 }
 
-weasel::Expression *weasel::Parser::parseReturnStatement()
+weasel::Expression *weasel::Parser::parseReturnExpression()
 {
     auto retToken = getCurrentToken();
-    getNextToken(); // eat 'return'
 
-    auto expr = parseExpression();
-    if (!expr)
+    if (getNextToken().isNewline())
     {
-        auto errToken = getCurrentToken();
-
-        getNextTokenUntil(TokenKind::TokenSpaceNewline);
-        return ErrorTable::addError(errToken, "Expected expression for return statement.");
+        return new ReturnExpression(retToken, nullptr);
     }
 
-    return new ReturnExpression(retToken, expr);
+    return new ReturnExpression(retToken, parseExpression());
 }
 
-// let 'identifier' 'datatype'  = 'expr'
-// let 'identifier' 'datatype'
-// let 'identifier'             = 'expr'
-// let 'identifier' *'datatype'
-// let 'identifier'             = &'expr'
-// let 'identifier' [<size>]'datatype'
-// let 'identifier'             = []
 weasel::Expression *weasel::Parser::parseDeclarationExpression()
 {
     auto qualifier = getQualifier();
@@ -471,9 +391,8 @@ weasel::Expression *weasel::Parser::parseDeclarationExpression()
         return ErrorTable::addError(errToken, "Expected equal sign");
     }
 
-    // Get Value
-    getNextToken(); // eat 'Equal Sign'
-    if (getCurrentToken().isKind(TokenKind::TokenSpaceNewline))
+    // Get Next Value
+    if (getNextToken().isKind(TokenKind::TokenSpaceNewline))
     {
         return ErrorTable::addError(getCurrentToken(), "Expected RHS Value Expression but got 'New line'");
     }
@@ -509,4 +428,26 @@ weasel::Expression *weasel::Parser::parseDeclarationExpression()
     }
 
     return new DeclarationExpression(qualToken, identifier, qualifier, type, val);
+}
+
+weasel::Expression *weasel::Parser::parseBreakExpression()
+{
+    auto token = getCurrentToken();
+    if (getNextToken().isOpenParen())
+    {
+        return new BreakExpression(token, parseExpression());
+    }
+
+    return new BreakExpression(token, nullptr);
+}
+
+weasel::Expression *weasel::Parser::parseContinueExpression()
+{
+    auto token = getCurrentToken();
+    if (getNextToken().isOpenParen())
+    {
+        return new ContinueExpression(token, parseExpression());
+    }
+
+    return new ContinueExpression(token, nullptr);
 }

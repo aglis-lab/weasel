@@ -1,0 +1,25 @@
+fun main() {
+
+    // Regular For looping
+    for initialValue; condition; increment {
+        // body
+    }
+
+    // Conditional looping
+    for condition {
+        // body
+    }
+
+    // infinite looping
+    for {
+        // body
+
+        // break the looping
+        break(condition)
+
+        // continue the looping
+        continue(condition)
+
+        // other body
+    }
+}

@@ -1,8 +1,7 @@
 #pragma once
 
-#include <map>
-#include <string>
-#include <sstream>
+#include <list>
+
 #include <llvm/IR/Value.h>
 #include <llvm/IR/Constant.h>
 #include <llvm/IR/Module.h>
@@ -32,8 +31,9 @@ namespace weasel
         Function *_currentFunction = nullptr;
         unsigned long _counter = 0;
 
-        // bool _isHostCL = false;
-        // bool _isParallel = false;
+        // Helper for Looping //
+        std::list<llvm::BasicBlock *> _breakBlocks;
+        std::list<llvm::BasicBlock *> _continueBlocks;
 
     private:
         llvm::MDNode *getTBAA(llvm::Type *type) const;
@@ -44,11 +44,17 @@ namespace weasel
         llvm::MDNode *getTBAALong() const;
         llvm::MDNode *getTBAAPointer() const;
 
-        // void parallelRun() const;
-        // void parallelInit() const;
-        // void parallelInitkernel(const std::string &kernelName);
-        // void parallelInitArgument(llvm::Value *arr, int size) const;
-        // void parallelDestroy() const;
+        // Helper for Break looping //
+        inline void addbreakBlock(llvm::BasicBlock *block) { _breakBlocks.push_back(block); }
+        inline void removeBreakBlock() { _breakBlocks.pop_back(); }
+        inline bool isBreakBlockExist() const { return !_breakBlocks.empty(); }
+        inline llvm::BasicBlock *getBreakBlock() const { return _breakBlocks.back(); }
+
+        // Helper for Continue Looping //
+        inline void addContinueBlock(llvm::BasicBlock *block) { _continueBlocks.push_back(block); }
+        inline void removeContinueBlock() { _continueBlocks.pop_back(); }
+        inline bool isContinueBlockExist() const { return !_continueBlocks.empty(); }
+        inline llvm::BasicBlock *getContinueBlock() const { return _continueBlocks.back(); }
 
     public:
         explicit Context(llvm::LLVMContext *context, const std::string &moduleName);
@@ -78,7 +84,6 @@ namespace weasel
         llvm::Value *codegen(ArrayLiteralExpression *expr);
 
         llvm::Value *codegen(VariableExpression *expr);
-        llvm::Value *codegen(StatementExpression *expr);
         llvm::Value *codegen(CallExpression *expr);
         llvm::Value *codegen(ReturnExpression *expr);
         llvm::Value *codegen(DeclarationExpression *expr);
@@ -86,7 +91,11 @@ namespace weasel
         llvm::Value *codegen(ArrayExpression *expr);
 
         // Condition Statement
-        llvm::Value *codegen(ConditionStatementExpression *expr);
+        llvm::Value *codegen(ConditionStatement *expr);
+        llvm::Value *codegen(StatementExpression *expr);
+        llvm::Value *codegen(LoopingStatement *expr);
+        llvm::Value *codegen(BreakExpression *expr);
+        llvm::Value *codegen(ContinueExpression *expr);
 
         llvm::Value *codegen(BinaryOperatorExpression *expr);
         llvm::Function *codegen(Function *func);

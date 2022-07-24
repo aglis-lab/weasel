@@ -1,7 +1,6 @@
 #pragma once
 
 #include <string>
-#include "weasel/Type/Type.h"
 #include "weasel/Basic/Enum.h"
 
 #define __defaultPrecOrder 20
@@ -19,18 +18,23 @@ namespace weasel
         TokenIdentifier,
 
         // Keyword
-        TokenKeyParallel, // parallel // heterogeneous support
-        TokenKeyKernel,   // kernel // heterogeneous kernel type
-        TokenKeyInline,   // For Always inline attribute
-        TokenKeyFun,      // fun
-        TokenKeyExtern,   // extern
-        TokenKeyLet,      // let
-        TokenKeyFinal,    // final
-        TokenKeyConst,    // const
-        TokenKeyReturn,   // return
-        TokenKeyIf,       // if // Condition
-        TokenKeyElse,     // else // Condition
-        TokenKeyFor,      // for // Looping
+        TokenKeyParallel,         // parallel // heterogeneous support
+        TokenKeyKernel,           // kernel // heterogeneous kernel type
+        TokenKeyInline,           // For Always inline attribute
+        TokenKeyFun,              // fun
+        TokenKeyExtern,           // extern
+        TokenKeyStartDeclaration, // START DECLARATION
+        TokenKeyLet,              // let
+        TokenKeyFinal,            // final
+        TokenKeyConst,            // const
+        TokenKeyEndDeclaration,   // END DECLARATION
+        TokenKeyReturn,           // return
+        TokenKeyIf,               // if // Condition
+        TokenKeyElse,             // else // Condition
+        TokenKeyFor,              // for // Looping
+        TokenKeyBreak,            // break // looping
+        TokenKeyContinue,         // continue //looping
+        TokenKeyAssert,           // assert // debugging
 
         // Data Literal -> Value of data type
         TokenLitNil,
@@ -179,6 +183,7 @@ namespace weasel
         inline bool isCloseParen() const { return _kind == TokenKind::TokenDelimCloseParen; }
         inline bool isOpenCurly() const { return _kind == TokenKind::TokenDelimOpenCurlyBracket; }
         inline bool isCloseCurly() const { return _kind == TokenKind::TokenDelimCloseCurlyBracket; }
+        inline bool isSemiColon() const { return _kind == TokenKind::TokenPuncSemicolon; }
 
         // Operator Comparator //
         inline bool isComparison() { return _kind >= TokenKind::TokenOperatorStartComparation && _kind <= TokenKind::TokenOperatorEndComparation; }
@@ -188,6 +193,12 @@ namespace weasel
         inline bool isComparisonNotEqual() const { return _kind == TokenKind::TokenOperatorNotEqual; }
         inline bool isComparisonLessEqual() const { return _kind == TokenKind::TokenOperatorLessEqual; }
         inline bool isComparisonGreaterEqual() const { return _kind == TokenKind::TokenOperatorGreaterEqual; }
+
+        // Keyword //
+        inline bool isKeyFor() const { return _kind == TokenKind::TokenKeyFor; }
+        inline bool isKeyDeclaration() { return _kind >= TokenKind::TokenKeyStartDeclaration && _kind <= TokenKind::TokenKeyEndDeclaration; }
+        inline bool isKeyBreak() const { return _kind == TokenKind::TokenKeyBreak; }
+        inline bool isKeyContinue() const { return _kind == TokenKind::TokenKeyContinue; }
 
         // Buffer //
         inline char *getStartBuffer() const { return _startBuffer; }
@@ -205,9 +216,6 @@ namespace weasel
         Precedence getPrecedence();
 
         inline static Token empty() { return Token(); }
-
-    public:
-        Type *toType() const;
     };
 
 } // namespace weasel

@@ -3,6 +3,7 @@
 #include <string>
 #include "llvm/IR/Value.h"
 #include "weasel/Lexer/Lexer.h"
+#include "weasel/Type/Type.h"
 
 namespace weasel
 {

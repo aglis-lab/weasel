@@ -83,15 +83,21 @@ bool weasel::Codegen::compile()
         return false;
     }
 
-    if (!ErrorTable::getErrors().empty())
-    {
-        std::cerr << "\n=> Error Information\n";
-        ErrorTable::showErrors();
+    return true;
+}
 
-        return false;
+void weasel::Codegen::createIR(char *outputFile) const
+{
+    std::error_code errCode;
+    llvm::raw_fd_ostream dest(std::string(outputFile) + ".ir", errCode, llvm::sys::fs::OF_None);
+    if (errCode)
+    {
+        llvm::errs() << "Could not open file : " << errCode.message() << "\n";
+        exit(1);
     }
 
-    return true;
+    dest << *getModule();
+    dest.flush();
 }
 
 void weasel::Codegen::createObject(char *outputFile) const

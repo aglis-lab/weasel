@@ -1,0 +1,16 @@
+fun main() {
+    // We use keyword 'let', 'final', and 'const'
+    // Stack Memory Declaration
+    let car Car
+
+    // Heap Memory Definition
+    let car2 = new Car()
+
+    // syntax declaration
+    // let variableName dataType
+    let count int
+
+    // syntax definition
+    // {let, final, const} variableName [dataType] = value
+    final maxValue = 120
+}

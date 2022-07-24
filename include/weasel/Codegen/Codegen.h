@@ -21,6 +21,7 @@ namespace weasel
         bool compile();
 
         void createObject(char *outputFile) const;
+        void createIR(char *outputFile) const;
 
     public:
         llvm::Module *getModule() const { return _context->getModule(); }

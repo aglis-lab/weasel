@@ -14,43 +14,6 @@ weasel::Context::Context(llvm::LLVMContext *context, const std::string &moduleNa
     _builder = new llvm::IRBuilder<>(*_context);
 }
 
-llvm::Type *weasel::Context::codegen(weasel::Type *type)
-{
-    if (type->isVoidType())
-    {
-        return getBuilder()->getVoidTy();
-    }
-
-    if (type->isIntegerType())
-    {
-        return getBuilder()->getIntNTy(type->getTypeWidth());
-    }
-
-    if (type->isFloatType())
-    {
-        return getBuilder()->getFloatTy();
-    }
-
-    if (type->isDoubleType())
-    {
-        return getBuilder()->getDoubleTy();
-    }
-
-    if (type->isArrayType())
-    {
-        auto containedType = type->getContainedType()->codegen(this);
-        return llvm::ArrayType::get(containedType, type->getTypeWidth());
-    }
-
-    if (type->isPointerType())
-    {
-        auto containedType = type->getContainedType()->codegen(this);
-        return llvm::PointerType::get(containedType, type->getTypeWidth());
-    }
-
-    return nullptr;
-}
-
 llvm::Function *weasel::Context::codegen(weasel::Function *funAST)
 {
     _currentFunction = funAST;
@@ -122,7 +85,7 @@ llvm::Function *weasel::Context::codegen(weasel::Function *funAST)
 
         // Create Block
         funAST->getBody()->codegen(this);
-        if (funLLVM->getReturnType()->isVoidTy())
+        if (funLLVM->getReturnType()->isVoidTy() && llvm::dyn_cast<llvm::ReturnInst>(&getBuilder()->GetInsertBlock()->back()) == nullptr)
         {
             getBuilder()->CreateRetVoid();
         }
@@ -140,63 +103,11 @@ llvm::Function *weasel::Context::codegen(weasel::Function *funAST)
     return funLLVM;
 }
 
-llvm::Value *weasel::Context::codegen(StatementExpression *expr)
-{
-    // Enter to new statement
-    {
-        SymbolTable::enterScope();
-    }
-
-    for (auto &item : expr->getBody())
-    {
-        auto val = item->codegen(this);
-    }
-
-    // Exit from statement
-    {
-        SymbolTable::exitScope();
-    }
-
-    return nullptr;
-}
-
-llvm::Value *weasel::Context::codegen(ConditionStatementExpression *expr)
-{
-    auto cond = expr->getCondition();
-    auto body = expr->getBody();
-    auto condType = cond->getType();
-
-    if (!condType->isBooleanType())
-    {
-        return ErrorTable::addError(cond->getToken(), "Expected Boolean Type");
-    }
-
-    auto curBranch = getBuilder()->GetInsertBlock();
-    auto parentFun = curBranch->getParent();
-    auto ifBranch = llvm::BasicBlock::Create(*this->getContext(), "", parentFun);
-    auto thenBranch = llvm::BasicBlock::Create(*this->getContext());
-
-    auto condVal = cond->codegen(this);
-    llvm::BranchInst::Create(ifBranch, thenBranch, condVal, curBranch);
-
-    getBuilder()->SetInsertPoint(ifBranch);
-    body->codegen(this);
-    getBuilder()->CreateBr(thenBranch);
-
-    // Emit Then Branch
-    parentFun->getBasicBlockList().push_back(thenBranch);
-    getBuilder()->SetInsertPoint(thenBranch);
-
-    // TODO: Calculate PHI
-
-    return nullptr;
-}
-
 llvm::Value *weasel::Context::codegen(CallExpression *expr)
 {
     auto identifier = expr->getIdentifier();
     auto args = expr->getArguments();
-    auto *fun = getModule()->getFunction(identifier);
+    auto fun = getModule()->getFunction(identifier);
     auto callConv = fun->getCallingConv();
 
     std::vector<llvm::Value *> argsV;
@@ -225,6 +136,7 @@ llvm::Value *weasel::Context::codegen(DeclarationExpression *expr)
     // Get Value Representation
     auto declType = expr->getType();
     auto valueExpr = expr->getValue();
+    auto valueType = expr->getType();
 
     if (declType == nullptr && valueExpr != nullptr && valueExpr->getType() != nullptr)
     {
@@ -240,6 +152,8 @@ llvm::Value *weasel::Context::codegen(DeclarationExpression *expr)
     // Default Value
     if (valueExpr == nullptr)
     {
+        std::cout << "No Value expression\n";
+
         // Default Value for integer
         if (declType->isIntegerType())
         {
@@ -250,19 +164,15 @@ llvm::Value *weasel::Context::codegen(DeclarationExpression *expr)
     else
     {
         auto valueType = valueExpr->getType();
+
         if (valueType->isVoidType())
         {
             return ErrorTable::addError(valueExpr->getToken(), "Cannot assign void to a variable");
         }
 
-        if (declType != nullptr && declType->getTypeID() != valueType->getTypeID())
+        if (!valueType->isEqual(declType))
         {
             return ErrorTable::addError(valueExpr->getToken(), "Cannot assign to different type");
-        }
-
-        if (declType != nullptr && declType->getTypeWidth() != valueType->getTypeWidth())
-        {
-            return ErrorTable::addError(valueExpr->getToken(), "Cannot assign to different size type");
         }
 
         auto valueV = valueExpr->codegen(this);
@@ -271,7 +181,7 @@ llvm::Value *weasel::Context::codegen(DeclarationExpression *expr)
 
     // Add Variable Declaration to symbol table
     {
-        AttributeKind attrKind;
+        AttributeKind attrKind = AttributeKind::SymbolVariable;
         if (declType->isArrayType())
         {
             attrKind = AttributeKind::SymbolArray;
@@ -280,10 +190,7 @@ llvm::Value *weasel::Context::codegen(DeclarationExpression *expr)
         {
             attrKind = AttributeKind::SymbolPointer;
         }
-        else
-        {
-            attrKind = AttributeKind::SymbolVariable;
-        }
+
         auto attr = new Attribute(varName, AttributeScope::ScopeLocal, attrKind, alloc, declType);
         SymbolTable::insert(varName, attr);
     }
@@ -297,27 +204,22 @@ llvm::Value *weasel::Context::codegen(BinaryOperatorExpression *expr)
     auto opToken = expr->getOperator();
     auto lhs = expr->getLHS();
     auto rhs = expr->getRHS();
+    auto lhsType = lhs->getType();
+    auto rhsType = rhs->getType();
+    auto exprType = expr->getType();
 
     // Checking Type
-    if (lhs->getType()->getTypeID() != rhs->getType()->getTypeID())
+    if (!lhsType->isEqual(rhsType))
     {
         ErrorTable::addError(expr->getLHS()->getToken(), "Data type look different");
 
         return lhs->codegen(this);
     }
 
-    // Checking Unsigned Type and Signed Type
-    if (lhs->getType()->isSigned() != rhs->getType()->isSigned())
-    {
-        ErrorTable::addError(expr->getLHS()->getToken(), "Data signed look different");
-
-        return lhs->codegen(this);
-    }
-
     auto lhsVal = lhs->codegen(this);
     auto rhsVal = rhs->codegen(this);
-    auto isFloat = lhs->getType()->isFloatType() || lhs->getType()->isDoubleType();
-    auto isSigned = expr->getType()->isSigned();
+    auto isFloat = lhsType->isFloatType() || rhsType->isDoubleType();
+    auto isSigned = exprType->isSigned();
 
     if (opToken.isComparison())
     {
@@ -355,15 +257,10 @@ llvm::Value *weasel::Context::codegen(BinaryOperatorExpression *expr)
         {
             if (isFloat)
             {
-                return getBuilder()->CreateFCmpOLT(lhsVal, rhsVal);
+                return getBuilder()->CreateFCmpOEQ(lhsVal, rhsVal);
             }
 
-            if (isSigned)
-            {
-                return getBuilder()->CreateICmpSLT(lhsVal, rhsVal);
-            }
-
-            return getBuilder()->CreateICmpULT(lhsVal, rhsVal);
+            return getBuilder()->CreateICmpEQ(lhsVal, rhsVal);
         }
         case TokenKind::TokenOperatorNotEqual:
         {
@@ -391,7 +288,6 @@ llvm::Value *weasel::Context::codegen(BinaryOperatorExpression *expr)
         }
         case TokenKind::TokenOperatorGreaterEqual:
         {
-
             if (isFloat)
             {
                 return getBuilder()->CreateFCmpOGE(lhsVal, rhsVal);
@@ -433,7 +329,8 @@ llvm::Value *weasel::Context::codegen(BinaryOperatorExpression *expr)
             return getBuilder()->CreateFMul(lhsVal, rhsVal, lhsVal->getName());
         case TokenKind::TokenOperatorSlash:
             return getBuilder()->CreateFDiv(lhsVal, rhsVal, lhsVal->getName());
-        // case TokenKind::TokenPuncPercent: return llvm::BinaryOperator::
+        case TokenKind::TokenOperatorPercent:
+            return getBuilder()->CreateFRem(lhsVal, rhsVal);
         case TokenKind::TokenOperatorPlus:
             return getBuilder()->CreateFAdd(lhsVal, rhsVal, lhsVal->getName());
         case TokenKind::TokenOperatorMinus:
@@ -447,38 +344,124 @@ llvm::Value *weasel::Context::codegen(BinaryOperatorExpression *expr)
     switch (opToken.getTokenKind())
     {
     case TokenKind::TokenOperatorStar:
-        return getBuilder()->CreateMul(lhsVal, rhsVal, lhsVal->getName());
+    {
+        if (isSigned)
+        {
+            return getBuilder()->CreateNSWMul(lhsVal, rhsVal, lhsVal->getName());
+        }
+        return getBuilder()->CreateNUWMul(lhsVal, rhsVal, lhsVal->getName());
+    }
     case TokenKind::TokenOperatorSlash:
-        return getBuilder()->CreateSDiv(lhsVal, rhsVal, lhsVal->getName());
-    // case TokenKind::TokenPuncPercent: return llvm::BinaryOperator::
+    {
+        if (isSigned)
+        {
+            return getBuilder()->CreateSDiv(lhsVal, rhsVal, lhsVal->getName());
+        }
+
+        return getBuilder()->CreateUDiv(lhsVal, rhsVal, lhsVal->getName());
+    }
+    case TokenKind::TokenOperatorPercent:
+    {
+        if (isSigned)
+        {
+            return getBuilder()->CreateSRem(lhsVal, rhsVal);
+        }
+        return getBuilder()->CreateURem(lhsVal, rhsVal);
+    }
     case TokenKind::TokenOperatorPlus:
-        return getBuilder()->CreateAdd(lhsVal, rhsVal, lhsVal->getName());
+    {
+        if (isSigned)
+        {
+            return getBuilder()->CreateNSWAdd(lhsVal, rhsVal, lhsVal->getName());
+        }
+        return getBuilder()->CreateNUWAdd(lhsVal, rhsVal, lhsVal->getName());
+    }
     case TokenKind::TokenOperatorMinus:
-        return getBuilder()->CreateSub(lhsVal, rhsVal, lhsVal->getName());
+    {
+        if (isSigned)
+        {
+            return getBuilder()->CreateNSWSub(lhsVal, rhsVal, lhsVal->getName());
+        }
+        return getBuilder()->CreateNUWSub(lhsVal, rhsVal, lhsVal->getName());
+    }
     default:
         ErrorTable::addError(expr->getLHS()->getToken(), "Not Yet Implemented Operator");
         return lhsVal;
     }
 }
 
-// TODO: Check Function Return Type and Return Type
+llvm::Value *weasel::Context::codegen(BreakExpression *expr)
+{
+    if (!isBreakBlockExist())
+    {
+        return ErrorTable::addError(expr->getToken(), "No looping found");
+    }
+
+    if (expr->getValue() == nullptr)
+    {
+        return getBuilder()->CreateBr(getBreakBlock());
+    }
+
+    auto condExpr = expr->getValue();
+    auto condType = condExpr->getType();
+    if (!condType->isBooleanType())
+    {
+        return ErrorTable::addError(expr->getToken(), "Break Condition should be boolean");
+    }
+
+    auto newBlock = llvm::BasicBlock::Create(*getContext(), "", getBuilder()->GetInsertBlock()->getParent());
+    auto breakBlock = getBreakBlock();
+    auto condVal = condExpr->codegen(this);
+    auto brIns = getBuilder()->CreateCondBr(condVal, breakBlock, newBlock);
+
+    // Create New Insert Point
+    getBuilder()->SetInsertPoint(newBlock);
+
+    return brIns;
+}
+
+llvm::Value *weasel::Context::codegen(ContinueExpression *expr)
+{
+    if (!isContinueBlockExist())
+    {
+        return ErrorTable::addError(expr->getToken(), "No looping found");
+    }
+
+    if (expr->getValue() == nullptr)
+    {
+        return getBuilder()->CreateBr(getContinueBlock());
+    }
+
+    auto condExpr = expr->getValue();
+    auto condType = condExpr->getType();
+    if (!condType->isBooleanType())
+    {
+        return ErrorTable::addError(expr->getToken(), "Continue Condition should be boolean");
+    }
+
+    auto newBlock = llvm::BasicBlock::Create(*getContext(), "", getBuilder()->GetInsertBlock()->getParent());
+    auto continueBlock = getContinueBlock();
+    auto condVal = condExpr->codegen(this);
+    auto brIns = getBuilder()->CreateCondBr(condVal, continueBlock, newBlock);
+
+    // // Create New Insert Point
+    getBuilder()->SetInsertPoint(newBlock);
+
+    return brIns;
+}
+
 llvm::Value *weasel::Context::codegen(ReturnExpression *expr)
 {
-    if (!expr->getValue())
+    if (expr->getValue() == nullptr)
     {
         return getBuilder()->CreateRetVoid();
     }
 
-    auto *val = expr->getValue()->codegen(this);
-
     // Get Last Function from symbol table
     auto funAttr = SymbolTable::getLastFunction();
-    if (!funAttr)
-    {
-        return ErrorTable::addError(expr->getToken(), "Return Statement cannot find last function from symbol table");
-    }
-    auto *fun = llvm::dyn_cast<llvm::Function>(funAttr->getValue());
-    auto *returnTy = fun->getReturnType();
+    auto val = expr->getValue()->codegen(this);
+    auto fun = llvm::dyn_cast<llvm::Function>(funAttr->getValue());
+    auto returnTy = fun->getReturnType();
     auto compareTy = compareType(returnTy, val->getType());
 
     if (compareTy == CompareType::Different)

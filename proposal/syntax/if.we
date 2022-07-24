@@ -1,0 +1,14 @@
+fun main() {
+    if condition {
+        // body
+    } else if (otherCondition) {
+        // body
+    } else {
+        // body
+    }
+
+    // Declaration and initial value
+    if let val = otherValue; declaredValue = someValue; condition {
+        // body
+    }
+}

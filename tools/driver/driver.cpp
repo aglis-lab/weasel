@@ -70,36 +70,27 @@ int main(int argc, char *argv[])
     auto codegen = new weasel::Codegen(context, funs);
 
     weasel::SymbolTable::reset();
-    auto isSuccess = codegen->compile();
-    if (!isSuccess)
+    auto isCompileSuccess = codegen->compile();
+    if (!isCompileSuccess)
     {
         if (!codegen->getError().empty())
         {
             std::cerr << "Codegen Compile : " << codegen->getError() << "\n";
         }
     }
-    else
+
+    codegen->createIR(outputPath);
+
+    if (!weasel::ErrorTable::getErrors().empty())
     {
-        // Compile to Object
+        std::cerr << "\n=> Error Information\n";
+        weasel::ErrorTable::showErrors();
+
+        return false;
+    }
+
+    if (isCompileSuccess)
+    {
         codegen->createObject(outputPath);
     }
-
-    // llvm::errs() << *codegen->getModule();
-
-    if (!isSuccess)
-    {
-        exit(1);
-    }
-
-    // Print out module
-    // std::error_code errCode;
-    // llvm::raw_fd_ostream dest(std::string(outputPath) + ".ir", errCode, llvm::sys::fs::OF_None);
-    // if (errCode)
-    // {
-    //     llvm::errs() << "Could not open file : " << errCode.message() << "\n";
-    //     exit(1);
-    // }
-
-    // dest << *codegen->getModule();
-    // dest.flush();
 }

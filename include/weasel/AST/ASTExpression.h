@@ -1,42 +1,6 @@
 #pragma once
 
-#include <vector>
 #include "weasel/AST/ASTBase.h"
-
-///// Expression /////
-// VariableExpression
-// LiteralExpression
-// ArrayLiteralExpression
-// | PathExpression
-// OperatorExpression
-// | GroupedExpression
-// ArrayExpression
-// | AwaitExpression
-// | IndexExpression
-// | TupleExpression
-// | TupleIndexingExpression
-// | StructExpression
-// CallExpression
-// | MethodCallExpression
-// | FieldExpression
-// | ClosureExpression
-// | ContinueExpression
-// | BreakExpression
-// | RangeExpression
-// ReturnExpression
-
-/// Operator Expression ///
-// UnaryOperatorExpression
-// | BorrowExpression
-// | DereferenceExpression
-// | ErrorPropagationExpression
-// | NegationExpression
-// | ArithmeticOrLogicalExpression
-// | ComparisonExpression
-// | LazyBooleanExpression
-// | TypeCastExpression
-// | AssignmentExpression
-// | CompoundAssignmentExpression
 
 // Expression Without Block PART
 namespace weasel
@@ -49,6 +13,36 @@ namespace weasel
 
     public:
         ReturnExpression(Token token, Expression *value) : Expression(token), _value(value) {}
+
+        Expression *getValue() const { return _value; }
+
+        llvm::Value *codegen(Context *context) override;
+        void debug(int shift) override;
+    };
+
+    // Return Expression
+    class BreakExpression : public Expression
+    {
+    private:
+        Expression *_value;
+
+    public:
+        BreakExpression(Token token, Expression *value) : Expression(token), _value(value) {}
+
+        Expression *getValue() const { return _value; }
+
+        llvm::Value *codegen(Context *context) override;
+        void debug(int shift) override;
+    };
+
+    // Return Expression
+    class ContinueExpression : public Expression
+    {
+    private:
+        Expression *_value;
+
+    public:
+        ContinueExpression(Token token, Expression *value) : Expression(token), _value(value) {}
 
         Expression *getValue() const { return _value; }
 
@@ -132,10 +126,9 @@ namespace weasel
     public:
         BinaryOperatorExpression(Token op, Expression *lhs, Expression *rhs) : Expression(op, lhs->getType()), _lhs(lhs), _rhs(rhs)
         {
-            auto isSigned = lhs->getType()->isSigned() && rhs->getType()->isSigned();
             if (op.isComparison())
             {
-                this->_type = Type::getIntegerType(1, isSigned);
+                setType(Type::getIntegerType(1, false));
             }
         }
 
@@ -158,64 +151,6 @@ namespace weasel
         UnaryOperatorExpression(Token lhs, Expression *rhs) : _lhs(lhs), _rhs(rhs) {}
 
         llvm::Value *codegen(Context *context) override { return nullptr; }
-        void debug(int shift) override;
-    };
-
-    // Array Expression
-    class ArrayLiteralExpression : public Expression
-    {
-    private:
-        std::vector<Expression *> _items;
-
-    public:
-        ArrayLiteralExpression() = default;
-        explicit ArrayLiteralExpression(std::vector<Expression *> items) : _items(items) {}
-
-        void addItem(Expression *item) { _items.push_back(item); }
-        std::vector<Expression *> getItems() const { return _items; }
-
-        llvm::Value *codegen(Context *context) override;
-        void debug(int shift) override;
-    };
-
-} // namespace weasel
-
-//
-
-//
-
-// Expression With Block Function PART
-namespace weasel
-{
-    // Statement Expression
-    class StatementExpression : public Expression
-    {
-    private:
-        std::vector<Expression *> _body;
-
-    public:
-        StatementExpression() = default;
-
-        void addBody(Expression *expr) { _body.push_back(expr); }
-        std::vector<Expression *> getBody() const { return _body; }
-
-        llvm::Value *codegen(Context *context) override;
-        void debug(int shift) override;
-    };
-
-    class ConditionStatementExpression : public Expression
-    {
-    private:
-        Expression *_condition;
-        StatementExpression *_statement;
-
-    public:
-        ConditionStatementExpression(Token token, Expression *condition, StatementExpression *statement) : Expression(token), _condition(condition), _statement(statement) {}
-
-        inline Expression *getCondition() const { return _condition; }
-        inline StatementExpression *getBody() const { return _statement; }
-
-        llvm::Value *codegen(Context *context) override;
         void debug(int shift) override;
     };
 

@@ -37,18 +37,8 @@ llvm::Value *weasel::StringLiteralExpression::codegen(Context *c)
     return c->codegen(this);
 }
 
-// Statement
+// Expression
 llvm::Value *weasel::DeclarationExpression::codegen(Context *c)
-{
-    return c->codegen(this);
-}
-
-llvm::Value *weasel::StatementExpression::codegen(Context *c)
-{
-    return c->codegen(this);
-}
-
-llvm::Value *weasel::ConditionStatementExpression::codegen(Context *c)
 {
     return c->codegen(this);
 }
@@ -78,12 +68,38 @@ llvm::Value *weasel::ReturnExpression::codegen(Context *c)
     return c->codegen(this);
 }
 
+llvm::Value *weasel::BreakExpression::codegen(Context *c)
+{
+    return c->codegen(this);
+}
+
+llvm::Value *weasel::ContinueExpression::codegen(Context *c)
+{
+    return c->codegen(this);
+}
+
 llvm::Value *weasel::NilLiteralExpression::codegen(Context *c)
 {
     return c->codegen(this);
 }
 
 llvm::Function *weasel::Function::codegen(Context *c)
+{
+    return c->codegen(this);
+}
+
+// Statement
+llvm::Value *weasel::StatementExpression::codegen(Context *c)
+{
+    return c->codegen(this);
+}
+
+llvm::Value *weasel::ConditionStatement::codegen(Context *c)
+{
+    return c->codegen(this);
+}
+
+llvm::Value *weasel::LoopingStatement::codegen(Context *c)
 {
     return c->codegen(this);
 }

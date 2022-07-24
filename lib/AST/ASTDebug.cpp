@@ -46,27 +46,11 @@ void weasel::StringLiteralExpression::debug(int shift)
     this->printDebug("String Literal", shift);
 }
 
-// Statement
 void weasel::DeclarationExpression::debug(int shift)
 {
     auto val = "Declaration " + this->getIdentifier();
     this->printDebug(val, shift);
-}
-
-void weasel::StatementExpression::debug(int shift)
-{
-    for (auto &item : this->getBody())
-    {
-        item->debug(shift + this->defaultShift);
-    }
-}
-
-void weasel::ConditionStatementExpression::debug(int shift)
-{
-    this->printDebug("If Statement", shift);
-    _condition->debug(shift);
-
-    _statement->debug(shift + this->defaultShift);
+    this->getValue()->debug(shift + defaultShift);
 }
 
 void weasel::VariableExpression::debug(int shift)
@@ -83,6 +67,7 @@ void weasel::ArrayExpression::debug(int shift)
 
 void weasel::BinaryOperatorExpression::debug(int shift)
 {
+
     auto op = this->getOperator().getValue();
     this->printDebug("Binary Operation : " + op, shift);
     this->getLHS()->debug(shift + this->defaultShift);
@@ -100,9 +85,69 @@ void weasel::ReturnExpression::debug(int shift)
     this->printDebug("Return", shift);
 }
 
+void weasel::BreakExpression::debug(int shift)
+{
+    if (getValue() == nullptr)
+    {
+        return this->printDebug("Break Empty", shift);
+    }
+
+    this->printDebug("Break with Condition", shift);
+    getValue()->debug(shift + defaultShift);
+}
+
+void weasel::ContinueExpression::debug(int shift)
+{
+    if (getValue() == nullptr)
+    {
+        return this->printDebug("Continue Empty", shift);
+    }
+
+    this->printDebug("Continue with Condition", shift);
+    getValue()->debug(shift + defaultShift);
+}
+
 // TODO: Not Implemented Yet
 void weasel::NilLiteralExpression::debug(int shift)
 {
+}
+
+// Statement
+void weasel::StatementExpression::debug(int shift)
+{
+    for (auto &item : this->getBody())
+    {
+        item->debug(shift + this->defaultShift);
+    }
+}
+
+void weasel::ConditionStatement::debug(int shift)
+{
+    this->printDebug("If Statement", shift);
+    _condition->debug(shift);
+
+    _statement->debug(shift + this->defaultShift);
+}
+
+void weasel::LoopingStatement::debug(int shift)
+{
+    this->printDebug("Looping Statement", shift);
+    if (_conditions.empty())
+    {
+        this->printDebug("Infinite Condition", shift);
+    }
+    else
+    {
+        this->printDebug("Start Condition", shift);
+        for (auto &item : _conditions)
+        {
+            item->debug(shift + this->defaultShift);
+        }
+
+        this->printDebug("End Condition", shift);
+    }
+
+    _body->debug(shift + this->defaultShift);
 }
 
 // Funtion Debug

@@ -1,5 +1,10 @@
 #pragma once
 
+// Include Standard Library
+#include <string>
+#include <vector>
+
+#include "weasel/Type/Type.h"
 #include "weasel/Lexer/Token.h"
 #include "weasel/Type/Type.h"
 #include "weasel/Basic/Cast.h"
@@ -53,5 +58,38 @@ namespace weasel
     {
     public:
         LiteralExpression(Token token, Type *type) : Expression(token, type) {}
+    };
+
+    // Function Argument
+    class FunctionArgument
+    {
+    private:
+        Token _token;
+        std::string _argName;
+        Type *_type;
+
+    public:
+        FunctionArgument(Token token, std::string argName, Type *type) : _token(token), _argName(argName), _type(type) {}
+
+        Token getToken() const { return _token; }
+        Type *getArgumentType() const { return _type; }
+        std::string getArgumentName() const { return _argName; }
+    };
+
+    // Function Type
+    class FunctionType
+    {
+    private:
+        std::vector<FunctionArgument *> _args;
+        Type *_retType;
+        bool _isVararg;
+
+    public:
+        FunctionType(Type *returnType, std::vector<FunctionArgument *> args, bool vararg) : _args(args), _retType(returnType), _isVararg(vararg) {}
+
+        std::vector<FunctionArgument *> getArgs() const { return _args; }
+        Type *getReturnType() const { return _retType; }
+
+        bool getIsVararg() const { return _isVararg; }
     };
 } // namespace weasel
