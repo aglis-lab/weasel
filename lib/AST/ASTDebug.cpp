@@ -74,7 +74,7 @@ void weasel::BinaryOperatorExpression::debug(int shift)
     this->getRHS()->debug(shift + this->defaultShift);
 }
 
-void weasel::CallExpression::debug(int shift)
+void weasel::MethodCallExpression::debug(int shift)
 {
     auto val = this->getIdentifier();
     this->printDebug("Call : " + val, shift);
@@ -157,6 +157,18 @@ void weasel::LoopingStatement::debug(int shift)
     }
 
     _body->debug(shift + this->defaultShift);
+}
+
+// User Defined Type
+void weasel::StructExpression::debug(int shift)
+{
+    std::string val = "Struct Type {";
+    for (auto &item : this->getType()->getContainedTypes())
+    {
+        val += std::to_string(item->getTypeWidth()) + ",";
+    }
+
+    this->printDebug(val + "}", shift);
 }
 
 // Funtion Debug

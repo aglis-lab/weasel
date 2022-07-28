@@ -3,30 +3,19 @@
 #include "weasel/Lexer/Token.h"
 #include "weasel/AST/ASTStatement.h"
 
-namespace llvm
-{
-    class Function;
-} // namespace llvm
-
 // Function
 namespace weasel
 {
-    // Func
-    class Function : public ASTDebug
+    // Function
+    class Function : public GlobalObject
     {
     private:
-        std::string _identifier;
-        FunctionType *_funcTy;
         StatementExpression *_body;
         bool _isDefine = false;
         bool _isInline = false;
 
     public:
-        Function(std::string identifier, FunctionType *funcTy) : _identifier(identifier), _funcTy(funcTy) {}
-
-        std::string getIdentifier() const { return _identifier; }
-        FunctionType *getFunctionType() const { return _funcTy; }
-        std::vector<FunctionArgument *> getArgs() const { return _funcTy->getArgs(); }
+        Function(std::string identifier, Type *type) : GlobalObject(Token(), identifier, type) {}
 
         StatementExpression *getBody() const { return _body; }
         void setBody(StatementExpression *body) { _body = body; }
@@ -38,9 +27,7 @@ namespace weasel
         bool isInline() const { return _isInline; }
 
     public:
-        llvm::Function *codegen(Context *c);
-
-    public:
+        llvm::Value *codegen(Context *c);
         void debug(int shift);
     };
 

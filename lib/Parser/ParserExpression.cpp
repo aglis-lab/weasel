@@ -10,6 +10,18 @@ weasel::Expression *weasel::Parser::parseStatement()
         return parseCompoundStatement();
     }
 
+    // If Statement
+    if (getCurrentToken().isKind(TokenKind::TokenKeyIf))
+    {
+        return parseConditionStatement();
+    }
+
+    // For Statement
+    if (getCurrentToken().isKeyFor())
+    {
+        return parseLoopingStatement();
+    }
+
     // Variable Definition Expression
     if (getCurrentToken().isKeyDefinition())
     {
@@ -32,18 +44,6 @@ weasel::Expression *weasel::Parser::parseStatement()
     if (getCurrentToken().isKeyContinue())
     {
         return parseContinueExpression();
-    }
-
-    // If Statement
-    if (getCurrentToken().isKind(TokenKind::TokenKeyIf))
-    {
-        return parseConditionStatement();
-    }
-
-    // For Statement
-    if (getCurrentToken().isKeyFor())
-    {
-        return parseLoopingStatement();
     }
 
     auto expr = parseExpression();
@@ -159,7 +159,7 @@ weasel::Expression *weasel::Parser::parseFunctionCallExpression(weasel::Attribut
     std::cout << "Function Call: '" << callToken.getValue() << "' with current token ";
     std::cout << getCurrentToken().getValue() << std::endl;
 
-    return new CallExpression(callToken, callToken.getValue(), args);
+    return new MethodCallExpression(callToken, callToken.getValue(), args);
 }
 
 weasel::Expression *weasel::Parser::parseIdentifierExpression()
@@ -168,7 +168,6 @@ weasel::Expression *weasel::Parser::parseIdentifierExpression()
     auto attr = SymbolTable::get(identifier);
     if (attr == nullptr)
     {
-        std::cout << "Catch you\n";
         return ErrorTable::addError(getCurrentToken(), "Variable not yet declared");
     }
 

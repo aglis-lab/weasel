@@ -14,30 +14,24 @@ weasel::Context::Context(llvm::LLVMContext *context, const std::string &moduleNa
     _builder = new llvm::IRBuilder<>(*_context);
 }
 
-llvm::Function *weasel::Context::codegen(weasel::Function *funAST)
+llvm::Value *weasel::Context::codegen(weasel::Function *funAST)
 {
     _currentFunction = funAST;
 
     auto funName = funAST->getIdentifier();
-    auto isVararg = funAST->getFunctionType()->getIsVararg();
-    auto funArgs = funAST->getArgs();
-    auto retTy = funAST->getFunctionType()->getReturnType();
+    auto funType = funAST->getType();
+    auto isVararg = funType->isSpread();
+    auto funArgs = funType->getContainedTypes();
     auto argsLength = funArgs.size() - (isVararg ? 1 : 0);
     auto args = std::vector<llvm::Type *>(argsLength);
-
-    // Set Arguments
-    for (size_t i = 0; i < argsLength; i++)
+    for (int index = 0; index < argsLength; index++)
     {
-        auto arg = funArgs[i]->getArgumentType();
-        auto argV = arg->codegen(this);
-
-        args[i] = argV;
+        args[index] = funArgs[index]->codegen(this);
     }
 
     auto linkage = llvm::GlobalValue::LinkageTypes::ExternalLinkage;
-    auto funTyLLVM = llvm::FunctionType::get(retTy->codegen(this), args, isVararg);
+    auto funTyLLVM = llvm::FunctionType::get(funType->codegen(this), args, isVararg);
     auto funLLVM = llvm::Function::Create(funTyLLVM, linkage, funName, *getModule());
-
     if (funAST->isInline())
     {
         funLLVM->addFnAttr(llvm::Attribute::AttrKind::InlineHint);
@@ -48,7 +42,7 @@ llvm::Function *weasel::Context::codegen(weasel::Function *funAST)
 
     // Add Function to symbol table
     {
-        auto attr = new Attribute(funName, AttributeScope::ScopeGlobal, AttributeKind::SymbolFunction, funLLVM, retTy);
+        auto attr = new Attribute(funName, AttributeScope::ScopeGlobal, AttributeKind::SymbolFunction, funLLVM, funType);
         SymbolTable::insert(funName, attr);
     }
 
@@ -64,8 +58,8 @@ llvm::Function *weasel::Context::codegen(weasel::Function *funAST)
         for (auto &item : funLLVM->args())
         {
             auto argExpr = funArgs[idx++];
-            auto paramTy = argExpr->getArgumentType();
-            auto argName = argExpr->getArgumentName();
+            auto paramTy = argExpr;
+            auto argName = argExpr->getIdentifier();
 
             item.setName(argName);
 
@@ -103,12 +97,11 @@ llvm::Function *weasel::Context::codegen(weasel::Function *funAST)
     return funLLVM;
 }
 
-llvm::Value *weasel::Context::codegen(CallExpression *expr)
+llvm::Value *weasel::Context::codegen(MethodCallExpression *expr)
 {
     auto identifier = expr->getIdentifier();
     auto args = expr->getArguments();
     auto fun = getModule()->getFunction(identifier);
-    auto callConv = fun->getCallingConv();
 
     std::vector<llvm::Value *> argsV;
     for (size_t i = 0; i < args.size(); i++)
@@ -121,6 +114,7 @@ llvm::Value *weasel::Context::codegen(CallExpression *expr)
     }
 
     auto call = getBuilder()->CreateCall(fun, argsV);
+
     call->setCallingConv(llvm::CallingConv::C);
 
     return call;
@@ -152,8 +146,6 @@ llvm::Value *weasel::Context::codegen(DeclarationExpression *expr)
     // Default Value
     if (valueExpr == nullptr)
     {
-        std::cout << "No Value expression\n";
-
         // Default Value for integer
         if (declType->isIntegerType())
         {

@@ -51,13 +51,13 @@ namespace weasel
     };
 
     // Call Expression
-    class CallExpression : public Expression
+    class MethodCallExpression : public Expression
     {
         std::string _identifier;
         std::vector<Expression *> _args;
 
     public:
-        CallExpression(Token token, std::string identifier, std::vector<Expression *> args) : Expression(token), _identifier(identifier), _args(args) {}
+        MethodCallExpression(Token token, std::string identifier, std::vector<Expression *> args) : Expression(token), _identifier(identifier), _args(args) {}
 
         std::string getIdentifier() const { return _identifier; }
         std::vector<Expression *> getArguments() const { return _args; }

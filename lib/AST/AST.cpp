@@ -58,7 +58,7 @@ llvm::Value *weasel::BinaryOperatorExpression::codegen(Context *c)
     return c->codegen(this);
 }
 
-llvm::Value *weasel::CallExpression::codegen(Context *c)
+llvm::Value *weasel::MethodCallExpression::codegen(Context *c)
 {
     return c->codegen(this);
 }
@@ -83,7 +83,7 @@ llvm::Value *weasel::NilLiteralExpression::codegen(Context *c)
     return c->codegen(this);
 }
 
-llvm::Function *weasel::Function::codegen(Context *c)
+llvm::Value *weasel::Function::codegen(Context *c)
 {
     return c->codegen(this);
 }
@@ -100,6 +100,12 @@ llvm::Value *weasel::ConditionStatement::codegen(Context *c)
 }
 
 llvm::Value *weasel::LoopingStatement::codegen(Context *c)
+{
+    return c->codegen(this);
+}
+
+// User Defined Type
+llvm::Value *weasel::StructExpression::codegen(Context *c)
 {
     return c->codegen(this);
 }

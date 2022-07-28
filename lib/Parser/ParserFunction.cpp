@@ -26,22 +26,21 @@ weasel::Function *weasel::Parser::parseFunction()
     // Set Symbol for parameters and enter a scope
     {
         SymbolTable::enterScope();
-        for (const auto &arg : fun->getArgs())
+        for (const auto &arg : fun->getType()->getContainedTypes())
         {
-            auto argName = arg->getArgumentName();
-            auto ty = arg->getArgumentType();
-
+            auto argName = arg->getIdentifier();
             auto attrKind = AttributeKind::SymbolVariable;
-            if (ty->isPointerType())
+
+            if (arg->isPointerType())
             {
                 attrKind = AttributeKind::SymbolPointer;
             }
-            else if (ty->isArrayType())
+            else if (arg->isArrayType())
             {
                 attrKind = AttributeKind::SymbolArray;
             }
 
-            auto attr = new Attribute(argName, AttributeScope::ScopeParam, attrKind, ty);
+            auto attr = new Attribute(argName, AttributeScope::ScopeParam, attrKind, arg);
 
             SymbolTable::insert(argName, attr);
         }
@@ -92,7 +91,7 @@ weasel::Function *weasel::Parser::parseDeclareFunction()
     }
 
     getNextToken(); // eat '('
-    std::vector<weasel::FunctionArgument *> args;
+    std::vector<Type *> types;
     auto isVararg = false;
 
     while (!getCurrentToken().isKind(TokenKind::TokenDelimCloseParen))
@@ -121,7 +120,8 @@ weasel::Function *weasel::Parser::parseDeclareFunction()
             return ErrorTable::addError(getCurrentToken(), "Expected type in function argument");
         }
 
-        args.push_back(new FunctionArgument(idenToken, identifier, type));
+        type->setIdentifier(identifier);
+        types.push_back(type);
 
         if (!getCurrentToken().isKind(TokenKind::TokenPuncComma))
         {
@@ -144,8 +144,10 @@ weasel::Function *weasel::Parser::parseDeclareFunction()
         returnType = Type::getVoidType();
     }
 
-    auto funTy = new FunctionType(returnType, args, isVararg);
-    auto fun = new Function(identifier, funTy);
+    returnType->setSpread(isVararg);
+    returnType->replaceContainedTypes(types);
+
+    auto fun = new Function(identifier, returnType);
 
     // Create Symbol for the function
     {

@@ -12,11 +12,11 @@ namespace weasel
     {
     private:
         Context *_context;
-        std::vector<Function *> _funs;
+        std::vector<GlobalObject *> _objects;
         std::string _err;
 
     public:
-        Codegen(Context *context, std::vector<Function *> funs);
+        Codegen(Context *context, const std::vector<GlobalObject *> &objects);
 
         bool compile();
 

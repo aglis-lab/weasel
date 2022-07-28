@@ -20,20 +20,21 @@ namespace weasel
         // Keyword
         TokenKeyParallel,         // parallel // heterogeneous support
         TokenKeyKernel,           // kernel // heterogeneous kernel type
+        TokenKeyStruct,           // struct
         TokenKeyInline,           // For Always inline attribute
-        TokenKeyFun,              // fun
+        TokenKeyFun,              // function
         TokenKeyExtern,           // extern
-        TokenKeyStartDeclaration, // START DECLARATION
-        TokenKeyLet,              // let
-        TokenKeyFinal,            // final
-        TokenKeyConst,            // const
-        TokenKeyEndDeclaration,   // END DECLARATION
         TokenKeyReturn,           // return
         TokenKeyIf,               // if // Condition
         TokenKeyElse,             // else // Condition
         TokenKeyFor,              // for // Looping
         TokenKeyBreak,            // break // looping
         TokenKeyContinue,         // continue //looping
+        TokenKeyStartDeclaration, // START DECLARATION
+        TokenKeyLet,              // let
+        TokenKeyFinal,            // final
+        TokenKeyConst,            // const
+        TokenKeyEndDeclaration,   // END DECLARATION
         TokenKeyAssert,           // assert // debugging
 
         // Data Literal -> Value of data type
@@ -172,12 +173,19 @@ namespace weasel
         Token() : _kind(TokenKind::TokenUndefined) {}
 
         // Fast Checking //
+        inline bool isKind(TokenKind type) const { return type == _kind; }
+        inline bool isKeyFunction() const { return _kind == TokenKind::TokenKeyFun; }
+        inline bool isKeyStruct() const { return _kind == TokenKind::TokenKeyStruct; }
+        inline bool isIdentifier() const { return _kind == TokenKind::TokenIdentifier; }
+
+        // Variable //
         inline bool isDataType() { return _kind >= TokenKind::TokenTyVoid && _kind <= TokenKind::TokenTyDecimal; }
         inline bool isKeyDefinition() { return (_kind == TokenKind::TokenKeyLet || _kind == TokenKind::TokenKeyFinal || _kind == TokenKind::TokenKeyConst); }
         inline bool isLiteral() { return _kind >= TokenKind::TokenLitNil && _kind <= TokenKind::TokenLitString; }
+
+        // Operator //
         inline bool isOperator() { return _kind >= TokenKind::TokenOperatorStart && _kind <= TokenKind::TokenOperatorEnd; }
         inline bool isUndefined() const { return _kind == TokenKind::TokenUndefined; }
-        inline bool isKind(TokenKind type) const { return type == _kind; }
         inline bool isNewline() const { return _kind == TokenKind::TokenSpaceNewline; }
         inline bool isOpenParen() const { return _kind == TokenKind::TokenDelimOpenParen; }
         inline bool isCloseParen() const { return _kind == TokenKind::TokenDelimCloseParen; }

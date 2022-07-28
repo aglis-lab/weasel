@@ -27,6 +27,9 @@ namespace weasel
         Function *parseDeclareFunction();
         Function *parseFunction();
 
+        // Struct
+        GlobalObject *parseStruct();
+
         // Statement
         Expression *parseStatement();
         StatementExpression *parseCompoundStatement();
@@ -58,7 +61,7 @@ namespace weasel
         void ignoreNewline();
 
     public:
-        std::vector<Function *> parse();
+        std::vector<GlobalObject *> parse();
     };
 
 } // namespace weasel

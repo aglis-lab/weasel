@@ -2,6 +2,11 @@
 #include "weasel/IR/Context.h"
 #include "weasel/Symbol/Symbol.h"
 
+llvm::Value *weasel::Context::codegen(StructExpression *expr)
+{
+    return nullptr;
+}
+
 llvm::Value *weasel::Context::codegen(StatementExpression *expr)
 {
     // Enter to new statement

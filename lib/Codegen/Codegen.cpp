@@ -18,17 +18,16 @@
 #include "weasel/Passes/Passes.h"
 #include "weasel/Metadata/Metadata.h"
 
-weasel::Codegen::Codegen(Context *context, std::vector<Function *> funs)
+weasel::Codegen::Codegen(Context *context, const std::vector<GlobalObject *> &objs)
 {
     _context = context;
-    _funs = funs;
-    // _isParallel = _context->isParallel();
+    _objects = objs;
 }
 
 bool weasel::Codegen::compile()
 {
     auto pass = Passes(getModule());
-    for (const auto &item : _funs)
+    for (const auto &item : _objects)
     {
         auto identifier = item->getIdentifier();
         auto sym = SymbolTable::get(identifier);
@@ -38,7 +37,7 @@ bool weasel::Codegen::compile()
             return false;
         }
 
-        auto fun = item->codegen(_context);
+        auto fun = llvm::dyn_cast<llvm::Function>(item->codegen(_context));
         if (fun == nullptr)
         {
             _err = "Cannot codegen function " + identifier + "\n";

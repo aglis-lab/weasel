@@ -2,6 +2,55 @@
 #include "weasel/Parser/Parser.h"
 #include "weasel/Symbol/Symbol.h"
 
+weasel::GlobalObject *weasel::Parser::parseStruct()
+{
+    auto token = getCurrentToken();
+    if (!getNextToken(true).isIdentifier())
+    {
+        return ErrorTable::addError(getCurrentToken(), "Invalid Struct expression");
+    }
+
+    auto tokenIndentifier = getCurrentToken();
+    if (!getNextToken(true).isOpenCurly())
+    {
+        return ErrorTable::addError(getCurrentToken(), "Invalid Struct expression");
+    }
+
+    // Parse Struct Properties
+    auto structType = Type::getStructType(tokenIndentifier.getValue());
+    while (true)
+    {
+        if (getNextToken(true).isCloseCurly())
+        {
+            break;
+        }
+
+        if (!getCurrentToken().isIdentifier())
+        {
+            return ErrorTable::addError(getCurrentToken(), "Invalid Struct expression");
+        }
+
+        auto propName = getCurrentToken();
+        if (!getNextToken(true).isDataType())
+        {
+            return ErrorTable::addError(getCurrentToken(), "Invalid Struct expression");
+        }
+
+        auto propType = getCurrentToken();
+        if (!getNextToken().isNewline())
+        {
+            return ErrorTable::addError(getCurrentToken(), "Invalid Struct expression");
+        }
+
+        auto type = Type::create(propType);
+
+        type->setIdentifier(propName.getValue());
+        structType->addContainedType(type);
+    }
+
+    return new StructExpression(token, tokenIndentifier.getValue(), structType);
+}
+
 weasel::Expression *weasel::Parser::parseLoopingStatement()
 {
     auto token = getCurrentToken();
@@ -131,21 +180,17 @@ weasel::Expression *weasel::Parser::parseConditionStatement()
 
         stmts.push_back(body);
 
-        std::cout << "Condition : " << isElseCondition << std::endl;
-
         if (isElseCondition)
         {
             break;
         }
 
-        std::cout << "Else : " << getCurrentToken().getValue() << std::endl;
         if (getCurrentToken().isKeyElse())
         {
             getNextToken(true); // eat 'else'
             continue;
         }
 
-        std::cout << "Expect Else : " << isExpectElse() << std::endl;
         if (isExpectElse())
         {
             getNextToken(true); // eat

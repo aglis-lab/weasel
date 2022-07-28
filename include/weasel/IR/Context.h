@@ -64,9 +64,6 @@ namespace weasel
         llvm::IRBuilder<> *getBuilder() const { return _builder; }
         llvm::MDBuilder *getMDBuilder() const { return _mdBuilder; }
 
-        // void setHostCL(bool val) { _isHostCL = val; }
-        // bool isParallel() const { return _isParallel; }
-
         llvm::Value *castIntegerType(llvm::Value *lhs, llvm::Value *rhs) const;
         llvm::Value *castIntegerType(llvm::Value *value, llvm::Type *castTy);
         CompareType compareType(llvm::Type *lhsType, llvm::Type *rhsType);
@@ -83,8 +80,9 @@ namespace weasel
         llvm::Value *codegen(StringLiteralExpression *expr) const;
         llvm::Value *codegen(ArrayLiteralExpression *expr);
 
+        // Expression
         llvm::Value *codegen(VariableExpression *expr);
-        llvm::Value *codegen(CallExpression *expr);
+        llvm::Value *codegen(MethodCallExpression *expr);
         llvm::Value *codegen(ReturnExpression *expr);
         llvm::Value *codegen(DeclarationExpression *expr);
         llvm::Value *codegen(NilLiteralExpression *expr) const;
@@ -96,9 +94,10 @@ namespace weasel
         llvm::Value *codegen(LoopingStatement *expr);
         llvm::Value *codegen(BreakExpression *expr);
         llvm::Value *codegen(ContinueExpression *expr);
-
         llvm::Value *codegen(BinaryOperatorExpression *expr);
-        llvm::Function *codegen(Function *func);
-    };
 
+        // User Defined
+        llvm::Value *codegen(Function *func);
+        llvm::Value *codegen(StructExpression *epxr);
+    };
 } // namespace weasel
