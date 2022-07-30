@@ -4,4 +4,3 @@
 #include "weasel/AST/ASTFunction.h"
 #include "weasel/AST/ASTLiteral.h"
 #include "weasel/AST/ASTStatement.h"
-#include "weasel/AST/ASTStruct.h"

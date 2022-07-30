@@ -3,87 +3,87 @@
 
 /// Symbol Init ///
 std::vector<weasel::Error> weasel::ErrorTable::_errors;
-std::vector<unsigned> weasel::SymbolTable::_lookup;
-std::vector<weasel::Attribute *> weasel::SymbolTable::_table;
+// std::vector<unsigned> weasel::SymbolTable::_lookup;
+// std::vector<weasel::Attribute *> weasel::SymbolTable::_table;
 
-/// Symbol Function ///
-void weasel::SymbolTable::enterScope()
-{
-    _lookup.push_back(0);
-}
+// /// Symbol Function ///
+// void weasel::SymbolTable::enterScope()
+// {
+//     _lookup.push_back(0);
+// }
 
-bool weasel::SymbolTable::exitScope()
-{
-    if (_lookup.size() == 1)
-    {
-        return false;
-    }
+// bool weasel::SymbolTable::exitScope()
+// {
+//     if (_lookup.size() == 1)
+//     {
+//         return false;
+//     }
 
-    auto n = _lookup.back();
-    while (n--)
-    {
-        _table.pop_back();
-    }
+//     auto n = _lookup.back();
+//     while (n--)
+//     {
+//         _table.pop_back();
+//     }
 
-    _lookup.pop_back();
-    return true;
-}
+//     _lookup.pop_back();
+//     return true;
+// }
 
-void weasel::SymbolTable::insert(const std::string &key, Attribute *attr)
-{
-    if (_lookup.empty())
-    {
-        _lookup.push_back(0);
-    }
+// void weasel::SymbolTable::insert(const std::string &key, Attribute *attr)
+// {
+//     if (_lookup.empty())
+//     {
+//         _lookup.push_back(0);
+//     }
 
-    _table.push_back(attr);
-    _lookup[_lookup.size() - 1]++;
-}
+//     _table.push_back(attr);
+//     _lookup[_lookup.size() - 1]++;
+// }
 
-weasel::Attribute *weasel::SymbolTable::get(const std::string &key)
-{
-    auto i = (int)_table.size() - 1;
-    for (; i >= 0; i--)
-    {
-        if (_table[i]->getIdentifier() == key)
-        {
-            return _table[i];
-        }
-    }
+// weasel::Attribute *weasel::SymbolTable::get(const std::string &key)
+// {
+//     auto i = (int)_table.size() - 1;
+//     for (; i >= 0; i--)
+//     {
+//         if (_table[i]->getIdentifier() == key)
+//         {
+//             return _table[i];
+//         }
+//     }
 
-    return nullptr;
-}
+//     return nullptr;
+// }
 
-weasel::Attribute *weasel::SymbolTable::getLastFunction()
-{
-    auto i = (int)_table.size() - 1;
-    for (; i >= 0; i--)
-    {
-        auto attr = _table[i];
+// weasel::Attribute *weasel::SymbolTable::getLastFunction()
+// {
+//     auto i = (int)_table.size() - 1;
+//     for (; i >= 0; i--)
+//     {
+//         auto attr = _table[i];
 
-        if (attr->getKind() == AttributeKind::SymbolFunction)
-        {
-            return attr;
-        }
-    }
+//         if (attr->getKind() == AttributeKind::SymbolFunction)
+//         {
+//             return attr;
+//         }
+//     }
 
-    return nullptr;
-}
+//     return nullptr;
+// }
 
-void weasel::SymbolTable::reset()
-{
-    while (!_table.empty())
-    {
-        _table.pop_back();
-    }
+// void weasel::SymbolTable::reset()
+// {
+//     while (!_table.empty())
+//     {
+//         _table.pop_back();
+//     }
 
-    while (!_lookup.empty())
-    {
-        _lookup.pop_back();
-    }
+//     while (!_lookup.empty())
+//     {
+//         _lookup.pop_back();
+//     }
 
-    enterScope(); // Enter Global Scope
-}
+//     enterScope(); // Enter Global Scope
+// }
 
 std::nullptr_t weasel::ErrorTable::addError(Token token, std::string msg)
 {

@@ -104,12 +104,6 @@ llvm::Value *weasel::LoopingStatement::codegen(Context *c)
     return c->codegen(this);
 }
 
-// User Defined Type
-llvm::Value *weasel::StructExpression::codegen(Context *c)
-{
-    return c->codegen(this);
-}
-
 // Some Type Checking
 bool weasel::Expression::isCompoundExpression()
 {

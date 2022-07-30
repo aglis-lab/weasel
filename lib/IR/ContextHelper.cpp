@@ -6,6 +6,24 @@ std::string weasel::Context::getDefaultLabel()
     return std::to_string(_counter++);
 }
 
+// Weasel User Type System to llvm Type System
+llvm::Type *weasel::Context::codegen(weasel::StructType *type)
+{
+    auto types = type->getContainedTypes();
+    auto n = types.size();
+    auto typesVal = std::vector<llvm::Type *>(n);
+    auto identifier = type->getIdentifier();
+
+    for (int i = 0; i < n; i++)
+    {
+        typesVal[i] = types[i]->codegen(this);
+    }
+
+    auto userDefined = llvm::StructType::create(*getContext(), typesVal, identifier, true);
+
+    return userDefined;
+}
+
 // Weasel Type System to llvm Type System
 llvm::Type *weasel::Context::codegen(weasel::Type *type)
 {

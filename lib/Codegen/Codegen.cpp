@@ -13,31 +13,38 @@
 #include <llvm/Bitcode/BitcodeWriter.h>
 #include <llvm/IR/Verifier.h>
 #include <llvm/IR/LegacyPassManager.h>
+
 #include "weasel/Symbol/Symbol.h"
 #include "weasel/Codegen/Codegen.h"
 #include "weasel/Passes/Passes.h"
 #include "weasel/Metadata/Metadata.h"
 
-weasel::Codegen::Codegen(Context *context, const std::vector<GlobalObject *> &objs)
+weasel::Codegen::Codegen(Context *context, weasel::Parser *parser)
 {
     _context = context;
-    _objects = objs;
+    _parser = parser;
 }
 
 bool weasel::Codegen::compile()
 {
     auto pass = Passes(getModule());
-    for (const auto &item : _objects)
+    for (const auto &item : getFunctions())
     {
         auto identifier = item->getIdentifier();
-        auto sym = SymbolTable::get(identifier);
-        if (sym && sym->isKind(AttributeKind::SymbolFunction))
+        auto exist = getModule()->getFunction(identifier);
+        if (exist)
         {
             _err = "Function conflict : " + identifier + "\n";
             return false;
         }
 
-        auto fun = llvm::dyn_cast<llvm::Function>(item->codegen(_context));
+        auto obj = item->codegen(_context);
+        if (obj == nullptr)
+        {
+            continue;
+        }
+
+        auto fun = llvm::dyn_cast<llvm::Function>(obj);
         if (fun == nullptr)
         {
             _err = "Cannot codegen function " + identifier + "\n";

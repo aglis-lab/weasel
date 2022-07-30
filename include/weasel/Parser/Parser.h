@@ -1,18 +1,33 @@
 #pragma once
 
+#include <list>
+
 #include "weasel/AST/AST.h"
 #include "weasel/Lexer/Lexer.h"
 #include "weasel/Type/Type.h"
+#include "weasel/Table/ParserTable.h"
 
 namespace weasel
 {
-    class Attribute;
+    class ParserAttribute;
 
-    class Parser
+    class Parser : ParserTable
     {
     private:
         Lexer *_lexer;
         Function *_currentFunction;
+        std::list<StructType *> _userTypes;
+        std::list<Function *> _functions;
+
+    private:
+        inline void addFunction(Function *fun) { _functions.push_back(fun); }
+        inline unsigned functionCount() const { return _functions.size(); }
+        inline Function *lastFunction() const { return _functions.back(); }
+        inline Function *findFunction(const std::string &identifier);
+
+        inline void addUserTypes(StructType *type) { _userTypes.push_back(type); }
+        inline unsigned userTypeCount() const { return _userTypes.size(); }
+        inline StructType *findUserType(const std::string &typeName);
 
     private:
         bool expectToken(TokenKind kind) { return _lexer->expect(kind); }
@@ -27,8 +42,8 @@ namespace weasel
         Function *parseDeclareFunction();
         Function *parseFunction();
 
-        // Struct
-        GlobalObject *parseStruct();
+        // Parse Global Type
+        StructType *parseStruct();
 
         // Statement
         Expression *parseStatement();
@@ -40,7 +55,7 @@ namespace weasel
         Expression *parseExpression();
         Expression *parsePrimaryExpression();
         Expression *parseDeclarationExpression();
-        Expression *parseFunctionCallExpression(Attribute *attr);
+        Expression *parseFunctionCallExpression(Function *fun);
         Expression *parseParenExpression();
         Expression *parseReturnExpression();
         Expression *parseBreakExpression();
@@ -55,13 +70,15 @@ namespace weasel
     public:
         Parser(Lexer *lexer) : _lexer(lexer) {}
 
+        // Gets Parser Value
+        inline std::list<StructType *> getUserTypes() const { return _userTypes; }
+        inline std::list<Function *> getFunctions() const { return _functions; }
+
         // Helper
         Type *parseDataType();
-
         void ignoreNewline();
 
     public:
-        std::vector<GlobalObject *> parse();
+        void parse();
     };
-
 } // namespace weasel

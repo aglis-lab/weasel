@@ -17,8 +17,8 @@
 // | ClosureExpression
 // | RangeExpression
 // ReturnExpression
-// | ContinueExpression
-// | BreakExpression
+// ContinueExpression
+// BreakExpression
 
 /// Operator Expression ///
 // UnaryOperatorExpression

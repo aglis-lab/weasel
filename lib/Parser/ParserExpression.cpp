@@ -119,7 +119,8 @@ weasel::Expression *weasel::Parser::parseLiteralExpression()
     return new NilLiteralExpression(getCurrentToken());
 }
 
-weasel::Expression *weasel::Parser::parseFunctionCallExpression(weasel::Attribute *attr)
+// TODO: Use Defined Function to validate the function call
+weasel::Expression *weasel::Parser::parseFunctionCallExpression(Function *fun)
 {
     auto callToken = getCurrentToken();
     if (!getNextToken().isKind(TokenKind::TokenDelimOpenParen))
@@ -165,19 +166,23 @@ weasel::Expression *weasel::Parser::parseFunctionCallExpression(weasel::Attribut
 weasel::Expression *weasel::Parser::parseIdentifierExpression()
 {
     auto identifier = getCurrentToken().getValue();
-    auto attr = SymbolTable::get(identifier);
-    if (attr == nullptr)
+
+    // Check Available Function
+    auto funExist = findFunction(identifier);
+    if (funExist != nullptr)
+    {
+        return parseFunctionCallExpression(funExist);
+    }
+
+    // Check Variable
+    auto attr = findAttribute(identifier);
+    if (attr.isEmpty())
     {
         return ErrorTable::addError(getCurrentToken(), "Variable not yet declared");
     }
 
-    if (attr->getKind() == AttributeKind::SymbolFunction)
-    {
-        return parseFunctionCallExpression(attr);
-    }
-
     // Check if Array Variable
-    if (attr->isKind(AttributeKind::SymbolArray) || attr->isKind(AttributeKind::SymbolPointer))
+    if (attr.getValue()->isArrayType() || attr.getValue()->isPointerType())
     {
         if (expectToken(TokenKind::TokenDelimOpenSquareBracket))
         {
@@ -185,11 +190,11 @@ weasel::Expression *weasel::Parser::parseIdentifierExpression()
             getNextToken(); // eat [
             auto indexExpr = parseExpression();
 
-            return new ArrayExpression(indexExpr->getToken(), identifier, indexExpr, attr->getType());
+            return new ArrayExpression(indexExpr->getToken(), identifier, indexExpr, attr.getValue());
         }
     }
 
-    return new VariableExpression(getCurrentToken(), identifier, attr->getType());
+    return new VariableExpression(getCurrentToken(), identifier, attr.getValue());
 }
 
 // TODO: Need to consume last ')'
@@ -358,24 +363,7 @@ weasel::Expression *weasel::Parser::parseDeclarationExpression()
         }
 
         // Insert Symbol Table
-        {
-            AttributeKind attrKind;
-            if (type->isArrayType())
-            {
-                attrKind = AttributeKind::SymbolArray;
-            }
-            else if (type->isPointerType())
-            {
-                attrKind = AttributeKind::SymbolPointer;
-            }
-            else
-            {
-                attrKind = AttributeKind::SymbolVariable;
-            }
-
-            auto attr = new Attribute(identifier, AttributeScope::ScopeLocal, attrKind, type);
-            SymbolTable::insert(identifier, attr);
-        }
+        addAttribute(ParserAttribute::get(identifier, type, AttributeKind::Variable));
 
         // Create Variable with Default Value
         return new DeclarationExpression(qualToken, identifier, qualifier, type);
@@ -411,20 +399,7 @@ weasel::Expression *weasel::Parser::parseDeclarationExpression()
     }
 
     // Insert Symbol Table
-    {
-        AttributeKind attrKind = AttributeKind::SymbolVariable;
-        if (type->isArrayType())
-        {
-            attrKind = AttributeKind::SymbolArray;
-        }
-        else if (type->isPointerType())
-        {
-            attrKind = AttributeKind::SymbolPointer;
-        }
-
-        auto attr = new Attribute(identifier, AttributeScope::ScopeLocal, attrKind, type);
-        SymbolTable::insert(identifier, attr);
-    }
+    addAttribute(ParserAttribute::get(identifier, type, AttributeKind::Variable));
 
     return new DeclarationExpression(qualToken, identifier, qualifier, type, val);
 }

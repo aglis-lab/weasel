@@ -2,7 +2,7 @@
 #include "weasel/Parser/Parser.h"
 #include "weasel/Symbol/Symbol.h"
 
-weasel::GlobalObject *weasel::Parser::parseStruct()
+weasel::StructType *weasel::Parser::parseStruct()
 {
     auto token = getCurrentToken();
     if (!getNextToken(true).isIdentifier())
@@ -17,7 +17,7 @@ weasel::GlobalObject *weasel::Parser::parseStruct()
     }
 
     // Parse Struct Properties
-    auto structType = Type::getStructType(tokenIndentifier.getValue());
+    auto structType = StructType::get(tokenIndentifier.getValue());
     while (true)
     {
         if (getNextToken(true).isCloseCurly())
@@ -48,7 +48,7 @@ weasel::GlobalObject *weasel::Parser::parseStruct()
         structType->addContainedType(type);
     }
 
-    return new StructExpression(token, tokenIndentifier.getValue(), structType);
+    return structType;
 }
 
 weasel::Expression *weasel::Parser::parseLoopingStatement()
@@ -219,9 +219,7 @@ weasel::StatementExpression *weasel::Parser::parseCompoundStatement()
     }
 
     // Enter statement scope
-    {
-        SymbolTable::enterScope();
-    }
+    enterScope();
 
     do
     {
@@ -256,9 +254,7 @@ weasel::StatementExpression *weasel::Parser::parseCompoundStatement()
     getNextToken(); // eat '}'
 
     // Exit statement scope
-    {
-        SymbolTable::exitScope();
-    }
+    exitScope();
 
     return stmt;
 }

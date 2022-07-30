@@ -1,8 +1,8 @@
 #pragma once
 
-#include <vector>
-#include <memory>
-#include "llvm/IR/LLVMContext.h"
+#include <llvm/IR/LLVMContext.h>
+
+#include "weasel/Parser/Parser.h"
 #include "weasel/AST/AST.h"
 #include "weasel/IR/Context.h"
 
@@ -12,11 +12,14 @@ namespace weasel
     {
     private:
         Context *_context;
-        std::vector<GlobalObject *> _objects;
+        Parser *_parser;
         std::string _err;
 
+    private:
+        inline std::list<Function *> getFunctions() const { return _parser->getFunctions(); }
+
     public:
-        Codegen(Context *context, const std::vector<GlobalObject *> &objects);
+        Codegen(Context *context, Parser *parser);
 
         bool compile();
 

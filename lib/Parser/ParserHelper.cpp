@@ -74,3 +74,29 @@ weasel::Type *weasel::Parser::parseDataType()
 
     return type;
 }
+
+inline weasel::Function *weasel::Parser::findFunction(const std::string &identifier)
+{
+    for (std::list<Function *>::reverse_iterator item = getFunctions().rbegin(); item != getFunctions().rend(); ++item)
+    {
+        if ((*item)->getIdentifier() == identifier)
+        {
+            return (*item);
+        }
+    }
+
+    return nullptr;
+}
+
+inline weasel::StructType *weasel::Parser::findUserType(const std::string &typeName)
+{
+    for (auto item : getUserTypes())
+    {
+        if (item->getIdentifier() == typeName)
+        {
+            return item;
+        }
+    }
+
+    return nullptr;
+}

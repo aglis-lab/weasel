@@ -16,7 +16,7 @@
 #include "weasel/Basic/FileManager.h"
 #include "weasel/Codegen/Codegen.h"
 
-void debug(std::vector<weasel::GlobalObject *> objects)
+void debug(const std::list<weasel::Function *> &objects)
 {
     std::cout << std::endl
               << std::setfill('=') << std::setw(40) << "=" << std::endl
@@ -59,17 +59,16 @@ int main(int argc, char *argv[])
     auto parser = new weasel::Parser(lexer);
 
     // Parse into AST
-    auto objects = parser->parse();
+    parser->parse();
 
     // Debugging AST
-    debug(objects);
+    debug(parser->getFunctions());
 
     // Prepare for codegen
     auto llvmContext = new llvm::LLVMContext();
     auto context = new weasel::Context(llvmContext, "codeModule");
-    auto codegen = new weasel::Codegen(context, objects);
+    auto codegen = new weasel::Codegen(context, parser);
 
-    weasel::SymbolTable::reset();
     auto isCompileSuccess = codegen->compile();
     if (!isCompileSuccess)
     {

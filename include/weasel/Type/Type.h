@@ -92,12 +92,24 @@ namespace weasel
         static Type *getDoubleType() { return new Type(TypeID::DoubleType, 64); }
         static Type *getPointerType(Type *containedType) { return new Type(TypeID::PointerType, containedType); }
         static Type *getArrayType(Type *containedType, unsigned width) { return new Type(TypeID::ArrayType, containedType, width); }
-        static Type *getStructType(const std::string &structName) { return new Type(TypeID::StructType, 0, false); }
 
         // Check Type
         bool isEqual(Type *type);
 
     public:
-        llvm::Type *codegen(Context *context);
+        virtual llvm::Type *codegen(Context *context);
+    };
+
+    // Struct Value
+    class StructType : public Type
+    {
+    private:
+        StructType(const std::string &structName) : Type(TypeID::StructType, 0, false) {}
+
+    public:
+        static StructType *get(const std::string &structName) { return new StructType(structName); }
+
+    public:
+        llvm::Type *codegen(Context *context) override;
     };
 } // namespace weasel

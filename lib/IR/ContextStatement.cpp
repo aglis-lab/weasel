@@ -2,17 +2,10 @@
 #include "weasel/IR/Context.h"
 #include "weasel/Symbol/Symbol.h"
 
-llvm::Value *weasel::Context::codegen(StructExpression *expr)
-{
-    return nullptr;
-}
-
 llvm::Value *weasel::Context::codegen(StatementExpression *expr)
 {
     // Enter to new statement
-    {
-        SymbolTable::enterScope();
-    }
+    enterScope();
 
     for (auto &item : expr->getBody())
     {
@@ -20,9 +13,7 @@ llvm::Value *weasel::Context::codegen(StatementExpression *expr)
     }
 
     // Exit from statement
-    {
-        SymbolTable::exitScope();
-    }
+    exitScope();
 
     return nullptr;
 }
@@ -114,9 +105,7 @@ llvm::Value *weasel::Context::codegen(LoopingStatement *expr)
     auto conditions = expr->getConditions();
 
     // Enter to new statement
-    {
-        SymbolTable::enterScope();
-    }
+    enterScope();
 
     // Add Last Block to Loop Blocks
     addbreakBlock(endBlock);
@@ -188,9 +177,7 @@ llvm::Value *weasel::Context::codegen(LoopingStatement *expr)
     removeContinueBlock();
 
     // Exit from statement
-    {
-        SymbolTable::exitScope();
-    }
+    exitScope();
 
     return nullptr;
 }

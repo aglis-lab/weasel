@@ -160,16 +160,16 @@ void weasel::LoopingStatement::debug(int shift)
 }
 
 // User Defined Type
-void weasel::StructExpression::debug(int shift)
-{
-    std::string val = "Struct Type {";
-    for (auto &item : this->getType()->getContainedTypes())
-    {
-        val += std::to_string(item->getTypeWidth()) + ",";
-    }
+// void weasel::StructExpression::debug(int shift)
+// {
+//     std::string val = "Struct Type {";
+//     for (auto &item : this->getType()->getContainedTypes())
+//     {
+//         val += std::to_string(item->getTypeWidth()) + ",";
+//     }
 
-    this->printDebug(val + "}", shift);
-}
+//     this->printDebug(val + "}", shift);
+// }
 
 // Funtion Debug
 void weasel::Function::debug(int shift)

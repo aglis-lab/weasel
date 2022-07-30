@@ -1,6 +1,7 @@
 #pragma once
 
 #include <list>
+#include <unordered_map>
 
 #include <llvm/IR/Value.h>
 #include <llvm/IR/Constant.h>
@@ -8,7 +9,9 @@
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/MDBuilder.h>
+
 #include "weasel/AST/AST.h"
+#include "weasel/Table/ContextTable.h"
 
 namespace weasel
 {
@@ -21,7 +24,7 @@ namespace weasel
     };
 
     // Analysis Context
-    class Context
+    class Context : ContextTable
     {
     private:
         llvm::Module *_module;
@@ -34,6 +37,7 @@ namespace weasel
         // Helper for Looping //
         std::list<llvm::BasicBlock *> _breakBlocks;
         std::list<llvm::BasicBlock *> _continueBlocks;
+        std::unordered_map<std::string, StructType> _structTypes;
 
     private:
         llvm::MDNode *getTBAA(llvm::Type *type) const;
@@ -71,6 +75,7 @@ namespace weasel
 
     public:
         llvm::Type *codegen(Type *type);
+        llvm::Type *codegen(StructType *type);
 
         llvm::Value *codegen(BoolLiteralExpression *expr) const;
         llvm::Value *codegen(CharLiteralExpression *expr) const;
@@ -98,6 +103,5 @@ namespace weasel
 
         // User Defined
         llvm::Value *codegen(Function *func);
-        llvm::Value *codegen(StructExpression *epxr);
     };
 } // namespace weasel

@@ -6,32 +6,26 @@
 #include "weasel/Symbol/Symbol.h"
 
 // parse
-std::vector<weasel::GlobalObject *> weasel::Parser::parse()
+void weasel::Parser::parse()
 {
-    std::vector<weasel::GlobalObject *> objects;
-
     while (!getNextToken().isKind(TokenKind::TokenEOF))
     {
         if (getCurrentToken().isKeyFunction())
         {
-            objects.push_back(parseFunction());
-            continue;
+            addFunction(parseFunction());
         }
 
         if (getCurrentToken().isKeyStruct())
         {
-            objects.push_back(parseStruct());
-            continue;
+            addUserTypes(parseStruct());
         }
 
         auto token = getCurrentToken();
         std::cout << "Parser -> " << token.getLocation().row << "/" << token.getLocation().col << " <> " << token.getTokenKindToInt() << " : " << token.getValue() << "\n";
     }
-
-    return objects;
 }
 
-// get Next Token Until
+// Get Next Token Until
 weasel::Token weasel::Parser::getNextTokenUntil(weasel::TokenKind kind)
 {
     if (getCurrentToken().isKind(kind))

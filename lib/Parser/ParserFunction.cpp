@@ -13,46 +13,30 @@ weasel::Function *weasel::Parser::parseFunction()
     }
 
     // Ignore new line
-    if (getCurrentToken().isKind(TokenKind::TokenSpaceNewline))
+    if (getCurrentToken().isNewline())
     {
         getNextToken(true);
     }
 
-    if (!getCurrentToken().isKind(TokenKind::TokenDelimOpenCurlyBracket))
+    if (!getCurrentToken().isOpenCurly())
     {
         return ErrorTable::addError(getCurrentToken(), "Expected {");
     }
 
     // Set Symbol for parameters and enter a scope
+    enterScope();
+
+    for (const auto &arg : fun->getType()->getContainedTypes())
     {
-        SymbolTable::enterScope();
-        for (const auto &arg : fun->getType()->getContainedTypes())
-        {
-            auto argName = arg->getIdentifier();
-            auto attrKind = AttributeKind::SymbolVariable;
+        auto argName = arg->getIdentifier();
 
-            if (arg->isPointerType())
-            {
-                attrKind = AttributeKind::SymbolPointer;
-            }
-            else if (arg->isArrayType())
-            {
-                attrKind = AttributeKind::SymbolArray;
-            }
-
-            auto attr = new Attribute(argName, AttributeScope::ScopeParam, attrKind, arg);
-
-            SymbolTable::insert(argName, attr);
-        }
+        addAttribute(ParserAttribute::get(argName, arg, AttributeKind::Parameter));
     }
 
     auto body = parseCompoundStatement();
 
     // Exit parameter scope
-    {
-        SymbolTable::exitScope();
-        SymbolTable::exitScope();
-    }
+    exitScope();
 
     if (!body)
     {
@@ -73,19 +57,19 @@ weasel::Function *weasel::Parser::parseFunction()
 weasel::Function *weasel::Parser::parseDeclareFunction()
 {
     // get next and eat 'fun'
-    if (!getNextToken().isKind(TokenKind::TokenIdentifier))
+    if (!getNextToken().isIdentifier())
     {
         return ErrorTable::addError(getCurrentToken(), "Expected an identifier");
     }
 
     // Check Symbol Table
     auto identifier = getCurrentToken().getValue();
-    if (SymbolTable::get(identifier) != nullptr)
+    if (findFunction(identifier) != nullptr)
     {
         return ErrorTable::addError(getCurrentToken(), "Function already declared");
     }
 
-    if (!getNextToken().isKind(TokenKind::TokenDelimOpenParen))
+    if (!getNextToken().isOpenParen())
     {
         return ErrorTable::addError(getCurrentToken(), "Expected (");
     }
@@ -94,7 +78,7 @@ weasel::Function *weasel::Parser::parseDeclareFunction()
     std::vector<Type *> types;
     auto isVararg = false;
 
-    while (!getCurrentToken().isKind(TokenKind::TokenDelimCloseParen))
+    while (!getCurrentToken().isCloseParen())
     {
         if (isVararg)
         {
@@ -102,7 +86,7 @@ weasel::Function *weasel::Parser::parseDeclareFunction()
         }
 
         auto idenToken = getCurrentToken();
-        if (!getCurrentToken().isKind(TokenKind::TokenIdentifier))
+        if (!getCurrentToken().isIdentifier())
         {
             return ErrorTable::addError(getCurrentToken(), "Expected identifier in function argument");
         }
@@ -131,7 +115,7 @@ weasel::Function *weasel::Parser::parseDeclareFunction()
         getNextToken(); // eat ','
     }
 
-    if (!getCurrentToken().isKind(TokenKind::TokenDelimCloseParen))
+    if (!getCurrentToken().isCloseParen())
     {
         return ErrorTable::addError(getCurrentToken(), "Expected ) in function argument");
     }
@@ -147,12 +131,5 @@ weasel::Function *weasel::Parser::parseDeclareFunction()
     returnType->setSpread(isVararg);
     returnType->replaceContainedTypes(types);
 
-    auto fun = new Function(identifier, returnType);
-
-    // Create Symbol for the function
-    {
-        SymbolTable::insert(identifier, new Attribute(identifier, AttributeScope::ScopeGlobal, AttributeKind::SymbolFunction, returnType));
-    }
-
-    return fun;
+    return new Function(identifier, returnType);
 }
