@@ -48,9 +48,11 @@ void weasel::StringLiteralExpression::debug(int shift)
 
 void weasel::DeclarationExpression::debug(int shift)
 {
-    auto val = "Declaration " + this->getIdentifier();
-    this->printDebug(val, shift);
-    this->getValue()->debug(shift + defaultShift);
+    this->printDebug("Declaration " + this->getIdentifier(), shift);
+    if (this->getValue() != nullptr)
+    {
+        this->getValue()->debug(shift + defaultShift);
+    }
 }
 
 void weasel::VariableExpression::debug(int shift)
@@ -158,18 +160,6 @@ void weasel::LoopingStatement::debug(int shift)
 
     _body->debug(shift + this->defaultShift);
 }
-
-// User Defined Type
-// void weasel::StructExpression::debug(int shift)
-// {
-//     std::string val = "Struct Type {";
-//     for (auto &item : this->getType()->getContainedTypes())
-//     {
-//         val += std::to_string(item->getTypeWidth()) + ",";
-//     }
-
-//     this->printDebug(val + "}", shift);
-// }
 
 // Funtion Debug
 void weasel::Function::debug(int shift)

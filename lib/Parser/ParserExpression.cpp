@@ -120,6 +120,7 @@ weasel::Expression *weasel::Parser::parseLiteralExpression()
 }
 
 // TODO: Use Defined Function to validate the function call
+// TODO: Eat last ')'
 weasel::Expression *weasel::Parser::parseFunctionCallExpression(Function *fun)
 {
     auto callToken = getCurrentToken();
@@ -155,10 +156,6 @@ weasel::Expression *weasel::Parser::parseFunctionCallExpression(Function *fun)
             getNextToken();
         }
     }
-
-    // TODO: We should eat ')'
-    std::cout << "Function Call: '" << callToken.getValue() << "' with current token ";
-    std::cout << getCurrentToken().getValue() << std::endl;
 
     return new MethodCallExpression(callToken, callToken.getValue(), args);
 }

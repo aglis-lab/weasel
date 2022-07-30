@@ -1,3 +1,4 @@
+#include <iostream>
 #include "weasel/IR/Context.h"
 #include "weasel/Type/Type.h"
 

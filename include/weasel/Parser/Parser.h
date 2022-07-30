@@ -23,11 +23,34 @@ namespace weasel
         inline void addFunction(Function *fun) { _functions.push_back(fun); }
         inline unsigned functionCount() const { return _functions.size(); }
         inline Function *lastFunction() const { return _functions.back(); }
-        inline Function *findFunction(const std::string &identifier);
+        inline Function *findFunction(const std::string &identifier)
+        {
+            for (auto item : getFunctions())
+            {
+                if (item->getIdentifier() == identifier)
+                {
+                    return item;
+                }
+            }
 
-        inline void addUserTypes(StructType *type) { _userTypes.push_back(type); }
+            return nullptr;
+        }
+
+        inline void addUserType(StructType *type) { _userTypes.push_back(type); }
         inline unsigned userTypeCount() const { return _userTypes.size(); }
-        inline StructType *findUserType(const std::string &typeName);
+        inline StructType *getLastUserType() const { return _userTypes.back(); }
+        inline StructType *findUserType(const std::string &typeName)
+        {
+            for (auto item : getUserTypes())
+            {
+                if (item->getIdentifier() == typeName)
+                {
+                    return item;
+                }
+            }
+
+            return nullptr;
+        }
 
     private:
         bool expectToken(TokenKind kind) { return _lexer->expect(kind); }

@@ -104,7 +104,10 @@ namespace weasel
     class StructType : public Type
     {
     private:
-        StructType(const std::string &structName) : Type(TypeID::StructType, 0, false) {}
+        StructType(const std::string &structName) : Type(TypeID::StructType, 0, false)
+        {
+            setIdentifier(structName);
+        }
 
     public:
         static StructType *get(const std::string &structName) { return new StructType(structName); }

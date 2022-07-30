@@ -5,7 +5,7 @@
 weasel::StructType *weasel::Parser::parseStruct()
 {
     auto token = getCurrentToken();
-    if (!getNextToken(true).isIdentifier())
+    if (!getNextToken().isIdentifier())
     {
         return ErrorTable::addError(getCurrentToken(), "Invalid Struct expression");
     }
@@ -18,10 +18,12 @@ weasel::StructType *weasel::Parser::parseStruct()
 
     // Parse Struct Properties
     auto structType = StructType::get(tokenIndentifier.getValue());
+    addUserType(structType);
     while (true)
     {
         if (getNextToken(true).isCloseCurly())
         {
+            getNextToken(); // eat '}'
             break;
         }
 
@@ -31,21 +33,16 @@ weasel::StructType *weasel::Parser::parseStruct()
         }
 
         auto propName = getCurrentToken();
-        if (!getNextToken(true).isDataType())
+        getNextToken(); // eat 'identifier'
+
+        auto propType = parseDataType();
+        if (propType == nullptr)
         {
             return ErrorTable::addError(getCurrentToken(), "Invalid Struct expression");
         }
 
-        auto propType = getCurrentToken();
-        if (!getNextToken().isNewline())
-        {
-            return ErrorTable::addError(getCurrentToken(), "Invalid Struct expression");
-        }
-
-        auto type = Type::create(propType);
-
-        type->setIdentifier(propName.getValue());
-        structType->addContainedType(type);
+        propType->setIdentifier(propName.getValue());
+        structType->addContainedType(propType);
     }
 
     return structType;

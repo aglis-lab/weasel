@@ -1,7 +1,8 @@
+#include <iostream>
+
 #include "weasel/Basic/Number.h"
 #include "weasel/Parser/Parser.h"
 #include "weasel/Symbol/Symbol.h"
-#include <iostream>
 
 void weasel::Parser::ignoreNewline()
 {
@@ -16,18 +17,15 @@ weasel::Type *weasel::Parser::parseDataType()
     // Pointer
     if (getCurrentToken().isKind(TokenKind::TokenOperatorStar))
     {
-        if (!getNextToken().isDataType())
+        getNextToken(); // eat '*'
+
+        auto containedType = parseDataType();
+        if (containedType == nullptr)
         {
             return ErrorTable::addError(getCurrentToken(), "Expected data type after pointer type");
         }
 
-        auto containedType = Type::create(getCurrentToken());
-        auto type = Type::getPointerType(containedType);
-
-        // Remove current token data type
-        getNextToken();
-
-        return type;
+        return Type::getPointerType(containedType);
     }
 
     // Array
@@ -63,8 +61,15 @@ weasel::Type *weasel::Parser::parseDataType()
         return Type::getArrayType(containedType, num);
     }
 
+    // Check User Type
+    auto userType = findUserType(getCurrentToken().getValue());
+    if (userType != nullptr)
+    {
+        getNextToken(); // remove current User Type
+        return userType;
+    }
+
     // Normal Data Type or no datatype
-    // auto type = getCurrentToken().toType();
     auto type = Type::create(getCurrentToken());
     if (type != nullptr)
     {
@@ -73,30 +78,4 @@ weasel::Type *weasel::Parser::parseDataType()
     }
 
     return type;
-}
-
-inline weasel::Function *weasel::Parser::findFunction(const std::string &identifier)
-{
-    for (std::list<Function *>::reverse_iterator item = getFunctions().rbegin(); item != getFunctions().rend(); ++item)
-    {
-        if ((*item)->getIdentifier() == identifier)
-        {
-            return (*item);
-        }
-    }
-
-    return nullptr;
-}
-
-inline weasel::StructType *weasel::Parser::findUserType(const std::string &typeName)
-{
-    for (auto item : getUserTypes())
-    {
-        if (item->getIdentifier() == typeName)
-        {
-            return item;
-        }
-    }
-
-    return nullptr;
 }

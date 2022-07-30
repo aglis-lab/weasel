@@ -21,6 +21,7 @@ void debug(const std::list<weasel::Function *> &objects)
     std::cout << std::endl
               << std::setfill('=') << std::setw(40) << "=" << std::endl
               << std::endl;
+
     for (auto &obj : objects)
     {
         obj->debug(0);

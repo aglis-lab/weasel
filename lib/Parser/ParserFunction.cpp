@@ -6,6 +6,7 @@
 
 weasel::Function *weasel::Parser::parseFunction()
 {
+
     auto fun = parseDeclareFunction();
     if (fun == nullptr)
     {
