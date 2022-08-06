@@ -1,5 +1,6 @@
 #include "weasel/IR/Context.h"
 #include "weasel/Config/Config.h"
+#include "weasel/Symbol/Symbol.h"
 
 std::string weasel::Context::getDefaultLabel()
 {
@@ -7,21 +8,33 @@ std::string weasel::Context::getDefaultLabel()
 }
 
 // Weasel User Type System to llvm Type System
-llvm::Type *weasel::Context::codegen(weasel::StructType *type)
+llvm::Type *weasel::Context::codegen(weasel::StructType *structExpr)
 {
-    auto types = type->getContainedTypes();
-    auto n = types.size();
-    auto typesVal = std::vector<llvm::Type *>(n);
-    auto identifier = type->getIdentifier();
-
-    for (int i = 0; i < n; i++)
+    auto types = structExpr->getContainedTypes();
+    auto typesVal = std::vector<llvm::Type *>();
+    auto identifier = structExpr->getIdentifier();
+    auto structExist = findStructType(identifier);
+    if (structExist != nullptr)
     {
-        typesVal[i] = types[i]->codegen(this);
+        return structExist;
     }
 
-    auto userDefined = llvm::StructType::create(*getContext(), typesVal, identifier, true);
+    auto structType = llvm::StructType::create(*getContext(), identifier);
+    addStructType(identifier, structType);
 
-    return userDefined;
+    for (auto item : types)
+    {
+        if (item->isStructType() && item->getIdentifier() == identifier)
+        {
+            ErrorTable::addError(Token(), "Cannot create circular struct");
+            continue;
+        }
+
+        typesVal.push_back(item->codegen(this));
+    }
+
+    structType->setBody(typesVal);
+    return structType;
 }
 
 // Weasel Type System to llvm Type System

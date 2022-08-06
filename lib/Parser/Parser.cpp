@@ -17,7 +17,7 @@ void weasel::Parser::parse()
 
         if (getCurrentToken().isKeyStruct())
         {
-            addUserType(parseStruct());
+            parseStruct();
         }
 
         auto token = getCurrentToken();

@@ -17,7 +17,9 @@ weasel::StructType *weasel::Parser::parseStruct()
     }
 
     // Parse Struct Properties
-    auto structType = StructType::get(tokenIndentifier.getValue());
+    auto structName = tokenIndentifier.getValue();
+    auto structType = StructType::get(structName);
+
     addUserType(structType);
     while (true)
     {
@@ -41,8 +43,7 @@ weasel::StructType *weasel::Parser::parseStruct()
             return ErrorTable::addError(getCurrentToken(), "Invalid Struct expression");
         }
 
-        propType->setIdentifier(propName.getValue());
-        structType->addContainedType(propType);
+        structType->addField(propName.getValue(), propType);
     }
 
     return structType;

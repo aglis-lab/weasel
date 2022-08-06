@@ -124,6 +124,11 @@ llvm::Value *weasel::Context::codegen(DeclarationExpression *expr)
     // Allocating Address for declaration
     auto varName = expr->getIdentifier();
     auto declTypeV = declType->codegen(this);
+    if (declTypeV == nullptr)
+    {
+        return ErrorTable::addError(expr->getToken(), "Unexpected error when codegen a type");
+    }
+
     auto alloc = getBuilder()->CreateAlloca(declTypeV, nullptr, varName);
 
     // Default Value
@@ -486,19 +491,6 @@ llvm::Value *weasel::Context::codegen(ArrayExpression *expr)
     }
 
     std::vector<llvm::Value *> idxList;
-    // if (attr->isKind(AttributeKind::SymbolArray))
-    // {
-    //     idxList.push_back(getBuilder()->getInt64(0));
-    // }
-    // idxList.push_back(indexValue);
-
-    // if (attr->isKind(AttributeKind::SymbolPointer))
-    // {
-    //     if (llvm::dyn_cast<llvm::Instruction>(alloc))
-    //     {
-    //         alloc = getBuilder()->CreateLoad(alloc->getType()->getContainedType(0), alloc, "pointerLoad");
-    //     }
-    // }
 
     auto *elemIndex = getBuilder()->CreateInBoundsGEP(alloc->getType(), alloc, idxList, "arrayElement");
     if (expr->isAddressOf())

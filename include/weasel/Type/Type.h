@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <iostream>
 
 namespace llvm
 {
@@ -54,7 +55,7 @@ namespace weasel
         inline bool isSpread() const { return _isSpread; }
 
         inline std::string getIdentifier() const { return _identifier; }
-        inline void setIdentifier(const std::string &identifier) { _identifier = identifier; }
+        inline void setIdentifier(std::string identifier) { _identifier = identifier; }
         inline void setSpread(bool val) { _isSpread = val; }
 
         inline bool isBooleanType() const { return isIntegerType() && _width == 1; }
@@ -104,15 +105,29 @@ namespace weasel
     class StructType : public Type
     {
     private:
-        StructType(const std::string &structName) : Type(TypeID::StructType, 0, false)
-        {
-            setIdentifier(structName);
-        }
+        std::vector<std::string> _typeNames;
+
+        StructType(std::string structName) : Type(TypeID::StructType, 0, false) { setIdentifier(structName); }
 
     public:
         static StructType *get(const std::string &structName) { return new StructType(structName); }
 
     public:
+        void addField(const std::string &fieldName, Type *type)
+        {
+            _typeNames.push_back(fieldName);
+            addContainedType(type);
+        }
+
+    public:
         llvm::Type *codegen(Context *context) override;
     };
+
+    // class ArgumentType : public Type
+    // {
+    // private:
+    //     std::vector<std::string> _typeNames;
+
+    //     ArgumentType(std::string structName) : Type(TypeID::StructType, 0, false) { setIdentifier(structName); }
+    // };
 } // namespace weasel

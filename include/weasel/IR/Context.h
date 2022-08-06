@@ -1,6 +1,6 @@
 #pragma once
 
-#include <list>
+#include <vector>
 #include <unordered_map>
 
 #include <llvm/IR/Value.h>
@@ -35,9 +35,9 @@ namespace weasel
         unsigned long _counter = 0;
 
         // Helper for Looping //
-        std::list<llvm::BasicBlock *> _breakBlocks;
-        std::list<llvm::BasicBlock *> _continueBlocks;
-        std::unordered_map<std::string, StructType> _structTypes;
+        std::vector<llvm::BasicBlock *> _breakBlocks;
+        std::vector<llvm::BasicBlock *> _continueBlocks;
+        std::unordered_map<std::string, llvm::StructType *> _structTypes;
 
     private:
         llvm::MDNode *getTBAA(llvm::Type *type) const;
@@ -59,6 +59,18 @@ namespace weasel
         inline void removeContinueBlock() { _continueBlocks.pop_back(); }
         inline bool isContinueBlockExist() const { return !_continueBlocks.empty(); }
         inline llvm::BasicBlock *getContinueBlock() const { return _continueBlocks.back(); }
+
+        // Helper for User Defined Struct //
+        inline void addStructType(const std::string &name, llvm::StructType *type) { _structTypes[name] = type; }
+        inline llvm::StructType *findStructType(const std::string &name)
+        {
+            if (_structTypes.find(name) != _structTypes.end())
+            {
+                return _structTypes[name];
+            }
+
+            return nullptr;
+        }
 
     public:
         explicit Context(llvm::LLVMContext *context, const std::string &moduleName);
