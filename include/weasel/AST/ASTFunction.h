@@ -10,15 +10,15 @@ namespace weasel
     class Function : public GlobalObject
     {
     private:
-        StatementExpression *_body;
+        CompoundExpression *_body;
         bool _isDefine = false;
         bool _isInline = false;
 
     public:
         Function(std::string identifier, Type *type) : GlobalObject(Token(), identifier, type) {}
 
-        StatementExpression *getBody() const { return _body; }
-        void setBody(StatementExpression *body) { _body = body; }
+        CompoundExpression *getBody() const { return _body; }
+        void setBody(CompoundExpression *body) { _body = body; }
 
         void setIsDefine(bool val) { _isDefine = val; }
         bool isDefine() const { return _isDefine; }

@@ -70,7 +70,7 @@ namespace weasel
 
         // Statement
         Expression *parseStatement();
-        StatementExpression *parseCompoundStatement();
+        CompoundExpression *parseCompoundStatement();
         Expression *parseConditionStatement();
         Expression *parseLoopingStatement();
 

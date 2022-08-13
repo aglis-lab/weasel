@@ -97,8 +97,8 @@ namespace weasel
         void debug(int shift) override;
     };
 
-    // Declaration Expression
-    class DeclarationExpression : public Expression
+    // Field Expresion
+    class FieldExpression : public Expression
     {
     private:
         std::string _identifier;
@@ -106,7 +106,7 @@ namespace weasel
         Expression *_value;
 
     public:
-        DeclarationExpression(Token token, std::string identifier, Qualifier qualifier, Type *type, Expression *value = nullptr) : Expression(token, type), _identifier(identifier), _qualifier(qualifier), _value(value) {}
+        FieldExpression(Token token, std::string identifier, Qualifier qualifier, Type *type, Expression *value = nullptr) : Expression(token, type), _identifier(identifier), _qualifier(qualifier), _value(value) {}
 
         inline Qualifier getQualifier() const { return _qualifier; }
         inline std::string getIdentifier() const { return _identifier; }
@@ -116,41 +116,26 @@ namespace weasel
         void debug(int shift) override;
     };
 
-    // Binary Operator Expression
-    class BinaryOperatorExpression : public Expression
+    // Struct Expression
+    class StructExpression : public Expression
     {
-    private:
-        Expression *_lhs;
-        Expression *_rhs;
-
     public:
-        BinaryOperatorExpression(Token op, Expression *lhs, Expression *rhs) : Expression(op, lhs->getType()), _lhs(lhs), _rhs(rhs)
+        class StructField
         {
-            if (op.isComparison())
-            {
-                setType(Type::getIntegerType(1, false));
-            }
-        }
+        private:
+        public:
+            StructField() {}
+        };
 
-        Token getOperator() const { return getToken(); }
-        Expression *getLHS() const { return _lhs; }
-        Expression *getRHS() const { return _rhs; }
-
-        llvm::Value *codegen(Context *context) override;
-        void debug(int shift) override;
-    };
-
-    // TODO: Unary Operator Expression
-    class UnaryOperatorExpression : public Expression
-    {
     private:
-        Token _lhs;
-        Expression *_rhs;
+        StructType *_type;
+        std::vector<StructField> _fields;
 
     public:
-        UnaryOperatorExpression(Token lhs, Expression *rhs) : _lhs(lhs), _rhs(rhs) {}
+        StructExpression();
 
-        llvm::Value *codegen(Context *context) override { return nullptr; }
+    public:
+        llvm::Value *codegen(Context *context) override;
         void debug(int shift) override;
     };
 

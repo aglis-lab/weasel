@@ -88,7 +88,7 @@ weasel::Token weasel::Lexer::getNextToken(bool skipSpace, bool eat)
     do
     {
         _currentToken = getToken();
-    } while (_currentToken.isKind(TokenKind::TokenSpaceNewline) && skipSpace);
+    } while (_currentToken.isNewline() && skipSpace);
 
     return _currentToken;
 }

@@ -83,11 +83,11 @@ weasel::Token weasel::Lexer::getPunctuation()
             getNextBuffer();
             return createToken(TokenKind::TokenOperatorAndEqual, lastBuffer, lastBuffer + 2);
         }
-        if (*(lastBuffer + 1) == '&')
-        {
-            getNextBuffer();
-            return createToken(TokenKind::TokenOperatorAndAnd, lastBuffer, lastBuffer + 2);
-        }
+        // if (*(lastBuffer + 1) == '&')
+        // {
+        //     getNextBuffer();
+        //     return createToken(TokenKind::TokenOperatorAndAnd, lastBuffer, lastBuffer + 2);
+        // }
 
         return createToken(TokenKind::TokenOperatorAnd, lastBuffer, lastBuffer + 1);
     }

@@ -192,6 +192,11 @@ namespace weasel
         inline bool isOpenCurly() const { return _kind == TokenKind::TokenDelimOpenCurlyBracket; }
         inline bool isCloseCurly() const { return _kind == TokenKind::TokenDelimCloseCurlyBracket; }
         inline bool isSemiColon() const { return _kind == TokenKind::TokenPuncSemicolon; }
+        inline bool isOperatorAnd() const { return _kind == TokenKind::TokenOperatorAnd; }
+        inline bool isOperatorAndAnd() const { return _kind == TokenKind::TokenOperatorAndAnd; }
+
+        // Punctuation //
+        inline bool isComma() const { return _kind == TokenKind::TokenPuncComma; }
 
         // Operator Comparator //
         inline bool isComparison() { return _kind >= TokenKind::TokenOperatorStartComparation && _kind <= TokenKind::TokenOperatorEndComparation; }
@@ -211,6 +216,9 @@ namespace weasel
         // Condition //
         inline bool isKeyElse() const { return _kind == TokenKind::TokenKeyElse; }
         inline bool isKeyIf() const { return _kind == TokenKind::TokenKeyIf; }
+
+        // Check If Last Buffer //
+        inline bool isEnd() const { return _kind == TokenKind::TokenEOF; }
 
         // Buffer //
         inline char *getStartBuffer() const { return _startBuffer; }

@@ -10,7 +10,7 @@
 // | IndexExpression
 // | TupleExpression
 // | TupleIndexingExpression
-// | StructExpression
+// StructExpression
 // CallExpression
 // | MethodCallExpression
 // | FieldExpression
@@ -22,7 +22,7 @@
 
 /// Operator Expression ///
 // UnaryOperatorExpression
-// | BorrowExpression
+// BorrowExpression
 // | DereferenceExpression
 // | ErrorPropagationExpression
 // | NegationExpression

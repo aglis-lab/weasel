@@ -140,7 +140,7 @@ weasel::Expression *weasel::Parser::parseLoopingStatement()
 weasel::Expression *weasel::Parser::parseConditionStatement()
 {
     auto conditions = std::vector<Expression *>();
-    auto stmts = std::vector<StatementExpression *>();
+    auto stmts = std::vector<CompoundExpression *>();
     auto token = getCurrentToken();
 
     while (true)
@@ -202,14 +202,14 @@ weasel::Expression *weasel::Parser::parseConditionStatement()
     return new ConditionStatement(token, conditions, stmts);
 }
 
-weasel::StatementExpression *weasel::Parser::parseCompoundStatement()
+weasel::CompoundExpression *weasel::Parser::parseCompoundStatement()
 {
     if (!getCurrentToken().isKind(TokenKind::TokenDelimOpenCurlyBracket))
     {
         return nullptr;
     }
 
-    auto stmt = new StatementExpression();
+    auto stmt = new CompoundExpression();
     if (getNextToken(true).isKind(TokenKind::TokenDelimCloseCurlyBracket))
     {
         getNextToken();

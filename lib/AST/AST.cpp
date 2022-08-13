@@ -38,7 +38,7 @@ llvm::Value *weasel::StringLiteralExpression::codegen(Context *c)
 }
 
 // Expression
-llvm::Value *weasel::DeclarationExpression::codegen(Context *c)
+llvm::Value *weasel::DeclarationStatement : codegen(Context *c)
 {
     return c->codegen(this);
 }
@@ -53,7 +53,7 @@ llvm::Value *weasel::ArrayExpression::codegen(Context *c)
     return c->codegen(this);
 }
 
-llvm::Value *weasel::BinaryOperatorExpression::codegen(Context *c)
+llvm::Value *weasel::BinaryExpression::codegen(Context *c)
 {
     return c->codegen(this);
 }
@@ -88,8 +88,14 @@ llvm::Value *weasel::Function::codegen(Context *c)
     return c->codegen(this);
 }
 
+// Operator Expression
+llvm::Value *weasel::Borrowxpression::codegen(Context *c)
+{
+    return c->codegen(this);
+}
+
 // Statement
-llvm::Value *weasel::StatementExpression::codegen(Context *c)
+llvm::Value *weasel::CompoundExpression::codegen(Context *c)
 {
     return c->codegen(this);
 }
@@ -107,5 +113,5 @@ llvm::Value *weasel::LoopingStatement::codegen(Context *c)
 // Some Type Checking
 bool weasel::Expression::isCompoundExpression()
 {
-    return dynamic_cast<weasel::StatementExpression *>(this) != nullptr;
+    return dynamic_cast<weasel::CompoundExpression *>(this) != nullptr;
 }

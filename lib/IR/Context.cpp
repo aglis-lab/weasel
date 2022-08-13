@@ -108,7 +108,7 @@ llvm::Value *weasel::Context::codegen(NilLiteralExpression *expr) const
     return llvm::ConstantPointerNull::getNullValue(getBuilder()->getInt8PtrTy());
 }
 
-llvm::Value *weasel::Context::codegen(DeclarationExpression *expr)
+llvm::Value *weasel::Context::codegen(DeclarationStatement *expr)
 {
     // Get Value Representation
     auto declType = expr->getType();
@@ -166,7 +166,7 @@ llvm::Value *weasel::Context::codegen(DeclarationExpression *expr)
 }
 
 // TODO: Need Type Check and conversion
-llvm::Value *weasel::Context::codegen(BinaryOperatorExpression *expr)
+llvm::Value *weasel::Context::codegen(BinaryExpression *expr)
 {
     auto opToken = expr->getOperator();
     auto lhs = expr->getLHS();
@@ -501,4 +501,17 @@ llvm::Value *weasel::Context::codegen(ArrayExpression *expr)
     auto *loadIns = getBuilder()->CreateLoad(elemIndex->getType(), elemIndex, varName);
 
     return loadIns;
+}
+
+/// Operator Expression ///
+llvm::Value *weasel::Context::codegen(Borrowxpression *expr)
+{
+    auto exprVal = expr->getExpression()->codegen(this);
+
+    if (auto loadInst = llvm::dyn_cast<llvm::LoadInst>(exprVal))
+    {
+        return loadInst->getPointerOperand();
+    }
+
+    return ErrorTable::addError(expr->getToken(), "Expression is not valid");
 }

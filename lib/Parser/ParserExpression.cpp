@@ -124,13 +124,13 @@ weasel::Expression *weasel::Parser::parseLiteralExpression()
 weasel::Expression *weasel::Parser::parseFunctionCallExpression(Function *fun)
 {
     auto callToken = getCurrentToken();
-    if (!getNextToken().isKind(TokenKind::TokenDelimOpenParen))
+    if (!getNextToken().isOpenParen())
     {
         return ErrorTable::addError(getCurrentToken(), "Expected ( for function call");
     }
 
     std::vector<Expression *> args;
-    if (!getNextToken().isKind(TokenKind::TokenDelimCloseParen))
+    if (!getNextToken().isCloseParen())
     {
         while (true)
         {
@@ -143,12 +143,12 @@ weasel::Expression *weasel::Parser::parseFunctionCallExpression(Function *fun)
                 return ErrorTable::addError(getCurrentToken(), "Expected argument expression");
             }
 
-            if (getCurrentToken().isKind(TokenKind::TokenDelimCloseParen))
+            if (getCurrentToken().isCloseParen())
             {
                 break;
             }
 
-            if (!getCurrentToken().isKind(TokenKind::TokenPuncComma))
+            if (!getCurrentToken().isComma())
             {
                 return ErrorTable::addError(getCurrentToken(), "Expected ) or , in argument list");
             }
@@ -248,14 +248,24 @@ weasel::Expression *weasel::Parser::parsePrimaryExpression()
         return parseParenExpression();
     }
 
-    if (getCurrentToken().isKind(TokenKind::TokenOperatorAnd))
+    if (getCurrentToken().isOperatorAnd())
     {
-        if (getNextToken().isKind(TokenKind::TokenIdentifier))
+        auto token = getCurrentToken();
+
+        getNextToken(); // eat '&'
+
+        auto expr = parsePrimaryExpression();
+        if (expr == nullptr)
         {
-            return parseIdentifierExpression();
+            return ErrorTable::addError(getCurrentToken(), "Expected expression after address of");
         }
 
-        return ErrorTable::addError(getCurrentToken(), "Expected Variable Identifier for address of");
+        if (dynamic_cast<Borrowxpression *>(expr))
+        {
+            return ErrorTable::addError(getCurrentToken(), "Expected expression not address of");
+        }
+
+        return new Borrowxpression(token, expr);
     }
 
     if (getCurrentToken().isKind(TokenKind::TokenDelimOpenSquareBracket))
@@ -312,7 +322,7 @@ weasel::Expression *weasel::Parser::parseBinaryOperator(unsigned precOrder, Expr
             return ErrorTable::addError(getCurrentToken(), "Expected RHS Expression 2");
         }
 
-        lhs = new BinaryOperatorExpression(binOp, lhs, rhs);
+        lhs = new BinaryExpression(binOp, lhs, rhs);
     }
 }
 
@@ -363,7 +373,7 @@ weasel::Expression *weasel::Parser::parseDeclarationExpression()
         addAttribute(ParserAttribute::get(identifier, type, AttributeKind::Variable));
 
         // Create Variable with Default Value
-        return new DeclarationExpression(qualToken, identifier, qualifier, type);
+        return new DeclarationStatement(qualToken, identifier, qualifier, type);
     }
 
     // Equal
@@ -398,7 +408,7 @@ weasel::Expression *weasel::Parser::parseDeclarationExpression()
     // Insert Symbol Table
     addAttribute(ParserAttribute::get(identifier, type, AttributeKind::Variable));
 
-    return new DeclarationExpression(qualToken, identifier, qualifier, type, val);
+    return new DeclarationStatement(qualToken, identifier, qualifier, type, val);
 }
 
 weasel::Expression *weasel::Parser::parseBreakExpression()

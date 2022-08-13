@@ -9,7 +9,7 @@ set(CMAKE_LINKER ld.lld)
 # LLVM SPIRV
 set(LLVM_SPIRV_DIR ${CMAKE_SOURCE_DIR}/llvm-spirv)
 set(LLVM_SPIRV_INCLUDE_DIR ${LLVM_SPIRV_DIR}/include)
-set(LLVM_SPIRV_LIB_DIR ${LLVM_SPIRV_DIR}/build/lib/SPIRV)
+# set(LLVM_SPIRV_LIB_DIR ${LLVM_SPIRV_DIR}/build/lib/SPIRV)
 
 # LLVM
 set(LLVM_DIR /opt/homebrew/opt/llvm@13/lib/cmake/llvm/)
@@ -38,7 +38,7 @@ add_definitions(${LLVM_DEFINITIONS})
 
 # INCLUDE LLVM LIBRARY
 include_directories(${LLVM_INCLUDE_DIRS})
-include_directories(${LLVM_SPIRV_INCLUDE_DIR})
+# include_directories(${LLVM_SPIRV_INCLUDE_DIR})
 include_directories(include)
 
 # Weasel Directories

@@ -46,7 +46,7 @@ void weasel::StringLiteralExpression::debug(int shift)
     this->printDebug("String Literal", shift);
 }
 
-void weasel::DeclarationExpression::debug(int shift)
+void weasel::DeclarationStatement::debug(int shift)
 {
     this->printDebug("Declaration " + this->getIdentifier(), shift);
     if (this->getValue() != nullptr)
@@ -67,7 +67,7 @@ void weasel::ArrayExpression::debug(int shift)
     this->printDebug(val, shift);
 }
 
-void weasel::BinaryOperatorExpression::debug(int shift)
+void weasel::BinaryExpression::debug(int shift)
 {
 
     auto op = this->getOperator().getValue();
@@ -115,7 +115,7 @@ void weasel::NilLiteralExpression::debug(int shift)
 }
 
 // Statement
-void weasel::StatementExpression::debug(int shift)
+void weasel::CompoundExpression::debug(int shift)
 {
     for (auto &item : this->getBody())
     {
@@ -159,6 +159,13 @@ void weasel::LoopingStatement::debug(int shift)
     }
 
     _body->debug(shift + this->defaultShift);
+}
+
+// Operator Expression
+void weasel::Borrowxpression::debug(int shift)
+{
+    this->printDebug("Borrow Expression", shift);
+    this->getExpression()->debug(shift + defaultShift);
 }
 
 // Funtion Debug

@@ -142,5 +142,5 @@ set(WEASEL_LIBS
     WeaselLib
 
     # LLVM SPIRV
-    ${LLVM_SPIRV_LIB_DIR}/libLLVMSPIRVLib.a
+    # ${LLVM_SPIRV_LIB_DIR}/libLLVMSPIRVLib.a
 )

@@ -8,7 +8,7 @@
 // parse
 void weasel::Parser::parse()
 {
-    while (!getNextToken().isKind(TokenKind::TokenEOF))
+    while (!getNextToken().isEnd())
     {
         if (getCurrentToken().isKeyFunction())
         {
@@ -19,9 +19,6 @@ void weasel::Parser::parse()
         {
             parseStruct();
         }
-
-        auto token = getCurrentToken();
-        std::cout << "Parser -> " << token.getLocation().row << "/" << token.getLocation().col << " <> " << token.getTokenKindToInt() << " : " << token.getValue() << "\n";
     }
 }
 
