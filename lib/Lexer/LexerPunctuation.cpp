@@ -21,10 +21,10 @@ weasel::Token weasel::Lexer::getPunctuation()
         if (*(lastBuffer + 1) == '=')
         {
             getNextBuffer();
-            return createToken(TokenKind::TokenOperatorMinusEqual, lastBuffer, lastBuffer + 2);
+            return createToken(TokenKind::TokenOperatorNegativeEqual, lastBuffer, lastBuffer + 2);
         }
 
-        return createToken(TokenKind::TokenOperatorMinus, lastBuffer, lastBuffer + 1);
+        return createToken(TokenKind::TokenOperatorNegative, lastBuffer, lastBuffer + 1);
     }
     case '*':
     {
@@ -83,11 +83,12 @@ weasel::Token weasel::Lexer::getPunctuation()
             getNextBuffer();
             return createToken(TokenKind::TokenOperatorAndEqual, lastBuffer, lastBuffer + 2);
         }
-        // if (*(lastBuffer + 1) == '&')
-        // {
-        //     getNextBuffer();
-        //     return createToken(TokenKind::TokenOperatorAndAnd, lastBuffer, lastBuffer + 2);
-        // }
+
+        if (*(lastBuffer + 1) == '&')
+        {
+            getNextBuffer();
+            return createToken(TokenKind::TokenOperatorAndAnd, lastBuffer, lastBuffer + 2);
+        }
 
         return createToken(TokenKind::TokenOperatorAnd, lastBuffer, lastBuffer + 1);
     }

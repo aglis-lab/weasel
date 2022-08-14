@@ -91,15 +91,16 @@ namespace weasel
 
         llvm::Value *codegen(BoolLiteralExpression *expr) const;
         llvm::Value *codegen(CharLiteralExpression *expr) const;
-        llvm::Value *codegen(NumberLiteralExpression *expr) const;
+        llvm::Value *codegen(NumberLiteralExpression *expr);
         llvm::Value *codegen(FloatLiteralExpression *expr) const;
         llvm::Value *codegen(DoubleLiteralExpression *expr) const;
         llvm::Value *codegen(StringLiteralExpression *expr) const;
         llvm::Value *codegen(ArrayLiteralExpression *expr);
 
         // Expression
+        llvm::Value *codegen(StructExpression *expr);
         llvm::Value *codegen(VariableExpression *expr);
-        llvm::Value *codegen(MethodCallExpression *expr);
+        llvm::Value *codegen(CallExpression *expr);
         llvm::Value *codegen(ReturnExpression *expr);
         llvm::Value *codegen(DeclarationStatement *expr);
         llvm::Value *codegen(NilLiteralExpression *expr) const;
@@ -107,14 +108,14 @@ namespace weasel
 
         // Condition Statement
         llvm::Value *codegen(ConditionStatement *expr);
-        llvm::Value *codegen(StatementExpression *expr);
+        llvm::Value *codegen(CompoundStatement *expr);
         llvm::Value *codegen(LoopingStatement *expr);
         llvm::Value *codegen(BreakExpression *expr);
         llvm::Value *codegen(ContinueExpression *expr);
 
         // Operator Expression
         llvm::Value *codegen(BinaryExpression *expr);
-        llvm::Value *codegen(Borrowxpression *expr);
+        llvm::Value *codegen(UnaryExpression *expr);
 
         // User Defined
         llvm::Value *codegen(Function *func);

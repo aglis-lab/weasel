@@ -46,6 +46,12 @@ void weasel::StringLiteralExpression::debug(int shift)
     this->printDebug("String Literal", shift);
 }
 
+// TODO: Not Implemented Yet
+void weasel::NilLiteralExpression::debug(int shift)
+{
+}
+
+// Statement
 void weasel::DeclarationStatement::debug(int shift)
 {
     this->printDebug("Declaration " + this->getIdentifier(), shift);
@@ -55,6 +61,7 @@ void weasel::DeclarationStatement::debug(int shift)
     }
 }
 
+// Expression
 void weasel::VariableExpression::debug(int shift)
 {
     auto val = "Variable " + this->getIdentifier();
@@ -76,7 +83,7 @@ void weasel::BinaryExpression::debug(int shift)
     this->getRHS()->debug(shift + this->defaultShift);
 }
 
-void weasel::MethodCallExpression::debug(int shift)
+void weasel::CallExpression::debug(int shift)
 {
     auto val = this->getIdentifier();
     this->printDebug("Call : " + val, shift);
@@ -85,6 +92,19 @@ void weasel::MethodCallExpression::debug(int shift)
 void weasel::ReturnExpression::debug(int shift)
 {
     this->printDebug("Return", shift);
+}
+
+void weasel::StructExpression::debug(int shift)
+{
+    auto val = "Struct " + this->getStructType()->getIdentifier();
+
+    val += "{";
+    for (auto &item : this->getFields())
+    {
+        val += item.getIdentifier() + ",";
+    }
+
+    this->printDebug(val, shift);
 }
 
 void weasel::BreakExpression::debug(int shift)
@@ -109,13 +129,8 @@ void weasel::ContinueExpression::debug(int shift)
     getValue()->debug(shift + defaultShift);
 }
 
-// TODO: Not Implemented Yet
-void weasel::NilLiteralExpression::debug(int shift)
-{
-}
-
 // Statement
-void weasel::CompoundExpression::debug(int shift)
+void weasel::CompoundStatement::debug(int shift)
 {
     for (auto &item : this->getBody())
     {
@@ -162,9 +177,11 @@ void weasel::LoopingStatement::debug(int shift)
 }
 
 // Operator Expression
-void weasel::Borrowxpression::debug(int shift)
+void weasel::UnaryExpression::debug(int shift)
 {
-    this->printDebug("Borrow Expression", shift);
+    auto op = this->getToken().getValue();
+
+    this->printDebug("Unary Expression (" + op + ")", shift);
     this->getExpression()->debug(shift + defaultShift);
 }
 

@@ -80,7 +80,7 @@ llvm::Value *weasel::Context::codegen(weasel::Function *funAST)
     return funLLVM;
 }
 
-llvm::Value *weasel::Context::codegen(MethodCallExpression *expr)
+llvm::Value *weasel::Context::codegen(CallExpression *expr)
 {
     auto identifier = expr->getIdentifier();
     auto args = expr->getArguments();
@@ -152,7 +152,17 @@ llvm::Value *weasel::Context::codegen(DeclarationStatement *expr)
 
         if (!valueType->isEqual(declType))
         {
-            return ErrorTable::addError(valueExpr->getToken(), "Cannot assign to different type");
+            if (valueType->getIntegerType() && declType->getIntegerType())
+            {
+                if (dynamic_cast<LiteralExpression *>(valueExpr))
+                {
+                    valueExpr->setType(declType);
+                }
+            }
+            else
+            {
+                return ErrorTable::addError(valueExpr->getToken(), "Cannot assign to different type");
+            }
         }
 
         auto valueV = valueExpr->codegen(this);
@@ -300,7 +310,7 @@ llvm::Value *weasel::Context::codegen(BinaryExpression *expr)
             return getBuilder()->CreateFRem(lhsVal, rhsVal);
         case TokenKind::TokenOperatorPlus:
             return getBuilder()->CreateFAdd(lhsVal, rhsVal, lhsVal->getName());
-        case TokenKind::TokenOperatorMinus:
+        case TokenKind::TokenOperatorNegative:
             return getBuilder()->CreateFAdd(lhsVal, rhsVal, lhsVal->getName());
         default:
             ErrorTable::addError(expr->getLHS()->getToken(), "Not Yet Implemented Operator");
@@ -343,7 +353,7 @@ llvm::Value *weasel::Context::codegen(BinaryExpression *expr)
         }
         return getBuilder()->CreateNUWAdd(lhsVal, rhsVal, lhsVal->getName());
     }
-    case TokenKind::TokenOperatorMinus:
+    case TokenKind::TokenOperatorNegative:
     {
         if (isSigned)
         {
@@ -504,14 +514,62 @@ llvm::Value *weasel::Context::codegen(ArrayExpression *expr)
 }
 
 /// Operator Expression ///
-llvm::Value *weasel::Context::codegen(Borrowxpression *expr)
+llvm::Value *weasel::Context::codegen(UnaryExpression *expr)
 {
-    auto exprVal = expr->getExpression()->codegen(this);
+    auto op = expr->getOperator();
+    auto rhs = expr->getExpression();
+    auto rhsVal = rhs->codegen(this);
+    auto rhsType = rhs->getType();
+    auto rhsTypeVal = rhsType->codegen(this);
 
-    if (auto loadInst = llvm::dyn_cast<llvm::LoadInst>(exprVal))
+    if (op == UnaryExpression::Borrow)
     {
-        return loadInst->getPointerOperand();
+        if (auto loadInst = llvm::dyn_cast<llvm::LoadInst>(rhsVal))
+        {
+            return loadInst->getPointerOperand();
+        }
+    }
+
+    if (op == UnaryExpression::Negative)
+    {
+        if (rhsType->isIntegerType())
+        {
+            auto zeroVal = getBuilder()->getInt32(0);
+
+            if (rhsType->getTypeWidth() < 32)
+            {
+                rhsVal = getBuilder()->CreateSExt(rhsVal, getBuilder()->getInt32Ty());
+            }
+            else if (rhsType->getTypeWidth() > 32)
+            {
+                zeroVal = getBuilder()->getInt64(0);
+            }
+
+            llvm::Value *val;
+            if (rhsType->isSigned())
+            {
+                val = getBuilder()->CreateNSWSub(zeroVal, rhsVal);
+            }
+            else
+            {
+                val = getBuilder()->CreateSub(zeroVal, rhsVal);
+            }
+
+            return getBuilder()->CreateSExtOrTrunc(val, rhsTypeVal);
+        }
+
+        if (rhsType->isFloatType() || rhsType->isDoubleType())
+        {
+            auto zeroVal = llvm::ConstantFP::get(rhsTypeVal, 0);
+
+            return getBuilder()->CreateFSub(zeroVal, rhsVal);
+        }
     }
 
     return ErrorTable::addError(expr->getToken(), "Expression is not valid");
+}
+
+llvm::Value *weasel::Context::codegen(StructExpression *expr)
+{
+    return nullptr;
 }

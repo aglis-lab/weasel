@@ -2,6 +2,62 @@
 #include "weasel/Parser/Parser.h"
 #include "weasel/Symbol/Symbol.h"
 
+weasel::Expression *weasel::Parser::parseStatement()
+{
+    // Compound Statement Expression
+    if (getCurrentToken().isOpenCurly())
+    {
+        return parseCompoundStatement();
+    }
+
+    // If Statement
+    if (getCurrentToken().isKeyIf())
+    {
+        return parseConditionStatement();
+    }
+
+    // For Statement
+    if (getCurrentToken().isKeyFor())
+    {
+        return parseLoopingStatement();
+    }
+
+    // Variable Definition Expression
+    if (getCurrentToken().isKeyDefinition())
+    {
+        return parseDeclarationExpression();
+    }
+
+    // Return Expression
+    if (getCurrentToken().isKeyReturn())
+    {
+        return parseReturnExpression();
+    }
+
+    // Break Expression
+    if (getCurrentToken().isKeyBreak())
+    {
+        return parseBreakExpression();
+    }
+
+    // Continue Expression
+    if (getCurrentToken().isKeyContinue())
+    {
+        return parseContinueExpression();
+    }
+
+    auto expr = parseExpression();
+    if (expr == nullptr)
+    {
+        auto errToken = getCurrentToken();
+
+        getNextTokenUntil(TokenKind::TokenSpaceNewline);
+        return ErrorTable::addError(errToken, "Invalid expression statement");
+    }
+
+    return expr;
+}
+
 weasel::StructType *weasel::Parser::parseStruct()
 {
     auto token = getCurrentToken();
@@ -140,7 +196,7 @@ weasel::Expression *weasel::Parser::parseLoopingStatement()
 weasel::Expression *weasel::Parser::parseConditionStatement()
 {
     auto conditions = std::vector<Expression *>();
-    auto stmts = std::vector<CompoundExpression *>();
+    auto stmts = std::vector<CompoundStatement *>();
     auto token = getCurrentToken();
 
     while (true)
@@ -202,14 +258,14 @@ weasel::Expression *weasel::Parser::parseConditionStatement()
     return new ConditionStatement(token, conditions, stmts);
 }
 
-weasel::CompoundExpression *weasel::Parser::parseCompoundStatement()
+weasel::CompoundStatement *weasel::Parser::parseCompoundStatement()
 {
     if (!getCurrentToken().isKind(TokenKind::TokenDelimOpenCurlyBracket))
     {
         return nullptr;
     }
 
-    auto stmt = new CompoundExpression();
+    auto stmt = new CompoundStatement();
     if (getNextToken(true).isKind(TokenKind::TokenDelimCloseCurlyBracket))
     {
         getNextToken();

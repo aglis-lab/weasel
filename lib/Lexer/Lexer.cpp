@@ -125,14 +125,14 @@ weasel::Token weasel::Lexer::getToken()
 
         /// Check Keyword ///
         auto token = getKeyword(start, _currentBuffer);
-        if (!token.isUndefined())
+        if (!token.isUnknown())
         {
             return token;
         }
 
         // Check if data type
         token = getType(start, _currentBuffer);
-        if (!token.isUndefined())
+        if (!token.isUnknown())
         {
             return token;
         }
@@ -171,7 +171,7 @@ weasel::Token weasel::Lexer::getToken()
 
         if (numDot >= 2)
         {
-            return createToken(TokenKind::TokenUndefined, start, _currentBuffer);
+            return createToken(TokenKind::TokenUnknown, start, _currentBuffer);
         }
 
         if (*_currentBuffer == 'd')
@@ -252,7 +252,7 @@ weasel::Token weasel::Lexer::getToken()
     if (ispunct(*lastBuffer))
     {
         auto token = getPunctuation();
-        if (!token.isUndefined())
+        if (!token.isUnknown())
         {
             return token;
         }
@@ -264,5 +264,5 @@ weasel::Token weasel::Lexer::getToken()
         getNextBuffer();
     }
 
-    return createToken(TokenKind::TokenUndefined, start, _currentBuffer);
+    return createToken(TokenKind::TokenUnknown, start, _currentBuffer);
 }

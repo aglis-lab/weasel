@@ -11,9 +11,10 @@ llvm::Value *weasel::Context::codegen(CharLiteralExpression *expr) const
     return getBuilder()->getInt8(expr->getValue());
 }
 
-llvm::Value *weasel::Context::codegen(NumberLiteralExpression *expr) const
+llvm::Value *weasel::Context::codegen(NumberLiteralExpression *expr)
 {
-    return getBuilder()->getInt32(expr->getValue());
+    auto typeVal = expr->getType()->codegen(this);
+    return llvm::ConstantInt::get(typeVal, expr->getValue());
 }
 
 llvm::Value *weasel::Context::codegen(FloatLiteralExpression *expr) const

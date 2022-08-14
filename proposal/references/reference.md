@@ -1,46 +1,80 @@
-# Statement
+# Notation
 
-## Delaration Statement
-    let IDENTIFIER (Type)? (= Expression)?
+
+# Library
+
+    (Funcion)+
+
+# Function
+
+    fun IDENTIFIER (Params?)
+        CompoundStatement
+
+# Params
+
+    IDENTIFIER Type (, IDENTIFIER Type)*
+
+# Statement
 
 ## Compound Statement
     {
-        (Expressions)*
+        (Expression)+
     }
 
 ## Condition Statement
 
-    if Expression
-        CompoundStatement
-    else if Expression
-        CompoundStatement
-    else
-        CompoundStatement
+- If Statement
+
+        if Expression
+            CompoundStatement
+
+- Else If Statement
+
+        else if Expression
+            CompoundStatement
+
+- Else Statement
+
+        else
+            CompoundStatement
 
 ## Looping Statement
 
-    for Expression
-        CompoundStatement
-    for Expression;Expression;Expression
-        CompoundStatement
+- For Condition Statement
+
+        for Expression
+            CompoundStatement
+
+- For Condition and Increment Statement
+
+        for Expression;Expression;Expression
+            CompoundStatement
+
+## Delaration Statement
+
+    let IDENTIFIER (Type)? (= Expression)? (CompoundStatement)?
+
+## Expression Statement
+    
+    Expression
 
 # Expression
 
 ## Return Expression
+
     return Expression
 
 ## Break Expression
-    break
+
+    break (Expression)?
 
 ## Continue Expression
-    continue
+
+    continue (Expression)?
 
 ## Call Expression
+
     Expression (Params?)
-
-- Params
-
-        Expression ( , Expression )* ,?
 
 ## Method Call Expression
 
@@ -66,7 +100,7 @@
 
 - StructExpression
 
-        { (StructExprFields)? }
+        StructType? { (StructExprFields)? }
 
 - StructExprFields :
 
@@ -112,6 +146,7 @@
     Expression (-|--|+|++)
 
 ## FieldExpression
+
     Expression . IDENTIFIER
 
 # Path

@@ -1,8 +1,8 @@
 // We not support 'class' but struct
 struct Car {
     // How we declare variable similar with go language but lower case for public variable
-    distance int
-    name []byte
+    distance int = 12
+    name string
 
     // we use '_' for private or protected variable
     _numCrash int

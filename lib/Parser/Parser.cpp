@@ -38,7 +38,7 @@ weasel::Token weasel::Parser::getNextTokenUntil(weasel::TokenKind kind)
             return token;
         }
 
-        if (token.isKind(TokenKind::TokenEOF) || token.isUndefined())
+        if (token.isKind(TokenKind::TokenEOF) || token.isUnknown())
         {
             break;
         }

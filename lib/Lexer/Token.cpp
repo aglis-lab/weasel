@@ -34,7 +34,7 @@ weasel::Precedence weasel::Token::getPrecedence()
     case TokenKind::TokenOperatorPercent:
         val.order = 5;
         break;
-    case TokenKind::TokenOperatorMinus:
+    case TokenKind::TokenOperatorNegative:
     case TokenKind::TokenOperatorPlus:
         val.order = 6;
         break;
@@ -69,7 +69,7 @@ weasel::Precedence weasel::Token::getPrecedence()
         break;
     case TokenKind::TokenOperatorEqual:
     case TokenKind::TokenOperatorPlusEqual:
-    case TokenKind::TokenOperatorMinusEqual:
+    case TokenKind::TokenOperatorNegativeEqual:
     case TokenKind::TokenOperatorStarEqual:
     case TokenKind::TokenOperatorSlashEqual:
     case TokenKind::TokenOperatorPercentEqual:

@@ -2,7 +2,7 @@
 #include "weasel/IR/Context.h"
 #include "weasel/Symbol/Symbol.h"
 
-llvm::Value *weasel::Context::codegen(CompoundExpression *expr)
+llvm::Value *weasel::Context::codegen(CompoundStatement *expr)
 {
     // Enter to new statement
     enterScope();

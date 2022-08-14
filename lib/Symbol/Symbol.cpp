@@ -23,7 +23,7 @@ void weasel::ErrorTable::showErrors()
             auto token = item.getToken();
             auto loc = token.getLocation();
 
-            if (token.isUndefined())
+            if (token.isUnknown())
             {
                 std::cerr << "Error : " << item.getMessage() << std::endl;
                 continue;

@@ -2,62 +2,6 @@
 #include "weasel/Parser/Parser.h"
 #include "weasel/Symbol/Symbol.h"
 
-weasel::Expression *weasel::Parser::parseStatement()
-{
-    // Compound Statement Expression
-    if (getCurrentToken().isKind(TokenKind::TokenDelimOpenCurlyBracket))
-    {
-        return parseCompoundStatement();
-    }
-
-    // If Statement
-    if (getCurrentToken().isKind(TokenKind::TokenKeyIf))
-    {
-        return parseConditionStatement();
-    }
-
-    // For Statement
-    if (getCurrentToken().isKeyFor())
-    {
-        return parseLoopingStatement();
-    }
-
-    // Variable Definition Expression
-    if (getCurrentToken().isKeyDefinition())
-    {
-        return parseDeclarationExpression();
-    }
-
-    // Return Expression
-    if (getCurrentToken().isKind(TokenKind::TokenKeyReturn))
-    {
-        return parseReturnExpression();
-    }
-
-    // Break Expression
-    if (getCurrentToken().isKeyBreak())
-    {
-        return parseBreakExpression();
-    }
-
-    // Continue Expression
-    if (getCurrentToken().isKeyContinue())
-    {
-        return parseContinueExpression();
-    }
-
-    auto expr = parseExpression();
-    if (expr == nullptr)
-    {
-        auto errToken = getCurrentToken();
-
-        getNextTokenUntil(TokenKind::TokenSpaceNewline);
-        return ErrorTable::addError(errToken, "Invalid expression statement");
-    }
-
-    return expr;
-}
-
 weasel::Expression *weasel::Parser::parseLiteralExpression()
 {
     auto token = getCurrentToken();
@@ -157,7 +101,7 @@ weasel::Expression *weasel::Parser::parseFunctionCallExpression(Function *fun)
         }
     }
 
-    return new MethodCallExpression(callToken, callToken.getValue(), args);
+    return new CallExpression(callToken, callToken.getValue(), args);
 }
 
 weasel::Expression *weasel::Parser::parseIdentifierExpression()
@@ -238,21 +182,22 @@ weasel::Expression *weasel::Parser::parsePrimaryExpression()
         return parseLiteralExpression();
     }
 
-    if (getCurrentToken().isKind(TokenKind::TokenIdentifier))
+    if (getCurrentToken().isIdentifier())
     {
         return parseIdentifierExpression();
     }
 
-    if (getCurrentToken().isKind(TokenKind::TokenDelimOpenParen))
+    if (getCurrentToken().isOpenParen())
     {
         return parseParenExpression();
     }
 
-    if (getCurrentToken().isOperatorAnd())
+    // Unary Expression
+    if (getCurrentToken().isOperatorUnary())
     {
         auto token = getCurrentToken();
 
-        getNextToken(); // eat '&'
+        getNextToken(); // eat '& | * | - | !'
 
         auto expr = parsePrimaryExpression();
         if (expr == nullptr)
@@ -260,15 +205,25 @@ weasel::Expression *weasel::Parser::parsePrimaryExpression()
             return ErrorTable::addError(getCurrentToken(), "Expected expression after address of");
         }
 
-        if (dynamic_cast<Borrowxpression *>(expr))
+        auto op = UnaryExpression::Borrow;
+        switch (token.getTokenKind())
         {
-            return ErrorTable::addError(getCurrentToken(), "Expected expression not address of");
+        case TokenKind::TokenOperatorStar:
+            op = UnaryExpression::Dereference;
+            break;
+        case TokenKind::TokenOperatorNegative:
+            op = UnaryExpression::Negative;
+            break;
+        case TokenKind::TokenOperatorNot:
+            op = UnaryExpression::Not;
+            break;
         }
 
-        return new Borrowxpression(token, expr);
+        return new UnaryExpression(token, op, expr);
     }
 
-    if (getCurrentToken().isKind(TokenKind::TokenDelimOpenSquareBracket))
+    // Array Expression
+    if (getCurrentToken().isOpenSquare())
     {
         return parseArrayExpression();
     }

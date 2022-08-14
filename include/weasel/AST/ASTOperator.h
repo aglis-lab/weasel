@@ -29,33 +29,40 @@ namespace weasel
         void debug(int shift) override;
     };
 
-    // Borrow Operator Expression
-    class Borrowxpression : public Expression
+    // Unary Operator Expression
+    class UnaryExpression : public Expression
     {
+    public:
+        enum Operator
+        {
+            Borrow,
+            Dereference,
+
+            // Negation
+            Negative,
+            Not,
+        };
+
     private:
         Expression *_rhs;
+        Operator _op;
 
     public:
-        Borrowxpression(Token token, Expression *rhs) : Expression(token, Type::getPointerType(rhs->getType())), _rhs(rhs) {}
+        UnaryExpression(Token token, Operator op, Expression *rhs) : Expression(token), _op(op), _rhs(rhs)
+        {
+            auto rhsType = rhs->getType();
+            if (op == Operator::Borrow)
+                rhsType = Type::getPointerType(rhsType);
+            else if (op == Operator::Dereference)
+                rhsType = rhsType->getContainedType();
+
+            setType(rhsType);
+        }
 
         Expression *getExpression() const { return _rhs; }
+        Operator getOperator() const { return _op; }
 
         llvm::Value *codegen(Context *context) override;
         void debug(int shift) override;
     };
-
-    // TODO: Unary Operator Expression
-    class UnaryOperatorExpression : public Expression
-    {
-    private:
-        Token _lhs;
-        Expression *_rhs;
-
-    public:
-        UnaryOperatorExpression(Token lhs, Expression *rhs) : _lhs(lhs), _rhs(rhs) {}
-
-        llvm::Value *codegen(Context *context) override { return nullptr; }
-        void debug(int shift) override;
-    };
-
 } // namespace weasel

@@ -20,18 +20,19 @@ namespace weasel
         inline std::string getIdentifier() const { return _identifier; }
         inline Expression *getValue() const { return _value; }
 
+    public:
         llvm::Value *codegen(Context *context) override;
         void debug(int shift) override;
     };
 
     // Statement Expression
-    class CompoundExpression : public Expression
+    class CompoundStatement : public Expression
     {
     private:
         std::vector<Expression *> _body;
 
     public:
-        CompoundExpression() = default;
+        CompoundStatement() = default;
 
         void addBody(Expression *expr) { _body.push_back(expr); }
         std::vector<Expression *> getBody() const { return _body; }
@@ -44,13 +45,13 @@ namespace weasel
     {
     private:
         std::vector<Expression *> _conditions;
-        std::vector<CompoundExpression *> _statements;
+        std::vector<CompoundStatement *> _statements;
 
     public:
-        ConditionStatement(const Token &token, const std::vector<Expression *> &conditions, const std::vector<CompoundExpression *> &statements) : Expression(token), _conditions(conditions), _statements(statements) {}
+        ConditionStatement(const Token &token, const std::vector<Expression *> &conditions, const std::vector<CompoundStatement *> &statements) : Expression(token), _conditions(conditions), _statements(statements) {}
 
         inline std::vector<Expression *> getConditions() const { return _conditions; }
-        inline std::vector<CompoundExpression *> getStatements() const { return _statements; }
+        inline std::vector<CompoundStatement *> getStatements() const { return _statements; }
         inline bool isElseExist() const { return _conditions.size() < _statements.size(); }
 
         llvm::Value *codegen(Context *context) override;
@@ -61,13 +62,13 @@ namespace weasel
     {
     private:
         std::vector<Expression *> _conditions;
-        CompoundExpression *_body;
+        CompoundStatement *_body;
 
     public:
-        LoopingStatement(const Token &token, std::vector<Expression *> conditions, CompoundExpression *body) : Expression(token), _conditions(conditions), _body(body) {}
+        LoopingStatement(const Token &token, std::vector<Expression *> conditions, CompoundStatement *body) : Expression(token), _conditions(conditions), _body(body) {}
 
         inline std::vector<Expression *> getConditions() const { return _conditions; }
-        inline CompoundExpression *getBody() const { return _body; }
+        inline CompoundStatement *getBody() const { return _body; }
         inline bool isInfinityCondition() const { return _conditions.empty(); }
         inline bool isSingleCondition() const { return _conditions.size() == 1; }
 

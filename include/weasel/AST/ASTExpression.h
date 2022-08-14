@@ -51,13 +51,13 @@ namespace weasel
     };
 
     // Call Expression
-    class MethodCallExpression : public Expression
+    class CallExpression : public Expression
     {
         std::string _identifier;
         std::vector<Expression *> _args;
 
     public:
-        MethodCallExpression(Token token, std::string identifier, std::vector<Expression *> args) : Expression(token), _identifier(identifier), _args(args) {}
+        CallExpression(Token token, std::string identifier, std::vector<Expression *> args) : Expression(token), _identifier(identifier), _args(args) {}
 
         std::string getIdentifier() const { return _identifier; }
         std::vector<Expression *> getArguments() const { return _args; }
@@ -123,8 +123,15 @@ namespace weasel
         class StructField
         {
         private:
+            std::string _identifier;
+            Expression *_expr;
+
         public:
-            StructField() {}
+            StructField(const std::string &identifier, Expression *expr) : _identifier(identifier), _expr(expr) {}
+
+            inline std::string getIdentifier() const { return _identifier; }
+            inline Expression *getExpression() const { return _expr; }
+            inline bool isEmptyIdentifier() const { return _identifier.empty(); }
         };
 
     private:
@@ -132,7 +139,10 @@ namespace weasel
         std::vector<StructField> _fields;
 
     public:
-        StructExpression();
+        StructExpression(StructType *type, const std::vector<StructField> &fields) : _type(type), _fields(fields) {}
+
+        inline StructType *getStructType() const { return _type; }
+        inline std::vector<StructField> getFields() const { return _fields; }
 
     public:
         llvm::Value *codegen(Context *context) override;
