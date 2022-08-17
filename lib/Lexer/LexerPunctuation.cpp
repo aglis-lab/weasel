@@ -216,6 +216,10 @@ weasel::Token weasel::Lexer::getPunctuation()
     {
         return createToken(TokenKind::TokenPuncSemicolon, lastBuffer, lastBuffer + 1);
     }
+    case ':':
+    {
+        return createToken(TokenKind::TokenPuncColon, lastBuffer, lastBuffer + 1);
+    }
 
     default:
         return Token::empty();

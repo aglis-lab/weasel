@@ -312,3 +312,102 @@ weasel::CompoundStatement *weasel::Parser::parseCompoundStatement()
 
     return stmt;
 }
+
+weasel::Expression *weasel::Parser::parseDeclarationExpression()
+{
+    auto qualifier = getQualifier();
+    auto qualToken = getCurrentToken();
+
+    getNextToken(); // eat qualifier(let, final, const)
+    if (!getCurrentToken().isIdentifier())
+    {
+        auto errToken = getCurrentToken();
+
+        getNextTokenUntil(TokenKind::TokenSpaceNewline);
+        return ErrorTable::addError(errToken, "Expected an identifier");
+    }
+
+    auto identifier = getCurrentToken().getValue();
+
+    getNextToken(); // eat 'identifier' and get next token
+
+    auto type = parseDataType();
+    if (getCurrentToken().isNewline())
+    {
+        if (type == nullptr)
+        {
+            return ErrorTable::addError(getCurrentToken(), "Data Type Expected for default value declaration");
+        }
+
+        if (qualifier != Qualifier::QualVolatile)
+        {
+            return ErrorTable::addError(getCurrentToken(), "No Default Value for Non Volatile variable");
+        }
+
+        // Insert Symbol Table
+        addAttribute(ParserAttribute::get(identifier, type, AttributeKind::Variable));
+
+        // Create Variable with Default Value
+        return new DeclarationStatement(qualToken, identifier, qualifier, type);
+    }
+
+    // Equal
+    if (!getCurrentToken().isOperatorEqual())
+    {
+        auto errToken = getCurrentToken();
+
+        getNextTokenUntil(TokenKind::TokenSpaceNewline);
+        return ErrorTable::addError(errToken, "Expected equal sign");
+    }
+
+    // Get Next Value
+    if (getNextToken().isNewline())
+    {
+        return ErrorTable::addError(getCurrentToken(), "Expected RHS Value Expression but got 'New line'");
+    }
+
+    auto val = parseExpression();
+    if (!val)
+    {
+        auto errToken = getCurrentToken();
+
+        getNextTokenUntil(TokenKind::TokenSpaceNewline);
+        return ErrorTable::addError(errToken, "Expected RHS Value Expression but got not valid expression");
+    }
+
+    if (type == nullptr)
+    {
+        if (val->getType() == nullptr)
+        {
+            return ErrorTable::addError(val->getToken(), "Cannot detect declaration and value type");
+        }
+
+        type = val->getType();
+    }
+
+    auto declExpr = new DeclarationStatement(qualToken, identifier, qualifier, type, val);
+    if (getCurrentToken().isOpenCurly())
+    {
+        enterScope();
+
+        // Insert Symbol Table
+        addAttribute(ParserAttribute::get(identifier, type, AttributeKind::Variable));
+
+        // Insert Symbol Table
+        auto compound = parseCompoundStatement();
+
+        exitScope();
+
+        if (compound != nullptr)
+        {
+            compound->insertBody(0, declExpr);
+
+            return compound;
+        }
+    }
+
+    // Insert Symbol Table
+    addAttribute(ParserAttribute::get(identifier, type, AttributeKind::Variable));
+
+    return declExpr;
+}

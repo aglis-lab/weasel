@@ -192,8 +192,39 @@ weasel::Expression *weasel::Parser::parseStructExpression()
 
     getNextToken(true); // eat '{'
     std::vector<StructExpression::StructField> fields;
+    std::cout << "Token : " << getCurrentToken().getValue() << std::endl;
     while (!getCurrentToken().isCloseCurly())
     {
+        auto idenToken = getCurrentToken();
+        if (!idenToken.isIdentifier())
+        {
+            return ErrorTable::addError(idenToken, "Expected Identifier");
+        }
+
+        auto colonToken = getNextToken();
+        if (!colonToken.isColon())
+        {
+            return ErrorTable::addError(colonToken, "Expected Colon");
+        }
+
+        auto exprToken = getNextToken(); // eat ':'
+        auto expr = parseExpression();
+        if (expr == nullptr)
+        {
+            return ErrorTable::addError(exprToken, "Expected Expression");
+        }
+
+        if (getCurrentToken().isCloseCurly())
+        {
+            break;
+        }
+
+        if (!getCurrentToken().isComma())
+        {
+            return ErrorTable::addError(exprToken, "Expected Comma");
+        }
+
+        getNextToken(); // eat ','
     }
 
     getNextToken(); // eat '}'
@@ -322,79 +353,6 @@ weasel::Expression *weasel::Parser::parseReturnExpression()
     }
 
     return new ReturnExpression(retToken, parseExpression());
-}
-
-weasel::Expression *weasel::Parser::parseDeclarationExpression()
-{
-    auto qualifier = getQualifier();
-    auto qualToken = getCurrentToken();
-
-    getNextToken(); // eat qualifier(let, final, const)
-    if (!getCurrentToken().isKind(TokenKind::TokenIdentifier))
-    {
-        auto errToken = getCurrentToken();
-
-        getNextTokenUntil(TokenKind::TokenSpaceNewline);
-        return ErrorTable::addError(errToken, "Expected an identifier");
-    }
-
-    auto identifier = getCurrentToken().getValue();
-
-    getNextToken(); // eat 'identifier' and get next token
-
-    auto type = parseDataType();
-    if (getCurrentToken().isKind(TokenKind::TokenSpaceNewline))
-    {
-        if (type == nullptr)
-        {
-            return ErrorTable::addError(getCurrentToken(), "Data Type Expected for default value declaration");
-        }
-
-        if (qualifier != Qualifier::QualVolatile)
-        {
-            return ErrorTable::addError(getCurrentToken(), "No Default Value for Non Volatile variable");
-        }
-
-        // Insert Symbol Table
-        addAttribute(ParserAttribute::get(identifier, type, AttributeKind::Variable));
-
-        // Create Variable with Default Value
-        return new DeclarationStatement(qualToken, identifier, qualifier, type);
-    }
-
-    // Equal
-    if (!getCurrentToken().isKind(TokenKind::TokenOperatorEqual))
-    {
-        auto errToken = getCurrentToken();
-
-        getNextTokenUntil(TokenKind::TokenSpaceNewline);
-        return ErrorTable::addError(errToken, "Expected equal sign");
-    }
-
-    // Get Next Value
-    if (getNextToken().isKind(TokenKind::TokenSpaceNewline))
-    {
-        return ErrorTable::addError(getCurrentToken(), "Expected RHS Value Expression but got 'New line'");
-    }
-
-    auto val = parseExpression();
-    if (!val)
-    {
-        auto errToken = getCurrentToken();
-
-        getNextTokenUntil(TokenKind::TokenSpaceNewline);
-        return ErrorTable::addError(errToken, "Expected RHS Value Expression but got not valid expression");
-    }
-
-    if (type == nullptr)
-    {
-        type = val->getType();
-    }
-
-    // Insert Symbol Table
-    addAttribute(ParserAttribute::get(identifier, type, AttributeKind::Variable));
-
-    return new DeclarationStatement(qualToken, identifier, qualifier, type, val);
 }
 
 weasel::Expression *weasel::Parser::parseBreakExpression()

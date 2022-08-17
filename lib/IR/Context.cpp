@@ -408,7 +408,7 @@ llvm::Value *weasel::Context::codegen(VariableExpression *expr)
     }
 
     auto type = alloc->getType()->getContainedType(0);
-    return getBuilder()->CreateLoad(type, alloc, varName);
+    return getBuilder()->CreateLoad(type, alloc);
 }
 
 // TODO: String as array of byte
@@ -504,10 +504,15 @@ llvm::Value *weasel::Context::codegen(UnaryExpression *expr)
 
 llvm::Value *weasel::Context::codegen(StructExpression *expr)
 {
+    if (expr->getFields().empty())
+    {
+        return getBuilder()->getInt8(0);
+    }
+
     auto type = expr->getType()->codegen(this);
     auto alloc = getBuilder()->CreateAlloca(type);
     // TODO: Implement for defined fields
-    if (!expr->getFields().empty())
+    for (auto item : expr->getFields())
     {
     }
 

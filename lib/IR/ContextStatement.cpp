@@ -25,8 +25,8 @@ llvm::Value *weasel::Context::codegen(DeclarationStatement *expr)
     // Default Value
     if (valueExpr == nullptr)
     {
-        auto alloc = getBuilder()->CreateAlloca(declTypeV, nullptr, varName);
-        llvm::Constant *constantVal;
+        auto alloc = getBuilder()->CreateAlloca(declTypeV, nullptr);
+        llvm::Constant *constantVal = nullptr;
 
         // Default Value for integer
         if (declType->isIntegerType())
@@ -41,7 +41,7 @@ llvm::Value *weasel::Context::codegen(DeclarationStatement *expr)
         }
 
         // Store Default Value
-        if (constantVal)
+        if (constantVal != nullptr)
         {
             getBuilder()->CreateStore(constantVal, alloc);
         }
@@ -49,7 +49,7 @@ llvm::Value *weasel::Context::codegen(DeclarationStatement *expr)
         // Add Variable Declaration to symbol table
         addAttribute(ContextAttribute::get(varName, alloc, AttributeKind::Variable));
 
-        return alloc;
+        return nullptr;
     }
 
     auto valueType = valueExpr->getType();
@@ -73,15 +73,18 @@ llvm::Value *weasel::Context::codegen(DeclarationStatement *expr)
 
     // TODO: LLVM Declare Struct Metadata
     // call void @llvm.dbg.declare(metadata %struct.Person* %3, metadata !20, metadata !DIExpression()), !dbg !28
+    auto alloc = getBuilder()->CreateAlloca(declTypeV, nullptr);
+
+    // Add Variable Declaration to symbol table
+    addAttribute(ContextAttribute::get(varName, alloc, AttributeKind::Variable));
+
     if (declType->isStructType())
     {
-        auto structType = dynamic_cast<StructType *>(declType);
+        getBuilder()->CreateMemSet(alloc, valueV, dynamic_cast<StructType *>(declType)->getStructTypeWidth(), llvm::MaybeAlign(0));
 
-        getBuilder()->CreateMemSet(valueV, getBuilder()->getInt8(0), getBuilder()->getInt64(structType->getStructTypeWidth()), llvm::MaybeAlign(0));
-        return valueV;
+        return nullptr;
     }
 
-    auto alloc = getBuilder()->CreateAlloca(declTypeV, nullptr, varName);
     if (declType->isPrimitiveType() && declType->getTypeWidth() != valueType->getTypeWidth())
     {
         valueV = getBuilder()->CreateSExtOrTrunc(valueV, declTypeV);
@@ -89,10 +92,7 @@ llvm::Value *weasel::Context::codegen(DeclarationStatement *expr)
 
     getBuilder()->CreateStore(valueV, alloc);
 
-    // Add Variable Declaration to symbol table
-    addAttribute(ContextAttribute::get(varName, alloc, AttributeKind::Variable));
-
-    return alloc;
+    return nullptr;
 }
 
 llvm::Value *weasel::Context::codegen(CompoundStatement *expr)
@@ -102,7 +102,7 @@ llvm::Value *weasel::Context::codegen(CompoundStatement *expr)
 
     for (auto &item : expr->getBody())
     {
-        auto val = item->codegen(this);
+        item->codegen(this);
     }
 
     // Exit from statement

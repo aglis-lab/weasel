@@ -97,7 +97,7 @@ int main(int argc, char *argv[])
         std::cerr << "\n=> Error Information\n";
         weasel::ErrorTable::showErrors();
 
-        return false;
+        return 0;
     }
 
     std::cout << "Create Output Objects...\n";

@@ -109,7 +109,8 @@ namespace weasel
         TokenPuncComma,     // ,
         TokenPuncPound,     // #
         TokenPuncQuestion,  // ?
-        TokenPuncSemicolon, // ; // optional
+        TokenPuncColon,     // :
+        TokenPuncSemicolon, // ;
 
         // Punctuation Delimiter Type
         TokenDelimOpenCurlyBracket,   // {
@@ -211,6 +212,10 @@ namespace weasel
 
         // Punctuation //
         inline bool isComma() const { return _kind == TokenKind::TokenPuncComma; }
+        inline bool isColon() const { return _kind == TokenKind::TokenPuncColon; }
+
+        // Operator //
+        inline bool isOperatorEqual() const { return _kind == TokenKind::TokenOperatorEqual; }
 
         // Operator Comparator //
         inline bool isComparison() { return _kind >= TokenKind::TokenOperatorStartComparation && _kind <= TokenKind::TokenOperatorEndComparation; }

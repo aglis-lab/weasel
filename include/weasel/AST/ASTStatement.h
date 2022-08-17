@@ -35,6 +35,7 @@ namespace weasel
         CompoundStatement() = default;
 
         void addBody(Expression *expr) { _body.push_back(expr); }
+        void insertBody(int pos, Expression *expr) { _body.insert(_body.begin() + pos, expr); }
         std::vector<Expression *> getBody() const { return _body; }
 
         llvm::Value *codegen(Context *context) override;
