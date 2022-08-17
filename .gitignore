@@ -1,7 +1,6 @@
 build/
 cmake-build-debug/
 clang/
-examples/
 third-party/
 temp/*
 test/*
@@ -13,13 +12,6 @@ build-llvm/
 build-spirv/
 llvm-project/
 llvm-spirv/
-
-# runtime-rt/*.exe
-# runtime-rt/*.o
-# runtime-rt/*.out
-runtime-rt/*.bc
-runtime-rt/*.ll
-runtime-rt/*.spv
 
 .idea
 .vscode

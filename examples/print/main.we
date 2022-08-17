@@ -1,0 +1,10 @@
+fun printf(msg *byte, param ...*long) int {}
+
+fun hello() {
+    printf("Hello\n")
+}
+
+fun main() {
+    printf("Test\n")
+    hello()
+}
