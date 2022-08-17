@@ -64,7 +64,7 @@ llvm::Value *weasel::Context::codegen(ArrayLiteralExpression *expr)
 
     auto init = llvm::ConstantArray::get(valueTy, valueArr);
     auto linkage = llvm::GlobalVariable::LinkageTypes::PrivateLinkage;
-    auto *gv = new llvm::GlobalVariable(*getModule(), valueTy, true, linkage, init);
+    auto gv = new llvm::GlobalVariable(*getModule(), valueTy, true, linkage, init);
     auto dataLayout = llvm::DataLayout(getModule());
     auto alignNum = dataLayout.getPrefTypeAlignment(valueTy);
 

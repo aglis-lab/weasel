@@ -86,7 +86,7 @@ void weasel::BinaryExpression::debug(int shift)
 void weasel::CallExpression::debug(int shift)
 {
     auto val = this->getIdentifier();
-    this->printDebug("Call : " + val, shift);
+    this->printDebug("Call " + val, shift);
 }
 
 void weasel::ReturnExpression::debug(int shift)
@@ -96,13 +96,14 @@ void weasel::ReturnExpression::debug(int shift)
 
 void weasel::StructExpression::debug(int shift)
 {
-    auto val = "Struct " + this->getStructType()->getIdentifier();
+    auto val = "Struct " + this->getType()->getIdentifier();
 
     val += "{";
     for (auto &item : this->getFields())
     {
         val += item.getIdentifier() + ",";
     }
+    val += "}";
 
     this->printDebug(val, shift);
 }

@@ -22,7 +22,7 @@ namespace weasel
         llvm::legacy::FunctionPassManager *_fpm;
 
     public:
-        explicit Passes(llvm::Module *module);
+        Passes(llvm::Module *module);
         bool run(llvm::Function &fun);
     };
 }

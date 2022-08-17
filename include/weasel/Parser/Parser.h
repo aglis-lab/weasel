@@ -78,11 +78,12 @@ namespace weasel
         Expression *parseExpression();
         Expression *parsePrimaryExpression();
         Expression *parseDeclarationExpression();
-        Expression *parseFunctionCallExpression(Function *fun);
+        Expression *parseCallExpression(Function *fun);
         Expression *parseParenExpression();
         Expression *parseReturnExpression();
         Expression *parseBreakExpression();
         Expression *parseContinueExpression();
+        Expression *parseStructExpression();
 
         // Expression Literal
         Expression *parseLiteralExpression();

@@ -2,6 +2,99 @@
 #include "weasel/IR/Context.h"
 #include "weasel/Symbol/Symbol.h"
 
+llvm::Value *weasel::Context::codegen(DeclarationStatement *expr)
+{
+    // Get Value Representation
+    auto declType = expr->getType();
+    auto valueExpr = expr->getValue();
+
+    if (declType == nullptr && valueExpr != nullptr && valueExpr->getType() != nullptr)
+    {
+        declType = valueExpr->getType();
+        expr->setType(declType);
+    }
+
+    // Allocating Address for declaration
+    auto varName = expr->getIdentifier();
+    auto declTypeV = declType->codegen(this);
+    if (declTypeV == nullptr)
+    {
+        return ErrorTable::addError(expr->getToken(), "Unexpected error when codegen a type");
+    }
+
+    // Default Value
+    if (valueExpr == nullptr)
+    {
+        auto alloc = getBuilder()->CreateAlloca(declTypeV, nullptr, varName);
+        llvm::Constant *constantVal;
+
+        // Default Value for integer
+        if (declType->isIntegerType())
+        {
+            auto constantVal = llvm::ConstantInt::get(declTypeV, 0, declType->isSigned());
+        }
+
+        // Default Value for Float
+        if (declType->isFloatType())
+        {
+            auto constantVal = llvm::ConstantFP::get(declTypeV, 0);
+        }
+
+        // Store Default Value
+        if (constantVal)
+        {
+            getBuilder()->CreateStore(constantVal, alloc);
+        }
+
+        // Add Variable Declaration to symbol table
+        addAttribute(ContextAttribute::get(varName, alloc, AttributeKind::Variable));
+
+        return alloc;
+    }
+
+    auto valueType = valueExpr->getType();
+    if (valueType->isVoidType())
+    {
+        return ErrorTable::addError(valueExpr->getToken(), "Cannot assign void to a variable");
+    }
+
+    // Check if type is different
+    // TODO: Change this to Analysis type checking
+    if (!valueType->isEqual(declType))
+    {
+        return ErrorTable::addError(valueExpr->getToken(), "Cannot assign to different type");
+    }
+
+    auto valueV = valueExpr->codegen(this);
+    if (valueV == nullptr)
+    {
+        return ErrorTable::addError(valueExpr->getToken(), "Cannot codegen value expression");
+    }
+
+    // TODO: LLVM Declare Struct Metadata
+    // call void @llvm.dbg.declare(metadata %struct.Person* %3, metadata !20, metadata !DIExpression()), !dbg !28
+    if (declType->isStructType())
+    {
+        auto structType = dynamic_cast<StructType *>(declType);
+
+        getBuilder()->CreateMemSet(valueV, getBuilder()->getInt8(0), getBuilder()->getInt64(structType->getStructTypeWidth()), llvm::MaybeAlign(0));
+        return valueV;
+    }
+
+    auto alloc = getBuilder()->CreateAlloca(declTypeV, nullptr, varName);
+    if (declType->isPrimitiveType() && declType->getTypeWidth() != valueType->getTypeWidth())
+    {
+        valueV = getBuilder()->CreateSExtOrTrunc(valueV, declTypeV);
+    }
+
+    getBuilder()->CreateStore(valueV, alloc);
+
+    // Add Variable Declaration to symbol table
+    addAttribute(ContextAttribute::get(varName, alloc, AttributeKind::Variable));
+
+    return alloc;
+}
+
 llvm::Value *weasel::Context::codegen(CompoundStatement *expr)
 {
     // Enter to new statement
@@ -100,7 +193,6 @@ llvm::Value *weasel::Context::codegen(LoopingStatement *expr)
     auto initialBlock = llvm::BasicBlock::Create(*getContext());
     auto conditionBlock = llvm::BasicBlock::Create(*getContext());
     auto countBlock = llvm::BasicBlock::Create(*getContext());
-
     auto parentFun = currentBlock->getParent();
     auto conditions = expr->getConditions();
 

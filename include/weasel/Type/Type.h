@@ -18,11 +18,14 @@ namespace weasel
         // Primitive Types
         FloatType,
         DoubleType,
-
         VoidType,
         IntegerType,
+
+        // Derived Types
         PointerType,
         ArrayType,
+
+        // User Type
         FunctionType,
         StructType,
     };
@@ -61,12 +64,25 @@ namespace weasel
         inline bool isBooleanType() const { return isIntegerType() && _width == 1; }
         inline bool isFloatType() const { return _typeId == TypeID::FloatType; }
         inline bool isDoubleType() const { return _typeId == TypeID::DoubleType; }
-
         inline bool isIntegerType() const { return _typeId == TypeID::IntegerType; }
+        inline bool isPrimitiveType() const
+        {
+            return isBooleanType() ||
+                   isFloatType() ||
+                   isDoubleType() ||
+                   isIntegerType() ||
+                   isVoidType();
+        }
+
         inline bool isPointerType() const { return _typeId == TypeID::PointerType; }
         inline bool isArrayType() const { return _typeId == TypeID::ArrayType; }
         inline bool isVoidType() const { return _typeId == TypeID::VoidType; }
         inline bool isStructType() const { return _typeId == TypeID::StructType; }
+        inline bool isDerivedType() const
+        {
+            return isPointerType() ||
+                   isArrayType();
+        }
 
         inline unsigned getContainedWidth() const { return _containedTypes[0]->getTypeWidth(); }
         inline Type *getContainedType() const { return _containedTypes[0]; }
@@ -117,6 +133,24 @@ namespace weasel
         {
             _typeNames.push_back(fieldName);
             addContainedType(type);
+        }
+
+        inline unsigned getStructTypeWidth() const
+        {
+            auto val = 0;
+            for (auto item : getContainedTypes())
+            {
+                if (item->isPointerType())
+                {
+                    val += 64;
+                }
+                else
+                {
+                    val += item->getTypeWidth();
+                }
+            }
+
+            return val / 8;
         }
 
     public:

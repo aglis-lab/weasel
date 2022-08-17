@@ -73,7 +73,7 @@ namespace weasel
         }
 
     public:
-        explicit Context(llvm::LLVMContext *context, const std::string &moduleName);
+        Context(llvm::LLVMContext *context, const std::string &moduleName);
 
         llvm::LLVMContext *getContext() const { return _context; }
         llvm::Module *getModule() const { return _module; }

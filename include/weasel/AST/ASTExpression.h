@@ -135,13 +135,11 @@ namespace weasel
         };
 
     private:
-        StructType *_type;
         std::vector<StructField> _fields;
 
     public:
-        StructExpression(StructType *type, const std::vector<StructField> &fields) : _type(type), _fields(fields) {}
+        StructExpression(Token token, StructType *type, const std::vector<StructField> &fields) : Expression(token, type), _fields(fields) {}
 
-        inline StructType *getStructType() const { return _type; }
         inline std::vector<StructField> getFields() const { return _fields; }
 
     public:

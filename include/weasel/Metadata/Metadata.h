@@ -24,7 +24,7 @@ namespace weasel
         llvm::LLVMContext *getContext() const { return _context; }
 
     public:
-        explicit Metadata(llvm::LLVMContext *context);
+        Metadata(llvm::LLVMContext *context);
 
         // void initParallelModule(llvm::Module *module) {
         //     initModule(module);
@@ -36,7 +36,7 @@ namespace weasel
         void initModule(llvm::Module *module)
         {
             module->addModuleFlag(llvm::Module::ModFlagBehavior::ModFlagBehaviorFirstVal, "wchar_size", getFlagsMetadata());
-            module->getOrInsertNamedMetadata("llvm.ident")->addOperand(llvm::MDNode::get(module->getContext(), {getVersionMetadata()}));
+            module->getOrInsertNamedMetadata("llvm.ident")->addOperand(llvm::MDNode::get(*getContext(), {getVersionMetadata()}));
         }
     };
 }

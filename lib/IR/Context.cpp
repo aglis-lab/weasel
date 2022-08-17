@@ -31,7 +31,7 @@ llvm::Value *weasel::Context::codegen(weasel::Function *funAST)
 
     auto linkage = llvm::GlobalValue::LinkageTypes::ExternalLinkage;
     auto funTyLLVM = llvm::FunctionType::get(funType->codegen(this), args, isVararg);
-    auto funLLVM = llvm::Function::Create(funTyLLVM, linkage, funName, *getModule());
+    auto funLLVM = llvm::Function::Create(funTyLLVM, linkage, funName, getModule());
     if (funAST->isInline())
     {
         funLLVM->addFnAttr(llvm::Attribute::AttrKind::InlineHint);
@@ -106,73 +106,6 @@ llvm::Value *weasel::Context::codegen(CallExpression *expr)
 llvm::Value *weasel::Context::codegen(NilLiteralExpression *expr) const
 {
     return llvm::ConstantPointerNull::getNullValue(getBuilder()->getInt8PtrTy());
-}
-
-llvm::Value *weasel::Context::codegen(DeclarationStatement *expr)
-{
-    // Get Value Representation
-    auto declType = expr->getType();
-    auto valueExpr = expr->getValue();
-    auto valueType = expr->getType();
-
-    if (declType == nullptr && valueExpr != nullptr && valueExpr->getType() != nullptr)
-    {
-        declType = new Type(*valueExpr->getType());
-        expr->setType(declType);
-    }
-
-    // Allocating Address for declaration
-    auto varName = expr->getIdentifier();
-    auto declTypeV = declType->codegen(this);
-    if (declTypeV == nullptr)
-    {
-        return ErrorTable::addError(expr->getToken(), "Unexpected error when codegen a type");
-    }
-
-    auto alloc = getBuilder()->CreateAlloca(declTypeV, nullptr, varName);
-
-    // Default Value
-    if (valueExpr == nullptr)
-    {
-        // Default Value for integer
-        if (declType->isIntegerType())
-        {
-            auto constantVal = llvm::ConstantInt::get(declTypeV, 0, declType->isSigned());
-            getBuilder()->CreateStore(constantVal, alloc);
-        }
-    }
-    else
-    {
-        auto valueType = valueExpr->getType();
-
-        if (valueType->isVoidType())
-        {
-            return ErrorTable::addError(valueExpr->getToken(), "Cannot assign void to a variable");
-        }
-
-        if (!valueType->isEqual(declType))
-        {
-            if (valueType->getIntegerType() && declType->getIntegerType())
-            {
-                if (dynamic_cast<LiteralExpression *>(valueExpr))
-                {
-                    valueExpr->setType(declType);
-                }
-            }
-            else
-            {
-                return ErrorTable::addError(valueExpr->getToken(), "Cannot assign to different type");
-            }
-        }
-
-        auto valueV = valueExpr->codegen(this);
-        getBuilder()->CreateStore(valueV, alloc);
-    }
-
-    // Add Variable Declaration to symbol table
-    addAttribute(ContextAttribute::get(varName, alloc, AttributeKind::Variable));
-
-    return alloc;
 }
 
 // TODO: Need Type Check and conversion
@@ -571,5 +504,12 @@ llvm::Value *weasel::Context::codegen(UnaryExpression *expr)
 
 llvm::Value *weasel::Context::codegen(StructExpression *expr)
 {
-    return nullptr;
+    auto type = expr->getType()->codegen(this);
+    auto alloc = getBuilder()->CreateAlloca(type);
+    // TODO: Implement for defined fields
+    if (!expr->getFields().empty())
+    {
+    }
+
+    return getBuilder()->CreateBitCast(alloc, getBuilder()->getInt8PtrTy());
 }

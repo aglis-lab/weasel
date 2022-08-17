@@ -15,6 +15,7 @@
 #include "weasel/Symbol/Symbol.h"
 #include "weasel/Basic/FileManager.h"
 #include "weasel/Codegen/Codegen.h"
+#include "weasel/Analysis/AnalysisSemantic.h"
 
 void debug(const std::list<weasel::Function *> &objects)
 {
@@ -50,36 +51,46 @@ int main(int argc, char *argv[])
     }
 
     // Initialize LLVM TO BULK
+    std::cout << "Initializing...\n";
     llvm::InitializeAllTargetInfos();
     llvm::InitializeNativeTarget();
     llvm::InitializeNativeTargetAsmParser();
     llvm::InitializeNativeTargetAsmPrinter();
 
     // Prepare Lexer and Parser
-    auto lexer = new weasel::Lexer(fileManager);
-    auto parser = new weasel::Parser(lexer);
+    auto lexer = weasel::Lexer(fileManager);
+    auto parser = weasel::Parser(&lexer);
 
     // Parse into AST
-    parser->parse();
+    std::cout << "Parsing...\n";
+    parser.parse();
 
     // Debugging AST
-    debug(parser->getFunctions());
+    std::cout << "Debug AST...\n";
+    debug(parser.getFunctions());
 
     // Prepare for codegen
-    auto llvmContext = new llvm::LLVMContext();
-    auto context = new weasel::Context(llvmContext, "codeModule");
-    auto codegen = new weasel::Codegen(context, parser);
+    auto llvmContext = llvm::LLVMContext();
+    auto context = weasel::Context(&llvmContext, "codeModule");
+    auto codegen = weasel::Codegen(&context, &parser);
+    auto analysis = weasel::AnalysisSemantic(&parser);
 
-    auto isCompileSuccess = codegen->compile();
+    std::cout << "Compile...\n";
+    auto isCompileSuccess = codegen.compile();
     if (!isCompileSuccess)
     {
-        if (!codegen->getError().empty())
+        if (!codegen.getError().empty())
         {
-            std::cerr << "Codegen Compile : " << codegen->getError() << "\n";
+            std::cerr << "Codegen Compile : " << codegen.getError() << "\n";
         }
     }
 
-    codegen->createIR(outputPath);
+    // std::cout << "Semantic Analysis...\n";
+    // analysis.semanticCheck();
+    // analysis.typeChecking();
+
+    std::cout << "Create LLVM IR...\n";
+    codegen.createIR(outputPath);
 
     if (!weasel::ErrorTable::getErrors().empty())
     {
@@ -89,8 +100,9 @@ int main(int argc, char *argv[])
         return false;
     }
 
+    std::cout << "Create Output Objects...\n";
     if (isCompileSuccess)
     {
-        codegen->createObject(outputPath);
+        codegen.createObject(outputPath);
     }
 }

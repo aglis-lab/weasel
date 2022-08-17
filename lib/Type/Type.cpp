@@ -14,17 +14,26 @@ llvm::Type *weasel::Type::codegen(weasel::Context *context)
 
 bool weasel::Type::isEqual(weasel::Type *type)
 {
-    if (this->getTypeID() != type->getTypeID())
+    auto val = this->getTypeID() == type->getTypeID();
+    if (!val)
     {
         return false;
     }
 
-    if (this->getTypeWidth() != type->getTypeWidth())
+    if (this->isPrimitiveType())
     {
-        return false;
+        return true;
     }
 
-    return true;
+    if (this->isDerivedType())
+    {
+        return this->getContainedType()->isEqual(type->getContainedType());
+    }
+
+    // User Type Check
+    // There is just one or single instance for user type
+    // Used for struct type
+    return this == type;
 }
 
 weasel::Type *weasel::Type::create(const Token &token)
