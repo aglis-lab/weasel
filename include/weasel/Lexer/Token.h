@@ -213,6 +213,7 @@ namespace weasel
         // Punctuation //
         inline bool isComma() const { return _kind == TokenKind::TokenPuncComma; }
         inline bool isColon() const { return _kind == TokenKind::TokenPuncColon; }
+        inline bool isDot() const { return _kind == TokenKind::TokenPuncDot; }
 
         // Operator //
         inline bool isOperatorEqual() const { return _kind == TokenKind::TokenOperatorEqual; }

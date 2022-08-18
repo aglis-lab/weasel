@@ -84,11 +84,12 @@ namespace weasel
         Expression *parseBreakExpression();
         Expression *parseContinueExpression();
         Expression *parseStructExpression();
+        Expression *parseFieldExpression(Expression *lhs);
 
         // Expression Literal
         Expression *parseLiteralExpression();
         Expression *parseIdentifierExpression();
-        Expression *parseBinaryOperator(unsigned prec, weasel::Expression *lhs);
+        Expression *parseBinaryOperator(unsigned prec, Expression *lhs);
         Expression *parseArrayExpression();
 
     public:

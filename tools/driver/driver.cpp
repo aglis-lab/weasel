@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
     auto llvmContext = llvm::LLVMContext();
     auto context = weasel::Context(&llvmContext, "codeModule");
     auto codegen = weasel::Codegen(&context, &parser);
-    auto analysis = weasel::AnalysisSemantic(&parser);
+    // auto analysis = weasel::AnalysisSemantic(&parser);
 
     std::cout << "Compile...\n";
     auto isCompileSuccess = codegen.compile();

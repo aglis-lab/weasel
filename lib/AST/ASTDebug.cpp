@@ -68,6 +68,12 @@ void weasel::VariableExpression::debug(int shift)
     this->printDebug(val, shift);
 }
 
+void weasel::FieldExpression::debug(int shift)
+{
+    auto val = this->getParent()->getToken().getValue() + "." + this->getField();
+    this->printDebug(val, shift);
+}
+
 void weasel::ArrayExpression::debug(int shift)
 {
     auto val = "Array " + this->getIdentifier();

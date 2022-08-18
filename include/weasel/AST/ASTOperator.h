@@ -48,7 +48,7 @@ namespace weasel
         Operator _op;
 
     public:
-        UnaryExpression(Token token, Operator op, Expression *rhs) : Expression(token), _op(op), _rhs(rhs)
+        UnaryExpression(Token token, Operator op, Expression *rhs) : Expression(token), _rhs(rhs), _op(op)
         {
             auto rhsType = rhs->getType();
             if (op == Operator::Borrow)
@@ -62,6 +62,12 @@ namespace weasel
         Expression *getExpression() const { return _rhs; }
         Operator getOperator() const { return _op; }
 
+        ~UnaryExpression()
+        {
+            delete _rhs;
+        }
+
+    public:
         llvm::Value *codegen(Context *context) override;
         void debug(int shift) override;
     };

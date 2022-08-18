@@ -27,8 +27,13 @@ namespace weasel
         bool isInline() const { return _isInline; }
 
     public:
-        llvm::Value *codegen(Context *c);
-        void debug(int shift);
+        llvm::Value *codegen(Context *c) override;
+        void debug(int shift) override;
+
+        ~Function()
+        {
+            delete _body;
+        }
     };
 
 } // namespace weasel

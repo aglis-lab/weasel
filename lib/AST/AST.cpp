@@ -53,6 +53,11 @@ llvm::Value *weasel::VariableExpression::codegen(Context *c)
     return c->codegen(this);
 }
 
+llvm::Value *weasel::FieldExpression::codegen(Context *c)
+{
+    return c->codegen(this);
+}
+
 llvm::Value *weasel::ArrayExpression::codegen(Context *c)
 {
     return c->codegen(this);

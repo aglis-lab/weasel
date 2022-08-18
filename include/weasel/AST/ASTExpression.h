@@ -16,8 +16,14 @@ namespace weasel
 
         Expression *getValue() const { return _value; }
 
+    public:
         llvm::Value *codegen(Context *context) override;
         void debug(int shift) override;
+
+        ~ReturnExpression()
+        {
+            delete _value;
+        }
     };
 
     // Return Expression
@@ -31,8 +37,14 @@ namespace weasel
 
         Expression *getValue() const { return _value; }
 
+    public:
         llvm::Value *codegen(Context *context) override;
         void debug(int shift) override;
+
+        ~BreakExpression()
+        {
+            delete _value;
+        }
     };
 
     // Return Expression
@@ -46,8 +58,14 @@ namespace weasel
 
         Expression *getValue() const { return _value; }
 
+    public:
         llvm::Value *codegen(Context *context) override;
         void debug(int shift) override;
+
+        ~ContinueExpression()
+        {
+            delete _value;
+        }
     };
 
     // Call Expression
@@ -62,8 +80,14 @@ namespace weasel
         std::string getIdentifier() const { return _identifier; }
         std::vector<Expression *> getArguments() const { return _args; }
 
+    public:
         llvm::Value *codegen(Context *context) override;
         void debug(int shift) override;
+
+        ~CallExpression()
+        {
+            _args.clear();
+        }
     };
 
     // Variable Expression
@@ -79,8 +103,11 @@ namespace weasel
         std::string getIdentifier() const { return _identifier; }
         bool isAddressOf() const { return _addressOf; }
 
+    public:
         llvm::Value *codegen(Context *context) override;
         void debug(int shift) override;
+
+        ~VariableExpression() {}
     };
 
     class ArrayExpression : public VariableExpression
@@ -93,27 +120,14 @@ namespace weasel
 
         Expression *getIndex() const { return _indexExpr; }
 
-        llvm::Value *codegen(Context *context) override;
-        void debug(int shift) override;
-    };
-
-    // Field Expresion
-    class FieldExpression : public Expression
-    {
-    private:
-        std::string _identifier;
-        Qualifier _qualifier;
-        Expression *_value;
-
     public:
-        FieldExpression(Token token, std::string identifier, Qualifier qualifier, Type *type, Expression *value = nullptr) : Expression(token, type), _identifier(identifier), _qualifier(qualifier), _value(value) {}
-
-        inline Qualifier getQualifier() const { return _qualifier; }
-        inline std::string getIdentifier() const { return _identifier; }
-        inline Expression *getValue() const { return _value; }
-
         llvm::Value *codegen(Context *context) override;
         void debug(int shift) override;
+
+        ~ArrayExpression()
+        {
+            delete _indexExpr;
+        }
     };
 
     // Struct Expression
@@ -132,6 +146,11 @@ namespace weasel
             inline std::string getIdentifier() const { return _identifier; }
             inline Expression *getExpression() const { return _expr; }
             inline bool isEmptyIdentifier() const { return _identifier.empty(); }
+
+            ~StructField()
+            {
+                delete _expr;
+            }
         };
 
     private:
@@ -145,6 +164,36 @@ namespace weasel
     public:
         llvm::Value *codegen(Context *context) override;
         void debug(int shift) override;
+
+        ~StructExpression()
+        {
+            _fields.clear();
+        }
+    };
+
+    // Field Expresion
+    class FieldExpression : public Expression
+    {
+    private:
+        std::string _identifier;
+        Expression *_parent;
+
+    public:
+        FieldExpression(Token token, std::string identifier, Expression *parent, Type *type) : Expression(token, type), _identifier(identifier), _parent(parent)
+        {
+        }
+
+        inline std::string getField() const { return _identifier; }
+        inline Expression *getParent() const { return _parent; }
+
+    public:
+        llvm::Value *codegen(Context *context) override;
+        void debug(int shift) override;
+
+        ~FieldExpression()
+        {
+            delete _parent;
+        }
     };
 
 } // namespace weasel

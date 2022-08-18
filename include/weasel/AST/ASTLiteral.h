@@ -15,6 +15,7 @@ namespace weasel
 
         long long getValue() const { return _value; }
 
+    public:
         llvm::Value *codegen(Context *context) override;
         void debug(int shift) override;
     };
@@ -30,6 +31,7 @@ namespace weasel
 
         float getValue() const { return _value; }
 
+    public:
         llvm::Value *codegen(Context *context) override;
         void debug(int shift) override;
     };
@@ -45,6 +47,7 @@ namespace weasel
 
         double getValue() const { return _value; }
 
+    public:
         llvm::Value *codegen(Context *context) override;
         void debug(int shift) override;
     };
@@ -60,6 +63,7 @@ namespace weasel
 
         bool getValue() const { return _value; }
 
+    public:
         llvm::Value *codegen(Context *context) override;
         void debug(int shift) override;
     };
@@ -75,6 +79,7 @@ namespace weasel
 
         char getValue() const { return _value; }
 
+    public:
         llvm::Value *codegen(Context *context) override;
         void debug(int shift) override;
     };
@@ -90,6 +95,7 @@ namespace weasel
 
         std::string getValue() const { return _value; }
 
+    public:
         llvm::Value *codegen(Context *context) override;
         void debug(int shift) override;
     };
@@ -100,6 +106,7 @@ namespace weasel
     public:
         NilLiteralExpression(Token token) : LiteralExpression(token, Type::getPointerType(nullptr)) {}
 
+    public:
         llvm::Value *codegen(Context *context) override;
         void debug(int shift) override;
     };
@@ -117,8 +124,14 @@ namespace weasel
         void addItem(Expression *item) { _items.push_back(item); }
         std::vector<Expression *> getItems() const { return _items; }
 
+    public:
         llvm::Value *codegen(Context *context) override;
         void debug(int shift) override;
+
+        ~ArrayLiteralExpression()
+        {
+            _items.clear();
+        }
     };
 
 } // namespace weasel

@@ -23,6 +23,11 @@ namespace weasel
     public:
         llvm::Value *codegen(Context *context) override;
         void debug(int shift) override;
+
+        ~DeclarationStatement()
+        {
+            delete _value;
+        }
     };
 
     // Statement Expression
@@ -38,8 +43,14 @@ namespace weasel
         void insertBody(int pos, Expression *expr) { _body.insert(_body.begin() + pos, expr); }
         std::vector<Expression *> getBody() const { return _body; }
 
+    public:
         llvm::Value *codegen(Context *context) override;
         void debug(int shift) override;
+
+        ~CompoundStatement()
+        {
+            _body.clear();
+        }
     };
 
     class ConditionStatement : public Expression
@@ -55,8 +66,15 @@ namespace weasel
         inline std::vector<CompoundStatement *> getStatements() const { return _statements; }
         inline bool isElseExist() const { return _conditions.size() < _statements.size(); }
 
+    public:
         llvm::Value *codegen(Context *context) override;
         void debug(int shift) override;
+
+        ~ConditionStatement()
+        {
+            _conditions.clear();
+            _statements.clear();
+        }
     };
 
     class LoopingStatement : public Expression
@@ -73,7 +91,14 @@ namespace weasel
         inline bool isInfinityCondition() const { return _conditions.empty(); }
         inline bool isSingleCondition() const { return _conditions.size() == 1; }
 
+    public:
         llvm::Value *codegen(Context *context) override;
         void debug(int shift) override;
+
+        ~LoopingStatement()
+        {
+            delete _body;
+            _conditions.clear();
+        }
     };
 } // namespace weasel

@@ -217,7 +217,7 @@ llvm::Value *weasel::Context::codegen(BinaryExpression *expr)
         }
     }
 
-    if (opToken.isKind(TokenKind::TokenOperatorEqual))
+    if (opToken.isOperatorEqual())
     {
         auto loadLhs = llvm::dyn_cast<llvm::LoadInst>(lhsVal);
         if (!loadLhs)
@@ -390,6 +390,7 @@ llvm::Value *weasel::Context::codegen(VariableExpression *expr)
 {
     // Get Allocator from Symbol Table
     auto varName = expr->getIdentifier();
+    auto type = expr->getType();
     auto attr = findAttribute(varName);
     if (attr.isEmpty())
     {
@@ -397,18 +398,18 @@ llvm::Value *weasel::Context::codegen(VariableExpression *expr)
     }
 
     auto alloc = attr.getValue();
-    if (expr->isAddressOf())
-    {
-        return alloc;
-    }
-
     if (llvm::dyn_cast<llvm::Argument>(alloc))
     {
         return alloc;
     }
 
-    auto type = alloc->getType()->getContainedType(0);
-    return getBuilder()->CreateLoad(type, alloc);
+    if (type->isStructType())
+    {
+        return getBuilder()->CreateBitCast(alloc, getBuilder()->getInt8PtrTy(), varName);
+    }
+
+    auto typeVal = type->codegen(this);
+    return getBuilder()->CreateLoad(typeVal, alloc, varName);
 }
 
 // TODO: String as array of byte
@@ -500,6 +501,23 @@ llvm::Value *weasel::Context::codegen(UnaryExpression *expr)
     }
 
     return ErrorTable::addError(expr->getToken(), "Expression is not valid");
+}
+
+llvm::Value *weasel::Context::codegen(FieldExpression *expr)
+{
+    auto parent = dynamic_cast<VariableExpression *>(expr->getParent());
+    auto field = expr->getField();
+    auto type = dynamic_cast<StructType *>(parent->getType());
+    auto identifier = parent->getIdentifier();
+    auto attr = findAttribute(identifier);
+    auto alloc = attr.getValue();
+
+    auto idx = type->findTypeName(field);
+    auto range = getBuilder()->getInt32(0);
+    auto idxVal = getBuilder()->getInt32(idx);
+    auto inbound = getBuilder()->CreateInBoundsGEP(alloc, {range, idxVal});
+
+    return getBuilder()->CreateLoad(inbound);
 }
 
 llvm::Value *weasel::Context::codegen(StructExpression *expr)

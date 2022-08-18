@@ -81,7 +81,8 @@ namespace weasel
         inline bool isDerivedType() const
         {
             return isPointerType() ||
-                   isArrayType();
+                   isArrayType() ||
+                   isStructType();
         }
 
         inline unsigned getContainedWidth() const { return _containedTypes[0]->getTypeWidth(); }
@@ -112,6 +113,11 @@ namespace weasel
 
         // Check Type
         bool isEqual(Type *type);
+
+        virtual ~Type()
+        {
+            getContainedTypes().clear();
+        }
 
     public:
         virtual llvm::Type *codegen(Context *context);
@@ -163,6 +169,8 @@ namespace weasel
 
             return val / 8;
         }
+
+        ~StructType() {}
 
     public:
         llvm::Type *codegen(Context *context) override;

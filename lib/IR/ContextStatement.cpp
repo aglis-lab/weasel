@@ -79,8 +79,15 @@ llvm::Value *weasel::Context::codegen(DeclarationStatement *expr)
         auto alloc = valueV;
         if (llvm::dyn_cast<llvm::Constant>(valueV) != nullptr)
         {
-            alloc = getBuilder()->CreateAlloca(declTypeV, nullptr);
+            alloc = getBuilder()->CreateAlloca(declTypeV, nullptr, varName);
+
             getBuilder()->CreateMemSet(alloc, valueV, widthVal, llvm::MaybeAlign(0));
+        }
+        else if (llvm::dyn_cast<llvm::BitCastInst>(valueV) != nullptr)
+        {
+            alloc = getBuilder()->CreateAlloca(declTypeV, nullptr, varName);
+
+            getBuilder()->CreateMemCpy(alloc, llvm::MaybeAlign(4), valueV, llvm::MaybeAlign(4), widthVal);
         }
 
         // Add Variable Declaration to symbol table
@@ -94,7 +101,7 @@ llvm::Value *weasel::Context::codegen(DeclarationStatement *expr)
         valueV = getBuilder()->CreateSExtOrTrunc(valueV, declTypeV);
     }
 
-    auto alloc = getBuilder()->CreateAlloca(declTypeV, nullptr);
+    auto alloc = getBuilder()->CreateAlloca(declTypeV, nullptr, varName);
     getBuilder()->CreateStore(valueV, alloc);
 
     // Add Variable Declaration to symbol table

@@ -5,10 +5,10 @@ namespace weasel
 {
     class AnalysisSemantic
     {
-    private:
-        Parser *_parser;
+        // private:
+        //     Parser *_parser;
 
-    public:
-        AnalysisSemantic(Parser *parser) : _parser(parser) {}
+        // public:
+        //     AnalysisSemantic(Parser *parser) : _parser(parser) {}
     };
 } // namespace weasel

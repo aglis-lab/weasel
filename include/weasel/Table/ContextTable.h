@@ -1,14 +1,11 @@
 #pragma once
 
+#include <llvm/IR/Value.h>
+
 #include <list>
 #include <string>
 
 #include "weasel/Table/Table.h"
-
-namespace llvm
-{
-    Value;
-} // namespace llvm
 
 namespace weasel
 {

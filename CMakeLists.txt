@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.15)
 project(weasel VERSION 0.0.1)
 
 # CMAKE LINKER
-set(CMAKE_LINKER ld.lld)
+# set(CMAKE_LINKER ld.lld)
 
 # LLVM SPIRV
 set(LLVM_SPIRV_DIR ${CMAKE_SOURCE_DIR}/llvm-spirv)
@@ -19,6 +19,9 @@ set(WEASEL_DIR ${CMAKE_SOURCE_DIR}/cmake)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+
+add_definitions("-Wno-reorder-ctor")
+add_definitions("-std=c++14")
 
 # LLVM FIND PACKAGE
 find_package(LLVM REQUIRED CONFIG)

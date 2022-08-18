@@ -105,6 +105,7 @@ namespace weasel
         llvm::Value *codegen(DeclarationStatement *expr);
         llvm::Value *codegen(NilLiteralExpression *expr) const;
         llvm::Value *codegen(ArrayExpression *expr);
+        llvm::Value *codegen(FieldExpression *expr);
 
         // Condition Statement
         llvm::Value *codegen(ConditionStatement *expr);

@@ -71,6 +71,8 @@ namespace weasel
         void printDebug(const std::string &val, int shift);
 
     public:
+        virtual ~ASTDebug() {}
+
         virtual void debug(int shift) = 0;
     };
 
@@ -90,11 +92,15 @@ namespace weasel
         inline Type *getType() const { return _type; }
         inline void setType(Type *type) { _type = type; }
         inline bool isNoType() const { return _type == nullptr; }
+        bool isCompoundExpression();
 
-        virtual llvm::Value *codegen(Context *context) = 0;
+        virtual ~Expression()
+        {
+            delete _type;
+        }
 
     public:
-        bool isCompoundExpression();
+        virtual llvm::Value *codegen(Context *context) = 0;
     };
 
     // Global Value
