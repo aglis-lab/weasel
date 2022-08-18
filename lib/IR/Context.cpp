@@ -509,12 +509,25 @@ llvm::Value *weasel::Context::codegen(StructExpression *expr)
         return getBuilder()->getInt8(0);
     }
 
-    auto type = expr->getType()->codegen(this);
-    auto alloc = getBuilder()->CreateAlloca(type);
-    // TODO: Implement for defined fields
+    auto type = dynamic_cast<StructType *>(expr->getType());
+    auto fieldNames = type->getTypeNames();
+    auto typeV = type->codegen(this);
+    auto alloc = getBuilder()->CreateAlloca(typeV);
     for (auto item : expr->getFields())
     {
+        auto idx = type->findTypeName(item->getIdentifier());
+        if (idx == -1)
+        {
+            continue;
+        }
+
+        auto idxStruct = getBuilder()->getInt32(0);
+        auto idxVal = getBuilder()->getInt32(idx);
+        auto inbound = getBuilder()->CreateInBoundsGEP(alloc, {idxStruct, idxVal});
+        auto val = item->getExpression()->codegen(this);
+
+        getBuilder()->CreateStore(val, inbound);
     }
 
-    return getBuilder()->CreateBitCast(alloc, getBuilder()->getInt8PtrTy());
+    return alloc;
 }

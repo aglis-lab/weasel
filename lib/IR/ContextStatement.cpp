@@ -73,14 +73,18 @@ llvm::Value *weasel::Context::codegen(DeclarationStatement *expr)
 
     // TODO: LLVM Declare Struct Metadata
     // call void @llvm.dbg.declare(metadata %struct.Person* %3, metadata !20, metadata !DIExpression()), !dbg !28
-    auto alloc = getBuilder()->CreateAlloca(declTypeV, nullptr);
-
-    // Add Variable Declaration to symbol table
-    addAttribute(ContextAttribute::get(varName, alloc, AttributeKind::Variable));
-
     if (declType->isStructType())
     {
-        getBuilder()->CreateMemSet(alloc, valueV, dynamic_cast<StructType *>(declType)->getStructTypeWidth(), llvm::MaybeAlign(0));
+        auto widthVal = dynamic_cast<StructType *>(declType)->getStructTypeWidth();
+        auto alloc = valueV;
+        if (llvm::dyn_cast<llvm::Constant>(valueV) != nullptr)
+        {
+            alloc = getBuilder()->CreateAlloca(declTypeV, nullptr);
+            getBuilder()->CreateMemSet(alloc, valueV, widthVal, llvm::MaybeAlign(0));
+        }
+
+        // Add Variable Declaration to symbol table
+        addAttribute(ContextAttribute::get(varName, alloc, AttributeKind::Variable));
 
         return nullptr;
     }
@@ -90,7 +94,11 @@ llvm::Value *weasel::Context::codegen(DeclarationStatement *expr)
         valueV = getBuilder()->CreateSExtOrTrunc(valueV, declTypeV);
     }
 
+    auto alloc = getBuilder()->CreateAlloca(declTypeV, nullptr);
     getBuilder()->CreateStore(valueV, alloc);
+
+    // Add Variable Declaration to symbol table
+    addAttribute(ContextAttribute::get(varName, alloc, AttributeKind::Variable));
 
     return nullptr;
 }

@@ -129,6 +129,17 @@ namespace weasel
         static StructType *get(const std::string &structName) { return new StructType(structName); }
 
     public:
+        std::vector<std::string> getTypeNames() const { return _typeNames; }
+        int findTypeName(const std::string &typeName)
+        {
+            auto exist = std::find(_typeNames.begin(), _typeNames.end(), typeName);
+            if (exist == _typeNames.end())
+            {
+                return -1;
+            }
+
+            return exist - _typeNames.begin();
+        }
         void addField(const std::string &fieldName, Type *type)
         {
             _typeNames.push_back(fieldName);

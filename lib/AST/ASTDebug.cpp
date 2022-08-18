@@ -101,7 +101,7 @@ void weasel::StructExpression::debug(int shift)
     val += "{";
     for (auto &item : this->getFields())
     {
-        val += item.getIdentifier() + ",";
+        val += item->getIdentifier() + ",";
     }
     val += "}";
 

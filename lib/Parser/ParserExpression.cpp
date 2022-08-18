@@ -191,8 +191,7 @@ weasel::Expression *weasel::Parser::parseStructExpression()
     }
 
     getNextToken(true); // eat '{'
-    std::vector<StructExpression::StructField> fields;
-    std::cout << "Token : " << getCurrentToken().getValue() << std::endl;
+    std::vector<StructExpression::StructField *> fields;
     while (!getCurrentToken().isCloseCurly())
     {
         auto idenToken = getCurrentToken();
@@ -213,6 +212,9 @@ weasel::Expression *weasel::Parser::parseStructExpression()
         {
             return ErrorTable::addError(exprToken, "Expected Expression");
         }
+
+        auto field = new StructExpression::StructField(idenToken.getValue(), expr);
+        fields.push_back(field);
 
         if (getCurrentToken().isCloseCurly())
         {

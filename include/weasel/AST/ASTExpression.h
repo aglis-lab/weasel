@@ -135,12 +135,12 @@ namespace weasel
         };
 
     private:
-        std::vector<StructField> _fields;
+        std::vector<StructField *> _fields;
 
     public:
-        StructExpression(Token token, StructType *type, const std::vector<StructField> &fields) : Expression(token, type), _fields(fields) {}
+        StructExpression(Token token, StructType *type, const std::vector<StructField *> &fields) : Expression(token, type), _fields(fields) {}
 
-        inline std::vector<StructField> getFields() const { return _fields; }
+        inline std::vector<StructField *> getFields() const { return _fields; }
 
     public:
         llvm::Value *codegen(Context *context) override;
