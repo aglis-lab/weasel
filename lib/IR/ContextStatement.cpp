@@ -65,6 +65,15 @@ llvm::Value *weasel::Context::codegen(DeclarationStatement *expr)
         return ErrorTable::addError(valueExpr->getToken(), "Cannot assign to different type");
     }
 
+    // Check if StructExpression
+    {
+        auto temp = dynamic_cast<StructExpression *>(valueExpr);
+        if (temp != nullptr)
+        {
+            temp->setPreferConstant(true);
+        }
+    }
+
     auto valueV = valueExpr->codegen(this);
     if (valueV == nullptr)
     {
@@ -75,18 +84,17 @@ llvm::Value *weasel::Context::codegen(DeclarationStatement *expr)
     // call void @llvm.dbg.declare(metadata %struct.Person* %3, metadata !20, metadata !DIExpression()), !dbg !28
     if (declType->isStructType())
     {
-        auto widthVal = dynamic_cast<StructType *>(declType)->getStructTypeWidth();
+        auto widthVal = declType->getTypeWidthByte();
         auto alloc = valueV;
-        if (llvm::dyn_cast<llvm::Constant>(valueV) != nullptr)
+
+        if (llvm::dyn_cast<llvm::Constant>(valueV))
         {
             alloc = getBuilder()->CreateAlloca(declTypeV, nullptr, varName);
-
             getBuilder()->CreateMemSet(alloc, valueV, widthVal, llvm::MaybeAlign(0));
         }
-        else if (llvm::dyn_cast<llvm::BitCastInst>(valueV) != nullptr)
+        else if (llvm::dyn_cast<llvm::GlobalVariable>(valueV))
         {
             alloc = getBuilder()->CreateAlloca(declTypeV, nullptr, varName);
-
             getBuilder()->CreateMemCpy(alloc, llvm::MaybeAlign(4), valueV, llvm::MaybeAlign(4), widthVal);
         }
 

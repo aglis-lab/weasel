@@ -201,13 +201,13 @@ weasel::Expression *weasel::Parser::parseStructExpression()
             return ErrorTable::addError(idenToken, "Expected Identifier");
         }
 
-        auto colonToken = getNextToken();
+        auto colonToken = getNextToken(true);
         if (!colonToken.isColon())
         {
             return ErrorTable::addError(colonToken, "Expected Colon");
         }
 
-        auto exprToken = getNextToken(); // eat ':'
+        auto exprToken = getNextToken(true); // eat ':'
         auto expr = parseExpression();
         if (expr == nullptr)
         {
@@ -216,6 +216,8 @@ weasel::Expression *weasel::Parser::parseStructExpression()
 
         auto field = new StructExpression::StructField(idenToken.getValue(), expr);
         fields.push_back(field);
+
+        ignoreNewline();
 
         if (getCurrentToken().isCloseCurly())
         {
@@ -227,7 +229,7 @@ weasel::Expression *weasel::Parser::parseStructExpression()
             return ErrorTable::addError(exprToken, "Expected Comma");
         }
 
-        getNextToken(); // eat ','
+        getNextToken(true); // eat ','
     }
 
     getNextToken(); // eat '}'

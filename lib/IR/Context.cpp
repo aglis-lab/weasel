@@ -528,10 +528,77 @@ llvm::Value *weasel::Context::codegen(StructExpression *expr)
     }
 
     auto type = dynamic_cast<StructType *>(expr->getType());
-    auto fieldNames = type->getTypeNames();
+    auto isConstant = expr->getIsPreferConstant() && type->isPreferConstant();
+    auto fields = expr->getFields();
+    if (isConstant)
+    {
+        for (auto item : fields)
+        {
+            if (!dynamic_cast<LiteralExpression *>(item->getExpression()))
+            {
+                isConstant = false;
+                break;
+            }
+        }
+    }
+
+    auto typeFields = type->getContainedTypes();
+    auto fieldSize = typeFields.size();
+    if (isConstant)
+    {
+        std::vector<llvm::Constant *> arr(fieldSize, nullptr);
+        for (auto &item : fields)
+        {
+            auto idx = type->findTypeName(item->getIdentifier());
+            if (idx == -1)
+            {
+                continue;
+            }
+
+            arr[idx] = llvm::dyn_cast<llvm::Constant>(item->getExpression()->codegen(this));
+        }
+
+        for (int i = 0; i < fieldSize; i++)
+        {
+            if (arr[i] != nullptr)
+            {
+                continue;
+            }
+
+            auto typeField = typeFields[i];
+            auto typeFieldV = typeField->codegen(this);
+            if (typeField->isPrimitiveType())
+            {
+                if (typeField->isFloatType() || typeField->isDoubleType())
+                {
+                    arr[i] = llvm::ConstantFP::get(typeFieldV, 0);
+                }
+                else
+                {
+                    arr[i] = llvm::ConstantInt::get(typeFieldV, 0);
+                }
+            }
+            else
+            {
+                arr[i] = llvm::ConstantStruct::get(llvm::dyn_cast<llvm::StructType>(typeFieldV), {});
+            }
+        }
+
+        auto typeV = llvm::dyn_cast<llvm::StructType>(type->codegen(this));
+        auto constantV = llvm::ConstantStruct::get(typeV, arr);
+        auto val = new llvm::GlobalVariable(*getModule(), typeV, true, llvm::GlobalValue::LinkageTypes::PrivateLinkage, constantV);
+
+        val->setUnnamedAddr(llvm::GlobalValue::UnnamedAddr::Global);
+
+        return val;
+    }
+
     auto typeV = type->codegen(this);
     auto alloc = getBuilder()->CreateAlloca(typeV);
-    for (auto item : expr->getFields())
+
+    getBuilder()->CreateMemSet(alloc, getBuilder()->getInt8(0), type->getTypeWidthByte(), llvm::MaybeAlign(4));
+
+    for (auto item : fields)
     {
         auto idx = type->findTypeName(item->getIdentifier());
         if (idx == -1)

@@ -53,7 +53,31 @@ namespace weasel
 
     public:
         inline TypeID getTypeID() const { return _typeId; }
-        inline unsigned getTypeWidth() const { return _width; }
+        unsigned getTypeWidth()
+        {
+            if (isStructType())
+            {
+                auto val = 0;
+                for (auto item : getContainedTypes())
+                {
+                    val += item->getTypeWidth();
+                }
+
+                return val;
+            }
+
+            if (isPointerType())
+            {
+                return 64;
+            }
+
+            return _width;
+        }
+        inline unsigned getTypeWidthByte()
+        {
+            return getTypeWidth() / 8;
+        }
+
         inline bool isSigned() const { return _isSigned; }
         inline bool isSpread() const { return _isSpread; }
 
@@ -70,8 +94,7 @@ namespace weasel
             return isBooleanType() ||
                    isFloatType() ||
                    isDoubleType() ||
-                   isIntegerType() ||
-                   isVoidType();
+                   isIntegerType();
         }
 
         inline bool isPointerType() const { return _typeId == TypeID::PointerType; }
@@ -152,22 +175,17 @@ namespace weasel
             addContainedType(type);
         }
 
-        inline unsigned getStructTypeWidth() const
+        inline bool isPreferConstant()
         {
-            auto val = 0;
-            for (auto item : getContainedTypes())
+            for (auto &item : getContainedTypes())
             {
-                if (item->isPointerType())
+                if (item->isArrayType())
                 {
-                    val += 64;
-                }
-                else
-                {
-                    val += item->getTypeWidth();
+                    return false;
                 }
             }
 
-            return val / 8;
+            return true;
         }
 
         ~StructType() {}

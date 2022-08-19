@@ -155,11 +155,15 @@ namespace weasel
 
     private:
         std::vector<StructField *> _fields;
+        bool _isPreferConstant = false;
 
     public:
         StructExpression(Token token, StructType *type, const std::vector<StructField *> &fields) : Expression(token, type), _fields(fields) {}
 
         inline std::vector<StructField *> getFields() const { return _fields; }
+
+        inline void setPreferConstant(bool v) { _isPreferConstant = v; }
+        inline bool getIsPreferConstant() const { return _isPreferConstant; }
 
     public:
         llvm::Value *codegen(Context *context) override;
