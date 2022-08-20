@@ -39,17 +39,10 @@ bool weasel::Codegen::compile()
         }
 
         auto obj = item->codegen(_context);
-        if (obj == nullptr)
-        {
-            continue;
-        }
+        assert(obj != nullptr);
 
         auto fun = llvm::dyn_cast<llvm::Function>(obj);
-        if (fun == nullptr)
-        {
-            _err = "Cannot codegen function " + identifier + "\n";
-            return false;
-        }
+        assert(fun != nullptr);
 
         if (llvm::verifyFunction(*fun, &llvm::errs()))
         {
@@ -64,22 +57,19 @@ bool weasel::Codegen::compile()
     auto targetTriple = llvm::sys::getDefaultTargetTriple();
     auto features = "";
     auto dataLayout = llvm::DataLayout(llvm::StringRef());
-    auto *target = llvm::TargetRegistry::lookupTarget(targetTriple, _err);
-    if (!target)
-        return false;
+    auto target = llvm::TargetRegistry::lookupTarget(targetTriple, _err);
+    assert(target != nullptr);
 
     auto targetOpts = llvm::TargetOptions();
     auto rm = llvm::Optional<llvm::Reloc::Model>();
-    auto *targetMachine = target->createTargetMachine(targetTriple, cpu, features, targetOpts, rm);
+    auto targetMachine = target->createTargetMachine(targetTriple, cpu, features, targetOpts, rm);
 
     dataLayout = targetMachine->createDataLayout();
 
     getModule()->setTargetTriple(targetTriple);
     getModule()->setDataLayout(dataLayout);
 
-    auto meta = Metadata(getContext());
-    meta.initModule(getModule());
-
+    Metadata(getContext()).initModule(getModule());
     if (llvm::verifyModule(*getModule()))
     {
         _err = "Error when constructing module\n";

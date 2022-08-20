@@ -1,0 +1,27 @@
+{
+  "name": "weasel",
+  "version": "1.0.0",
+  "description": "Weasel Language named after name of animal https://en.wikipedia.org/wiki/Weasel",
+  "main": "index.js",
+  "directories": {
+    "example": "examples",
+    "lib": "lib",
+    "test": "test"
+  },
+  "scripts": {
+    "llvm": "./config/llvm.sh",
+    "spirv": "./config/spirv.sh",
+    "spirv-cross": "./config/spirv-cross.sh",
+
+    "build": "./config/build.sh",
+
+    "test-weasel": "./config/test-weasel.sh test/main.we temp/test",
+    "test-cross": "./config/test-cross.sh"
+  },
+  "repository": {
+    "type": "git",
+    "url": "aglis:aglis-lab/weasel.git"
+  },
+  "author": "zaem",
+  "license": "ISC"
+}

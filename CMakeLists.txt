@@ -7,9 +7,14 @@ project(weasel VERSION 0.0.1)
 # set(CMAKE_LINKER ld.lld)
 
 # LLVM SPIRV
-set(LLVM_SPIRV_DIR ${CMAKE_SOURCE_DIR}/llvm-spirv)
+set(LLVM_SPIRV_DIR ${CMAKE_SOURCE_DIR}/spirv)
 set(LLVM_SPIRV_INCLUDE_DIR ${LLVM_SPIRV_DIR}/include)
-# set(LLVM_SPIRV_LIB_DIR ${LLVM_SPIRV_DIR}/build/lib/SPIRV)
+set(LLVM_SPIRV_LIB_DIR ${LLVM_SPIRV_DIR}/build/lib/SPIRV)
+
+# SPIRV-CROSS
+set(SPIRV_CROSS_DIR ${CMAKE_SOURCE_DIR}/spirv-cross)
+set(SPIRV_CROSS_INCLUDE ${SPIRV_CROSS_DIR})
+set(SPIRV_CROSS_LIB_DIR ${SPIRV_CROSS_DIR}/build)
 
 # LLVM
 set(LLVM_DIR /opt/homebrew/opt/llvm@13/lib/cmake/llvm/)
@@ -19,6 +24,10 @@ set(WEASEL_DIR ${CMAKE_SOURCE_DIR}/cmake)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+
+# Set Weasel Libs
+set(WEASEL_LIBS WeaselLib)
+# ${LLVM_SPIRV_LIB_DIR}/libLLVMSPIRVLib.a
 
 add_definitions("-Wno-reorder-ctor")
 add_definitions("-std=c++14")

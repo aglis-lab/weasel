@@ -17,9 +17,9 @@ namespace weasel
 
     private:
         // Get and Next Buffer
-        inline char *getNextBuffer(size_t slide = 1);
+        char *getNextBuffer(size_t slide = 1);
         inline char checkNextBuffer() const { return *(_currentBuffer + 1); }
-        inline void setCurrentBuffer(char *buffer);
+        inline void setCurrentBuffer(char *buffer) { _currentBuffer -= _currentBuffer - buffer; }
 
         bool compareBuffer(char *startBuffer, char *endBuffer, const char *compareBuffer);
         bool isIdentifier(char c, bool num = false);

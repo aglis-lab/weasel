@@ -31,13 +31,13 @@ llvm::Value *weasel::Context::codegen(DeclarationStatement *expr)
         // Default Value for integer
         if (declType->isIntegerType())
         {
-            auto constantVal = llvm::ConstantInt::get(declTypeV, 0, declType->isSigned());
+            constantVal = llvm::ConstantInt::get(declTypeV, 0, declType->isSigned());
         }
 
         // Default Value for Float
         if (declType->isFloatType())
         {
-            auto constantVal = llvm::ConstantFP::get(declTypeV, 0);
+            constantVal = llvm::ConstantFP::get(declTypeV, 0);
         }
 
         // Store Default Value
@@ -87,15 +87,15 @@ llvm::Value *weasel::Context::codegen(DeclarationStatement *expr)
         auto widthVal = declType->getTypeWidthByte();
         auto alloc = valueV;
 
-        if (llvm::dyn_cast<llvm::Constant>(valueV))
-        {
-            alloc = getBuilder()->CreateAlloca(declTypeV, nullptr, varName);
-            getBuilder()->CreateMemSet(alloc, valueV, widthVal, llvm::MaybeAlign(0));
-        }
-        else if (llvm::dyn_cast<llvm::GlobalVariable>(valueV))
+        if (llvm::dyn_cast<llvm::GlobalVariable>(valueV))
         {
             alloc = getBuilder()->CreateAlloca(declTypeV, nullptr, varName);
             getBuilder()->CreateMemCpy(alloc, llvm::MaybeAlign(4), valueV, llvm::MaybeAlign(4), widthVal);
+        }
+        else if (llvm::dyn_cast<llvm::ConstantInt>(valueV))
+        {
+            alloc = getBuilder()->CreateAlloca(declTypeV, nullptr, varName);
+            getBuilder()->CreateMemSet(alloc, valueV, widthVal, llvm::MaybeAlign(0));
         }
 
         // Add Variable Declaration to symbol table
@@ -138,7 +138,7 @@ llvm::Value *weasel::Context::codegen(ConditionStatement *expr)
 {
     auto conditions = expr->getConditions();
     auto statements = expr->getStatements();
-    auto count = conditions.size();
+    auto count = (int)conditions.size();
     auto parentFun = getBuilder()->GetInsertBlock()->getParent();
     auto endBlock = llvm::BasicBlock::Create(*getContext());
 
@@ -152,7 +152,6 @@ llvm::Value *weasel::Context::codegen(ConditionStatement *expr)
             return ErrorTable::addError(condition->getToken(), "Expected Boolean Type");
         }
 
-        auto currentBlock = getBuilder()->GetInsertBlock();
         auto bodyBlock = llvm::BasicBlock::Create(*getContext(), "", parentFun);
         auto nextBlock = llvm::BasicBlock::Create(*getContext());
 
@@ -213,7 +212,6 @@ llvm::Value *weasel::Context::codegen(LoopingStatement *expr)
     auto currentBlock = getBuilder()->GetInsertBlock();
     auto bodyBlock = llvm::BasicBlock::Create(*getContext());
     auto endBlock = llvm::BasicBlock::Create(*getContext());
-    auto initialBlock = llvm::BasicBlock::Create(*getContext());
     auto conditionBlock = llvm::BasicBlock::Create(*getContext());
     auto countBlock = llvm::BasicBlock::Create(*getContext());
     auto parentFun = currentBlock->getParent();

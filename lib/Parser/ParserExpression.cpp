@@ -143,7 +143,6 @@ weasel::Expression *weasel::Parser::parseIdentifierExpression()
     return new VariableExpression(identToken, identifier, attr.getValue());
 }
 
-// TODO: Need to consume last ')'
 weasel::Expression *weasel::Parser::parseParenExpression()
 {
     getNextToken(); // eat (
@@ -158,7 +157,8 @@ weasel::Expression *weasel::Parser::parseParenExpression()
         return ErrorTable::addError(getCurrentToken(), "Expected )");
     }
 
-    // Token ) will eated next time
+    getNextToken(); // eat ')'
+
     return expr;
 }
 
@@ -239,29 +239,51 @@ weasel::Expression *weasel::Parser::parseStructExpression()
 
 weasel::Expression *weasel::Parser::parsePrimaryExpression()
 {
+    auto possibleHaveField = getCurrentToken().isIdentifier() ||
+                             getCurrentToken().isOpenParen() ||
+                             getCurrentToken().isOpenSquare();
+
+    if (possibleHaveField)
+    {
+        weasel::Expression *expr = nullptr;
+
+        // Identifier
+        // Call or Variable Expression or Struct Expression
+        if (getCurrentToken().isIdentifier())
+        {
+            if (findUserType(getCurrentToken().getValue()) != nullptr)
+            {
+                return parseStructExpression();
+            }
+
+            expr = parseIdentifierExpression();
+        }
+
+        // Parentise Expression
+        else if (getCurrentToken().isOpenParen())
+        {
+            expr = parseParenExpression();
+        }
+
+        // Array Expression
+        else if (getCurrentToken().isOpenSquare())
+        {
+            expr = parseArrayExpression();
+        }
+
+        // Check for possible Field Expression
+        if (expr != nullptr && getCurrentToken().isDot())
+        {
+            return parseFieldExpression(expr);
+        }
+
+        return expr;
+    }
+
+    // Literal Expression
     if (getCurrentToken().isLiteral())
     {
         return parseLiteralExpression();
-    }
-
-    // Struct Expression
-    if (getCurrentToken().isIdentifier())
-    {
-        auto userType = findUserType(getCurrentToken().getValue());
-        if (userType != nullptr)
-        {
-            return parseStructExpression();
-        }
-    }
-
-    if (getCurrentToken().isIdentifier())
-    {
-        return parseIdentifierExpression();
-    }
-
-    if (getCurrentToken().isOpenParen())
-    {
-        return parseParenExpression();
     }
 
     // Unary Expression
@@ -277,7 +299,7 @@ weasel::Expression *weasel::Parser::parsePrimaryExpression()
             return ErrorTable::addError(getCurrentToken(), "Expected expression after address of");
         }
 
-        auto op = UnaryExpression::Borrow;
+        UnaryExpression::Operator op;
         switch (token.getTokenKind())
         {
         case TokenKind::TokenOperatorStar:
@@ -289,15 +311,11 @@ weasel::Expression *weasel::Parser::parsePrimaryExpression()
         case TokenKind::TokenOperatorNot:
             op = UnaryExpression::Not;
             break;
+        default:
+            op = UnaryExpression::Borrow;
         }
 
         return new UnaryExpression(token, op, expr);
-    }
-
-    // Array Expression
-    if (getCurrentToken().isOpenSquare())
-    {
-        return parseArrayExpression();
     }
 
     return ErrorTable::addError(getCurrentToken(), "Expected expression");
@@ -311,51 +329,7 @@ weasel::Expression *weasel::Parser::parseExpression()
         return ErrorTable::addError(getCurrentToken(), "Expected LHS");
     }
 
-    // Check if Field Expression
-    if (getCurrentToken().isDot())
-    {
-        return parseFieldExpression(lhs);
-    }
-
     return parseBinaryOperator(__defaultPrecOrder, lhs);
-}
-
-weasel::Expression *weasel::Parser::parseFieldExpression(Expression *lhs)
-{
-    auto type = lhs->getType();
-    if (type->isPointerType())
-    {
-        type = type->getContainedType();
-    }
-
-    if (!type->isStructType())
-    {
-        getNextTokenUntil(TokenKind::TokenSpaceNewline);
-        return ErrorTable::addError(lhs->getToken(), "Expected Struct");
-    }
-
-    auto token = getCurrentToken();
-    auto identToken = getNextToken();
-    if (!identToken.isIdentifier())
-    {
-        getNextTokenUntil(TokenKind::TokenSpaceNewline);
-        return ErrorTable::addError(getCurrentToken(), "Expected Identifier for Field Expression");
-    }
-
-    getNextToken(); // eat 'identifier'
-
-    // TODO: Check on Analysis Semantic
-    // Checking type field
-    auto structType = dynamic_cast<StructType *>(type);
-    auto idx = structType->findTypeName(identToken.getValue());
-    if (idx == -1)
-    {
-        return ErrorTable::addError(getCurrentToken(), "Field " + identToken.getValue() + " not found");
-    }
-
-    auto typeField = structType->getContainedTypes()[idx];
-
-    return new FieldExpression(token, identToken.getValue(), lhs, typeField);
 }
 
 weasel::Expression *weasel::Parser::parseBinaryOperator(unsigned precOrder, Expression *lhs)
@@ -381,7 +355,6 @@ weasel::Expression *weasel::Parser::parseBinaryOperator(unsigned precOrder, Expr
             return ErrorTable::addError(getCurrentToken(), "Expected RHS Expression 1");
         }
 
-        getNextToken(); // eat 'rhs'
         rhs = parseBinaryOperator(prec.order, rhs);
         if (!rhs)
         {
@@ -390,6 +363,34 @@ weasel::Expression *weasel::Parser::parseBinaryOperator(unsigned precOrder, Expr
 
         lhs = new BinaryExpression(binOp, lhs, rhs);
     }
+}
+
+weasel::Expression *weasel::Parser::parseFieldExpression(Expression *lhs)
+{
+    auto type = lhs->getType();
+    auto token = getCurrentToken();
+    auto identToken = getNextToken();
+    if (!identToken.isIdentifier())
+    {
+        getNextTokenUntil(TokenKind::TokenSpaceNewline);
+
+        return ErrorTable::addError(getCurrentToken(), "Expected Identifier for Field Expression");
+    }
+
+    getNextToken(); // eat 'identifier'
+
+    // TODO: Check on Analysis Semantic
+    // Checking type field
+    auto structType = dynamic_cast<StructType *>(type);
+    auto idx = structType->findTypeName(identToken.getValue());
+    if (idx == -1)
+    {
+        return ErrorTable::addError(getCurrentToken(), "Field " + identToken.getValue() + " not found");
+    }
+
+    auto typeField = structType->getContainedTypes()[idx];
+
+    return new FieldExpression(token, identToken.getValue(), lhs, typeField);
 }
 
 weasel::Expression *weasel::Parser::parseReturnExpression()

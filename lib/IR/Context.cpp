@@ -22,7 +22,7 @@ llvm::Value *weasel::Context::codegen(weasel::Function *funAST)
     auto funType = funAST->getType();
     auto isVararg = funType->isSpread();
     auto funArgs = funType->getContainedTypes();
-    auto argsLength = funArgs.size() - (isVararg ? 1 : 0);
+    auto argsLength = (int)funArgs.size() - (isVararg ? 1 : 0);
     auto args = std::vector<llvm::Type *>(argsLength);
     for (int index = 0; index < argsLength; index++)
     {
@@ -52,7 +52,6 @@ llvm::Value *weasel::Context::codegen(weasel::Function *funAST)
         for (auto &item : funLLVM->args())
         {
             auto argExpr = funArgs[idx++];
-            auto paramTy = argExpr;
             auto argName = argExpr->getIdentifier();
 
             item.setName(argName);
@@ -506,18 +505,19 @@ llvm::Value *weasel::Context::codegen(UnaryExpression *expr)
 llvm::Value *weasel::Context::codegen(FieldExpression *expr)
 {
     auto parent = dynamic_cast<VariableExpression *>(expr->getParent());
-    auto field = expr->getField();
     auto type = dynamic_cast<StructType *>(parent->getType());
-    auto identifier = parent->getIdentifier();
-    auto attr = findAttribute(identifier);
-    auto alloc = attr.getValue();
+    assert(type != nullptr);
 
+    auto typeV = type->codegen(this);
+    auto attr = findAttribute(parent->getIdentifier());
+    auto field = expr->getField();
     auto idx = type->findTypeName(field);
+
     auto range = getBuilder()->getInt32(0);
     auto idxVal = getBuilder()->getInt32(idx);
-    auto inbound = getBuilder()->CreateInBoundsGEP(alloc, {range, idxVal});
+    auto inbound = getBuilder()->CreateInBoundsGEP(typeV, attr.getValue(), {range, idxVal});
 
-    return getBuilder()->CreateLoad(inbound);
+    return getBuilder()->CreateLoad(inbound->getType()->getPointerElementType(), inbound);
 }
 
 llvm::Value *weasel::Context::codegen(StructExpression *expr)
@@ -543,7 +543,7 @@ llvm::Value *weasel::Context::codegen(StructExpression *expr)
     }
 
     auto typeFields = type->getContainedTypes();
-    auto fieldSize = typeFields.size();
+    auto fieldSize = (int)typeFields.size();
     if (isConstant)
     {
         std::vector<llvm::Constant *> arr(fieldSize, nullptr);
@@ -608,7 +608,7 @@ llvm::Value *weasel::Context::codegen(StructExpression *expr)
 
         auto idxStruct = getBuilder()->getInt32(0);
         auto idxVal = getBuilder()->getInt32(idx);
-        auto inbound = getBuilder()->CreateInBoundsGEP(alloc, {idxStruct, idxVal});
+        auto inbound = getBuilder()->CreateInBoundsGEP(typeV, alloc, {idxStruct, idxVal});
         auto val = item->getExpression()->codegen(this);
 
         getBuilder()->CreateStore(val, inbound);

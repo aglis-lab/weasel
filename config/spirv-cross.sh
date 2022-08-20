@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# GITHUB LLVM SPIRV-CROSS
+# LLVM_SPIRV_CROSS_BRANCH=
+LLVM_SPIRV_CROSS_SOURCE=spirv-cross
+LLVM_SPIRV_CROSS_URL=https://github.com/KhronosGroup/SPIRV-Cross.git
+
+if [ ! -d "$LLVM_SPIRV_CROSS_SOURCE" ]
+then
+    git clone $LLVM_SPIRV_CROSS_URL $LLVM_SPIRV_CROSS_SOURCE
+    mkdir $LLVM_SPIRV_CROSS_SOURCE/build
+fi
+
+cd $LLVM_SPIRV_CROSS_SOURCE/build
+cmake .. -DCMAKE_GENERATOR:INTERNAL=Ninja -DPYTHON_EXECUTABLE:FILEPATH=/usr/bin/python3
+cmake --build .

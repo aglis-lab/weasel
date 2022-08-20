@@ -53,11 +53,6 @@ char *weasel::Lexer::getNextBuffer(size_t slide)
     return _currentBuffer;
 }
 
-void weasel::Lexer::setCurrentBuffer(char *buffer)
-{
-    _currentBuffer -= _currentBuffer - buffer;
-}
-
 bool weasel::Lexer::expect(weasel::TokenKind kind)
 {
     auto lastBuffer = _currentBuffer;

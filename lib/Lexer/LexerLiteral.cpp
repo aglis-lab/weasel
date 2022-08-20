@@ -2,11 +2,11 @@
 
 weasel::Token weasel::Lexer::getStringLiteral()
 {
-    auto *start = getNextBuffer(); // eat double quote (")
+    auto start = getNextBuffer(); // eat double quote (")
     while (*getNextBuffer() != '"')
         ;
 
-    auto *endString = _currentBuffer;
+    auto endString = _currentBuffer;
 
     getNextBuffer(); // eat double quote (")
     return createToken(TokenKind::TokenLitString, start, endString);

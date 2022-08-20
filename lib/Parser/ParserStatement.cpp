@@ -60,7 +60,6 @@ weasel::Expression *weasel::Parser::parseStatement()
 
 weasel::StructType *weasel::Parser::parseStruct()
 {
-    auto token = getCurrentToken();
     if (!getNextToken().isIdentifier())
     {
         return ErrorTable::addError(getCurrentToken(), "Invalid Struct expression");

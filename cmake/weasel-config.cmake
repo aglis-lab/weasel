@@ -1,4 +1,5 @@
 set(WEASEL_LIBS
+    ${WEASEL_LIBS}
     # AMD GPU
     LLVMAMDGPUInfo
     LLVMAMDGPUAsmParser
@@ -137,10 +138,4 @@ set(WEASEL_LIBS
 
     # LLVM to SPIRV
     # LLVMSPIRVLib
-
-    # Weasel Library
-    WeaselLib
-
-    # LLVM SPIRV
-    # ${LLVM_SPIRV_LIB_DIR}/libLLVMSPIRVLib.a
 )

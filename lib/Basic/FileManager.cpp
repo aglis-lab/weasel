@@ -11,7 +11,7 @@
 #endif /* !_WIN32 && !HAVE_MMAP */
 
 #include <iostream>
-#include "weasel/basic/filemanager.h"
+#include "weasel/Basic/FileManager.h"
 
 // instead of using ifstream
 weasel::FileManager::FileManager(const char *filePath)
@@ -42,7 +42,7 @@ char *weasel::FileManager::mapFile(const char *path, size_t *length)
     data = (char *)MapViewOfFile(hMap, FILE_MAP_READ, 0, 0, size);
 
     /* We can call CloseHandle here, but it will not be closed until
-	 * we unmap the view */
+     * we unmap the view */
     CloseHandle(hMap);
 fail:
     CloseHandle(hFile);

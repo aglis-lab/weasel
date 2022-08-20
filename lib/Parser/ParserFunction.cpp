@@ -86,7 +86,6 @@ weasel::Function *weasel::Parser::parseDeclareFunction()
             return ErrorTable::addError(getCurrentToken(), "Variable number argument should be final argument");
         }
 
-        auto idenToken = getCurrentToken();
         if (!getCurrentToken().isIdentifier())
         {
             return ErrorTable::addError(getCurrentToken(), "Expected identifier in function argument");
