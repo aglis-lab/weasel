@@ -3,10 +3,8 @@ cmake-build-debug/
 clang/
 third-party/
 temp/*
-test/*
 
 !temp/.gitkeep
-!test/.gitkeep
 
 build-llvm/
 build-spirv/

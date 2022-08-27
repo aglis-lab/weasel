@@ -15,8 +15,10 @@
 
     "build": "./config/build.sh",
 
-    "test-weasel": "./config/test-weasel.sh test/main.we temp/test",
-    "test-cross": "./config/test-cross.sh"
+    "weasel-test": "./config/test-weasel.sh test/main.we temp/test",
+    "cross-test": "./build/test/cross-test/cross-test",
+    "metal-test": "./build/test/metal-test/metal-test",
+    "vulkan-test": "./build/test/vulkan-test/vulkan-test"
   },
   "repository": {
     "type": "git",

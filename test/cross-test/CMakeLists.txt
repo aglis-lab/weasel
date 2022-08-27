@@ -1,7 +1,8 @@
 find_package(WEASEL)
 
 include_directories(${SPIRV_CROSS_INCLUDE})
-add_executable(cross cross.cpp)
+
+add_executable(cross-test main.cpp)
 
 set(WEASEL_LIBS
     ${WEASEL_LIBS}
@@ -15,4 +16,4 @@ set(WEASEL_LIBS
     ${SPIRV_CROSS_LIB_DIR}/libspirv-cross-util.a
 )
 
-target_link_libraries(cross ${WEASEL_LIBS})
+target_link_libraries(cross-test ${WEASEL_LIBS})

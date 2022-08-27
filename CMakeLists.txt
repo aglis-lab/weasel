@@ -56,4 +56,4 @@ include_directories(include)
 # Weasel Directories
 add_subdirectory(tools)
 add_subdirectory(lib)
-# add_subdirectory(libparallel)
+add_subdirectory(test)
