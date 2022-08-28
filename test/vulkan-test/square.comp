@@ -4,12 +4,12 @@ layout (local_size_x = 10) in;
 
 layout (binding = 0) readonly buffer InVal
 {
-    int data[10];
+    int data[];
 } inVal;
 
 layout (binding = 1) writeonly buffer OutVal
 {
-    int data[10];
+    int data[];
 } outVal;
 
 void main()
