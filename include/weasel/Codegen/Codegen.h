@@ -15,16 +15,16 @@ namespace weasel
         Parser *_parser;
         std::string _err;
 
-    private:
-        inline std::list<Function *> getFunctions() const { return _parser->getFunctions(); }
-
     public:
         Codegen(Context *context, Parser *parser);
 
-        bool compile();
+        bool compile(std::string targetTriple = "");
 
         void createObject(char *outputFile) const;
         void createIR(char *outputFile) const;
+
+        inline std::list<Function *> getFunctions() const { return _parser->getFunctions(); }
+        inline std::list<StructType *> getUserTypes() const { return _parser->getUserTypes(); }
 
     public:
         llvm::Module *getModule() const { return _context->getModule(); }

@@ -12,11 +12,17 @@ LLVM_SPIRV_URL=https://github.com/KhronosGroup/SPIRV-LLVM-Translator.git
 if [ ! -d "$LLVM_SPIRV_SOURCE" ]
 then
     git clone -b $LLVM_SPIRV_BRANCH $LLVM_SPIRV_URL $LLVM_SPIRV_SOURCE
+fi
+
+if [ ! -d "$LLVM_SPIRV_SOURCE/buid" ]
+then
     mkdir $LLVM_SPIRV_SOURCE/build
 fi
 
 cd $LLVM_SPIRV_SOURCE/build
-cmake .. -DLLVM_DIR=$LLVM_PATH -DCMAKE_GENERATOR:INTERNAL=Ninja
-cmake --build .
-cd ../..
-cp -r $LLVM_SPIRV_SOURCE/include $LLVM_SPIRV_SOURCE/build
+cmake .. -DLLVM_DIR=$LLVM_PATH
+# cmake .. -DLLVM_DIR=$LLVM_PATH -DCMAKE_GENERATOR:INTERNAL=Ninja -DLLVM_SPIRV_BUILD_EXTERNAL=YES
+# cmake --build .
+make llvm-spirv -j 4
+# cd ../..
+# cp -r $LLVM_SPIRV_SOURCE/include $LLVM_SPIRV_SOURCE/build

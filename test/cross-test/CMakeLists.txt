@@ -1,6 +1,6 @@
 find_package(WEASEL)
 
-include_directories(${SPIRV_CROSS_INCLUDE})
+include_directories(${SPIRV_CROSS_INCLUDE_DIR})
 
 add_executable(cross-test main.cpp)
 

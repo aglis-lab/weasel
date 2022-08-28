@@ -135,7 +135,4 @@ set(WEASEL_LIBS
     # LLVMXCoreDesc
     # LLVMXCoreDisassembler
     # LLVMXCoreUtils
-
-    # LLVM to SPIRV
-    # LLVMSPIRVLib
 )

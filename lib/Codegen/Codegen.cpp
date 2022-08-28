@@ -25,7 +25,7 @@ weasel::Codegen::Codegen(Context *context, weasel::Parser *parser)
     _parser = parser;
 }
 
-bool weasel::Codegen::compile()
+bool weasel::Codegen::compile(std::string defTargetTriple)
 {
     auto pass = Passes(getModule());
     for (const auto &item : getFunctions())
@@ -53,21 +53,28 @@ bool weasel::Codegen::compile()
         pass.run(*fun);
     }
 
-    auto cpu = "generic";
-    auto targetTriple = llvm::sys::getDefaultTargetTriple();
-    auto features = "";
-    auto dataLayout = llvm::DataLayout(llvm::StringRef());
-    auto target = llvm::TargetRegistry::lookupTarget(targetTriple, _err);
-    assert(target != nullptr);
+    if (!defTargetTriple.empty())
+    {
+        getModule()->setTargetTriple(defTargetTriple);
+    }
+    else
+    {
+        auto cpu = "generic";
+        auto targetTriple = llvm::sys::getDefaultTargetTriple();
+        auto features = "";
+        auto dataLayout = llvm::DataLayout(llvm::StringRef());
+        auto target = llvm::TargetRegistry::lookupTarget(targetTriple, _err);
+        assert(target != nullptr);
 
-    auto targetOpts = llvm::TargetOptions();
-    auto rm = llvm::Optional<llvm::Reloc::Model>();
-    auto targetMachine = target->createTargetMachine(targetTriple, cpu, features, targetOpts, rm);
+        auto targetOpts = llvm::TargetOptions();
+        auto rm = llvm::Optional<llvm::Reloc::Model>();
+        auto targetMachine = target->createTargetMachine(targetTriple, cpu, features, targetOpts, rm);
 
-    dataLayout = targetMachine->createDataLayout();
+        dataLayout = targetMachine->createDataLayout();
 
-    getModule()->setTargetTriple(targetTriple);
-    getModule()->setDataLayout(dataLayout);
+        getModule()->setTargetTriple(targetTriple);
+        getModule()->setDataLayout(dataLayout);
+    }
 
     Metadata(getContext()).initModule(getModule());
     if (llvm::verifyModule(*getModule()))

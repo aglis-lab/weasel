@@ -1,3 +1,5 @@
 add_subdirectory(cross-test)
 add_subdirectory(metal-test)
 add_subdirectory(vulkan-test)
+add_subdirectory(spirv-test)
+add_subdirectory(glsl-test)

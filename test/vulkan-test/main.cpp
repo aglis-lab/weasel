@@ -129,8 +129,9 @@ int main()
     createInfo.pApplicationInfo = &appInfo;
     createInfo.enabledExtensionCount = extensions.size();
     createInfo.ppEnabledExtensionNames = extensions.data();
-    createInfo.enabledLayerCount = layers.size();
-    createInfo.ppEnabledLayerNames = layers.data();
+    createInfo.enabledLayerCount = 0;
+    // createInfo.enabledLayerCount = layers.size();
+    // createInfo.ppEnabledLayerNames = layers.data();
     createInfo.pNext = nullptr;
 
     // Get Instance
@@ -183,11 +184,10 @@ int main()
     queueInfo.sType = VkStructureType::VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
     queueInfo.queueFamilyIndex = familyIndex;
     queueInfo.queueCount = 1;
-    queueInfo.pNext = nullptr;
     queueInfo.pQueuePriorities = queuePriority;
+    queueInfo.pNext = nullptr;
 
     std::vector<char *> deviceExtensions = getDeviceExtensions();
-
     VkDeviceCreateInfo deviceInfo{};
     deviceInfo.sType = VkStructureType::VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
     deviceInfo.queueCreateInfoCount = 1;
@@ -231,10 +231,6 @@ int main()
     VkPhysicalDeviceMemoryProperties memoryProperties;
     vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memoryProperties);
 
-    std::cout << std::endl;
-    std::cout << "Memory Type Count : " << memoryProperties.memoryTypeCount << std::endl;
-    std::cout << "Memory Heap Type Count : " << memoryProperties.memoryHeapCount << std::endl;
-
     uint32_t memoryTypeIndex = 0;
     std::cout << std::endl;
 
@@ -260,7 +256,7 @@ int main()
         auto memoryType = memoryProperties.memoryHeaps[i];
 
         std::bitset<16> val(memoryType.flags);
-        std::cout << "Memory Heap " << val << " : " << (memoryType.size / 1024 / 1024) << "MB" << std::endl;
+        std::cout << "Memory Heap " << val << " : " << memoryType.size / 1024 / 1024 / 1024 << " GB" << std::endl;
     }
 
     // Checking Memory Property
@@ -272,29 +268,6 @@ int main()
     std::cout << "Memory Device Coherent " << std::bitset<16>(VK_MEMORY_PROPERTY_DEVICE_COHERENT_BIT_AMD) << std::endl;
     std::cout << "Memory Type Index " << memoryTypeIndex << std::endl;
 
-    VkMemoryAllocateInfo inMemoryAllocateInfo;
-    inMemoryAllocateInfo.sType = VkStructureType::VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-    inMemoryAllocateInfo.allocationSize = inMemoryRequirements.size;
-    inMemoryAllocateInfo.memoryTypeIndex = memoryTypeIndex;
-    inMemoryAllocateInfo.pNext = nullptr;
-
-    VkMemoryAllocateInfo outMemoryAllocateInfo;
-    outMemoryAllocateInfo.sType = VkStructureType::VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-    outMemoryAllocateInfo.allocationSize = outMemoryRequirements.size;
-    outMemoryAllocateInfo.memoryTypeIndex = memoryTypeIndex;
-    outMemoryAllocateInfo.pNext = nullptr;
-
-    // Device Memory
-    VkDeviceMemory inDeviceMemory{};
-    VkDeviceMemory outDeviceMemory{};
-
-    vkAllocateMemory(device, &inMemoryAllocateInfo, nullptr, &inDeviceMemory);
-    vkAllocateMemory(device, &outMemoryAllocateInfo, nullptr, &outDeviceMemory);
-
-    // Binding Memory
-    vkBindBufferMemory(device, inBuffer, inDeviceMemory, 0);
-    vkBindBufferMemory(device, outBuffer, outDeviceMemory, 0);
-
     // Load Content
     char *filePath = "/Users/zaen/Projects/Open Source/weasel/test/vulkan-test/square.spv";
     auto contentProgram = readBinaryFile(filePath);
@@ -304,16 +277,27 @@ int main()
     shaderCreateInfo.sType = VkStructureType::VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
     shaderCreateInfo.codeSize = contentProgram.size();
     shaderCreateInfo.pCode = contentProgram.data();
-    //    shaderCreateInfo.pCode = reinterpret_cast<const uint32_t *>(contents.data());
 
     VkShaderModule shaderModule{};
     vkCreateShaderModule(device, &shaderCreateInfo, nullptr, &shaderModule);
 
     // Set Descriptor Layout
-    std::vector<VkDescriptorSetLayoutBinding> layoutBinding = {
-        {0, VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VkShaderStageFlagBits::VK_SHADER_STAGE_COMPUTE_BIT},
-        {1, VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VkShaderStageFlagBits::VK_SHADER_STAGE_COMPUTE_BIT},
-    };
+    VkDescriptorSetLayoutBinding setLayoutBindingFirst;
+    setLayoutBindingFirst.binding = 0;
+    setLayoutBindingFirst.descriptorType = VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+    setLayoutBindingFirst.descriptorCount = 1;
+    setLayoutBindingFirst.stageFlags = VkShaderStageFlagBits::VK_SHADER_STAGE_COMPUTE_BIT;
+    setLayoutBindingFirst.pImmutableSamplers = nullptr;
+
+    VkDescriptorSetLayoutBinding setLayoutBindingSecond;
+    setLayoutBindingSecond.binding = 1;
+    setLayoutBindingSecond.descriptorType = VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+    setLayoutBindingSecond.descriptorCount = 1;
+    setLayoutBindingSecond.stageFlags = VkShaderStageFlagBits::VK_SHADER_STAGE_COMPUTE_BIT;
+    setLayoutBindingSecond.pImmutableSamplers = nullptr;
+
+    std::vector<VkDescriptorSetLayoutBinding> layoutBinding = {setLayoutBindingFirst, setLayoutBindingSecond};
+
     VkDescriptorSetLayoutCreateInfo layoutCreateInfo{};
     layoutCreateInfo.sType = VkStructureType::VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
     layoutCreateInfo.pBindings = layoutBinding.data();
@@ -468,7 +452,28 @@ int main()
     submitInfo.pCommandBuffers = &commandBuffer;
     submitInfo.pNext = nullptr;
 
-    vkQueueSubmit(queue, 1, &submitInfo, fence);
+    // Device Memory
+    VkMemoryAllocateInfo inMemoryAllocateInfo;
+    inMemoryAllocateInfo.sType = VkStructureType::VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+    inMemoryAllocateInfo.allocationSize = inMemoryRequirements.size;
+    inMemoryAllocateInfo.memoryTypeIndex = memoryTypeIndex;
+    inMemoryAllocateInfo.pNext = nullptr;
+
+    VkMemoryAllocateInfo outMemoryAllocateInfo;
+    outMemoryAllocateInfo.sType = VkStructureType::VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+    outMemoryAllocateInfo.allocationSize = outMemoryRequirements.size;
+    outMemoryAllocateInfo.memoryTypeIndex = memoryTypeIndex;
+    outMemoryAllocateInfo.pNext = nullptr;
+
+    VkDeviceMemory inDeviceMemory;
+    VkDeviceMemory outDeviceMemory;
+
+    vkAllocateMemory(device, &inMemoryAllocateInfo, nullptr, &inDeviceMemory);
+    vkAllocateMemory(device, &outMemoryAllocateInfo, nullptr, &outDeviceMemory);
+
+    // Binding Memory
+    vkBindBufferMemory(device, inBuffer, inDeviceMemory, 0);
+    vkBindBufferMemory(device, outBuffer, outDeviceMemory, 0);
 
     // Map Input before submit
     uint32_t *inBufferPtr = (uint32_t *)malloc(bufferSize);
@@ -480,6 +485,7 @@ int main()
     }
 
     // Run GPU
+    vkQueueSubmit(queue, 1, &submitInfo, fence);
     vkWaitForFences(device, 1, &fence, true, -1);
 
     // Map device memory to host

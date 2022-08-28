@@ -15,10 +15,12 @@
 
     "build": "./config/build.sh",
 
-    "weasel-test": "./config/test-weasel.sh test/main.we temp/test",
+    "weasel-test": "./config/test-weasel.sh temp/main.we temp/test",
     "cross-test": "./build/test/cross-test/cross-test",
     "metal-test": "./build/test/metal-test/metal-test",
-    "vulkan-test": "./build/test/vulkan-test/vulkan-test"
+    "vulkan-test": "./build/test/vulkan-test/vulkan-test",
+    "spirv-test": "./build/test/spirv-test/spirv-test",
+    "glsl-test": "./build/test/glsl-test/glsl-test"
   },
   "repository": {
     "type": "git",

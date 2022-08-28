@@ -6,14 +6,14 @@ project(weasel VERSION 0.0.1)
 # CMAKE LINKER
 # set(CMAKE_LINKER ld.lld)
 
-# LLVM SPIRV
-set(LLVM_SPIRV_DIR ${CMAKE_SOURCE_DIR}/spirv)
-set(LLVM_SPIRV_INCLUDE_DIR ${LLVM_SPIRV_DIR}/include)
-set(LLVM_SPIRV_LIB_DIR ${LLVM_SPIRV_DIR}/build/lib/SPIRV)
+# SPIRV
+set(SPIRV_DIR ${CMAKE_SOURCE_DIR}/spirv)
+set(SPIRV_INCLUDE_DIR ${SPIRV_DIR}/include)
+set(SPIRV_LIB_DIR ${SPIRV_DIR}/build/lib/SPIRV)
 
 # SPIRV-CROSS
 set(SPIRV_CROSS_DIR ${CMAKE_SOURCE_DIR}/spirv-cross)
-set(SPIRV_CROSS_INCLUDE ${SPIRV_CROSS_DIR})
+set(SPIRV_CROSS_INCLUDE_DIR ${SPIRV_CROSS_DIR})
 set(SPIRV_CROSS_LIB_DIR ${SPIRV_CROSS_DIR}/build)
 
 # LLVM
@@ -27,7 +27,6 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Set Weasel Libs
 set(WEASEL_LIBS WeaselLib)
-# ${LLVM_SPIRV_LIB_DIR}/libLLVMSPIRVLib.a
 
 add_definitions("-Wno-reorder-ctor")
 add_definitions("-std=c++14")
@@ -50,7 +49,6 @@ add_definitions(${LLVM_DEFINITIONS})
 
 # INCLUDE LLVM LIBRARY
 include_directories(${LLVM_INCLUDE_DIRS})
-# include_directories(${LLVM_SPIRV_INCLUDE_DIR})
 include_directories(include)
 
 # Weasel Directories
