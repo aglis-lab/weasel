@@ -56,10 +56,13 @@ namespace weasel
         bool expectToken(TokenKind kind) { return _lexer->expect(kind); }
         bool isExpectElse() { return expectToken(TokenKind::TokenKeyElse); }
 
+        // Parser Helper
         Qualifier getQualifier() const { return getCurrentToken().getQualifier(); }
         Token getCurrentToken() const { return _lexer->getCurrentToken(); }
         Token getNextToken(bool skipSpace = false);
         Token getNextTokenUntil(TokenKind kind);
+
+        Expression *createOperatorExpression(Token op, Expression *lhs, Expression *rhs);
 
         // Function
         Function *parseDeclareFunction();
@@ -89,7 +92,7 @@ namespace weasel
         // Expression Literal
         Expression *parseLiteralExpression();
         Expression *parseIdentifierExpression();
-        Expression *parseBinaryOperator(unsigned prec, Expression *lhs);
+        Expression *parseExpressionOperator(unsigned prec, Expression *lhs);
         Expression *parseArrayExpression();
 
     public:
@@ -102,6 +105,9 @@ namespace weasel
         // Helper
         Type *parseDataType();
         void ignoreNewline();
+
+        // Lexer
+        Lexer *getLexer() const { return _lexer; }
 
     public:
         void parse();

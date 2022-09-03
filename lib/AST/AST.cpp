@@ -63,7 +63,22 @@ llvm::Value *weasel::ArrayExpression::codegen(Context *c)
     return c->codegen(this);
 }
 
-llvm::Value *weasel::BinaryExpression::codegen(Context *c)
+llvm::Value *weasel::ArithmeticExpression::codegen(Context *c)
+{
+    return c->codegen(this);
+}
+
+llvm::Value *weasel::LogicalExpression::codegen(Context *c)
+{
+    return c->codegen(this);
+}
+
+llvm::Value *weasel::AssignmentExpression::codegen(Context *c)
+{
+    return c->codegen(this);
+}
+
+llvm::Value *weasel::ComparisonExpression::codegen(Context *c)
 {
     return c->codegen(this);
 }

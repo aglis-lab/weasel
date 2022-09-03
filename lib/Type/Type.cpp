@@ -14,6 +14,11 @@ llvm::Type *weasel::Type::codegen(weasel::Context *context)
 
 bool weasel::Type::isEqual(weasel::Type *type)
 {
+    if (type == nullptr)
+    {
+        return false;
+    }
+
     auto val = this->getTypeID() == type->getTypeID();
     if (!val)
     {

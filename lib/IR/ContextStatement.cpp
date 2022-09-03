@@ -17,10 +17,7 @@ llvm::Value *weasel::Context::codegen(DeclarationStatement *expr)
     // Allocating Address for declaration
     auto varName = expr->getIdentifier();
     auto declTypeV = declType->codegen(this);
-    if (declTypeV == nullptr)
-    {
-        return ErrorTable::addError(expr->getToken(), "Unexpected error when codegen a type");
-    }
+    assert(declTypeV != nullptr);
 
     // Default Value
     if (valueExpr == nullptr)
@@ -89,12 +86,12 @@ llvm::Value *weasel::Context::codegen(DeclarationStatement *expr)
 
         if (llvm::dyn_cast<llvm::GlobalVariable>(valueV))
         {
-            alloc = getBuilder()->CreateAlloca(declTypeV, nullptr, varName);
+            alloc = getBuilder()->CreateAlloca(declTypeV, nullptr);
             getBuilder()->CreateMemCpy(alloc, llvm::MaybeAlign(4), valueV, llvm::MaybeAlign(4), widthVal);
         }
         else if (llvm::dyn_cast<llvm::ConstantInt>(valueV))
         {
-            alloc = getBuilder()->CreateAlloca(declTypeV, nullptr, varName);
+            alloc = getBuilder()->CreateAlloca(declTypeV, nullptr);
             getBuilder()->CreateMemSet(alloc, valueV, widthVal, llvm::MaybeAlign(0));
         }
 
@@ -109,7 +106,7 @@ llvm::Value *weasel::Context::codegen(DeclarationStatement *expr)
         valueV = getBuilder()->CreateSExtOrTrunc(valueV, declTypeV);
     }
 
-    auto alloc = getBuilder()->CreateAlloca(declTypeV, nullptr, varName);
+    auto alloc = getBuilder()->CreateAlloca(declTypeV, nullptr);
     getBuilder()->CreateStore(valueV, alloc);
 
     // Add Variable Declaration to symbol table
@@ -125,6 +122,7 @@ llvm::Value *weasel::Context::codegen(CompoundStatement *expr)
 
     for (auto &item : expr->getBody())
     {
+        item->addMeta(MetaID::LHS);
         item->codegen(this);
     }
 
@@ -147,7 +145,7 @@ llvm::Value *weasel::Context::codegen(ConditionStatement *expr)
         auto condition = conditions[i];
         auto statement = statements[i];
         auto conditionType = condition->getType();
-        if (!conditionType->isBooleanType())
+        if (!conditionType->isBoolType())
         {
             return ErrorTable::addError(condition->getToken(), "Expected Boolean Type");
         }
@@ -217,6 +215,12 @@ llvm::Value *weasel::Context::codegen(LoopingStatement *expr)
     auto parentFun = currentBlock->getParent();
     auto conditions = expr->getConditions();
 
+    // Make Sure every variable or expression have LHS Meta Data
+    for (auto &item : conditions)
+    {
+        item->addMeta(MetaID::LHS);
+    }
+
     // Enter to new statement
     enterScope();
 
@@ -242,7 +246,7 @@ llvm::Value *weasel::Context::codegen(LoopingStatement *expr)
     {
         auto conditionExpr = isSingleCondition ? conditions[0] : conditions[1];
 
-        if (!conditionExpr->getType()->isBooleanType())
+        if (!conditionExpr->getType()->isBoolType())
         {
             return ErrorTable::addError(conditionExpr->getToken(), "Expected Boolean Type for Looping Condition");
         }

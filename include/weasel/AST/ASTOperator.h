@@ -6,20 +6,68 @@
 namespace weasel
 {
     // Binary Operator Expression
-    class BinaryExpression : public Expression
+    class ArithmeticExpression : public Expression
     {
     private:
         Expression *_lhs;
         Expression *_rhs;
 
     public:
-        BinaryExpression(Token op, Expression *lhs, Expression *rhs) : Expression(op, lhs->getType()), _lhs(lhs), _rhs(rhs)
-        {
-            if (op.isComparison())
-            {
-                setType(Type::getIntegerType(1, false));
-            }
-        }
+        ArithmeticExpression(Token op, Expression *lhs, Expression *rhs) : Expression(op, lhs->getType()), _lhs(lhs), _rhs(rhs) {}
+
+        Token getOperator() const { return getToken(); }
+        Expression *getLHS() const { return _lhs; }
+        Expression *getRHS() const { return _rhs; }
+
+        llvm::Value *codegen(Context *context) override;
+        void debug(int shift) override;
+    };
+
+    // Binary Operator Expression
+    class LogicalExpression : public Expression
+    {
+    private:
+        Expression *_lhs;
+        Expression *_rhs;
+
+    public:
+        LogicalExpression(Token op, Expression *lhs, Expression *rhs) : Expression(op, lhs->getType()), _lhs(lhs), _rhs(rhs) {}
+
+        Token getOperator() const { return getToken(); }
+        Expression *getLHS() const { return _lhs; }
+        Expression *getRHS() const { return _rhs; }
+
+        llvm::Value *codegen(Context *context) override;
+        void debug(int shift) override;
+    };
+
+    // Assignment Operator Expression
+    class AssignmentExpression : public Expression
+    {
+    private:
+        Expression *_lhs;
+        Expression *_rhs;
+
+    public:
+        AssignmentExpression(Token op, Expression *lhs, Expression *rhs) : Expression(op, lhs->getType()), _lhs(lhs), _rhs(rhs) {}
+
+        Token getOperator() const { return getToken(); }
+        Expression *getLHS() const { return _lhs; }
+        Expression *getRHS() const { return _rhs; }
+
+        llvm::Value *codegen(Context *context) override;
+        void debug(int shift) override;
+    };
+
+    // Comparison Operator Expression
+    class ComparisonExpression : public Expression
+    {
+    private:
+        Expression *_lhs;
+        Expression *_rhs;
+
+    public:
+        ComparisonExpression(Token op, Expression *lhs, Expression *rhs) : Expression(op, Type::getBoolType()), _lhs(lhs), _rhs(rhs) {}
 
         Token getOperator() const { return getToken(); }
         Expression *getLHS() const { return _lhs; }
@@ -35,12 +83,12 @@ namespace weasel
     public:
         enum Operator
         {
-            Borrow,
-            Dereference,
-
-            // Negation
-            Negative,
-            Not,
+            Borrow,      // & Expression
+            Dereference, // * Expression
+            Negative,    // - Expression
+            Positive,    // + Expression
+            Not,         // ! Expression
+            Negation,    // ~ Expression
         };
 
     private:
@@ -50,13 +98,15 @@ namespace weasel
     public:
         UnaryExpression(Token token, Operator op, Expression *rhs) : Expression(token), _rhs(rhs), _op(op)
         {
-            auto rhsType = rhs->getType();
+            auto type = rhs->getType();
             if (op == Operator::Borrow)
-                rhsType = Type::getPointerType(rhsType);
+                type = Type::getPointerType(type);
             else if (op == Operator::Dereference)
-                rhsType = rhsType->getContainedType();
+                type = type->getContainedType();
+            else if (op == Operator::Not)
+                type = Type::getBoolType();
 
-            setType(rhsType);
+            setType(type);
         }
 
         Expression *getExpression() const { return _rhs; }

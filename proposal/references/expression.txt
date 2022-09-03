@@ -13,7 +13,7 @@
 // StructExpression
 // CallExpression
 // | MethodCallExpression
-// | FieldExpression
+// FieldExpression
 // | ClosureExpression
 // | RangeExpression
 // ReturnExpression
@@ -21,14 +21,11 @@
 // BreakExpression
 
 /// Operator Expression ///
-// UnaryOperatorExpression
-// BorrowExpression
-// | DereferenceExpression
+// UnaryExpression -> BorrowExpression, DereferenceExpression, NegationExpression
 // | ErrorPropagationExpression
-// | NegationExpression
-// | ArithmeticOrLogicalExpression
-// | ComparisonExpression
+// ArithmeticExpression
+// LogicalExpression
+// ComparisonExpression
 // | LazyBooleanExpression
 // | TypeCastExpression
-// | AssignmentExpression
-// | CompoundAssignmentExpression
+// AssignmentExpression | CompoundAssignmentExpression

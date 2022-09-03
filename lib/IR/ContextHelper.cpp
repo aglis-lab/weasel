@@ -62,8 +62,18 @@ llvm::Type *weasel::Context::codegen(weasel::Type *type)
 
     if (type->isArrayType())
     {
-        auto containedType = type->getContainedType()->codegen(this);
-        return llvm::ArrayType::get(containedType, type->getTypeWidth());
+        auto containedType = type->getContainedType();
+        assert(containedType != nullptr);
+
+        auto containedTypeV = containedType->codegen(this);
+        assert(containedTypeV != nullptr);
+
+        if (type->getTypeWidth() == -1)
+        {
+            return llvm::PointerType::get(containedTypeV, 0);
+        }
+
+        return llvm::ArrayType::get(containedTypeV, type->getTypeWidth());
     }
 
     if (type->isPointerType())
@@ -73,51 +83,6 @@ llvm::Type *weasel::Context::codegen(weasel::Type *type)
     }
 
     return nullptr;
-}
-
-// Compare Type Helpter
-weasel::CompareType weasel::Context::compareType(llvm::Type *lhsType, llvm::Type *rhsType)
-{
-    if (lhsType->getTypeID() != rhsType->getTypeID())
-    {
-        return CompareType::Different;
-    }
-
-    if (lhsType->isIntegerTy())
-    {
-        if (lhsType->getIntegerBitWidth() != rhsType->getIntegerBitWidth())
-        {
-            return CompareType::Casting;
-        }
-    }
-
-    return CompareType::Equal;
-}
-
-// Cast Integer Type Helper
-llvm::Value *weasel::Context::castIntegerType(llvm::Value *value, llvm::Type *castTy)
-{
-    if (value->getType()->getIntegerBitWidth() < castTy->getIntegerBitWidth())
-    {
-        return getBuilder()->CreateCast(llvm::Instruction::CastOps::SExt, value, castTy);
-    }
-    else
-    {
-        return getBuilder()->CreateCast(llvm::Instruction::CastOps::Trunc, value, castTy);
-    }
-}
-
-// Cast Integer Type Helper
-llvm::Value *weasel::Context::castIntegerType(llvm::Value *lhs, llvm::Value *rhs) const
-{
-    if (lhs->getType()->getIntegerBitWidth() > rhs->getType()->getIntegerBitWidth())
-    {
-        return getBuilder()->CreateCast(llvm::Instruction::CastOps::SExt, rhs, lhs->getType());
-    }
-    else
-    {
-        return getBuilder()->CreateCast(llvm::Instruction::CastOps::SExt, lhs, rhs->getType());
-    }
 }
 
 llvm::MDNode *weasel::Context::getTBAARoot() const

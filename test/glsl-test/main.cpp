@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
     }
 
     auto filePath = argv[1];
-    auto outputPath = argv[2];
+    // auto outputPath = argv[2];
     auto fileManager = new weasel::FileManager(filePath);
     if (!fileManager->isValid())
     {

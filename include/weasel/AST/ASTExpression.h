@@ -95,13 +95,11 @@ namespace weasel
     {
     private:
         std::string _identifier;
-        bool _addressOf;
 
     public:
-        VariableExpression(Token token, std::string identifier, Type *type, bool addressOf = false) : Expression(token, type), _identifier(identifier), _addressOf(addressOf) {}
+        VariableExpression(Token token, std::string identifier, Type *type) : Expression(token, type), _identifier(identifier) {}
 
         std::string getIdentifier() const { return _identifier; }
-        bool isAddressOf() const { return _addressOf; }
 
     public:
         llvm::Value *codegen(Context *context) override;
@@ -116,7 +114,7 @@ namespace weasel
         Expression *_indexExpr;
 
     public:
-        ArrayExpression(Token token, std::string identifier, Expression *indexExpr, bool addressOf = false) : VariableExpression(token, identifier, nullptr, addressOf), _indexExpr(indexExpr) {}
+        ArrayExpression(Token token, std::string identifier, Expression *indexExpr, Type *type) : VariableExpression(token, identifier, type), _indexExpr(indexExpr) {}
 
         Expression *getIndex() const { return _indexExpr; }
 
@@ -176,6 +174,8 @@ namespace weasel
     };
 
     // Field Expresion
+    // a.b : a->b
+    // a.*b : a->*b
     class FieldExpression : public Expression
     {
     private:
@@ -183,9 +183,7 @@ namespace weasel
         Expression *_parent;
 
     public:
-        FieldExpression(Token token, std::string identifier, Expression *parent, Type *type) : Expression(token, type), _identifier(identifier), _parent(parent)
-        {
-        }
+        FieldExpression(Token token, std::string identifier, Expression *parent, Type *type) : Expression(token, type), _identifier(identifier), _parent(parent) {}
 
         inline std::string getField() const { return _identifier; }
         inline Expression *getParent() const { return _parent; }

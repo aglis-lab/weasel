@@ -80,15 +80,24 @@ namespace weasel
         llvm::IRBuilder<> *getBuilder() const { return _builder; }
         llvm::MDBuilder *getMDBuilder() const { return _mdBuilder; }
 
-        llvm::Value *castIntegerType(llvm::Value *lhs, llvm::Value *rhs) const;
-        llvm::Value *castIntegerType(llvm::Value *value, llvm::Type *castTy);
-        CompareType compareType(llvm::Type *lhsType, llvm::Type *rhsType);
         std::string getDefaultLabel();
 
     public:
         llvm::Type *codegen(Type *type);
         llvm::Type *codegen(StructType *type);
 
+        // Integer Fast Casting
+        llvm::Value *castInteger(llvm::Value *val, llvm::Type *type, bool isSign = false)
+        {
+            if (isSign)
+            {
+                return getBuilder()->CreateSExtOrTrunc(val, type);
+            }
+
+            return getBuilder()->CreateZExtOrTrunc(val, type);
+        }
+
+        // Literal Expression
         llvm::Value *codegen(BoolLiteralExpression *expr) const;
         llvm::Value *codegen(CharLiteralExpression *expr) const;
         llvm::Value *codegen(NumberLiteralExpression *expr);
@@ -115,7 +124,10 @@ namespace weasel
         llvm::Value *codegen(ContinueExpression *expr);
 
         // Operator Expression
-        llvm::Value *codegen(BinaryExpression *expr);
+        llvm::Value *codegen(ArithmeticExpression *expr);
+        llvm::Value *codegen(LogicalExpression *expr);
+        llvm::Value *codegen(AssignmentExpression *expr);
+        llvm::Value *codegen(ComparisonExpression *expr);
         llvm::Value *codegen(UnaryExpression *expr);
 
         // User Defined

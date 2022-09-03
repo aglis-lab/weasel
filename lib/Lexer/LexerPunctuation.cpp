@@ -76,6 +76,16 @@ weasel::Token weasel::Lexer::getPunctuation()
 
         return createToken(TokenKind::TokenOperatorNot, lastBuffer, lastBuffer + 1);
     }
+    case '~':
+    {
+        if (*(lastBuffer + 1) == '=')
+        {
+            getNextBuffer();
+            return createToken(TokenKind::TokenOperatorNegationEqual, lastBuffer, lastBuffer + 2);
+        }
+
+        return createToken(TokenKind::TokenOperatorNegation, lastBuffer, lastBuffer + 1);
+    }
     case '&':
     {
         if (*(lastBuffer + 1) == '=')

@@ -76,15 +76,37 @@ void weasel::FieldExpression::debug(int shift)
 
 void weasel::ArrayExpression::debug(int shift)
 {
-    auto val = "Array " + this->getIdentifier();
+    auto val = "Array Variable of " + this->getIdentifier();
     this->printDebug(val, shift);
 }
 
-void weasel::BinaryExpression::debug(int shift)
+void weasel::LogicalExpression::debug(int shift)
+{
+    auto op = this->getOperator().getValue();
+    this->printDebug("Logical Operation : " + op, shift);
+    this->getLHS()->debug(shift + this->defaultShift);
+    this->getRHS()->debug(shift + this->defaultShift);
+}
+
+void weasel::ArithmeticExpression::debug(int shift)
 {
 
     auto op = this->getOperator().getValue();
-    this->printDebug("Binary Operation : " + op, shift);
+    this->printDebug("Arithmetic Operation : " + op, shift);
+    this->getLHS()->debug(shift + this->defaultShift);
+    this->getRHS()->debug(shift + this->defaultShift);
+}
+
+void weasel::AssignmentExpression::debug(int shift)
+{
+    this->printDebug("Assignment Operation", shift);
+    this->getLHS()->debug(shift + this->defaultShift);
+    this->getRHS()->debug(shift + this->defaultShift);
+}
+
+void weasel::ComparisonExpression::debug(int shift)
+{
+    this->printDebug("Comparison Operation : " + getToken().getValue(), shift);
     this->getLHS()->debug(shift + this->defaultShift);
     this->getRHS()->debug(shift + this->defaultShift);
 }

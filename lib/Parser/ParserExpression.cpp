@@ -134,9 +134,13 @@ weasel::Expression *weasel::Parser::parseIdentifierExpression()
         {
             getNextToken(); // eat [
             auto indexExpr = parseExpression();
-            getNextToken(); // eat ]
+            if (!getCurrentToken().isCloseSquare())
+            {
+                return ErrorTable::addError(getCurrentToken(), "Expected ']'");
+            }
 
-            return new ArrayExpression(indexExpr->getToken(), identifier, indexExpr, attr.getValue());
+            getNextToken(); // eat ]
+            return new ArrayExpression(indexExpr->getToken(), identifier, indexExpr, attr.getValue()->getContainedType());
         }
     }
 
@@ -291,12 +295,12 @@ weasel::Expression *weasel::Parser::parsePrimaryExpression()
     {
         auto token = getCurrentToken();
 
-        getNextToken(); // eat '& | * | - | !'
+        getNextToken(); // eat ' & | * | - | ! | ~ '
 
         auto expr = parsePrimaryExpression();
         if (expr == nullptr)
         {
-            return ErrorTable::addError(getCurrentToken(), "Expected expression after address of");
+            return ErrorTable::addError(getCurrentToken(), "Expected expression after unary operator");
         }
 
         UnaryExpression::Operator op;
@@ -308,8 +312,14 @@ weasel::Expression *weasel::Parser::parsePrimaryExpression()
         case TokenKind::TokenOperatorNegative:
             op = UnaryExpression::Negative;
             break;
+        case TokenKind::TokenOperatorPlus:
+            op = UnaryExpression::Positive;
+            break;
         case TokenKind::TokenOperatorNot:
             op = UnaryExpression::Not;
+            break;
+        case TokenKind::TokenOperatorNegation:
+            op = UnaryExpression::Negation;
             break;
         default:
             op = UnaryExpression::Borrow;
@@ -326,13 +336,13 @@ weasel::Expression *weasel::Parser::parseExpression()
     auto lhs = parsePrimaryExpression();
     if (lhs == nullptr)
     {
-        return ErrorTable::addError(getCurrentToken(), "Expected LHS");
+        return ErrorTable::addError(getCurrentToken(), "Expected RHS");
     }
 
-    return parseBinaryOperator(__defaultPrecOrder, lhs);
+    return parseExpressionOperator(__defaultPrecOrder, lhs);
 }
 
-weasel::Expression *weasel::Parser::parseBinaryOperator(unsigned precOrder, Expression *lhs)
+weasel::Expression *weasel::Parser::parseExpressionOperator(unsigned precOrder, Expression *lhs)
 {
     while (true)
     {
@@ -355,13 +365,13 @@ weasel::Expression *weasel::Parser::parseBinaryOperator(unsigned precOrder, Expr
             return ErrorTable::addError(getCurrentToken(), "Expected RHS Expression 1");
         }
 
-        rhs = parseBinaryOperator(prec.order, rhs);
+        rhs = parseExpressionOperator(prec.order, rhs);
         if (!rhs)
         {
             return ErrorTable::addError(getCurrentToken(), "Expected RHS Expression 2");
         }
 
-        lhs = new BinaryExpression(binOp, lhs, rhs);
+        lhs = createOperatorExpression(binOp, lhs, rhs);
     }
 }
 

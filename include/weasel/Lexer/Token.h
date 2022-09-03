@@ -39,6 +39,7 @@ namespace weasel
         TokenKeyConst,            // const
         TokenKeyEndDeclaration,   // END DECLARATION
         TokenKeyAssert,           // assert // debugging
+        TokenKeyDefer,            // defer
 
         // Data Literal -> Value of data type
         TokenLitNil,
@@ -73,27 +74,35 @@ namespace weasel
         TokenOperatorPlus,             // +
         TokenOperatorNegative,         // -
         TokenOperatorStar,             // *
+        TokenOperatorStarStar,         // **
         TokenOperatorSlash,            // /
         TokenOperatorPercent,          // %
         TokenOperatorCaret,            // ^
         TokenOperatorNot,              // !
+        TokenOperatorNegation,         // ~
         TokenOperatorAnd,              // &
         TokenOperatorOr,               // |
+        TokenOperatorLogicalStart,     // START LOGICAL
         TokenOperatorAndAnd,           // &&
         TokenOperatorOror,             // ||
+        TokenOperatorLogicalEnd,       // END LOGICAL
         TokenOperatorShiftLeft,        // <<
         TokenOperatorShiftRight,       // >>
+        TokenOperatorEqualStart,       // START ASSIGNMENT
+        TokenOperatorEqual,            // =
         TokenOperatorPlusEqual,        // +=
         TokenOperatorNegativeEqual,    // -=
         TokenOperatorStarEqual,        // *=
+        TokenOperatorStarStarEqual,    // **=
         TokenOperatorSlashEqual,       // /=
         TokenOperatorPercentEqual,     // %=
         TokenOperatorCaretEqual,       // ^=
-        TokenOperatorAndEqual,         // &=
-        TokenOperatorOrEqual,          // |=
         TokenOperatorShiftLeftEqual,   // <<=
         TokenOperatorShiftRightEqual,  // >>=
-        TokenOperatorEqual,            // =
+        TokenOperatorNegationEqual,    // ~=
+        TokenOperatorAndEqual,         // &=
+        TokenOperatorOrEqual,          // |=
+        TokenOperatorEqualEnd,         // END ASSIGNMENT
         TokenOperatorStartComparation, // START COMPARATOR
         TokenOperatorLessThan,         // <
         TokenOperatorGreaterThen,      // >
@@ -178,6 +187,7 @@ namespace weasel
         inline bool isKeyFunction() const { return _kind == TokenKind::TokenKeyFun; }
         inline bool isKeyStruct() const { return _kind == TokenKind::TokenKeyStruct; }
         inline bool isIdentifier() const { return _kind == TokenKind::TokenIdentifier; }
+        inline bool isKeyDefer() const { return _kind == TokenKind::TokenKeyDefer; }
 
         // Variable //
         inline bool isDataType() { return _kind >= TokenKind::TokenTyVoid && _kind <= TokenKind::TokenTyDecimal; }
@@ -188,17 +198,37 @@ namespace weasel
         inline bool isOperator() { return _kind >= TokenKind::TokenOperatorStart && _kind <= TokenKind::TokenOperatorEnd; }
         inline bool isUnknown() const { return _kind == TokenKind::TokenUnknown; }
         inline bool isNewline() const { return _kind == TokenKind::TokenSpaceNewline; }
+
+        inline bool isOperatorEqual() const { return _kind == TokenKind::TokenOperatorEqual; }
+        inline bool isOperatorAssignment() const
+        {
+            return _kind > TokenKind::TokenOperatorEqualStart &&
+                   _kind < TokenKind::TokenOperatorEqualEnd;
+        }
+
         inline bool isOperatorAnd() const { return _kind == TokenKind::TokenOperatorAnd; }
         inline bool isOperatorAndAnd() const { return _kind == TokenKind::TokenOperatorAndAnd; }
-        inline bool isOperatorStar() const { return _kind == TokenKind::TokenOperatorStart; }
+        inline bool isOperatorStar() const { return _kind == TokenKind::TokenOperatorStar; }
         inline bool isOperatorNegative() const { return _kind == TokenKind::TokenOperatorNegative; }
+        inline bool isOperatorPlus() const { return _kind == TokenKind::TokenOperatorPlus; }
         inline bool isOperatorNot() const { return _kind == TokenKind::TokenOperatorNot; }
+        inline bool isOperatorNegation() const { return _kind == TokenKind::TokenOperatorNegation; }
         inline bool isOperatorUnary() const
         {
             return isOperatorAnd() ||
                    isOperatorStar() ||
                    isOperatorNegative() ||
+                   isOperatorPlus() ||
+                   isOperatorNegation() ||
                    isOperatorNot();
+        }
+
+        inline bool isOperatorAndAnd() const { return _kind == TokenKind::TokenOperatorAndAnd; }
+        inline bool isOperatorOrOr() const { return _kind == TokenKind::TokenOperatorOror; }
+        inline bool isOperatorLogical() const
+        {
+            return _kind > TokenKind::TokenOperatorLogicalStart ||
+                   _kind < TokenKind::TokenOperatorLogicalEnd;
         }
 
         // Delimiter //
@@ -214,9 +244,6 @@ namespace weasel
         inline bool isComma() const { return _kind == TokenKind::TokenPuncComma; }
         inline bool isColon() const { return _kind == TokenKind::TokenPuncColon; }
         inline bool isDot() const { return _kind == TokenKind::TokenPuncDot; }
-
-        // Operator //
-        inline bool isOperatorEqual() const { return _kind == TokenKind::TokenOperatorEqual; }
 
         // Operator Comparator //
         inline bool isComparison() { return _kind >= TokenKind::TokenOperatorStartComparation && _kind <= TokenKind::TokenOperatorEndComparation; }

@@ -1,27 +1,6 @@
+# Add Executable
+file(GLOB SOURCES */*.cpp)
+
 add_library(WeaselLib STATIC
-    AST/AST.cpp
-    AST/ASTDebug.cpp
-    Basic/FileManager.cpp
-    Basic/Number.cpp
-    Basic/Cast.cpp
-    Codegen/Codegen.cpp
-    IR/Context.cpp
-    IR/ContextStatement.cpp
-    IR/ContextLiteral.cpp
-    IR/ContextHelper.cpp
-    Lexer/Lexer.cpp
-    Lexer/LexerType.cpp
-    Lexer/LexerPunctuation.cpp
-    Lexer/LexerKeyword.cpp
-    Lexer/LexerLiteral.cpp
-    Lexer/Token.cpp
-    Metadata/Metadata.cpp
-    Passes/Passes.cpp
-    Parser/Parser.cpp
-    Parser/ParserFunction.cpp
-    Parser/ParserExpression.cpp
-    Parser/ParserStatement.cpp
-    Parser/ParserHelper.cpp
-    Type/Type.cpp
-    Symbol/Symbol.cpp
+    ${SOURCES}
 )

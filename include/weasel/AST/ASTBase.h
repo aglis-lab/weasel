@@ -56,6 +56,14 @@ namespace weasel
         /// be referred to from other translation units.
         ExternalLinkage
     };
+
+    // MetaID
+    enum class MetaID
+    {
+        RHS,
+        LHS,
+    };
+
 } // namespace weasel
 
 // Expression Base Type
@@ -82,6 +90,7 @@ namespace weasel
     protected:
         Token _token; // Token each expression
         Type *_type;
+        std::vector<MetaID> _metas;
 
     public:
         Expression() = default;
@@ -93,6 +102,32 @@ namespace weasel
         inline void setType(Type *type) { _type = type; }
         inline bool isNoType() const { return _type == nullptr; }
         bool isCompoundExpression();
+
+        inline void addMeta(MetaID meta) { _metas.push_back(meta); }
+        bool isRHS()
+        {
+            for (auto item : _metas)
+            {
+                if (item == MetaID::RHS)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+        bool isLHS()
+        {
+            for (auto item : _metas)
+            {
+                if (item == MetaID::LHS)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
 
         virtual ~Expression()
         {

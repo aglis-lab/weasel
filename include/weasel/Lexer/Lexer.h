@@ -28,12 +28,13 @@ namespace weasel
         // TODO: Handle special character for parseCharacter or string
         // Token section
         Token getToken();
-        Token createToken(TokenKind kind, char *startBuffer, char *endBuffer);
         Token getType(char *startBuffer, char *endBuffer);
         Token getKeyword(char *startBuffer, char *endBuffer);
         Token getPunctuation();
         Token getStringLiteral();
         Token getCharacterLiteral();
+
+        Token createToken(TokenKind kind, char *startBuffer, char *endBuffer);
 
     public:
         Lexer(FileManager *fileManager);

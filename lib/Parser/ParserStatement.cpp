@@ -317,8 +317,8 @@ weasel::Expression *weasel::Parser::parseDeclarationExpression()
     auto qualifier = getQualifier();
     auto qualToken = getCurrentToken();
 
-    getNextToken(); // eat qualifier(let, final, const)
-    if (!getCurrentToken().isIdentifier())
+    // eat qualifier(let, final, const)
+    if (!getNextToken().isIdentifier())
     {
         auto errToken = getCurrentToken();
 

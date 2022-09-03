@@ -15,7 +15,7 @@
 
     "build": "./config/build.sh",
 
-    "weasel-test": "./config/test-weasel.sh temp/main.we temp/test",
+    "weaselc-test": "./config/test-weasel.sh temp/test.we temp/test",
     "cross-test": "./build/test/cross-test/cross-test",
     "metal-test": "./build/test/metal-test/metal-test",
     "vulkan-test": "./build/test/vulkan-test/vulkan-test",

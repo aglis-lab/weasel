@@ -36,7 +36,7 @@ namespace weasel
     protected:
         bool _isSpread = false;
         bool _isSigned = true;
-        unsigned _width = 32; // width in bit
+        int _width = 32; // width in bit
         TypeID _typeId = TypeID::VoidType;
         std::vector<Type *> _containedTypes;
         std::string _identifier;
@@ -53,7 +53,7 @@ namespace weasel
 
     public:
         inline TypeID getTypeID() const { return _typeId; }
-        unsigned getTypeWidth()
+        int getTypeWidth()
         {
             if (isStructType())
             {
@@ -73,10 +73,8 @@ namespace weasel
 
             return _width;
         }
-        inline unsigned getTypeWidthByte()
-        {
-            return getTypeWidth() / 8;
-        }
+
+        inline int getTypeWidthByte() { return getTypeWidth() / 8; }
 
         inline bool isSigned() const { return _isSigned; }
         inline bool isSpread() const { return _isSpread; }
@@ -85,13 +83,13 @@ namespace weasel
         inline void setIdentifier(std::string identifier) { _identifier = identifier; }
         inline void setSpread(bool val) { _isSpread = val; }
 
-        inline bool isBooleanType() const { return isIntegerType() && _width == 1; }
+        inline bool isBoolType() const { return isIntegerType() && _width == 1; }
         inline bool isFloatType() const { return _typeId == TypeID::FloatType; }
         inline bool isDoubleType() const { return _typeId == TypeID::DoubleType; }
         inline bool isIntegerType() const { return _typeId == TypeID::IntegerType; }
         inline bool isPrimitiveType() const
         {
-            return isBooleanType() ||
+            return isBoolType() ||
                    isFloatType() ||
                    isDoubleType() ||
                    isIntegerType();
@@ -128,6 +126,7 @@ namespace weasel
 
         // Generator
         static Type *getVoidType() { return new Type(TypeID::VoidType, 0, false); }
+        static Type *getBoolType() { return getIntegerType(1, false); }
         static Type *getIntegerType(unsigned width = 32, bool isSign = true) { return new Type(TypeID::IntegerType, width, isSign); }
         static Type *getFloatType() { return new Type(TypeID::FloatType, 32); }
         static Type *getDoubleType() { return new Type(TypeID::DoubleType, 64); }

@@ -52,6 +52,7 @@ weasel::Precedence weasel::Token::getPrecedence()
     case TokenKind::TokenOperatorNotEqual:
         val.order = 10;
         break;
+    case TokenKind::TokenOperatorOr:
     case TokenKind::TokenOperatorAnd:
         val.order = 11;
         break;
