@@ -78,8 +78,10 @@ llvm::Type *weasel::Context::codegen(weasel::Type *type)
 
     if (type->isPointerType())
     {
-        auto containedType = type->getContainedType()->codegen(this);
-        return llvm::PointerType::get(containedType, 0);
+        auto containedType = type->getContainedType();
+        auto containedTypeV = containedType->codegen(this);
+
+        return llvm::PointerType::get(containedTypeV, 0);
     }
 
     return nullptr;

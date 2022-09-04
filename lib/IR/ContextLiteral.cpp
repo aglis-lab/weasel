@@ -73,3 +73,9 @@ llvm::Value *weasel::Context::codegen(ArrayLiteralExpression *expr)
 
     return getBuilder()->CreateLoad(gv->getType(), gv);
 }
+
+llvm::Value *weasel::Context::codegen(NilLiteralExpression *expr)
+{
+    auto typeV = expr->getType()->codegen(this);
+    return llvm::ConstantPointerNull::getNullValue(typeV);
+}

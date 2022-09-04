@@ -112,7 +112,7 @@ namespace weasel
         llvm::Value *codegen(CallExpression *expr);
         llvm::Value *codegen(ReturnExpression *expr);
         llvm::Value *codegen(DeclarationStatement *expr);
-        llvm::Value *codegen(NilLiteralExpression *expr) const;
+        llvm::Value *codegen(NilLiteralExpression *expr);
         llvm::Value *codegen(ArrayExpression *expr);
         llvm::Value *codegen(FieldExpression *expr);
 

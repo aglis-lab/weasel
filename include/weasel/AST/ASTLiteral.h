@@ -104,7 +104,7 @@ namespace weasel
     class NilLiteralExpression : public LiteralExpression
     {
     public:
-        NilLiteralExpression(Token token) : LiteralExpression(token, Type::getPointerType(nullptr)) {}
+        NilLiteralExpression(Token token) : LiteralExpression(token, Type::getPointerType(Type::getIntegerType(8, false))) {}
 
     public:
         llvm::Value *codegen(Context *context) override;

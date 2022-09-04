@@ -176,6 +176,12 @@ llvm::Value *weasel::Context::codegen(AssignmentExpression *expr)
         return lhs->codegen(this);
     }
 
+    // TODO: Migrate to Analysis Check
+    if (dynamic_cast<NilLiteralExpression *>(rhs) != nullptr)
+    {
+        rhs->setType(lhsType);
+    }
+
     // Codegen RHS First
     // Because RHS may depend on LHS because some reason
     auto rhsVal = rhs->codegen(this);
@@ -219,6 +225,12 @@ llvm::Value *weasel::Context::codegen(ComparisonExpression *expr)
         ErrorTable::addError(expr->getLHS()->getToken(), "Data type look different");
 
         return lhs->codegen(this);
+    }
+
+    // TODO: Migrate to Analysis Check
+    if (dynamic_cast<NilLiteralExpression *>(rhs) != nullptr)
+    {
+        rhs->setType(lhsType);
     }
 
     // Set LHS Meta

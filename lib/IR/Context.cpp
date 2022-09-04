@@ -102,11 +102,6 @@ llvm::Value *weasel::Context::codegen(CallExpression *expr)
     return call;
 }
 
-llvm::Value *weasel::Context::codegen(NilLiteralExpression *expr) const
-{
-    return llvm::ConstantPointerNull::getNullValue(getBuilder()->getInt8PtrTy());
-}
-
 llvm::Value *weasel::Context::codegen(BreakExpression *expr)
 {
     if (!isBreakBlockExist())

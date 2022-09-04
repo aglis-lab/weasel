@@ -74,7 +74,6 @@ namespace weasel
         TokenOperatorPlus,             // +
         TokenOperatorNegative,         // -
         TokenOperatorStar,             // *
-        TokenOperatorStarStar,         // **
         TokenOperatorSlash,            // /
         TokenOperatorPercent,          // %
         TokenOperatorCaret,            // ^
@@ -93,7 +92,6 @@ namespace weasel
         TokenOperatorPlusEqual,        // +=
         TokenOperatorNegativeEqual,    // -=
         TokenOperatorStarEqual,        // *=
-        TokenOperatorStarStarEqual,    // **=
         TokenOperatorSlashEqual,       // /=
         TokenOperatorPercentEqual,     // %=
         TokenOperatorCaretEqual,       // ^=
@@ -207,7 +205,6 @@ namespace weasel
         }
 
         inline bool isOperatorAnd() const { return _kind == TokenKind::TokenOperatorAnd; }
-        inline bool isOperatorAndAnd() const { return _kind == TokenKind::TokenOperatorAndAnd; }
         inline bool isOperatorStar() const { return _kind == TokenKind::TokenOperatorStar; }
         inline bool isOperatorNegative() const { return _kind == TokenKind::TokenOperatorNegative; }
         inline bool isOperatorPlus() const { return _kind == TokenKind::TokenOperatorPlus; }
@@ -227,7 +224,7 @@ namespace weasel
         inline bool isOperatorOrOr() const { return _kind == TokenKind::TokenOperatorOror; }
         inline bool isOperatorLogical() const
         {
-            return _kind > TokenKind::TokenOperatorLogicalStart ||
+            return _kind > TokenKind::TokenOperatorLogicalStart &&
                    _kind < TokenKind::TokenOperatorLogicalEnd;
         }
 
