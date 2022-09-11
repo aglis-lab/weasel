@@ -129,6 +129,7 @@ namespace weasel
         llvm::Value *codegen(AssignmentExpression *expr);
         llvm::Value *codegen(ComparisonExpression *expr);
         llvm::Value *codegen(UnaryExpression *expr);
+        llvm::Value *codegen(TypeCastExpression *expr);
 
         // User Defined
         llvm::Value *codegen(Function *func);

@@ -119,6 +119,11 @@ llvm::Value *weasel::UnaryExpression::codegen(Context *c)
     return c->codegen(this);
 }
 
+llvm::Value *weasel::TypeCastExpression::codegen(Context *c)
+{
+    return c->codegen(this);
+}
+
 // Statement
 llvm::Value *weasel::CompoundStatement::codegen(Context *c)
 {

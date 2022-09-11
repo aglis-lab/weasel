@@ -5,6 +5,22 @@
 // Expression Without Block PART
 namespace weasel
 {
+    // Type Casting Operator Expression
+    class TypeCastExpression : public Expression
+    {
+    private:
+        Expression *_rhs;
+
+    public:
+        TypeCastExpression(Token op, Type *type, Expression *rhs) : Expression(op, type), _rhs(rhs) {}
+
+        Expression *getExpression() const { return _rhs; }
+
+    public:
+        llvm::Value *codegen(Context *context) override;
+        void debug(int shift) override;
+    };
+
     // Binary Operator Expression
     class ArithmeticExpression : public Expression
     {

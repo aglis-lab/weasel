@@ -27,6 +27,7 @@ weasel::Precedence weasel::Token::getPrecedence()
     case TokenKind::TokenPuncDotThree:
     case TokenKind::TokenDelimOpenSquareBracket:
     case TokenKind::TokenDelimOpenParen:
+    case TokenKind::TokenOperatorCasting:
         val.order = 2;
         break;
     case TokenKind::TokenOperatorStar:

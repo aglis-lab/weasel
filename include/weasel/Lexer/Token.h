@@ -109,6 +109,7 @@ namespace weasel
         TokenOperatorLessEqual,        // <=
         TokenOperatorGreaterEqual,     // >=
         TokenOperatorEndComparation,   // END COMPARATOR
+        TokenOperatorCasting,          // as
         TokenOperatorEnd,              // END OPERATOR
 
         TokenPuncDot,       // .
@@ -196,6 +197,7 @@ namespace weasel
         inline bool isOperator() { return _kind >= TokenKind::TokenOperatorStart && _kind <= TokenKind::TokenOperatorEnd; }
         inline bool isUnknown() const { return _kind == TokenKind::TokenUnknown; }
         inline bool isNewline() const { return _kind == TokenKind::TokenSpaceNewline; }
+        inline bool isOperatorCast() const { return _kind == TokenKind::TokenOperatorCasting; }
 
         inline bool isOperatorEqual() const { return _kind == TokenKind::TokenOperatorEqual; }
         inline bool isOperatorAssignment() const

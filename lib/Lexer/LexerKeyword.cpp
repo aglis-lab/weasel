@@ -67,6 +67,10 @@ weasel::Token weasel::Lexer::getKeyword(char *startBuffer, char *endBuffer)
     {
         return createToken(TokenKind::TokenKeyDefer, startBuffer, endBuffer);
     }
+    else if (compareBuffer(startBuffer, endBuffer, "as"))
+    {
+        return createToken(TokenKind::TokenOperatorCasting, startBuffer, endBuffer);
+    }
 
     return Token::empty();
 }

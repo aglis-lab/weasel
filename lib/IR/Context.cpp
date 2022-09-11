@@ -232,10 +232,10 @@ llvm::Value *weasel::Context::codegen(ArrayExpression *expr)
 {
     // Get Index
     auto indexExpr = expr->getIndex();
-    assert(indexExpr);
-
     auto indexV = indexExpr->codegen(this);
+
     assert(indexV);
+    assert(indexExpr);
 
     // Get Allocator from Symbol Table
     auto varName = expr->getIdentifier();
@@ -248,14 +248,20 @@ llvm::Value *weasel::Context::codegen(ArrayExpression *expr)
     // Casting to integer 64
     indexV = getBuilder()->CreateSExtOrTrunc(indexV, getBuilder()->getInt64Ty());
 
-    std::vector<llvm::Value *> idxList = {
-        getBuilder()->getInt64(0),
-        indexV,
-    };
+    std::vector<llvm::Value *> idxList = {indexV};
 
     auto typeV = alloc->getType()->getPointerElementType();
-    auto elemIndex = getBuilder()->CreateInBoundsGEP(typeV, alloc, idxList);
+    if (typeV->isPointerTy())
+    {
+        alloc = getBuilder()->CreateLoad(typeV, alloc);
+        typeV = typeV->getPointerElementType();
+    }
+    else
+    {
+        idxList.insert(idxList.begin(), getBuilder()->getInt64(0));
+    }
 
+    auto elemIndex = getBuilder()->CreateInBoundsGEP(typeV, alloc, idxList);
     if (expr->isLHS())
     {
         return elemIndex;

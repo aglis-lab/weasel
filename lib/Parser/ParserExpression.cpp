@@ -359,6 +359,19 @@ weasel::Expression *weasel::Parser::parseExpressionOperator(unsigned precOrder, 
         }
 
         getNextToken(); // eat 'operator'
+        if (binOp.isOperatorCast())
+        {
+            auto castType = parseDataType();
+            if (!castType)
+            {
+                return ErrorTable::addError(getCurrentToken(), "Expected RHS Expression 1");
+            }
+
+            lhs = new TypeCastExpression(binOp, castType, lhs);
+
+            continue;
+        }
+
         auto rhs = parsePrimaryExpression();
         if (!rhs)
         {

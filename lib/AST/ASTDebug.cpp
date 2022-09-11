@@ -215,6 +215,14 @@ void weasel::UnaryExpression::debug(int shift)
     this->getExpression()->debug(shift + defaultShift);
 }
 
+void weasel::TypeCastExpression::debug(int shift)
+{
+    auto op = this->getToken().getValue();
+
+    this->printDebug("Type Cast Expression (" + op + ")", shift);
+    this->getExpression()->debug(shift + defaultShift);
+}
+
 // Funtion Debug
 void weasel::Function::debug(int shift)
 {

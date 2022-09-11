@@ -6,6 +6,49 @@
 #include "weasel/Symbol/Symbol.h"
 #include "weasel/Config/Config.h"
 
+// Unimplemented
+llvm::Value *weasel::Context::codegen(TypeCastExpression *expr)
+{
+    auto type = expr->getType();
+    auto rhs = expr->getExpression();
+    auto rhsType = rhs->getType();
+    auto rhsVal = rhs->codegen(this);
+    auto typeVal = type->codegen(this);
+
+    if (
+        rhsType->isPointerType() || type->isPointerType() ||
+        rhsType->isArrayType() || type->isArrayType())
+    {
+        return getBuilder()->CreateBitOrPointerCast(rhsVal, typeVal);
+    }
+
+    if (type->isIntegerType() && rhsType->isFloatType() || rhsType->isDoubleType())
+    {
+        if (type->isSigned())
+        {
+            return getBuilder()->CreateFPToSI(rhsVal, typeVal);
+        }
+        else
+        {
+            return getBuilder()->CreateFPToUI(rhsVal, typeVal);
+        }
+    }
+
+    if (rhsType->isIntegerType() && type->isFloatType() || type->isDoubleType())
+    {
+        if (rhsType->isSigned())
+        {
+            return getBuilder()->CreateSIToFP(rhsVal, typeVal);
+        }
+        else
+        {
+            return getBuilder()->CreateUIToFP(rhsVal, typeVal);
+        }
+    }
+
+    return ErrorTable::addError(expr->getToken(), "Type Casting not supported");
+}
+
 llvm::Value *weasel::Context::codegen(ArithmeticExpression *expr)
 {
     auto opToken = expr->getOperator();
