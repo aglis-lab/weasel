@@ -27,11 +27,9 @@ weasel::Function *weasel::Parser::parseFunction()
     // Set Symbol for parameters and enter a scope
     enterScope();
 
-    for (const auto &arg : fun->getType()->getContainedTypes())
+    for (auto &arg : fun->getArguments())
     {
-        auto argName = arg->getIdentifier();
-
-        addAttribute(ParserAttribute::get(argName, arg, AttributeKind::Parameter));
+        addAttribute(ParserAttribute::get(arg->getArgumentName(), arg->getType(), AttributeKind::Parameter));
     }
 
     auto body = parseCompoundStatement();
@@ -76,7 +74,7 @@ weasel::Function *weasel::Parser::parseDeclareFunction()
     }
 
     getNextToken(); // eat '('
-    std::vector<Type *> types;
+    std::vector<ArgumentType *> types;
     auto isVararg = false;
 
     while (!getCurrentToken().isCloseParen())
@@ -104,8 +102,9 @@ weasel::Function *weasel::Parser::parseDeclareFunction()
             return ErrorTable::addError(getCurrentToken(), "Expected type in function argument");
         }
 
-        type->setIdentifier(identifier);
-        types.push_back(type);
+        auto argumentType = new ArgumentType(identifier, type);
+
+        types.push_back(argumentType);
 
         if (!getCurrentToken().isKind(TokenKind::TokenPuncComma))
         {
@@ -129,7 +128,6 @@ weasel::Function *weasel::Parser::parseDeclareFunction()
     }
 
     returnType->setSpread(isVararg);
-    returnType->replaceContainedTypes(types);
 
-    return new Function(identifier, returnType);
+    return new Function(identifier, returnType, types);
 }

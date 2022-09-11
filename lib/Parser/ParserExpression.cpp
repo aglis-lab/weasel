@@ -104,7 +104,7 @@ weasel::Expression *weasel::Parser::parseCallExpression(Function *fun)
 
     getNextToken(); // eat ')'
 
-    return new CallExpression(callToken, callToken.getValue(), args);
+    return new CallExpression(callToken, fun, args);
 }
 
 weasel::Expression *weasel::Parser::parseIdentifierExpression()

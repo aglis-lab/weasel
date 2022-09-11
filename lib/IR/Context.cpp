@@ -21,12 +21,12 @@ llvm::Value *weasel::Context::codegen(weasel::Function *funAST)
     auto funName = funAST->getIdentifier();
     auto funType = funAST->getType();
     auto isVararg = funType->isSpread();
-    auto funArgs = funType->getContainedTypes();
+    auto funArgs = funAST->getArguments();
     auto argsLength = (int)funArgs.size() - (isVararg ? 1 : 0);
     auto args = std::vector<llvm::Type *>(argsLength);
     for (int index = 0; index < argsLength; index++)
     {
-        args[index] = funArgs[index]->codegen(this);
+        args[index] = funArgs[index]->getType()->codegen(this);
     }
 
     auto linkage = llvm::GlobalValue::LinkageTypes::ExternalLinkage;
@@ -52,7 +52,7 @@ llvm::Value *weasel::Context::codegen(weasel::Function *funAST)
         for (auto &item : funLLVM->args())
         {
             auto argExpr = funArgs[idx++];
-            auto argName = argExpr->getIdentifier();
+            auto argName = argExpr->getArgumentName();
 
             item.setName(argName);
 
@@ -81,7 +81,7 @@ llvm::Value *weasel::Context::codegen(weasel::Function *funAST)
 
 llvm::Value *weasel::Context::codegen(CallExpression *expr)
 {
-    auto identifier = expr->getIdentifier();
+    auto identifier = expr->getFunction()->getIdentifier();
     auto args = expr->getArguments();
     auto fun = getModule()->getFunction(identifier);
 

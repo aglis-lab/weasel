@@ -1,6 +1,7 @@
 #pragma once
 
 #include "weasel/AST/ASTBase.h"
+#include "weasel/AST/ASTFunction.h"
 
 // Expression Without Block PART
 namespace weasel
@@ -71,14 +72,14 @@ namespace weasel
     // Call Expression
     class CallExpression : public Expression
     {
-        std::string _identifier;
+        Function *_fun;
         std::vector<Expression *> _args;
 
     public:
-        CallExpression(Token token, std::string identifier, std::vector<Expression *> args) : Expression(token), _identifier(identifier), _args(args) {}
+        CallExpression(Token token, Function *fun, std::vector<Expression *> args) : Expression(token, fun->getType()), _fun(fun), _args(args) {}
 
-        std::string getIdentifier() const { return _identifier; }
         std::vector<Expression *> getArguments() const { return _args; }
+        Function *getFunction() const { return _fun; }
 
     public:
         llvm::Value *codegen(Context *context) override;

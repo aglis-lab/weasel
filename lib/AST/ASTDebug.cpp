@@ -113,7 +113,7 @@ void weasel::ComparisonExpression::debug(int shift)
 
 void weasel::CallExpression::debug(int shift)
 {
-    auto val = this->getIdentifier();
+    auto val = this->getFunction()->getIdentifier();
     this->printDebug("Call " + val, shift);
 }
 
@@ -124,7 +124,8 @@ void weasel::ReturnExpression::debug(int shift)
 
 void weasel::StructExpression::debug(int shift)
 {
-    auto val = "Struct " + this->getType()->getIdentifier();
+    auto type = dynamic_cast<StructType *>(this->getType());
+    auto val = "Struct " + type->getIdentifier();
 
     val += "{";
     for (auto &item : this->getFields())

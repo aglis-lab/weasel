@@ -12,6 +12,7 @@ namespace weasel
 {
     class Context;
     class Token;
+    class StructType;
 
     enum class TypeID
     {
@@ -39,7 +40,6 @@ namespace weasel
         int _width = 32; // width in bit
         TypeID _typeId = TypeID::VoidType;
         std::vector<Type *> _containedTypes;
-        std::string _identifier;
 
         Type(TypeID typeId, Type *containedType, unsigned width = 0, bool isSign = true) : _typeId(typeId), _width(width), _isSigned(isSign)
         {
@@ -78,9 +78,6 @@ namespace weasel
 
         inline bool isSigned() const { return _isSigned; }
         inline bool isSpread() const { return _isSpread; }
-
-        inline std::string getIdentifier() const { return _identifier; }
-        inline void setIdentifier(std::string identifier) { _identifier = identifier; }
         inline void setSpread(bool val) { _isSpread = val; }
 
         inline bool isBoolType() const { return isIntegerType() && _width == 1; }
@@ -150,6 +147,7 @@ namespace weasel
     {
     private:
         std::vector<std::string> _typeNames;
+        std::string _identifier;
 
         StructType(std::string structName) : Type(TypeID::StructType, 0, false) { setIdentifier(structName); }
 
@@ -157,6 +155,9 @@ namespace weasel
         static StructType *get(const std::string &structName) { return new StructType(structName); }
 
     public:
+        inline std::string getIdentifier() const { return _identifier; }
+        inline void setIdentifier(std::string identifier) { _identifier = identifier; }
+
         std::vector<std::string> getTypeNames() const { return _typeNames; }
         int findTypeName(const std::string &typeName)
         {
@@ -193,11 +194,16 @@ namespace weasel
         llvm::Type *codegen(Context *context) override;
     };
 
-    // class ArgumentType : public Type
-    // {
-    // private:
-    //     std::vector<std::string> _typeNames;
+    class ArgumentType
+    {
+    private:
+        std::string _argumentName;
+        Type *_type;
 
-    //     ArgumentType(std::string structName) : Type(TypeID::StructType, 0, false) { setIdentifier(structName); }
-    // };
+    public:
+        ArgumentType(std::string argumentName, Type *type) : _argumentName(argumentName), _type(type) {}
+
+        inline std::string getArgumentName() const { return _argumentName; }
+        inline Type *getType() const { return _type; }
+    };
 } // namespace weasel

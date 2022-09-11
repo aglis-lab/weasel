@@ -197,7 +197,18 @@ llvm::Value *weasel::Context::codegen(AssignmentExpression *expr)
         rhsVal = castInteger(rhsVal, lhsTypeV, lhsType->isSigned());
     }
 
-    getBuilder()->CreateStore(rhsVal, lhsVal);
+    if (rhsType->isStructType())
+    {
+        auto rhsTypeStruct = dynamic_cast<StructType *>(rhsType);
+        assert(rhsTypeStruct);
+
+        getBuilder()->CreateMemCpy(lhsVal, llvm::MaybeAlign(4), rhsVal, llvm::MaybeAlign(4), rhsTypeStruct->getTypeWidthByte());
+    }
+    else
+    {
+        getBuilder()->CreateStore(rhsVal, lhsVal);
+    }
+
     if (expr->isLHS())
     {
         return lhsVal;
