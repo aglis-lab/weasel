@@ -40,6 +40,8 @@ namespace weasel
         TokenKeyEndDeclaration,   // END DECLARATION
         TokenKeyAssert,           // assert // debugging
         TokenKeyDefer,            // defer
+        TokenKeyReadOnly,         // readonly
+        TokenKeyWriteOnly,        // writeonly
 
         // Data Literal -> Value of data type
         TokenLitNil,

@@ -1,6 +1,9 @@
 # Load Library Package
 find_package(WEASEL)
 
+# Include Directory
+include_directories(${CMAKE_SOURCE_DIR}/include)
+
 # Add Executable
 file(GLOB SOURCES *.cpp)
 

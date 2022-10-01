@@ -3,6 +3,7 @@
 #include <vector>
 #include <iostream>
 #include <fstream>
+#include <unistd.h>
 
 // for a ‘real-world application' you’d want to find which device best suits your workload by using
 // vkGetPhysicalDeviceFeatures, vkGetPhysicalDeviceFormatProperties,
@@ -362,7 +363,6 @@ int main()
     // Descriptor Sets
     std::vector<VkDescriptorSet> descriptorSets(allocateInfo.descriptorSetCount);
     vkAllocateDescriptorSets(device, &allocateInfo, descriptorSets.data());
-    VkDescriptorSet descriptorSet = descriptorSets.front();
 
     // Descriptor Buffer
     VkDescriptorBufferInfo inDescriptorBufferInfo{};
@@ -374,6 +374,9 @@ int main()
     outDescriptorBufferInfo.buffer = outBuffer;
     outDescriptorBufferInfo.range = bufferSize;
     outDescriptorBufferInfo.offset = 0;
+
+    // Descriptor Set
+    VkDescriptorSet descriptorSet = descriptorSets.front();
 
     // Write Descriptor Set
     VkWriteDescriptorSet inWriteDescriptorSet{};
@@ -432,25 +435,11 @@ int main()
     vkEndCommandBuffer(commandBuffer);
 
     // Submit Work to GPU
-    VkQueue queue;
-    vkGetDeviceQueue(device, familyIndex, 0, &queue);
-
     VkFence fence;
     VkFenceCreateInfo fenceCreateInfo{};
     fenceCreateInfo.sType = VkStructureType::VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
 
     vkCreateFence(device, &fenceCreateInfo, nullptr, &fence);
-
-    VkSubmitInfo submitInfo;
-    submitInfo.sType = VkStructureType::VK_STRUCTURE_TYPE_SUBMIT_INFO;
-    submitInfo.signalSemaphoreCount = 0;
-    submitInfo.pSignalSemaphores = nullptr;
-    submitInfo.waitSemaphoreCount = 0;
-    submitInfo.pWaitSemaphores = nullptr;
-    submitInfo.pWaitDstStageMask = nullptr;
-    submitInfo.commandBufferCount = 1;
-    submitInfo.pCommandBuffers = &commandBuffer;
-    submitInfo.pNext = nullptr;
 
     // Device Memory
     VkMemoryAllocateInfo inMemoryAllocateInfo;
@@ -484,8 +473,25 @@ int main()
         inBufferPtr[i] = i + 1;
     }
 
+    // Create Device Queue
+    VkQueue queue;
+    vkGetDeviceQueue(device, familyIndex, 0, &queue);
+
     // Run GPU
+    VkSubmitInfo submitInfo;
+    submitInfo.sType = VkStructureType::VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    submitInfo.signalSemaphoreCount = 0;
+    submitInfo.pSignalSemaphores = nullptr;
+    submitInfo.waitSemaphoreCount = 0;
+    submitInfo.pWaitSemaphores = nullptr;
+    submitInfo.pWaitDstStageMask = nullptr;
+    submitInfo.commandBufferCount = 1;
+    submitInfo.pCommandBuffers = &commandBuffer;
+    submitInfo.pNext = nullptr;
+
     vkQueueSubmit(queue, 1, &submitInfo, fence);
+
+    // Wait for Queue Finish
     vkWaitForFences(device, 1, &fence, true, -1);
 
     // Map device memory to host

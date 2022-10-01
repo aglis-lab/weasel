@@ -19,6 +19,7 @@
     "cross-test": "./build/test/cross-test/cross-test",
     "metal-test": "./build/test/metal-test/metal-test",
     "vulkan-test": "./build/test/vulkan-test/vulkan-test",
+    "parallel-test": "./build/test/parallel-test/parallel-test",
     "spirv-test": "./build/test/spirv-test/spirv-test",
     "glsl-test": "./build/test/glsl-test/glsl-test"
   },

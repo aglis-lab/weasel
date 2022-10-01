@@ -2,6 +2,30 @@
 import "io"
 import "parallel"
 
+/*
+Data Types
+
+1 byte
+char
+byte
+sbyte
+
+2 bytes
+short
+ushort
+
+4 bytes
+int
+uint
+float
+
+8 bytes
+long
+ulong
+double
+
+*/
+
 parallel
 fun Mul(data *float) {
     let global = parallel.global

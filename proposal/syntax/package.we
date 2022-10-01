@@ -1,0 +1,15 @@
+// This is package name
+package funny
+
+
+// This is how we import our package and how to use it
+import wood
+// wood.doingCalculation()
+
+
+// This is how we import our package without package prefix and how to use it
+import buddy.running
+// running(12, "MILES")
+
+import std.*
+// println("Hello {}", name)

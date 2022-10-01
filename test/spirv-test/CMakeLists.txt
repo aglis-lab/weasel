@@ -3,6 +3,9 @@ find_package(WEASEL)
 
 include_directories(${SPIRV_INCLUDE_DIR})
 
+# Include Directory
+include_directories(${CMAKE_SOURCE_DIR}/include)
+
 # Add Executable
 file(GLOB SOURCES *.cpp)
 

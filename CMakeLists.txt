@@ -16,6 +16,9 @@ set(SPIRV_CROSS_DIR ${CMAKE_SOURCE_DIR}/spirv-cross)
 set(SPIRV_CROSS_INCLUDE_DIR ${SPIRV_CROSS_DIR})
 set(SPIRV_CROSS_LIB_DIR ${SPIRV_CROSS_DIR}/build)
 
+# WEASEL PARALLEL
+set(WEASEL_PARALLEL_LIB_DIR ${CMAKE_SOURCE_DIR}/build/libparallel)
+
 # LLVM
 set(LLVM_DIR /opt/homebrew/opt/llvm@13/lib/cmake/llvm/)
 set(WEASEL_DIR ${CMAKE_SOURCE_DIR}/cmake)
@@ -49,9 +52,9 @@ add_definitions(${LLVM_DEFINITIONS})
 
 # INCLUDE LLVM LIBRARY
 include_directories(${LLVM_INCLUDE_DIRS})
-include_directories(include)
 
 # Weasel Directories
 add_subdirectory(tools)
 add_subdirectory(lib)
 add_subdirectory(test)
+add_subdirectory(libparallel)
