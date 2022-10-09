@@ -54,7 +54,7 @@ add_definitions(${LLVM_DEFINITIONS})
 include_directories(${LLVM_INCLUDE_DIRS})
 
 # Weasel Directories
-add_subdirectory(tools)
 add_subdirectory(lib)
-add_subdirectory(test)
 add_subdirectory(libparallel)
+add_subdirectory(tools)
+add_subdirectory(test)

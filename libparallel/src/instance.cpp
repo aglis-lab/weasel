@@ -24,7 +24,7 @@ std::vector<VkLayerProperties> getLayerProperties()
     return props;
 }
 
-void __setupInstance()
+void __setupInstance(bool isDebug)
 {
     auto extensionProps = getExtensionProperties();
     std::vector<char *> extensions(extensionProps.size());
@@ -55,8 +55,15 @@ void __setupInstance()
     createInfo.pApplicationInfo = &appInfo;
     createInfo.enabledExtensionCount = extensions.size();
     createInfo.ppEnabledExtensionNames = extensions.data();
-    createInfo.enabledLayerCount = layers.size();
-    createInfo.ppEnabledLayerNames = layers.data();
+    if (isDebug)
+    {
+        createInfo.enabledLayerCount = layers.size();
+        createInfo.ppEnabledLayerNames = layers.data();
+    }
+    else
+    {
+        createInfo.enabledLayerCount = 0;
+    }
     createInfo.pNext = nullptr;
 
     VkResult res = vkCreateInstance(&createInfo, nullptr, &__instance);
@@ -68,5 +75,6 @@ void __setupInstance()
 
 void __release()
 {
-    std::cout << "Release Vulkan Parallel\n";
+    vkDestroyDevice(__device, nullptr);
+    vkDestroyInstance(__instance, nullptr);
 }

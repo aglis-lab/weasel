@@ -1,0 +1,25 @@
+struct ParallelGroup {
+    x uint
+    y uint
+    z uint
+}
+
+// Setup Parallel Vulkan
+extern fun __setupInstance(isDebug bool) {}
+extern fun __setupDevice() {}
+extern fun __setupMemory() {}
+
+// Allocating Device Memory
+fun __allocate(dataPtr *byte, bufferSize uint) *byte {}
+
+// Deallocating Device Memory
+fun __deAllocation(dataPtr *byte) {}
+
+// Load Shader File
+fun __shader(filename *byte) {}
+
+// Run Shader
+fun __run(functionName *byte, group ParallelGroup, paramCount uint, param ...*long) {}
+
+// Release All Memory
+fun __release() {}

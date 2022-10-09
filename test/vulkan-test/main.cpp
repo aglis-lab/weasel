@@ -130,9 +130,9 @@ int main()
     createInfo.pApplicationInfo = &appInfo;
     createInfo.enabledExtensionCount = extensions.size();
     createInfo.ppEnabledExtensionNames = extensions.data();
-    createInfo.enabledLayerCount = 0;
-    // createInfo.enabledLayerCount = layers.size();
-    // createInfo.ppEnabledLayerNames = layers.data();
+    // createInfo.enabledLayerCount = 0;
+    createInfo.enabledLayerCount = layers.size();
+    createInfo.ppEnabledLayerNames = layers.data();
     createInfo.pNext = nullptr;
 
     // Get Instance
@@ -164,7 +164,7 @@ int main()
     // Get Queue Family Properties
     std::vector<VkQueueFamilyProperties> queueProperties = getQueueFamilyPoperties(physicalDevice);
 
-    uint32_t familyIndex = -1;
+    uint32_t familyIndex = 0;
     uint32_t queuePropSize = queueProperties.size();
     for (uint32_t i = 0; i < queuePropSize; i++)
     {
@@ -183,6 +183,7 @@ int main()
 
     VkDeviceQueueCreateInfo queueInfo;
     queueInfo.sType = VkStructureType::VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+    queueInfo.flags = 0;
     queueInfo.queueFamilyIndex = familyIndex;
     queueInfo.queueCount = 1;
     queueInfo.pQueuePriorities = queuePriority;
@@ -215,18 +216,6 @@ int main()
     bufferCreateInfo.size = bufferSize;
     bufferCreateInfo.pQueueFamilyIndices = &familyIndex;
     bufferCreateInfo.queueFamilyIndexCount = 1;
-
-    VkBuffer inBuffer;
-    VkBuffer outBuffer;
-
-    vkCreateBuffer(device, &bufferCreateInfo, nullptr, &inBuffer);
-    vkCreateBuffer(device, &bufferCreateInfo, nullptr, &outBuffer);
-
-    VkMemoryRequirements inMemoryRequirements;
-    VkMemoryRequirements outMemoryRequirements;
-
-    vkGetBufferMemoryRequirements(device, inBuffer, &inMemoryRequirements);
-    vkGetBufferMemoryRequirements(device, outBuffer, &outMemoryRequirements);
 
     // Physical Device Memory Properties
     VkPhysicalDeviceMemoryProperties memoryProperties;
@@ -270,7 +259,7 @@ int main()
     std::cout << "Memory Type Index " << memoryTypeIndex << std::endl;
 
     // Load Content
-    char *filePath = "/Users/zaen/Projects/Open Source/weasel/test/vulkan-test/square.spv";
+    char *filePath = "/Users/zaen/Projects/Open Source/weasel/test/vulkan-test/comp.spv";
     auto contentProgram = readBinaryFile(filePath);
 
     // Create Shader Module
@@ -316,6 +305,7 @@ int main()
     VkPipelineLayout pipeline{};
     vkCreatePipelineLayout(device, &pipelineCreateInfo, nullptr, &pipeline);
 
+    // Create Pipelince Cache
     VkPipelineCacheCreateInfo pipelineCacheCreateInfo{};
     pipelineCacheCreateInfo.sType = VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
 
@@ -363,6 +353,41 @@ int main()
     // Descriptor Sets
     std::vector<VkDescriptorSet> descriptorSets(allocateInfo.descriptorSetCount);
     vkAllocateDescriptorSets(device, &allocateInfo, descriptorSets.data());
+
+    VkBuffer inBuffer;
+    VkBuffer outBuffer;
+
+    vkCreateBuffer(device, &bufferCreateInfo, nullptr, &inBuffer);
+    vkCreateBuffer(device, &bufferCreateInfo, nullptr, &outBuffer);
+
+    VkMemoryRequirements inMemoryRequirements;
+    VkMemoryRequirements outMemoryRequirements;
+
+    vkGetBufferMemoryRequirements(device, inBuffer, &inMemoryRequirements);
+    vkGetBufferMemoryRequirements(device, outBuffer, &outMemoryRequirements);
+
+    // Device Memory
+    VkMemoryAllocateInfo inMemoryAllocateInfo;
+    inMemoryAllocateInfo.sType = VkStructureType::VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+    inMemoryAllocateInfo.allocationSize = inMemoryRequirements.size;
+    inMemoryAllocateInfo.memoryTypeIndex = memoryTypeIndex;
+    inMemoryAllocateInfo.pNext = nullptr;
+
+    VkMemoryAllocateInfo outMemoryAllocateInfo;
+    outMemoryAllocateInfo.sType = VkStructureType::VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+    outMemoryAllocateInfo.allocationSize = outMemoryRequirements.size;
+    outMemoryAllocateInfo.memoryTypeIndex = memoryTypeIndex;
+    outMemoryAllocateInfo.pNext = nullptr;
+
+    VkDeviceMemory inDeviceMemory;
+    VkDeviceMemory outDeviceMemory;
+
+    vkAllocateMemory(device, &inMemoryAllocateInfo, nullptr, &inDeviceMemory);
+    vkAllocateMemory(device, &outMemoryAllocateInfo, nullptr, &outDeviceMemory);
+
+    // Binding Memory
+    vkBindBufferMemory(device, inBuffer, inDeviceMemory, 0);
+    vkBindBufferMemory(device, outBuffer, outDeviceMemory, 0);
 
     // Descriptor Buffer
     VkDescriptorBufferInfo inDescriptorBufferInfo{};
@@ -441,37 +466,16 @@ int main()
 
     vkCreateFence(device, &fenceCreateInfo, nullptr, &fence);
 
-    // Device Memory
-    VkMemoryAllocateInfo inMemoryAllocateInfo;
-    inMemoryAllocateInfo.sType = VkStructureType::VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-    inMemoryAllocateInfo.allocationSize = inMemoryRequirements.size;
-    inMemoryAllocateInfo.memoryTypeIndex = memoryTypeIndex;
-    inMemoryAllocateInfo.pNext = nullptr;
-
-    VkMemoryAllocateInfo outMemoryAllocateInfo;
-    outMemoryAllocateInfo.sType = VkStructureType::VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-    outMemoryAllocateInfo.allocationSize = outMemoryRequirements.size;
-    outMemoryAllocateInfo.memoryTypeIndex = memoryTypeIndex;
-    outMemoryAllocateInfo.pNext = nullptr;
-
-    VkDeviceMemory inDeviceMemory;
-    VkDeviceMemory outDeviceMemory;
-
-    vkAllocateMemory(device, &inMemoryAllocateInfo, nullptr, &inDeviceMemory);
-    vkAllocateMemory(device, &outMemoryAllocateInfo, nullptr, &outDeviceMemory);
-
-    // Binding Memory
-    vkBindBufferMemory(device, inBuffer, inDeviceMemory, 0);
-    vkBindBufferMemory(device, outBuffer, outDeviceMemory, 0);
-
     // Map Input before submit
-    uint32_t *inBufferPtr = (uint32_t *)malloc(bufferSize);
+    float *inBufferPtr = (float *)malloc(bufferSize);
     vkMapMemory(device, inDeviceMemory, 0, bufferSize, 0, (void **)&inBufferPtr);
-
     for (uint32_t i = 0; i < numElements; i++)
     {
-        inBufferPtr[i] = i + 1;
+        inBufferPtr[i] = (float)i + 1;
     }
+
+    float *outBufferPtr = (float *)malloc(bufferSize);
+    vkMapMemory(device, outDeviceMemory, 0, bufferSize, 0, (void **)&outBufferPtr);
 
     // Create Device Queue
     VkQueue queue;
@@ -495,9 +499,6 @@ int main()
     vkWaitForFences(device, 1, &fence, true, -1);
 
     // Map device memory to host
-    uint32_t *outBufferPtr = (uint32_t *)malloc(bufferSize);
-    vkMapMemory(device, outDeviceMemory, 0, bufferSize, 0, (void **)&outBufferPtr);
-
     std::cout << "In Values :\n";
     for (uint32_t i = 0; i < numElements; ++i)
     {
@@ -512,24 +513,26 @@ int main()
     }
     std::cout << std::endl;
 
-    // Unmap memory
+    // __deallocation
     vkUnmapMemory(device, outDeviceMemory);
     vkUnmapMemory(device, inDeviceMemory);
+    vkFreeMemory(device, inDeviceMemory, nullptr);
+    vkFreeMemory(device, outDeviceMemory, nullptr);
+    vkDestroyBuffer(device, inBuffer, nullptr);
+    vkDestroyBuffer(device, outBuffer, nullptr);
 
     // Release Everything
+    vkDestroyPipelineLayout(device, pipeline, nullptr);
     vkResetCommandPool(device, commandPool, VkCommandPoolResetFlagBits::VK_COMMAND_POOL_RESET_RELEASE_RESOURCES_BIT);
     vkDestroyFence(device, fence, nullptr);
     vkDestroyDescriptorSetLayout(device, layout, nullptr);
-    vkDestroyPipelineLayout(device, pipeline, nullptr);
     vkDestroyPipelineCache(device, pipelineCache, nullptr);
     vkDestroyShaderModule(device, shaderModule, nullptr);
     vkDestroyPipeline(device, computePipeline, nullptr);
     vkDestroyDescriptorPool(device, pool, nullptr);
     vkDestroyCommandPool(device, commandPool, nullptr);
-    vkFreeMemory(device, inDeviceMemory, nullptr);
-    vkFreeMemory(device, outDeviceMemory, nullptr);
-    vkDestroyBuffer(device, inBuffer, nullptr);
-    vkDestroyBuffer(device, outBuffer, nullptr);
+
+    // __release
     vkDestroyDevice(device, nullptr);
     vkDestroyInstance(instance, nullptr);
 }

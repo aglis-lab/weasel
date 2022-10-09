@@ -12,7 +12,7 @@ file(GLOB SOURCES
 add_executable(parallel-test ${SOURCES})
 
 set(PARALLEL_LIBS
-    ${WEASEL_PARALLEL_LIB_DIR}/libWeaselParallel.a
+    WeaselParallel
     Vulkan::Vulkan
 )
 target_link_libraries(parallel-test ${PARALLEL_LIBS})

@@ -146,7 +146,7 @@
 - Queue -> 28
 - Fence -> 23
 
-### 3. Wait For Fences (Waiting the queue finish)
+### 30. Wait For Fences (Waiting the queue finish)
 
 - Device -> 3
 - Fence -> 23

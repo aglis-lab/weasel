@@ -45,6 +45,15 @@ void __setupDevice()
     __physicalDevices = getPhysicalDevices(__instance);
     __physicalDevice = __physicalDevices.front();
 
+    // Get Device Properties
+    // VkPhysicalDeviceProperties physicalDeviceProperties;
+    // vkGetPhysicalDeviceProperties(__physicalDevice, &physicalDeviceProperties);
+    // std::cout << "Properties of device\n";
+    // std::cout << "Vendor ID : " << physicalDeviceProperties.vendorID << std::endl;
+    // std::cout << "Device Name : " << physicalDeviceProperties.deviceName << std::endl;
+    // std::cout << "Vulkan Version : " << (physicalDeviceProperties.apiVersion >> 22) << std::endl;
+    // std::cout << "Max Compute Shared Memory Size: " << physicalDeviceProperties.limits.maxComputeSharedMemorySize / 1024 << " KB" << std::endl;
+
     auto queueProperties = getQueueFamilyPoperties(__physicalDevice);
     auto queuePropSize = queueProperties.size();
     for (size_t i = 0; i < queuePropSize; i++)
@@ -57,16 +66,12 @@ void __setupDevice()
         }
     }
 
-    if (__familyIndex == -1)
-    {
-        throw std::runtime_error("failed to find family index queue!");
-    }
-
     // TODO: I don't know what it is
     float queuePriority[1] = {0.0};
 
     VkDeviceQueueCreateInfo queueInfo;
     queueInfo.sType = VkStructureType::VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+    queueInfo.flags = 0;
     queueInfo.queueFamilyIndex = __familyIndex;
     queueInfo.queueCount = 1;
     queueInfo.pQueuePriorities = queuePriority;
@@ -84,5 +89,8 @@ void __setupDevice()
     deviceInfo.pEnabledFeatures = nullptr;
     deviceInfo.pNext = nullptr;
 
-    vkCreateDevice(__physicalDevice, &deviceInfo, nullptr, &__device);
+    if (vkCreateDevice(__physicalDevice, &deviceInfo, nullptr, &__device) != VkResult::VK_SUCCESS)
+    {
+        throw std::runtime_error("failed to create device!");
+    }
 }
