@@ -79,27 +79,45 @@ inline VkShaderModule __shaderModule;
 inline uint32_t __memoryTypeIndex = -1;
 inline std::unordered_map<std::uintptr_t, BufferMemory *> __bufferMemory;
 
-// Functionality //
-// Setup
-extern "C" void __setupInstance(bool isDebug);
-extern "C" void __setupDevice();
-extern "C" void __setupMemory();
+// Private Functionality //
+// Allocate Memory
+VkBuffer createBuffer(size_t bufferSize);
+VkDeviceMemory createDeviceMemory(VkBuffer bufferSize);
+BufferMemory *getAllocation(void *dataPtr);
 
 // Create Pipeline Layout
 VkDescriptorSetLayout createDescriptorSetLayout(uint32_t bindingCount);
 VkDescriptorSetLayoutBinding createLayoutBinding(uint32_t binding);
-VkPipelineLayout createPipelineLayout(std::vector<VkDescriptorSetLayout> layouts);
+VkDescriptorPoolSize createDescriptorPoolSize(uint32_t descriptorCount);
+VkDescriptorPool createDescriptorPool(std::vector<VkDescriptorPoolSize> pools, uint32_t maxSets); // NumDescriptors * sizeof(Descriptor) + NumSets * sizeof(DescriptorSet);
+std::vector<VkDescriptorSet> allocateDescriptorSets(VkDescriptorPool pool, std::vector<VkDescriptorSetLayout> layouts);
+VkWriteDescriptorSet createDescriptorSet(VkDescriptorSet descriptorSet, size_t binding, VkBuffer buffer, size_t bufferSize);
+void updateDescriptorSets(std::vector<VkWriteDescriptorSet> descriptorWrites, std::vector<VkCopyDescriptorSet> descriptorCopies);
 
-// Create Pipeline
+// Create Pipelines
+VkPipelineLayout createPipelineLayout(std::vector<VkDescriptorSetLayout> layouts);
 VkPipelineCache createPipelineCache();
 VkComputePipelineCreateInfo createComputePipelineCreateInfo(const char *funName, VkPipelineLayout pipelineLayout);
 std::vector<VkPipeline> createPipelines(std::vector<VkComputePipelineCreateInfo> createInfos, VkPipelineCache pipelineCache);
 
-// Allocate Memory
-VkBuffer createBuffer(size_t bufferSize);
-VkDeviceMemory createDeviceMemory(VkBuffer bufferSize);
+// Create Command
+VkCommandPool createCommandPool(uint32_t familyIndex);
+std::vector<VkCommandBuffer> createCommandBuffers(VkCommandPool commandPool, uint32_t commandBufferCount);
+void parseCommand(VkCommandBuffer commandBuffer, VkPipeline pipeline, VkPipelineLayout pipelineLayout, std::vector<VkDescriptorSet> descriptorSets, ParallelGroup group);
 
-BufferMemory *getAllocation(void *dataPtr);
+// Queue
+VkFence createFence();
+VkQueue getDeviceQueue(uint familyIndex, uint queueIndex);
+void queueSubmit(VkQueue queue, std::vector<VkCommandBuffer> commandBuffers, VkFence fence);
+void waitFences(std::vector<VkFence> fences, bool waitAll, uint timeout);
+void resetFences(std::vector<VkFence> fences);
+VkResult getFenceStatus(VkFence fence);
+
+// Public Functionality //
+// Setup
+extern "C" void __setupInstance(bool isDebug);
+extern "C" void __setupDevice();
+extern "C" void __setupMemory();
 
 extern "C" void *__allocate(void *dataPtr, uint32_t bufferSize);
 extern "C" void __deAllocation(void *dataPtr);

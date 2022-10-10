@@ -1,25 +1,6 @@
 #include "helper.h"
 #include "parallel.h"
 
-VkWriteDescriptorSet createDescriptorSet(VkDescriptorSet descriptorSet, size_t binding, VkBuffer buffer, size_t bufferSize)
-{
-    auto descriptorBufferInfo = new VkDescriptorBufferInfo;
-    descriptorBufferInfo->buffer = buffer;
-    descriptorBufferInfo->range = bufferSize;
-    descriptorBufferInfo->offset = 0;
-
-    VkWriteDescriptorSet writeDescriptorSet{};
-    writeDescriptorSet.sType = VkStructureType::VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    writeDescriptorSet.descriptorType = VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-    writeDescriptorSet.pBufferInfo = descriptorBufferInfo;
-    writeDescriptorSet.dstBinding = binding;
-    writeDescriptorSet.dstArrayElement = 0;
-    writeDescriptorSet.descriptorCount = 1;
-    writeDescriptorSet.dstSet = descriptorSet;
-
-    return writeDescriptorSet;
-}
-
 void __shader(const char *filename)
 {
     auto program = readBinaryFile(filename);
@@ -85,51 +66,14 @@ void __run(const char *functionName, ParallelGroup group, uint32_t paramCount, .
     auto layout = createDescriptorSetLayout(bindingCount);
     auto layouts = std::vector<VkDescriptorSetLayout>{layout};
 
-    // Create Pipeline Layout
-    // Pipeline layout for all the functions parameters
-    // Multiple Layout to set layout on GLSL
-    auto pipeline = createPipelineLayout(layouts);
-
-    // Create Pipeline
-    // We can create multiple function and multiple pipelines at once
-    auto computeCreateInfo = createComputePipelineCreateInfo(functionName, pipeline);
-    auto pipelineCache = createPipelineCache();
-    auto pipelines = createPipelines({computeCreateInfo}, pipelineCache);
-    auto computePipeline = pipelines[0];
-
     // Create Descriptor Pool
-    VkDescriptorPoolSize poolSize{};
-    poolSize.type = VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-    poolSize.descriptorCount = descriptorCount;
-
-    VkDescriptorPoolCreateInfo poolCreateInfo;
-    poolCreateInfo.sType = VkStructureType::VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-    poolCreateInfo.flags = VkDescriptorPoolCreateFlagBits::VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT;
-    poolCreateInfo.poolSizeCount = 1;
-    poolCreateInfo.pPoolSizes = &poolSize;
-    poolCreateInfo.maxSets = 1;
-    poolCreateInfo.pNext = nullptr;
-
-    VkDescriptorPool pool{};
-    if (vkCreateDescriptorPool(__device, &poolCreateInfo, nullptr, &pool) != VkResult::VK_SUCCESS)
-    {
-        throw std::runtime_error("failed to create descriptor pool!");
-    }
+    auto poolSize = createDescriptorPoolSize(descriptorCount);
+    auto poolsSize = std::vector<VkDescriptorPoolSize>{poolSize};
+    auto pool = createDescriptorPool(poolsSize, layouts.size());
 
     // Allocate Info Descriptor Sets
-    VkDescriptorSetAllocateInfo allocateInfo{};
-    allocateInfo.sType = VkStructureType::VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-    allocateInfo.descriptorSetCount = 1;
-    allocateInfo.pSetLayouts = &layout;
-    allocateInfo.descriptorPool = pool;
-    allocateInfo.pNext = nullptr;
-
-    std::vector<VkDescriptorSet> descriptorSets(allocateInfo.descriptorSetCount);
-    if (vkAllocateDescriptorSets(__device, &allocateInfo, descriptorSets.data()) != VkResult::VK_SUCCESS)
-    {
-        throw std::runtime_error("failed to allocate descriptor sets!");
-    }
-    VkDescriptorSet descriptorSet = descriptorSets.front();
+    auto descriptorSets = allocateDescriptorSets(pool, layouts);
+    auto descriptorSet = descriptorSets.front();
 
     // Update Descriptor Set
     std::vector<VkWriteDescriptorSet> writeDescriptorSets(paramCount);
@@ -143,80 +87,72 @@ void __run(const char *functionName, ParallelGroup group, uint32_t paramCount, .
         writeDescriptorSets[i] = descriptor;
     }
 
-    vkUpdateDescriptorSets(__device, writeDescriptorSets.size(), writeDescriptorSets.data(), 0, nullptr);
+    updateDescriptorSets(writeDescriptorSets, {});
+
+    // Create Pipeline Layout
+    // Pipeline layout for all the functions parameters
+    // Multiple Layout to set layout on GLSL
+    auto pipelineLayout = createPipelineLayout(layouts);
+
+    // Create Pipeline
+    // We can create multiple function and multiple pipelines at once
+    auto computeCreateInfo = createComputePipelineCreateInfo(functionName, pipelineLayout);
+    auto pipelineCache = createPipelineCache();
+    auto pipelines = createPipelines({computeCreateInfo}, pipelineCache);
+    auto pipeline = pipelines[0];
 
     // Command Pool
-    VkCommandPoolCreateInfo commandPoolCreateInfo{};
-    commandPoolCreateInfo.sType = VkStructureType::VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-    commandPoolCreateInfo.queueFamilyIndex = __familyIndex;
-
-    VkCommandPool commandPool{};
-    if (vkCreateCommandPool(__device, &commandPoolCreateInfo, nullptr, &commandPool) != VkResult::VK_SUCCESS)
-    {
-        throw std::runtime_error("failed to create command pool!");
-    }
+    auto commandPool = createCommandPool(__familyIndex);
 
     // Command Buffer
-    VkCommandBufferAllocateInfo commandBufferAllocateInfo{};
-    commandBufferAllocateInfo.sType = VkStructureType::VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-    commandBufferAllocateInfo.commandPool = commandPool;
-    commandBufferAllocateInfo.level = VkCommandBufferLevel::VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-    commandBufferAllocateInfo.commandBufferCount = 1;
-
-    std::vector<VkCommandBuffer> commandBuffers(commandBufferAllocateInfo.commandBufferCount);
-    if (vkAllocateCommandBuffers(__device, &commandBufferAllocateInfo, commandBuffers.data()) != VkResult::VK_SUCCESS)
-    {
-        throw std::runtime_error("failed to allocate command buffers!");
-    }
-    VkCommandBuffer commandBuffer = commandBuffers.front();
+    auto commandBufferCount = (uint)1;
+    auto commandBuffers = createCommandBuffers(commandPool, commandBufferCount);
+    auto commandBuffer = commandBuffers.front();
 
     // Recording Command
-    VkCommandBufferBeginInfo commandBufferBeginInfo{};
-    commandBufferBeginInfo.flags = VkCommandBufferUsageFlagBits::VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-    commandBufferBeginInfo.sType = VkStructureType::VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    parseCommand(commandBuffer, pipeline, pipelineLayout, descriptorSets, group);
 
-    vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo);
-    vkCmdBindPipeline(commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_COMPUTE, computePipeline);
-    vkCmdBindDescriptorSets(commandBuffer, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_COMPUTE, pipeline, 0, 1, descriptorSets.data(), 0, nullptr);
-    vkCmdDispatch(commandBuffer, group.x, group.y, group.z);
-    vkEndCommandBuffer(commandBuffer);
-
-    // Submit Work to GPU
-    VkFence fence;
-    VkFenceCreateInfo fenceCreateInfo{};
-    fenceCreateInfo.sType = VkStructureType::VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-
-    if (vkCreateFence(__device, &fenceCreateInfo, nullptr, &fence) != VkResult::VK_SUCCESS)
-    {
-        throw std::runtime_error("failed to create fence!");
-    }
+    // Queue and Fence
+    auto fence = createFence();
 
     // Create Device Queue
-    VkQueue queue;
-    vkGetDeviceQueue(__device, __familyIndex, 0, &queue);
+    auto queue = getDeviceQueue(__familyIndex, 0);
 
     // Run GPU
-    VkSubmitInfo submitInfo;
-    submitInfo.sType = VkStructureType::VK_STRUCTURE_TYPE_SUBMIT_INFO;
-    submitInfo.signalSemaphoreCount = 0;
-    submitInfo.pSignalSemaphores = nullptr;
-    submitInfo.waitSemaphoreCount = 0;
-    submitInfo.pWaitSemaphores = nullptr;
-    submitInfo.pWaitDstStageMask = nullptr;
-    submitInfo.commandBufferCount = 1;
-    submitInfo.pCommandBuffers = &commandBuffer;
-    submitInfo.pNext = nullptr;
-
-    if (vkQueueSubmit(queue, 1, &submitInfo, fence) != VkResult::VK_SUCCESS)
-    {
-        throw std::runtime_error("failed to queue submit!");
-    }
+    queueSubmit(queue, commandBuffers, fence);
 
     // Wait for Queue Finish
-    if (vkWaitForFences(__device, 1, &fence, true, -1) != VkResult::VK_SUCCESS)
-    {
-        throw std::runtime_error("failed to wait for fence!");
-    }
+    waitFences({fence}, true, -1);
+
+    // // Second Attempt
+    // {
+    //     std::vector<VkWriteDescriptorSet> writeDescriptorSets(paramCount);
+    //     for (size_t i = 0; i < paramCount; i++)
+    //     {
+    //         auto arg = args[i];
+    //         auto bufferMemory = arg.bufferMemory;
+    //         assert(bufferMemory);
+
+    //         auto descriptor = createDescriptorSet(descriptorSet, i, bufferMemory->buffer, bufferMemory->bufferSize);
+    //         writeDescriptorSets[i] = descriptor;
+    //     }
+
+    //     updateDescriptorSets(writeDescriptorSets, {});
+    //     parseCommand(commandBuffer, pipeline, pipelineLayout, descriptorSets, group);
+    //     resetFences({fence});
+    // }
+
+    // for (size_t i = 0; i < 10; i++)
+    // {
+    //     ((float *)args[0].data)[i] *= 2;
+    // }
+
+    // // Run GPU
+    // auto fence2 = createFence();
+    // queueSubmit(queue, commandBuffers, fence2);
+
+    // // Wait for Queue Finish
+    // waitFences({fence2, fence}, true, -1);
 
     for (auto item : args)
     {

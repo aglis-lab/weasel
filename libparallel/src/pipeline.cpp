@@ -31,7 +31,7 @@ VkPipelineCache createPipelineCache()
 {
     VkPipelineCacheCreateInfo pipelineCacheCreateInfo{};
     pipelineCacheCreateInfo.sType = VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
-    pipelineCacheCreateInfo.flags = VkPipelineCacheCreateFlagBits::VK_PIPELINE_CACHE_CREATE_EXTERNALLY_SYNCHRONIZED_BIT;
+    pipelineCacheCreateInfo.flags = 0;
 
     VkPipelineCache pipelineCache{};
     if (vkCreatePipelineCache(__device, &pipelineCacheCreateInfo, nullptr, &pipelineCache) != VkResult::VK_SUCCESS)
