@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# SPIRV LLVM TRANSLATOR JUST SUPPORT OPENCL LANGUAGE #
+
 # PRE-DEFINE VARIABLES
 LLVM_PACKAGE="llvm@13"
 LLVM_PATH=/opt/homebrew/opt/$LLVM_PACKAGE/lib/cmake/llvm/

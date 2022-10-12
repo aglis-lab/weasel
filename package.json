@@ -12,6 +12,7 @@
     "llvm": "./config/llvm.sh",
     "spirv": "./config/spirv.sh",
     "spirv-cross": "./config/spirv-cross.sh",
+    "spirv-clspv": "./config/spirv-clspv.sh",
 
     "build": "./config/build.sh",
 

@@ -29,7 +29,7 @@ void debug(const std::list<weasel::Function *> &objects)
 
 int main(int argc, char *argv[])
 {
-    if (argc <= 2)
+    if (argc <= 1)
     {
         std::cerr << "Not Input files\n";
         return 1;

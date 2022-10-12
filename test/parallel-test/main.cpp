@@ -7,7 +7,7 @@ int main()
     __setupInstance(true);
     __setupDevice();
     __setupMemory();
-    __shader("/Users/zaen/Projects/Open Source/weasel/test/vulkan-test/comp.spv");
+    __shader("/Users/zaen/Projects/Open Source/weasel/temp/weasel-spv/square.spv");
 
     auto numElement = 10;
     auto paramCount = 2;

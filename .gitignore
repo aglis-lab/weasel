@@ -12,6 +12,7 @@ llvm-project/
 llvm-spirv/
 spirv/
 spirv-cross/
+spirv-clspv/
 
 .idea
 .vscode
