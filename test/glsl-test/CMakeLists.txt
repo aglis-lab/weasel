@@ -5,9 +5,9 @@ find_package(WEASEL)
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
 # Add Executable
-file(GLOB SOURCES *.cpp)
-
-add_executable(glsl-test ${SOURCES})
+add_executable(glsl-test
+    main.cpp
+)
 
 set(WEASEL_LIBS
     ${WEASEL_LIBS}

@@ -1,13 +1,14 @@
-#include <iostream>
-#include <iomanip>
+#include <fmt/core.h>
 #include "weasel/AST/AST.h"
 #include "weasel/IR/Context.h"
 
 // Internal Printing
 void weasel::ASTDebug::printDebug(const std::string &val, int shift)
 {
-    std::cout << std::setfill(' ') << std::setw(shift);
-    std::cout << "> " << val << std::endl;
+    // std::cout << std::setfill(' ') << std::setw(shift);
+    // std::cout << val << std::endl;
+
+    fmt::println("{: >{}} {}", "", shift, val);
 }
 
 // Literal
@@ -54,11 +55,19 @@ void weasel::NilLiteralExpression::debug(int shift)
 // Statement
 void weasel::DeclarationStatement::debug(int shift)
 {
-    this->printDebug("Declaration " + this->getIdentifier(), shift);
+    auto prefix = "@declare";
     if (this->getValue() != nullptr)
     {
-        this->getValue()->debug(shift + defaultShift);
+        prefix = "@define";
     }
+
+    auto val = fmt::format("{} {} {}", prefix, this->getIdentifier(), getType()->getTypeName());
+    if (this->getValue() != nullptr)
+    {
+        val = fmt::format("{} = {}", val, this->getValue()->getType()->getTypeName());
+    }
+
+    this->printDebug(val, shift);
 }
 
 // Expression
@@ -113,13 +122,28 @@ void weasel::ComparisonExpression::debug(int shift)
 
 void weasel::CallExpression::debug(int shift)
 {
-    auto val = this->getFunction()->getIdentifier();
-    this->printDebug("Call " + val, shift);
+
+    std::string argStr;
+    auto argSize = (int)this->getArguments().size();
+    for (int i = 0; i < argSize; i++)
+    {
+        auto item = this->getArguments()[i];
+        argStr += item->getType()->getTypeName();
+
+        if (i != argSize - 1)
+        {
+            argStr += ", ";
+        }
+    }
+
+    auto val = fmt::format("@call {}({})", this->getFunction()->getIdentifier(), argStr);
+    this->printDebug(val, shift);
 }
 
 void weasel::ReturnExpression::debug(int shift)
 {
-    this->printDebug("Return", shift);
+    auto val = fmt::format("return {}", this->getValue()->getType()->getTypeName());
+    this->printDebug(val, shift);
 }
 
 void weasel::StructExpression::debug(int shift)
@@ -164,24 +188,30 @@ void weasel::CompoundStatement::debug(int shift)
 {
     for (auto &item : this->getBody())
     {
-        item->debug(shift + this->defaultShift);
+        item->debug(shift);
     }
 }
 
 void weasel::ConditionStatement::debug(int shift)
 {
-    this->printDebug("If Statement", shift);
-    this->printDebug("If Conditions", shift);
-    for (auto &item : getConditions())
+    int length = this->getConditions().size();
+    for (int i = 0; i < length; i++)
     {
-        item->debug(shift + defaultShift);
-    }
+        auto cond = this->getConditions()[i];
+        auto body = this->getStatements()[i];
 
-    this->printDebug("If Body", shift);
-    for (auto &item : getStatements())
-    {
-        this->printDebug("Body", shift);
-        item->debug(shift + defaultShift);
+        if (i == length - 1 && this->isElseExist())
+        {
+            auto val = fmt::format("else {}", cond->getType()->getTypeName());
+            this->printDebug(val, shift);
+        }
+        else
+        {
+            auto val = fmt::format("if {}", cond->getType()->getTypeName());
+            this->printDebug(val, shift);
+        }
+
+        body->debug(shift + this->defaultShift);
     }
 }
 
@@ -226,6 +256,29 @@ void weasel::TypeCastExpression::debug(int shift)
 // Funtion Debug
 void weasel::Function::debug(int shift)
 {
-    this->printDebug("Function : " + this->getIdentifier(), shift);
+    std::string prefix = "@declare";
+    if (this->getBody()->getBody().size() > 0)
+    {
+        prefix = "@define";
+    }
+
+    std::string argStr;
+    auto argSize = (int)this->getArguments().size();
+    for (int i = 0; i < argSize; i++)
+    {
+        auto item = this->getArguments()[i];
+        argStr += item->getType()->getTypeName();
+
+        if (i != argSize - 1)
+        {
+            argStr += ", ";
+        }
+    }
+
+    auto retStr = this->getType()->getTypeName();
+    auto identifier = this->getIdentifier();
+    auto val = fmt::format("{} {}({}) {}", prefix, identifier, argStr, retStr);
+
+    this->printDebug(val, shift);
     this->getBody()->debug(shift + this->defaultShift);
 }

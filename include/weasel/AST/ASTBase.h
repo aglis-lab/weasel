@@ -38,17 +38,17 @@ namespace weasel
         UniqueExternalLinkage,
 
         /// No linkage according to the standard, but is visible from other
-        /// translation units because of types defined in a inline function.
+        /// translation units because of types defined in a function.
         VisibleNoLinkage,
 
         /// Internal linkage according to the Modules TS, but can be referred
-        /// to from other translation units indirectly through inline functions and
+        /// to from other translation units indirectly through functions and
         /// templates in the module interface.
         ModuleInternalLinkage,
 
         /// Module linkage, which indicates that the entity can be referred
         /// to from other translation units within the same module, and indirectly
-        /// from arbitrary other translation units through inline functions and
+        /// from arbitrary other translation units through functions and
         /// templates in the module interface.
         ModuleLinkage,
 
@@ -87,23 +87,18 @@ namespace weasel
     // Expression
     class Expression : public ASTDebug
     {
-    protected:
-        Token _token; // Token each expression
-        Type *_type;
-        std::vector<MetaID> _metas;
-
     public:
-        Expression() = default;
+        Expression() : _token(Token::create()) {}
         Expression(Token token) : _token(token) {}
         Expression(Token token, Type *type) : _token(token), _type(type) {}
 
-        inline Token getToken() const { return _token; }
-        inline Type *getType() const { return _type; }
-        inline void setType(Type *type) { _type = type; }
-        inline bool isNoType() const { return _type == nullptr; }
+        Token getToken() const { return _token; }
+        Type *getType() const { return _type; }
+        void setType(Type *type) { _type = type; }
+        bool isNoType() const { return _type == nullptr; }
         bool isCompoundExpression();
 
-        inline void addMeta(MetaID meta) { _metas.push_back(meta); }
+        void addMeta(MetaID meta) { _metas.push_back(meta); }
         bool isRHS()
         {
             for (auto item : _metas)
@@ -116,6 +111,7 @@ namespace weasel
 
             return false;
         }
+
         bool isLHS()
         {
             for (auto item : _metas)
@@ -136,6 +132,11 @@ namespace weasel
 
     public:
         virtual llvm::Value *codegen(Context *context) = 0;
+
+    protected:
+        Token _token; // Token each expression
+        Type *_type;
+        std::vector<MetaID> _metas;
     };
 
     // Global Value
@@ -148,7 +149,7 @@ namespace weasel
     public:
         GlobalObject(Token token, const std::string &identifier, Type *type) : Expression(token, type), _identifier(identifier) {}
 
-        inline std::string getIdentifier() const { return _identifier; }
+        std::string getIdentifier() const { return _identifier; }
     };
 
     // Literal Expression

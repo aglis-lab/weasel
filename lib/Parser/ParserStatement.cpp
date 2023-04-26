@@ -60,7 +60,7 @@ weasel::Expression *weasel::Parser::parseStatement()
 
 weasel::StructType *weasel::Parser::parseStruct()
 {
-    if (!getNextToken().isIdentifier())
+    if (!getNextToken().isIdentifier() && !getCurrentToken().isKeyParallel())
     {
         return ErrorTable::addError(getCurrentToken(), "Invalid Struct expression");
     }

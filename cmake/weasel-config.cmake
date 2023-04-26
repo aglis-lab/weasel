@@ -1,3 +1,5 @@
+find_package (glog REQUIRED)
+
 set(WEASEL_LIBS
     ${WEASEL_LIBS}
     # AMD GPU
@@ -135,4 +137,7 @@ set(WEASEL_LIBS
     # LLVMXCoreDesc
     # LLVMXCoreDisassembler
     # LLVMXCoreUtils
+
+    # Third Party Library
+    glog::glog
 )

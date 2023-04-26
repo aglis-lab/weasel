@@ -19,7 +19,7 @@ int main()
     floats2.size = numElement;
     floats2.data = (float *)__allocate(nullptr, numElement * sizeof(float));
 
-    for (size_t i = 0; i < numElement; i++)
+    for (int i = 0; i < numElement; i++)
     {
         floats1.data[i] = (float)i + 1;
     }
@@ -27,12 +27,12 @@ int main()
     __run("main", ParallelGroup{numElement, 1, 1}, paramCount, &floats1, &floats2);
 
     std::cout << "Values\n";
-    for (size_t i = 0; i < numElement; i++)
+    for (int i = 0; i < numElement; i++)
     {
         std::cout << floats1.data[i] << " ";
     }
     std::cout << std::endl;
-    for (size_t i = 0; i < numElement; i++)
+    for (int i = 0; i < numElement; i++)
     {
         std::cout << floats2.data[i] << " ";
     }

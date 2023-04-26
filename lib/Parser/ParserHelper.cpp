@@ -112,7 +112,7 @@ weasel::Expression *weasel::Parser::createOperatorExpression(Token op, Expressio
 
             assert(tokenKind != TokenKind::TokenUnknown);
 
-            auto token = Token(tokenKind, op.getLocation(), startBuffer, endBuffer);
+            auto token = Token::create(tokenKind, op.getLocation(), startBuffer, endBuffer);
 
             rhs = new ArithmeticExpression(token, lhs, rhs);
         }

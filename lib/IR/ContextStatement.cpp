@@ -1,4 +1,3 @@
-#include <iostream>
 #include "weasel/IR/Context.h"
 #include "weasel/Symbol/Symbol.h"
 
@@ -22,7 +21,7 @@ llvm::Value *weasel::Context::codegen(DeclarationStatement *expr)
     // Default Value
     if (valueExpr == nullptr)
     {
-        auto alloc = getBuilder()->CreateAlloca(declTypeV, nullptr);
+        auto alloc = this->getBuilder()->CreateAlloca(declTypeV, nullptr);
         llvm::Constant *constantVal = nullptr;
 
         // Default Value for integer
@@ -40,7 +39,7 @@ llvm::Value *weasel::Context::codegen(DeclarationStatement *expr)
         // Store Default Value
         if (constantVal != nullptr)
         {
-            getBuilder()->CreateStore(constantVal, alloc);
+            this->getBuilder()->CreateStore(constantVal, alloc);
         }
 
         // Add Variable Declaration to symbol table
@@ -86,13 +85,13 @@ llvm::Value *weasel::Context::codegen(DeclarationStatement *expr)
 
         if (llvm::dyn_cast<llvm::GlobalVariable>(valueV))
         {
-            alloc = getBuilder()->CreateAlloca(declTypeV, nullptr);
-            getBuilder()->CreateMemCpy(alloc, llvm::MaybeAlign(4), valueV, llvm::MaybeAlign(4), widthVal);
+            alloc = this->getBuilder()->CreateAlloca(declTypeV, nullptr);
+            this->getBuilder()->CreateMemCpy(alloc, llvm::MaybeAlign(4), valueV, llvm::MaybeAlign(4), widthVal);
         }
         else if (llvm::dyn_cast<llvm::ConstantInt>(valueV))
         {
-            alloc = getBuilder()->CreateAlloca(declTypeV, nullptr);
-            getBuilder()->CreateMemSet(alloc, valueV, widthVal, llvm::MaybeAlign(0));
+            alloc = this->getBuilder()->CreateAlloca(declTypeV, nullptr);
+            this->getBuilder()->CreateMemSet(alloc, valueV, widthVal, llvm::MaybeAlign(0));
         }
 
         // Add Variable Declaration to symbol table
@@ -103,11 +102,11 @@ llvm::Value *weasel::Context::codegen(DeclarationStatement *expr)
 
     if (declType->isPrimitiveType() && declType->getTypeWidth() != valueType->getTypeWidth())
     {
-        valueV = getBuilder()->CreateSExtOrTrunc(valueV, declTypeV);
+        valueV = this->getBuilder()->CreateSExtOrTrunc(valueV, declTypeV);
     }
 
-    auto alloc = getBuilder()->CreateAlloca(declTypeV, nullptr);
-    getBuilder()->CreateStore(valueV, alloc);
+    auto alloc = this->getBuilder()->CreateAlloca(declTypeV, nullptr);
+    this->getBuilder()->CreateStore(valueV, alloc);
 
     // Add Variable Declaration to symbol table
     addAttribute(ContextAttribute::get(varName, alloc, AttributeKind::Variable));
@@ -137,7 +136,7 @@ llvm::Value *weasel::Context::codegen(ConditionStatement *expr)
     auto conditions = expr->getConditions();
     auto statements = expr->getStatements();
     auto count = (int)conditions.size();
-    auto parentFun = getBuilder()->GetInsertBlock()->getParent();
+    auto parentFun = this->getBuilder()->GetInsertBlock()->getParent();
     auto endBlock = llvm::BasicBlock::Create(*getContext());
 
     for (int i = 0; i < count; i++)
@@ -154,25 +153,25 @@ llvm::Value *weasel::Context::codegen(ConditionStatement *expr)
         auto nextBlock = llvm::BasicBlock::Create(*getContext());
 
         // Create Condition Branch
-        getBuilder()->CreateCondBr(condition->codegen(this), bodyBlock, nextBlock);
+        this->getBuilder()->CreateCondBr(condition->codegen(this), bodyBlock, nextBlock);
 
         // Set Insert Point
-        getBuilder()->SetInsertPoint(bodyBlock);
+        this->getBuilder()->SetInsertPoint(bodyBlock);
 
         // Codegen Body
         statement->codegen(this);
 
         // Jump to Next Block
-        if (!getBuilder()->GetInsertBlock()->back().isTerminator())
+        if (!this->getBuilder()->GetInsertBlock()->back().isTerminator())
         {
-            getBuilder()->CreateBr(endBlock);
+            this->getBuilder()->CreateBr(endBlock);
         }
 
         // Add Next Block to Fuction
         parentFun->getBasicBlockList().push_back(nextBlock);
 
         // Set Insert point
-        getBuilder()->SetInsertPoint(nextBlock);
+        this->getBuilder()->SetInsertPoint(nextBlock);
     }
 
     if (expr->isElseExist())
@@ -180,23 +179,23 @@ llvm::Value *weasel::Context::codegen(ConditionStatement *expr)
         auto statement = statements.back();
         auto elseBlock = llvm::BasicBlock::Create(*getContext(), "", parentFun);
 
-        getBuilder()->CreateBr(elseBlock);
-        getBuilder()->SetInsertPoint(elseBlock);
+        this->getBuilder()->CreateBr(elseBlock);
+        this->getBuilder()->SetInsertPoint(elseBlock);
 
         statement->codegen(this);
     }
 
     // Jump to Next Block
-    if (!getBuilder()->GetInsertBlock()->back().isTerminator())
+    if (!this->getBuilder()->GetInsertBlock()->back().isTerminator())
     {
-        getBuilder()->CreateBr(endBlock);
+        this->getBuilder()->CreateBr(endBlock);
     }
 
     // Add End Block to Fuction
     parentFun->getBasicBlockList().push_back(endBlock);
 
     // Set Insert point
-    getBuilder()->SetInsertPoint(endBlock);
+    this->getBuilder()->SetInsertPoint(endBlock);
 
     // TODO: Calculate PHI
 
@@ -207,7 +206,7 @@ llvm::Value *weasel::Context::codegen(LoopingStatement *expr)
 {
     auto isInfinity = expr->isInfinityCondition();
     auto isSingleCondition = expr->isSingleCondition();
-    auto currentBlock = getBuilder()->GetInsertBlock();
+    auto currentBlock = this->getBuilder()->GetInsertBlock();
     auto bodyBlock = llvm::BasicBlock::Create(*getContext());
     auto endBlock = llvm::BasicBlock::Create(*getContext());
     auto conditionBlock = llvm::BasicBlock::Create(*getContext());
@@ -237,11 +236,11 @@ llvm::Value *weasel::Context::codegen(LoopingStatement *expr)
 
     // Condition //
     // Jump to Conditional
-    getBuilder()->CreateBr(conditionBlock);
+    this->getBuilder()->CreateBr(conditionBlock);
 
     // Set Insert point to Conditional Block
     parentFun->getBasicBlockList().push_back(conditionBlock);
-    getBuilder()->SetInsertPoint(conditionBlock);
+    this->getBuilder()->SetInsertPoint(conditionBlock);
     if (!isInfinity)
     {
         auto conditionExpr = isSingleCondition ? conditions[0] : conditions[1];
@@ -251,29 +250,29 @@ llvm::Value *weasel::Context::codegen(LoopingStatement *expr)
             return ErrorTable::addError(conditionExpr->getToken(), "Expected Boolean Type for Looping Condition");
         }
 
-        getBuilder()->CreateCondBr(conditionExpr->codegen(this), bodyBlock, endBlock);
+        this->getBuilder()->CreateCondBr(conditionExpr->codegen(this), bodyBlock, endBlock);
     }
     else
     {
         // If Infinity just jump to body block
-        getBuilder()->CreateBr(bodyBlock);
+        this->getBuilder()->CreateBr(bodyBlock);
     }
 
     // Block //
     // Set Insert Point to body block
     parentFun->getBasicBlockList().push_back(bodyBlock);
-    getBuilder()->SetInsertPoint(bodyBlock);
+    this->getBuilder()->SetInsertPoint(bodyBlock);
 
     // Codegen Body
     expr->getBody()->codegen(this);
 
     // Counting //
     // Jump to Counting
-    getBuilder()->CreateBr(countBlock);
+    this->getBuilder()->CreateBr(countBlock);
 
     // Set Insert Point to Counting
     parentFun->getBasicBlockList().push_back(countBlock);
-    getBuilder()->SetInsertPoint(countBlock);
+    this->getBuilder()->SetInsertPoint(countBlock);
 
     // Check if counting expression found
     if (!isInfinity && !isSingleCondition)
@@ -284,11 +283,11 @@ llvm::Value *weasel::Context::codegen(LoopingStatement *expr)
     }
 
     // Jump back to Condition
-    getBuilder()->CreateBr(conditionBlock);
+    this->getBuilder()->CreateBr(conditionBlock);
 
     // End Block //
     parentFun->getBasicBlockList().push_back(endBlock);
-    getBuilder()->SetInsertPoint(endBlock);
+    this->getBuilder()->SetInsertPoint(endBlock);
 
     removeBreakBlock();
     removeContinueBlock();

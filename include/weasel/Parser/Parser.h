@@ -16,8 +16,8 @@ namespace weasel
     private:
         Lexer *_lexer;
         Function *_currentFunction;
-        std::list<StructType *> _userTypes;
-        std::list<Function *> _functions;
+        std::vector<StructType *> _userTypes;
+        std::vector<Function *> _functions;
 
     private:
         inline void addFunction(Function *fun) { _functions.push_back(fun); }
@@ -65,8 +65,8 @@ namespace weasel
         Expression *createOperatorExpression(Token op, Expression *lhs, Expression *rhs);
 
         // Function
-        Function *parseDeclareFunction();
-        Function *parseFunction();
+        Function *parseDeclareFunction(StructType *type);
+        Function *parseFunction(StructType *type = nullptr);
 
         // Parse Global Type
         StructType *parseStruct();
@@ -99,8 +99,21 @@ namespace weasel
         Parser(Lexer *lexer) : _lexer(lexer) {}
 
         // Gets Parser Value
-        inline std::list<StructType *> getUserTypes() const { return _userTypes; }
-        inline std::list<Function *> getFunctions() const { return _functions; }
+        inline std::vector<StructType *> getUserTypes() const { return _userTypes; }
+        inline std::vector<Function *> getFunctions() const { return _functions; }
+        inline std::vector<Function *> getFunctionsParallel() const
+        {
+            std::vector<Function *> funs;
+            for (auto item : _functions)
+            {
+                if (item->getParallel())
+                {
+                    funs.push_back(item);
+                }
+            }
+
+            return funs;
+        }
 
         // Helper
         Type *parseDataType();

@@ -7,12 +7,19 @@ namespace weasel
 {
     class Lexer
     {
+    public:
+        Lexer(FileManager *fileManager);
+
+        Token getNextToken(bool skipSpace = false, bool eat = false);
+        Token getCurrentToken() const { return _currentToken; }
+        bool expect(TokenKind kind);
+
     private:
         char *_startBuffer;
         char *_endBuffer;
         char *_currentBuffer;
 
-        Token _currentToken;
+        Token _currentToken = Token::create();
         SourceLocation _location;
 
     private:
@@ -35,13 +42,6 @@ namespace weasel
         Token getCharacterLiteral();
 
         Token createToken(TokenKind kind, char *startBuffer, char *endBuffer);
-
-    public:
-        Lexer(FileManager *fileManager);
-
-        Token getNextToken(bool skipSpace = false, bool eat = false);
-        Token getCurrentToken() const { return _currentToken; }
-        bool expect(TokenKind kind);
     };
 
 } // namespace weasel

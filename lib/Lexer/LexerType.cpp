@@ -68,5 +68,5 @@ weasel::Token weasel::Lexer::getType(char *startBuffer, char *endBuffer)
         return Token::empty();
     }
 
-    return createToken(kind, startBuffer, endBuffer);
+    return this->createToken(kind, startBuffer, endBuffer);
 }

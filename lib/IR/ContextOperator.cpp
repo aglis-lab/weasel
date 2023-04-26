@@ -22,7 +22,7 @@ llvm::Value *weasel::Context::codegen(TypeCastExpression *expr)
         return getBuilder()->CreateBitOrPointerCast(rhsVal, typeVal);
     }
 
-    if (type->isIntegerType() && rhsType->isFloatType() || rhsType->isDoubleType())
+    if (type->isIntegerType() && (rhsType->isFloatType() || rhsType->isDoubleType()))
     {
         if (type->isSigned())
         {
@@ -34,7 +34,7 @@ llvm::Value *weasel::Context::codegen(TypeCastExpression *expr)
         }
     }
 
-    if (rhsType->isIntegerType() && type->isFloatType() || type->isDoubleType())
+    if (rhsType->isIntegerType() && (type->isFloatType() || type->isDoubleType()))
     {
         if (rhsType->isSigned())
         {
@@ -174,7 +174,6 @@ llvm::Value *weasel::Context::codegen(ArithmeticExpression *expr)
 // && ||
 llvm::Value *weasel::Context::codegen(LogicalExpression *expr)
 {
-    auto opToken = expr->getOperator();
     auto lhs = expr->getLHS();
     auto rhs = expr->getRHS();
     auto lhsType = lhs->getType();
@@ -189,9 +188,7 @@ llvm::Value *weasel::Context::codegen(LogicalExpression *expr)
         return lhs->codegen(this);
     }
 
-    auto lhsVal = lhs->codegen(this);
     auto rhsVal = rhs->codegen(this);
-    auto isFloat = lhsType->isFloatType() || lhsType->isDoubleType();
     auto isSigned = exprType->isSigned();
 
     if (exprType->isIntegerType())

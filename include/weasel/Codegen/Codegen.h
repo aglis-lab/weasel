@@ -23,8 +23,8 @@ namespace weasel
         void createObject(char *outputFile) const;
         void createIR(char *outputFile) const;
 
-        inline std::list<Function *> getFunctions() const { return _parser->getFunctions(); }
-        inline std::list<StructType *> getUserTypes() const { return _parser->getUserTypes(); }
+        inline std::vector<Function *> getFunctions() const { return _parser->getFunctions(); }
+        inline std::vector<StructType *> getUserTypes() const { return _parser->getUserTypes(); }
 
     public:
         llvm::Module *getModule() const { return _context->getModule(); }

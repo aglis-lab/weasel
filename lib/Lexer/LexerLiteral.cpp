@@ -9,7 +9,7 @@ weasel::Token weasel::Lexer::getStringLiteral()
     auto endString = _currentBuffer;
 
     getNextBuffer(); // eat double quote (")
-    return createToken(TokenKind::TokenLitString, start, endString);
+    return this->createToken(TokenKind::TokenLitString, start, endString);
 }
 
 weasel::Token weasel::Lexer::getCharacterLiteral()
@@ -26,5 +26,5 @@ weasel::Token weasel::Lexer::getCharacterLiteral()
     }
 
     getNextBuffer(); // eat single quote (')
-    return createToken(TokenKind::TokenLitChar, start, start + 1);
+    return this->createToken(TokenKind::TokenLitChar, start, start + 1);
 }

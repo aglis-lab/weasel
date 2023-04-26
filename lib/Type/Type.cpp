@@ -1,6 +1,33 @@
 #include <iostream>
+#include <fmt/core.h>
 #include "weasel/IR/Context.h"
 #include "weasel/Type/Type.h"
+
+int weasel::Type::getTypeWidth()
+{
+    if (isStructType())
+    {
+        auto val = 0;
+        for (auto item : getContainedTypes())
+        {
+            val += item->getTypeWidth();
+        }
+
+        return val;
+    }
+
+    if (isPointerType())
+    {
+        return 64;
+    }
+
+    return _width;
+}
+
+weasel::Type::~Type()
+{
+    getContainedTypes().clear();
+}
 
 llvm::Type *weasel::StructType::codegen(weasel::Context *context)
 {
@@ -41,7 +68,7 @@ bool weasel::Type::isEqual(weasel::Type *type)
     return this == type;
 }
 
-weasel::Type *weasel::Type::create(const Token &token)
+weasel::Type *weasel::Type::create(Token token)
 {
     switch (token.getTokenKind())
     {
@@ -87,5 +114,74 @@ weasel::Type *weasel::Type::create(const Token &token)
 
     default:
         return nullptr;
+    }
+}
+
+std::string weasel::Type::getTypeName()
+{
+    switch (getTypeID())
+    {
+    case TypeID::IntegerType:
+    {
+        char prefix = '\0';
+        std::string type;
+        if (!_isSigned)
+        {
+            prefix = 'u';
+        }
+
+        if (_width == 1)
+        {
+            type = "bool";
+            prefix = '\0';
+        }
+
+        if (_width == 8)
+        {
+            type = "byte";
+
+            if (_isSigned)
+            {
+                prefix = 's';
+            }
+        }
+
+        if (_width == 16)
+        {
+            type = "short";
+        }
+
+        if (_width == 32)
+        {
+            type = "int";
+        }
+
+        if (_width == 64)
+        {
+            type = "long";
+        }
+
+        return fmt::format("{}{}", prefix, type);
+    }
+    case TypeID::DoubleType:
+    {
+        return "double";
+    }
+    case TypeID::FloatType:
+    {
+        return "float";
+    }
+    case TypeID::VoidType:
+    {
+        return "void";
+    }
+    case TypeID::PointerType:
+    {
+        return fmt::format("{}{}", '*', this->getContainedType()->getTypeName());
+    }
+    default:
+    {
+        return "no-type";
+    }
     }
 }

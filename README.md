@@ -147,9 +147,11 @@ We also can binding the library created by weasel language into another language
 
 ### Data Type
 
-- [x] Integer
-- [ ] Float
-- [ ] Boolean
+- [x] integer
+- [ ] float
+- [ ] boolean
+- [ ] string
+- [ ] []rune or []char
 
 ### Variable Table Declaration
 

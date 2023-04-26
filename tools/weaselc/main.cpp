@@ -1,5 +1,3 @@
-#include <iostream>
-#include <iomanip>
 #include <sstream>
 #include <llvm/Support/TargetSelect.h>
 #include <llvm/ADT/STLExtras.h>
@@ -9,32 +7,22 @@
 #include <llvm/Support/Host.h>
 #include <llvm/Analysis/TargetLibraryInfo.h>
 #include <llvm/IR/LegacyPassManager.h>
-#include "weasel/Parser/Parser.h"
-#include "weasel/IR/Context.h"
-#include "weasel/AST/AST.h"
-#include "weasel/Symbol/Symbol.h"
-#include "weasel/Basic/FileManager.h"
-#include "weasel/Codegen/Codegen.h"
-#include "weasel/Analysis/AnalysisSemantic.h"
 
-void debug(const std::list<weasel::Function *> &objects)
-{
-    std::cout << std::endl
-              << std::setfill('=') << std::setw(40) << "=" << std::endl
-              << std::endl;
+#include <weasel/Parser/Parser.h>
+#include <weasel/IR/Context.h>
+#include <weasel/AST/AST.h>
+#include <weasel/Symbol/Symbol.h>
+#include <weasel/Basic/FileManager.h>
+#include <weasel/Codegen/Codegen.h>
+#include <weasel/Analysis/AnalysisSemantic.h>
 
-    for (auto &obj : objects)
-    {
-        obj->debug(0);
-    }
-
-    std::cout << std::endl
-              << std::setfill('=') << std::setw(40) << "=" << std::endl
-              << std::endl;
-}
+#include <weasel-c/debug.h>
 
 int main(int argc, char *argv[])
 {
+    // Init Loging
+    // google::InitGoogleLogging(argv[0]);
+
     if (argc <= 2)
     {
         std::cerr << "Not Input files\n";
@@ -43,30 +31,30 @@ int main(int argc, char *argv[])
 
     auto filePath = argv[1];
     auto outputPath = argv[2];
-    auto fileManager = new weasel::FileManager(filePath);
-    if (!fileManager->isValid())
+    auto fileManager = weasel::FileManager(filePath);
+    if (!fileManager.isValid())
     {
-        std::cout << filePath << " Not exist\n";
+        std::cerr << filePath << " Not exist\n";
         return 0;
     }
 
     // Initialize LLVM TO BULK
-    std::cout << "Initializing...\n";
+    LOG(INFO) << "Initializing...\n";
     llvm::InitializeAllTargetInfos();
     llvm::InitializeNativeTarget();
     llvm::InitializeNativeTargetAsmParser();
     llvm::InitializeNativeTargetAsmPrinter();
 
     // Prepare Lexer and Parser
-    auto lexer = weasel::Lexer(fileManager);
+    auto lexer = weasel::Lexer(&fileManager);
     auto parser = weasel::Parser(&lexer);
 
     // Parse into AST
-    std::cout << "Parsing...\n";
+    LOG(INFO) << "Parsing...\n";
     parser.parse();
 
     // Debugging AST
-    std::cout << "Debug AST...\n";
+    LOG(INFO) << "Debug AST...\n";
     debug(parser.getFunctions());
 
     // Prepare for codegen
@@ -75,7 +63,7 @@ int main(int argc, char *argv[])
     auto codegen = weasel::Codegen(&context, &parser);
     // auto analysis = weasel::AnalysisSemantic(&parser);
 
-    std::cout << "Compile...\n";
+    LOG(INFO) << "Compiling...\n";
     auto isCompileSuccess = codegen.compile();
     if (!isCompileSuccess)
     {
@@ -85,11 +73,11 @@ int main(int argc, char *argv[])
         }
     }
 
-    // std::cout << "Semantic Analysis...\n";
+    // LOG(INFO) << "Semantic Analysis...\n";
     // analysis.semanticCheck();
     // analysis.typeChecking();
 
-    std::cout << "Create LLVM IR...\n";
+    LOG(INFO) << "Create LLVM IR...\n";
     codegen.createIR(outputPath);
 
     if (!weasel::ErrorTable::getErrors().empty())
@@ -100,7 +88,7 @@ int main(int argc, char *argv[])
         return 0;
     }
 
-    std::cout << "Create Output Objects...\n";
+    LOG(INFO) << "Create Output Objects...\n";
     if (isCompileSuccess)
     {
         codegen.createObject(outputPath);

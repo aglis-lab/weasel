@@ -1,5 +1,3 @@
-#include <iostream>
-#include <cassert>
 #include "weasel/Lexer/Lexer.h"
 
 weasel::Lexer::Lexer(FileManager *fileManager)
@@ -74,7 +72,7 @@ bool weasel::Lexer::expect(weasel::TokenKind kind)
 
 weasel::Token weasel::Lexer::createToken(weasel::TokenKind kind, char *startBuffer, char *endBuffer)
 {
-    return Token(kind, _location, startBuffer, endBuffer);
+    return Token::create(kind, _location, startBuffer, endBuffer);
 }
 
 weasel::Token weasel::Lexer::getNextToken(bool skipSpace, bool eat)
@@ -92,7 +90,7 @@ weasel::Token weasel::Lexer::getToken()
 {
     if (_currentBuffer == _endBuffer)
     {
-        return createToken(TokenKind::TokenEOF, _currentBuffer, _endBuffer);
+        return this->createToken(TokenKind::TokenEOF, _currentBuffer, _endBuffer);
     }
 
     while (isspace(*_currentBuffer))
@@ -105,7 +103,7 @@ weasel::Token weasel::Lexer::getToken()
             // Instead make lastChar empty char will not need new character
             // And next iteration will be ignored
             getNextBuffer();
-            return createToken(TokenKind::TokenSpaceNewline, _currentBuffer - 1, _currentBuffer);
+            return this->createToken(TokenKind::TokenSpaceNewline, _currentBuffer - 1, _currentBuffer);
         }
 
         getNextBuffer();
@@ -145,7 +143,7 @@ weasel::Token weasel::Lexer::getToken()
         }
 
         // Identifier
-        return createToken(kind, start, _currentBuffer);
+        return this->createToken(kind, start, _currentBuffer);
     }
 
     // Check if Number
@@ -166,14 +164,14 @@ weasel::Token weasel::Lexer::getToken()
 
         if (numDot >= 2)
         {
-            return createToken(TokenKind::TokenUnknown, start, _currentBuffer);
+            return this->createToken(TokenKind::TokenUnknown, start, _currentBuffer);
         }
 
         if (*_currentBuffer == 'd')
         {
             getNextBuffer(); // eat 'd' for double
 
-            return createToken(TokenKind::TokenLitDouble, start, _currentBuffer);
+            return this->createToken(TokenKind::TokenLitDouble, start, _currentBuffer);
         }
 
         if (numDot == 1 || *_currentBuffer == 'f')
@@ -183,11 +181,11 @@ weasel::Token weasel::Lexer::getToken()
                 getNextBuffer(); // eat 'f' if exist
             }
 
-            return createToken(TokenKind::TokenLitFloat, start, _currentBuffer);
+            return this->createToken(TokenKind::TokenLitFloat, start, _currentBuffer);
         }
 
         // Number Literal
-        return createToken(TokenKind::TokenLitInteger, start, _currentBuffer);
+        return this->createToken(TokenKind::TokenLitInteger, start, _currentBuffer);
     }
 
     // String Literal
@@ -259,5 +257,5 @@ weasel::Token weasel::Lexer::getToken()
         getNextBuffer();
     }
 
-    return createToken(TokenKind::TokenUnknown, start, _currentBuffer);
+    return this->createToken(TokenKind::TokenUnknown, start, _currentBuffer);
 }

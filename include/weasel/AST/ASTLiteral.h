@@ -114,13 +114,13 @@ namespace weasel
     // Array Expression
     class ArrayLiteralExpression : public Expression
     {
-    private:
-        std::vector<Expression *> _items;
+    public:
+        static ArrayLiteralExpression *create()
+        {
+            return new ArrayLiteralExpression();
+        }
 
     public:
-        ArrayLiteralExpression() = default;
-        explicit ArrayLiteralExpression(std::vector<Expression *> items) : _items(items) {}
-
         void addItem(Expression *item) { _items.push_back(item); }
         std::vector<Expression *> getItems() const { return _items; }
 
@@ -132,6 +132,12 @@ namespace weasel
         {
             _items.clear();
         }
+
+    protected:
+        ArrayLiteralExpression() = default;
+
+    private:
+        std::vector<Expression *> _items;
     };
 
 } // namespace weasel

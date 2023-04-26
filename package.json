@@ -22,7 +22,7 @@
     "vulkan-test": "./build/test/vulkan-test/vulkan-test",
     "parallel-test": "./build/test/parallel-test/parallel-test",
     "spirv-test": "./build/test/spirv-test/spirv-test",
-    "glsl-test": "./build/test/glsl-test/glsl-test"
+    "glsl-test": "./build/test/glsl-test/glsl-test temp/test.we"
   },
   "repository": {
     "type": "git",

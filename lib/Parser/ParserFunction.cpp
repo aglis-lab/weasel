@@ -4,10 +4,9 @@
 #include "weasel/IR/Context.h"
 #include "weasel/Symbol/Symbol.h"
 
-weasel::Function *weasel::Parser::parseFunction()
+weasel::Function *weasel::Parser::parseFunction(StructType *type)
 {
-
-    auto fun = parseDeclareFunction();
+    auto fun = parseDeclareFunction(type);
     if (fun == nullptr)
     {
         return nullptr;
@@ -53,7 +52,7 @@ weasel::Function *weasel::Parser::parseFunction()
 }
 
 // 'fun' identifier '(' args ')' funTy
-weasel::Function *weasel::Parser::parseDeclareFunction()
+weasel::Function *weasel::Parser::parseDeclareFunction(StructType *implType)
 {
     // get next and eat 'fun'
     if (!getNextToken().isIdentifier())
@@ -76,7 +75,6 @@ weasel::Function *weasel::Parser::parseDeclareFunction()
     getNextToken(); // eat '('
     std::vector<ArgumentType *> types;
     auto isVararg = false;
-
     while (!getCurrentToken().isCloseParen())
     {
         if (isVararg)
@@ -84,27 +82,39 @@ weasel::Function *weasel::Parser::parseDeclareFunction()
             return ErrorTable::addError(getCurrentToken(), "Variable number argument should be final argument");
         }
 
-        if (!getCurrentToken().isIdentifier())
+        auto lastToken = getCurrentToken();
+        if (lastToken.isKeyThis())
         {
-            return ErrorTable::addError(getCurrentToken(), "Expected identifier in function argument");
-        }
+            auto argumentType = ArgumentType::create(lastToken.getValue(), implType);
 
-        auto identifier = getCurrentToken().getValue();
-        if (getNextToken().isKind(TokenKind::TokenPuncDotThree))
+            types.push_back(argumentType);
+
+            getNextToken(); // eat 'this'
+        }
+        else
         {
-            isVararg = true;
-            getNextToken(); // eat ...
+            if (!lastToken.isIdentifier())
+            {
+                return ErrorTable::addError(getCurrentToken(), "Expected identifier in function argument");
+            }
+
+            auto identifier = lastToken.getValue();
+            if (getNextToken().isKind(TokenKind::TokenPuncDotThree))
+            {
+                isVararg = true;
+                getNextToken(); // eat ...
+            }
+
+            auto type = parseDataType();
+            if (type == nullptr)
+            {
+                return ErrorTable::addError(getCurrentToken(), "Expected type in function argument");
+            }
+
+            auto argumentType = ArgumentType::create(identifier, type);
+
+            types.push_back(argumentType);
         }
-
-        auto type = parseDataType();
-        if (type == nullptr)
-        {
-            return ErrorTable::addError(getCurrentToken(), "Expected type in function argument");
-        }
-
-        auto argumentType = new ArgumentType(identifier, type);
-
-        types.push_back(argumentType);
 
         if (!getCurrentToken().isKind(TokenKind::TokenPuncComma))
         {

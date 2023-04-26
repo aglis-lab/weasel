@@ -1,0 +1,28 @@
+// Core or builtin struct for parallel
+struct parallel {
+    uint x
+    uint y
+    uint z
+}
+
+// Block Parallel Functions
+parallel {
+    fun Mul(this, a *float, b *float) {
+        let x = this.x
+
+        b[x] = a[x] * a[x]
+    }
+}
+
+// Single Parallel Function
+parallel // -> impl of struct or parallel
+fun Mul(this, a *float, b *float) {
+    let x = this.x
+
+    b[x] = a[x] * a[x]
+}
+
+// Main Function
+fun Main() {
+    Mul<<<125, 1, 1>>>(a, b)
+}

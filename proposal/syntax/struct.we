@@ -1,3 +1,9 @@
+// Interface or trait
+interface IConstruct {
+    New()
+    Drop()
+}
+
 // We not support 'class' but struct
 struct Car {
     // How we declare variable similar with go language but lower case for public variable
@@ -8,18 +14,32 @@ struct Car {
     _numCrash int
 }
 
-// Function by reference
-fun Car Crash() {
-    // We use 'this' keyword to access 'Car' variable or function
-    print("The Car {} was crashed after {}KM", this.name, this.distance)
+// Implement Struct Method
+impl Car {
+    // Cannot Call Outside Package
+    fun getNumCrash(&this) {
+        return this._numCrash
+    }
 
-    // Function by reference can access private or protected variable
-    this._numCrash++
+    // Can Call Outside Package
+    fun Crash(&this) {
+        // We use 'this' keyword to access 'Car' variable or function
+        print("The Car {} was crashed after {}KM", this.name, this.distance)
+
+        // Function by reference can access private or protected variable
+        this._numCrash++
+    }
 }
 
-// Create Function with Extension Grouping
-extension Car {
-    fun getNumCrash() {
-        return this._numCrash
+impl IConstruct
+for Car {
+    // Car::New()
+    // Constructor
+    fun New() {
+        return Car{}
+    }
+
+    // Destructor
+    fun Drop(&this) {
     }
 }

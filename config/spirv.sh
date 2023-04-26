@@ -16,7 +16,7 @@ then
     git clone -b $LLVM_SPIRV_BRANCH $LLVM_SPIRV_URL $LLVM_SPIRV_SOURCE
 fi
 
-if [ ! -d "$LLVM_SPIRV_SOURCE/buid" ]
+if [ ! -d "$LLVM_SPIRV_SOURCE/build" ]
 then
     mkdir $LLVM_SPIRV_SOURCE/build
 fi

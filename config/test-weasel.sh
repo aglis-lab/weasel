@@ -1,12 +1,9 @@
 #!/bin/bash
 
-echo "Build Objects"
 build/tools/weaselc/weaselc $1 "$2.o" || exit 1
-
-echo "Build Executable"
 clang++ "$2.o" -o $2 \
-    '/Users/zaen/Projects/Open Source/weasel/build/libparallel/libWeaselParallel.a' \
+    '/Volumes/SideJob/Open Source/weasel/build/libparallel/libWeaselParallel.a' \
     || exit 1
+echo -e "\nOutput:\n"
 
-echo -e "Run Executable\n\n"
-$2 || exit 1
+$2 || echo -e "\n" || exit 0

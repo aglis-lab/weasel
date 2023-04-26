@@ -29,7 +29,7 @@ llvm::Type *weasel::Context::codegen(weasel::StructType *structExpr)
             auto itemStructType = dynamic_cast<StructType *>(item);
             if (itemStructType && itemStructType->getIdentifier() == identifier)
             {
-                ErrorTable::addError(Token(), "Cannot create circular struct");
+                ErrorTable::addError(Token::create(), "Cannot create circular struct");
                 continue;
             }
         }

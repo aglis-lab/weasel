@@ -10,8 +10,11 @@
 #include "weasel/Basic/FileManager.h"
 #include "weasel/Codegen/Codegen.h"
 #include "weasel/Analysis/AnalysisSemantic.h"
+#include "weasel/Passes/PassesGLSL.h"
 
-void debug(const std::list<weasel::Function *> &objects)
+#include <glog/logging.h>
+
+void debug(const std::vector<weasel::Function *> &objects)
 {
     std::cout << std::endl
               << std::setfill('=') << std::setw(40) << "=" << std::endl
@@ -37,35 +40,28 @@ int main(int argc, char *argv[])
 
     auto filePath = argv[1];
     // auto outputPath = argv[2];
-    auto fileManager = new weasel::FileManager(filePath);
-    if (!fileManager->isValid())
+    auto fileManager = weasel::FileManager(filePath);
+    if (!fileManager.isValid())
     {
         std::cout << filePath << " Not exist\n";
         return 0;
     }
 
     // Prepare Lexer and Parser
-    auto lexer = weasel::Lexer(fileManager);
+    auto lexer = weasel::Lexer(&fileManager);
     auto parser = weasel::Parser(&lexer);
 
     // Parse into AST
-    std::cout << "Parsing...\n";
+    LOG(INFO) << "Parsing...\n";
     parser.parse();
 
     // Debugging AST
-    std::cout << "Debug AST...\n";
-    debug(parser.getFunctions());
+    LOG(INFO) << "Debug AST...\n";
+    debug(parser.getFunctionsParallel());
 
-    // Prepare for codegen
-    auto llvmContext = llvm::LLVMContext();
-    auto context = weasel::Context(&llvmContext, "codeModule");
-    auto codegen = weasel::Codegen(&context, &parser);
+    // Transpiling to GLSL Shading Language
+    LOG(INFO) << "Transpiling AST to GLSL ...\n";
+    auto pass = weasel::PassesGLSL(parser.getFunctionsParallel());
 
-    // TODO: Convert from Generic AST to AST HLSL
-    std::cout << "Convert to HLSL...\n";
-    // auto funs = codegen.getFunctions();
-    // auto types = codegen.getUserTypes();
-
-    // TODO: Transpiling to HLSL Shading Language
-    std::cout << "Transpiling to HLSL\n";
+    pass.run();
 }

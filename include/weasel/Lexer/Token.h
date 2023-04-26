@@ -21,10 +21,12 @@ namespace weasel
         TokenIdentifier,
 
         // Keyword
+        TokenKeyImpl,             // impl // user type or block struct traits
+        TokenKeyThis,             // referencing impl struct
         TokenKeyParallel,         // parallel // heterogeneous support
         TokenKeyKernel,           // kernel // heterogeneous kernel type
         TokenKeyStruct,           // struct
-        TokenKeyInline,           // For Always inline attribute
+        TokenKeyInline,           // For Always attribute
         TokenKeyFun,              // function
         TokenKeyExtern,           // extern
         TokenKeyReturn,           // return
@@ -172,49 +174,41 @@ namespace weasel
 
     class Token
     {
-    private:
-        char *_startBuffer;
-        char *_endBuffer;
-
-        TokenKind _kind;
-        SourceLocation _location;
-
     public:
-        Token(TokenKind kind, SourceLocation location, char *startToken, char *endToken) : _startBuffer(startToken), _endBuffer(endToken), _kind(kind), _location(location) {}
-        Token() : _kind(TokenKind::TokenUnknown) {}
-
         // Fast Checking //
-        inline bool isKind(TokenKind type) const { return type == _kind; }
-        inline bool isKeyFunction() const { return _kind == TokenKind::TokenKeyFun; }
-        inline bool isKeyStruct() const { return _kind == TokenKind::TokenKeyStruct; }
-        inline bool isIdentifier() const { return _kind == TokenKind::TokenIdentifier; }
-        inline bool isKeyDefer() const { return _kind == TokenKind::TokenKeyDefer; }
+        bool isKind(TokenKind type) const { return type == _kind; }
+        bool isKeyFunction() const { return _kind == TokenKind::TokenKeyFun; }
+        bool isKeyStruct() const { return _kind == TokenKind::TokenKeyStruct; }
+        bool isIdentifier() const { return _kind == TokenKind::TokenIdentifier; }
+        bool isKeyDefer() const { return _kind == TokenKind::TokenKeyDefer; }
+        bool isKeyImpl() const { return _kind == TokenKind::TokenKeyImpl; }
+        bool isKeyThis() const { return _kind == TokenKind::TokenKeyThis; }
 
         // Variable //
-        inline bool isDataType() { return _kind >= TokenKind::TokenTyVoid && _kind <= TokenKind::TokenTyDecimal; }
-        inline bool isKeyDefinition() { return (_kind == TokenKind::TokenKeyLet || _kind == TokenKind::TokenKeyFinal || _kind == TokenKind::TokenKeyConst); }
-        inline bool isLiteral() { return _kind >= TokenKind::TokenLitNil && _kind <= TokenKind::TokenLitString; }
+        bool isDataType() { return _kind >= TokenKind::TokenTyVoid && _kind <= TokenKind::TokenTyDecimal; }
+        bool isKeyDefinition() { return (_kind == TokenKind::TokenKeyLet || _kind == TokenKind::TokenKeyFinal || _kind == TokenKind::TokenKeyConst); }
+        bool isLiteral() { return _kind >= TokenKind::TokenLitNil && _kind <= TokenKind::TokenLitString; }
 
         // Operator //
-        inline bool isOperator() { return _kind >= TokenKind::TokenOperatorStart && _kind <= TokenKind::TokenOperatorEnd; }
-        inline bool isUnknown() const { return _kind == TokenKind::TokenUnknown; }
-        inline bool isNewline() const { return _kind == TokenKind::TokenSpaceNewline; }
-        inline bool isOperatorCast() const { return _kind == TokenKind::TokenOperatorCasting; }
+        bool isOperator() { return _kind >= TokenKind::TokenOperatorStart && _kind <= TokenKind::TokenOperatorEnd; }
+        bool isUnknown() const { return _kind == TokenKind::TokenUnknown; }
+        bool isNewline() const { return _kind == TokenKind::TokenSpaceNewline; }
+        bool isOperatorCast() const { return _kind == TokenKind::TokenOperatorCasting; }
 
-        inline bool isOperatorEqual() const { return _kind == TokenKind::TokenOperatorEqual; }
-        inline bool isOperatorAssignment() const
+        bool isOperatorEqual() const { return _kind == TokenKind::TokenOperatorEqual; }
+        bool isOperatorAssignment() const
         {
             return _kind > TokenKind::TokenOperatorEqualStart &&
                    _kind < TokenKind::TokenOperatorEqualEnd;
         }
 
-        inline bool isOperatorAnd() const { return _kind == TokenKind::TokenOperatorAnd; }
-        inline bool isOperatorStar() const { return _kind == TokenKind::TokenOperatorStar; }
-        inline bool isOperatorNegative() const { return _kind == TokenKind::TokenOperatorNegative; }
-        inline bool isOperatorPlus() const { return _kind == TokenKind::TokenOperatorPlus; }
-        inline bool isOperatorNot() const { return _kind == TokenKind::TokenOperatorNot; }
-        inline bool isOperatorNegation() const { return _kind == TokenKind::TokenOperatorNegation; }
-        inline bool isOperatorUnary() const
+        bool isOperatorAnd() const { return _kind == TokenKind::TokenOperatorAnd; }
+        bool isOperatorStar() const { return _kind == TokenKind::TokenOperatorStar; }
+        bool isOperatorNegative() const { return _kind == TokenKind::TokenOperatorNegative; }
+        bool isOperatorPlus() const { return _kind == TokenKind::TokenOperatorPlus; }
+        bool isOperatorNot() const { return _kind == TokenKind::TokenOperatorNot; }
+        bool isOperatorNegation() const { return _kind == TokenKind::TokenOperatorNegation; }
+        bool isOperatorUnary() const
         {
             return isOperatorAnd() ||
                    isOperatorStar() ||
@@ -224,54 +218,55 @@ namespace weasel
                    isOperatorNot();
         }
 
-        inline bool isOperatorAndAnd() const { return _kind == TokenKind::TokenOperatorAndAnd; }
-        inline bool isOperatorOrOr() const { return _kind == TokenKind::TokenOperatorOror; }
-        inline bool isOperatorLogical() const
+        bool isOperatorAndAnd() const { return _kind == TokenKind::TokenOperatorAndAnd; }
+        bool isOperatorOrOr() const { return _kind == TokenKind::TokenOperatorOror; }
+        bool isOperatorLogical() const
         {
             return _kind > TokenKind::TokenOperatorLogicalStart &&
                    _kind < TokenKind::TokenOperatorLogicalEnd;
         }
 
         // Delimiter //
-        inline bool isOpenParen() const { return _kind == TokenKind::TokenDelimOpenParen; }
-        inline bool isCloseParen() const { return _kind == TokenKind::TokenDelimCloseParen; }
-        inline bool isOpenCurly() const { return _kind == TokenKind::TokenDelimOpenCurlyBracket; }
-        inline bool isCloseCurly() const { return _kind == TokenKind::TokenDelimCloseCurlyBracket; }
-        inline bool isSemiColon() const { return _kind == TokenKind::TokenPuncSemicolon; }
-        inline bool isOpenSquare() const { return _kind == TokenKind::TokenDelimOpenSquareBracket; }
-        inline bool isCloseSquare() const { return _kind == TokenKind::TokenDelimCloseSquareBracket; }
+        bool isOpenParen() const { return _kind == TokenKind::TokenDelimOpenParen; }
+        bool isCloseParen() const { return _kind == TokenKind::TokenDelimCloseParen; }
+        bool isOpenCurly() const { return _kind == TokenKind::TokenDelimOpenCurlyBracket; }
+        bool isCloseCurly() const { return _kind == TokenKind::TokenDelimCloseCurlyBracket; }
+        bool isSemiColon() const { return _kind == TokenKind::TokenPuncSemicolon; }
+        bool isOpenSquare() const { return _kind == TokenKind::TokenDelimOpenSquareBracket; }
+        bool isCloseSquare() const { return _kind == TokenKind::TokenDelimCloseSquareBracket; }
 
         // Punctuation //
-        inline bool isComma() const { return _kind == TokenKind::TokenPuncComma; }
-        inline bool isColon() const { return _kind == TokenKind::TokenPuncColon; }
-        inline bool isDot() const { return _kind == TokenKind::TokenPuncDot; }
+        bool isComma() const { return _kind == TokenKind::TokenPuncComma; }
+        bool isColon() const { return _kind == TokenKind::TokenPuncColon; }
+        bool isDot() const { return _kind == TokenKind::TokenPuncDot; }
 
         // Operator Comparator //
-        inline bool isComparison() { return _kind >= TokenKind::TokenOperatorStartComparation && _kind <= TokenKind::TokenOperatorEndComparation; }
-        inline bool isComparisonLessThan() const { return _kind == TokenKind::TokenOperatorLessThan; }
-        inline bool isComparisonGreaterThan() const { return _kind == TokenKind::TokenOperatorGreaterThen; }
-        inline bool isComparisonEqualEqual() const { return _kind == TokenKind::TokenOperatorEqualEqual; }
-        inline bool isComparisonNotEqual() const { return _kind == TokenKind::TokenOperatorNotEqual; }
-        inline bool isComparisonLessEqual() const { return _kind == TokenKind::TokenOperatorLessEqual; }
-        inline bool isComparisonGreaterEqual() const { return _kind == TokenKind::TokenOperatorGreaterEqual; }
+        bool isComparison() { return _kind >= TokenKind::TokenOperatorStartComparation && _kind <= TokenKind::TokenOperatorEndComparation; }
+        bool isComparisonLessThan() const { return _kind == TokenKind::TokenOperatorLessThan; }
+        bool isComparisonGreaterThan() const { return _kind == TokenKind::TokenOperatorGreaterThen; }
+        bool isComparisonEqualEqual() const { return _kind == TokenKind::TokenOperatorEqualEqual; }
+        bool isComparisonNotEqual() const { return _kind == TokenKind::TokenOperatorNotEqual; }
+        bool isComparisonLessEqual() const { return _kind == TokenKind::TokenOperatorLessEqual; }
+        bool isComparisonGreaterEqual() const { return _kind == TokenKind::TokenOperatorGreaterEqual; }
 
         // Keyword //
-        inline bool isKeyFor() const { return _kind == TokenKind::TokenKeyFor; }
-        inline bool isKeyDeclaration() { return _kind >= TokenKind::TokenKeyStartDeclaration && _kind <= TokenKind::TokenKeyEndDeclaration; }
-        inline bool isKeyBreak() const { return _kind == TokenKind::TokenKeyBreak; }
-        inline bool isKeyContinue() const { return _kind == TokenKind::TokenKeyContinue; }
-        inline bool isKeyReturn() const { return _kind == TokenKind::TokenKeyReturn; }
+        bool isKeyParallel() const { return _kind == TokenKind::TokenKeyParallel; }
+        bool isKeyFor() const { return _kind == TokenKind::TokenKeyFor; }
+        bool isKeyDeclaration() { return _kind >= TokenKind::TokenKeyStartDeclaration && _kind <= TokenKind::TokenKeyEndDeclaration; }
+        bool isKeyBreak() const { return _kind == TokenKind::TokenKeyBreak; }
+        bool isKeyContinue() const { return _kind == TokenKind::TokenKeyContinue; }
+        bool isKeyReturn() const { return _kind == TokenKind::TokenKeyReturn; }
 
         // Condition //
-        inline bool isKeyElse() const { return _kind == TokenKind::TokenKeyElse; }
-        inline bool isKeyIf() const { return _kind == TokenKind::TokenKeyIf; }
+        bool isKeyElse() const { return _kind == TokenKind::TokenKeyElse; }
+        bool isKeyIf() const { return _kind == TokenKind::TokenKeyIf; }
 
         // Check If Last Buffer //
-        inline bool isEnd() const { return _kind == TokenKind::TokenEOF; }
+        bool isEnd() const { return _kind == TokenKind::TokenEOF; }
 
         // Buffer //
-        inline char *getStartBuffer() const { return _startBuffer; }
-        inline char *getEndBuffer() const { return _endBuffer; }
+        char *getStartBuffer() const { return _startBuffer; }
+        char *getEndBuffer() const { return _endBuffer; }
 
         std::string getValue() const { return std::string(_startBuffer, _endBuffer); }
 
@@ -284,7 +279,22 @@ namespace weasel
         // TODO: Need to support Right to Left Associativity
         Precedence getPrecedence();
 
-        inline static Token empty() { return Token(); }
+        static Token empty() { return Token(); }
+
+    public:
+        static Token create();
+        static Token create(TokenKind kind, SourceLocation location, char *startToken, char *endToken);
+
+    protected:
+        Token() : _kind(TokenKind::TokenUnknown) {}
+        Token(TokenKind kind, SourceLocation location, char *startToken, char *endToken) : _startBuffer(startToken), _endBuffer(endToken), _kind(kind), _location(location) {}
+
+    private:
+        char *_startBuffer;
+        char *_endBuffer;
+
+        TokenKind _kind;
+        SourceLocation _location;
     };
 
 } // namespace weasel

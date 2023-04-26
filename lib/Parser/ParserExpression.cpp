@@ -168,12 +168,12 @@ weasel::Expression *weasel::Parser::parseParenExpression()
 
 weasel::Expression *weasel::Parser::parseArrayExpression()
 {
-    auto expr = new ArrayLiteralExpression();
+    auto exp = ArrayLiteralExpression::create();
 
     getNextToken(); // eat [
     while (!getCurrentToken().isKind(TokenKind::TokenDelimCloseSquareBracket))
     {
-        expr->addItem(parseLiteralExpression());
+        exp->addItem(parseLiteralExpression());
 
         if (getNextToken().isKind(TokenKind::TokenPuncComma))
         {
@@ -181,7 +181,7 @@ weasel::Expression *weasel::Parser::parseArrayExpression()
         }
     }
 
-    return expr;
+    return exp;
 }
 
 weasel::Expression *weasel::Parser::parseStructExpression()
@@ -243,7 +243,8 @@ weasel::Expression *weasel::Parser::parseStructExpression()
 
 weasel::Expression *weasel::Parser::parsePrimaryExpression()
 {
-    auto possibleHaveField = getCurrentToken().isIdentifier() ||
+    auto possibleHaveField = getCurrentToken().isKeyThis() ||
+                             getCurrentToken().isIdentifier() ||
                              getCurrentToken().isOpenParen() ||
                              getCurrentToken().isOpenSquare();
 
@@ -253,7 +254,7 @@ weasel::Expression *weasel::Parser::parsePrimaryExpression()
 
         // Identifier
         // Call or Variable Expression or Struct Expression
-        if (getCurrentToken().isIdentifier())
+        if (getCurrentToken().isIdentifier() || getCurrentToken().isKeyThis())
         {
             if (findUserType(getCurrentToken().getValue()) != nullptr)
             {

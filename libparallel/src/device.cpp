@@ -32,11 +32,9 @@ std::vector<VkQueueFamilyProperties> getQueueFamilyPoperties(VkPhysicalDevice ph
     return arr;
 }
 
-std::vector<char *> getDeviceExtensions()
+std::vector<char const *> getDeviceExtensions()
 {
-    return {
-        "VK_KHR_portability_subset",
-    };
+    return {"VK_KHR_portability_subset"};
 }
 
 void __setupDevice()
@@ -77,7 +75,8 @@ void __setupDevice()
     queueInfo.pQueuePriorities = queuePriority;
     queueInfo.pNext = nullptr;
 
-    std::vector<char *> deviceExtensions = getDeviceExtensions();
+    auto deviceExtensions = getDeviceExtensions();
+
     VkDeviceCreateInfo deviceInfo{};
     deviceInfo.sType = VkStructureType::VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
     deviceInfo.queueCreateInfoCount = 1;
