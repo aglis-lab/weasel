@@ -4,14 +4,14 @@
 #include <fstream>
 
 #include "weasel/Parser/Parser.h"
-#include "weasel/IR/Context.h"
+#include "weasel/IR/Codegen.h"
 #include "weasel/AST/AST.h"
 #include "weasel/Symbol/Symbol.h"
 #include "weasel/Basic/FileManager.h"
-#include "weasel/Codegen/Codegen.h"
+#include "weasel/Driver/Driver.h"
 #include "weasel/Analysis/AnalysisSemantic.h"
 #include "weasel/Passes/PassesGLSL.h"
-
+#include <weasel/Printer/Printer.h>
 #include <glog/logging.h>
 
 void debug(const std::vector<weasel::Function *> &objects)
@@ -20,9 +20,10 @@ void debug(const std::vector<weasel::Function *> &objects)
               << std::setfill('=') << std::setw(40) << "=" << std::endl
               << std::endl;
 
+    auto printer = weasel::Printer();
     for (auto &obj : objects)
     {
-        obj->debug(0);
+        obj->print(&printer);
     }
 
     std::cout << std::endl

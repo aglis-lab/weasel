@@ -11,7 +11,7 @@ namespace llvm
 
 namespace weasel
 {
-    class Context;
+    class WeaselCodegen;
     class StructType;
 
     enum class TypeID
@@ -105,7 +105,7 @@ namespace weasel
 
     public:
         virtual ~Type();
-        virtual llvm::Type *codegen(Context *context);
+        virtual llvm::Type *codegen(WeaselCodegen *codegen);
 
     protected:
         bool _isSpread = false;
@@ -168,7 +168,7 @@ namespace weasel
         }
 
     public:
-        llvm::Type *codegen(Context *context) override;
+        llvm::Type *codegen(WeaselCodegen *codegen) override;
     };
 
     class ArgumentType

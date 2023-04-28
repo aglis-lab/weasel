@@ -1,13 +1,14 @@
 #include <iostream>
+
 #include <llvm/IR/Function.h>
 #include <llvm/IR/Constant.h>
 #include <llvm/IR/Module.h>
-#include "weasel/IR/Context.h"
-#include "weasel/Symbol/Symbol.h"
-#include "weasel/Config/Config.h"
+
+#include <weasel/IR/Codegen.h>
+#include <weasel/Symbol/Symbol.h>
 
 // Unimplemented
-llvm::Value *weasel::Context::codegen(TypeCastExpression *expr)
+llvm::Value *weasel::WeaselCodegen::codegen(TypeCastExpression *expr)
 {
     auto type = expr->getType();
     auto rhs = expr->getExpression();
@@ -49,7 +50,7 @@ llvm::Value *weasel::Context::codegen(TypeCastExpression *expr)
     return ErrorTable::addError(expr->getToken(), "Type Casting not supported");
 }
 
-llvm::Value *weasel::Context::codegen(ArithmeticExpression *expr)
+llvm::Value *weasel::WeaselCodegen::codegen(ArithmeticExpression *expr)
 {
     auto opToken = expr->getOperator();
     auto lhs = expr->getLHS();
@@ -172,7 +173,7 @@ llvm::Value *weasel::Context::codegen(ArithmeticExpression *expr)
 
 // TODO: Understanding Logical Operator
 // && ||
-llvm::Value *weasel::Context::codegen(LogicalExpression *expr)
+llvm::Value *weasel::WeaselCodegen::codegen(LogicalExpression *expr)
 {
     auto lhs = expr->getLHS();
     auto rhs = expr->getRHS();
@@ -201,7 +202,7 @@ llvm::Value *weasel::Context::codegen(LogicalExpression *expr)
     return nullptr;
 }
 
-llvm::Value *weasel::Context::codegen(AssignmentExpression *expr)
+llvm::Value *weasel::WeaselCodegen::codegen(AssignmentExpression *expr)
 {
     auto lhs = expr->getLHS();
     auto rhs = expr->getRHS();
@@ -260,7 +261,7 @@ llvm::Value *weasel::Context::codegen(AssignmentExpression *expr)
     return getBuilder()->CreateLoad(lhsTypeV, lhsVal);
 }
 
-llvm::Value *weasel::Context::codegen(ComparisonExpression *expr)
+llvm::Value *weasel::WeaselCodegen::codegen(ComparisonExpression *expr)
 {
     auto opToken = expr->getOperator();
     auto lhs = expr->getLHS();
@@ -380,7 +381,7 @@ llvm::Value *weasel::Context::codegen(ComparisonExpression *expr)
     }
 }
 
-llvm::Value *weasel::Context::codegen(UnaryExpression *expr)
+llvm::Value *weasel::WeaselCodegen::codegen(UnaryExpression *expr)
 {
     auto op = expr->getOperator();
     auto rhs = expr->getExpression();

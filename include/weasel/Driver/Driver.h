@@ -4,19 +4,19 @@
 
 #include "weasel/Parser/Parser.h"
 #include "weasel/AST/AST.h"
-#include "weasel/IR/Context.h"
+#include "weasel/IR/Codegen.h"
 
 namespace weasel
 {
-    class Codegen
+    class Driver
     {
     private:
-        Context *_context;
+        WeaselCodegen *_context;
         Parser *_parser;
         std::string _err;
 
     public:
-        Codegen(Context *context, Parser *parser);
+        Driver(WeaselCodegen *context, Parser *parser);
 
         bool compile(std::string targetTriple = "");
 

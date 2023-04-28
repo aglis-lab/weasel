@@ -1,4 +1,3 @@
-#include <iostream>
 #include "weasel/Parser/Parser.h"
 #include "weasel/Symbol/Symbol.h"
 

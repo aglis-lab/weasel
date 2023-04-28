@@ -1,5 +1,3 @@
-#include <iostream>
-
 #include "weasel/Basic/Number.h"
 #include "weasel/Parser/Parser.h"
 #include "weasel/Symbol/Symbol.h"

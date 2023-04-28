@@ -1,6 +1,6 @@
 #include <iostream>
 #include <fmt/core.h>
-#include "weasel/IR/Context.h"
+#include "weasel/IR/Codegen.h"
 #include "weasel/Type/Type.h"
 
 int weasel::Type::getTypeWidth()
@@ -29,12 +29,12 @@ weasel::Type::~Type()
     getContainedTypes().clear();
 }
 
-llvm::Type *weasel::StructType::codegen(weasel::Context *context)
+llvm::Type *weasel::StructType::codegen(weasel::WeaselCodegen *context)
 {
     return context->codegen(this);
 }
 
-llvm::Type *weasel::Type::codegen(weasel::Context *context)
+llvm::Type *weasel::Type::codegen(weasel::WeaselCodegen *context)
 {
     return context->codegen(this);
 }
@@ -143,6 +143,10 @@ std::string weasel::Type::getTypeName()
             if (_isSigned)
             {
                 prefix = 's';
+            }
+            else
+            {
+                prefix = '\0';
             }
         }
 

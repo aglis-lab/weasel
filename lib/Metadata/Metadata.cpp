@@ -2,7 +2,8 @@
 // Created by zaen on 27/06/21.
 //
 #include "weasel/Metadata/Metadata.h"
-#include "weasel/Config/Config.h"
+
+#define WEASEL_FULL_VERSION "weasel version 0.1.0-experimental"
 
 weasel::Metadata::Metadata(llvm::LLVMContext *context)
 {

@@ -1,14 +1,14 @@
-#include "weasel/IR/Context.h"
-#include "weasel/Config/Config.h"
-#include "weasel/Symbol/Symbol.h"
+#include <iostream>
 
-std::string weasel::Context::getDefaultLabel()
-{
-    return std::to_string(_counter++);
-}
+#include <llvm/IR/Function.h>
+#include <llvm/IR/Constant.h>
+#include <llvm/IR/Module.h>
+
+#include <weasel/IR/Codegen.h>
+#include <weasel/Symbol/Symbol.h>
 
 // Weasel User Type System to llvm Type System
-llvm::Type *weasel::Context::codegen(weasel::StructType *structExpr)
+llvm::Type *weasel::WeaselCodegen::codegen(weasel::StructType *structExpr)
 {
     auto types = structExpr->getContainedTypes();
     auto typesVal = std::vector<llvm::Type *>();
@@ -42,7 +42,7 @@ llvm::Type *weasel::Context::codegen(weasel::StructType *structExpr)
 }
 
 // Weasel Type System to llvm Type System
-llvm::Type *weasel::Context::codegen(weasel::Type *type)
+llvm::Type *weasel::WeaselCodegen::codegen(weasel::Type *type)
 {
     if (type->isVoidType())
     {
@@ -89,67 +89,4 @@ llvm::Type *weasel::Context::codegen(weasel::Type *type)
     }
 
     return nullptr;
-}
-
-llvm::MDNode *weasel::Context::getTBAARoot() const
-{
-    return getMDBuilder()->createTBAARoot("Simple C / C++ TBAA");
-}
-
-llvm::MDNode *weasel::Context::getTBAAChar() const
-{
-    return getMDBuilder()->createTBAAScalarTypeNode("omnipotent char", getTBAARoot(), 0);
-}
-
-llvm::MDNode *weasel::Context::getTBAAShort() const
-{
-    return getMDBuilder()->createTBAAScalarTypeNode("short", getTBAAChar(), 0);
-}
-
-llvm::MDNode *weasel::Context::getTBAAInt() const
-{
-    return getMDBuilder()->createTBAAScalarTypeNode("int", getTBAAChar(), 0);
-}
-
-llvm::MDNode *weasel::Context::getTBAALong() const
-{
-    return getMDBuilder()->createTBAAScalarTypeNode("long long", getTBAAChar(), 0);
-}
-
-llvm::MDNode *weasel::Context::getTBAAPointer() const
-{
-    return getMDBuilder()->createTBAAScalarTypeNode("any pointer", getTBAAChar(), 0);
-}
-
-llvm::MDNode *weasel::Context::getTBAA(llvm::Type *type) const
-{
-    llvm::MDNode *node;
-    auto width = type->getIntegerBitWidth();
-
-    if (type->isPointerTy())
-    {
-        node = getTBAAPointer();
-    }
-    else if (width == 8)
-    {
-        node = getTBAAChar();
-    }
-    else if (width == 16)
-    {
-        node = getTBAAShort();
-    }
-    else if (width == 32)
-    {
-        node = getTBAAInt();
-    }
-    else if (width == 64)
-    {
-        node = getTBAALong();
-    }
-    else
-    {
-        assert(false && "You get another bit width");
-    }
-
-    return node;
 }

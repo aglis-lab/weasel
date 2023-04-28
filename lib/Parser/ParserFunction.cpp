@@ -1,7 +1,4 @@
-#include <iostream>
-#include <llvm/IR/Type.h>
 #include "weasel/Parser/Parser.h"
-#include "weasel/IR/Context.h"
 #include "weasel/Symbol/Symbol.h"
 
 weasel::Function *weasel::Parser::parseFunction(StructType *type)

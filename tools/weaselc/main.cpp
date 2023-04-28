@@ -1,4 +1,5 @@
 #include <sstream>
+
 #include <llvm/Support/TargetSelect.h>
 #include <llvm/ADT/STLExtras.h>
 #include <llvm/Target/TargetMachine.h>
@@ -8,15 +9,19 @@
 #include <llvm/Analysis/TargetLibraryInfo.h>
 #include <llvm/IR/LegacyPassManager.h>
 
+#include <weasel/AST/AST.h>
+#include <weasel/Printer/Printer.h>
 #include <weasel/Parser/Parser.h>
-#include <weasel/IR/Context.h>
+#include <weasel/IR/Codegen.h>
 #include <weasel/AST/AST.h>
 #include <weasel/Symbol/Symbol.h>
 #include <weasel/Basic/FileManager.h>
-#include <weasel/Codegen/Codegen.h>
+#include <weasel/Driver/Driver.h>
 #include <weasel/Analysis/AnalysisSemantic.h>
 
-#include <weasel-c/debug.h>
+#include <glog/logging.h>
+
+void debug(const std::vector<weasel::Function *> objects);
 
 int main(int argc, char *argv[])
 {
@@ -38,14 +43,8 @@ int main(int argc, char *argv[])
         return 0;
     }
 
-    // Initialize LLVM TO BULK
-    LOG(INFO) << "Initializing...\n";
-    llvm::InitializeAllTargetInfos();
-    llvm::InitializeNativeTarget();
-    llvm::InitializeNativeTargetAsmParser();
-    llvm::InitializeNativeTargetAsmPrinter();
-
     // Prepare Lexer and Parser
+    LOG(INFO) << "Initializing Parser...\n";
     auto lexer = weasel::Lexer(&fileManager);
     auto parser = weasel::Parser(&lexer);
 
@@ -57,10 +56,22 @@ int main(int argc, char *argv[])
     LOG(INFO) << "Debug AST...\n";
     debug(parser.getFunctions());
 
+    // Initialize LLVM
+    llvm::InitializeAllTargetInfos();
+    llvm::InitializeNativeTarget();
+    llvm::InitializeNativeTargetAsmParser();
+    llvm::InitializeNativeTargetAsmPrinter();
+
+    // Only Codegen that have a relationship with the LLVM System
+    /*
+    Codegen(LLVMContext);
+    Driver(Codegen, Module);
+    */
+
     // Prepare for codegen
     auto llvmContext = llvm::LLVMContext();
-    auto context = weasel::Context(&llvmContext, "codeModule");
-    auto codegen = weasel::Codegen(&context, &parser);
+    auto context = weasel::WeaselCodegen(&llvmContext, "CoreModule");
+    auto codegen = weasel::Driver(&context, &parser);
     // auto analysis = weasel::AnalysisSemantic(&parser);
 
     LOG(INFO) << "Compiling...\n";
@@ -69,7 +80,7 @@ int main(int argc, char *argv[])
     {
         if (!codegen.getError().empty())
         {
-            std::cerr << "Codegen Compile : " << codegen.getError() << "\n";
+            std::cerr << "Driver Compile : " << codegen.getError() << "\n";
         }
     }
 
@@ -93,4 +104,30 @@ int main(int argc, char *argv[])
     {
         codegen.createObject(outputPath);
     }
+}
+
+void debug(const std::vector<weasel::Function *> objects)
+{
+    /*
+
+    out = stdout
+    for _, item on module->userTypes {
+        item->print(out)
+    }
+
+    for _, item on module->functions {
+        item->print(out)
+    }
+
+    */
+
+    std::cerr << std::endl;
+
+    auto printer = weasel::Printer();
+    for (auto obj : objects)
+    {
+        obj->print(&printer);
+    }
+
+    std::cerr << std::endl;
 }

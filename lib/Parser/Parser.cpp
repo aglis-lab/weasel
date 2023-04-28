@@ -1,8 +1,4 @@
-#include <iostream>
-#include <unistd.h>
-#include "llvm/IR/Verifier.h"
 #include "weasel/Parser/Parser.h"
-#include "weasel/IR/Context.h"
 #include "weasel/Symbol/Symbol.h"
 
 // parse

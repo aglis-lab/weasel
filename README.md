@@ -10,6 +10,17 @@ And we can create computationally task easyly solved. Like Machine Learning and 
 
 We also can binding the library created by weasel language into another languages like python to create better environment for end user to create fast program.
 
+# Flow Code
+
+- Module -> FileManager -> Lexer -> Parser
+- Module -> Codegen(LLVM Module) -> Driver
+- Module -> Printer
+
+# Third-Party
+
+- fmt (install on system)
+- glog (install on system)
+
 # SETUP (see LLVM Documentation)
 
 - Add LLVM Project

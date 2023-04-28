@@ -1,35 +1,34 @@
-#include "llvm/IR/Constants.h"
-#include "weasel/IR/Context.h"
+#include "weasel/IR/Codegen.h"
 
-llvm::Value *weasel::Context::codegen(BoolLiteralExpression *expr) const
+llvm::Value *weasel::WeaselCodegen::codegen(BoolLiteralExpression *expr) const
 {
     return getBuilder()->getInt1(expr->getValue());
 }
 
-llvm::Value *weasel::Context::codegen(CharLiteralExpression *expr) const
+llvm::Value *weasel::WeaselCodegen::codegen(CharLiteralExpression *expr) const
 {
     return getBuilder()->getInt8(expr->getValue());
 }
 
-llvm::Value *weasel::Context::codegen(NumberLiteralExpression *expr)
+llvm::Value *weasel::WeaselCodegen::codegen(NumberLiteralExpression *expr)
 {
     auto typeVal = expr->getType()->codegen(this);
     return llvm::ConstantInt::get(typeVal, expr->getValue());
 }
 
-llvm::Value *weasel::Context::codegen(FloatLiteralExpression *expr) const
+llvm::Value *weasel::WeaselCodegen::codegen(FloatLiteralExpression *expr) const
 {
     auto floatTy = getBuilder()->getFloatTy();
     return llvm::ConstantFP::get(floatTy, expr->getValue());
 }
 
-llvm::Value *weasel::Context::codegen(DoubleLiteralExpression *expr) const
+llvm::Value *weasel::WeaselCodegen::codegen(DoubleLiteralExpression *expr) const
 {
     auto doubleTy = getBuilder()->getDoubleTy();
     return llvm::ConstantFP::get(doubleTy, expr->getValue());
 }
 
-llvm::Value *weasel::Context::codegen(StringLiteralExpression *expr) const
+llvm::Value *weasel::WeaselCodegen::codegen(StringLiteralExpression *expr) const
 {
     auto *str = getBuilder()->CreateGlobalString(expr->getValue());
     std::vector<llvm::Value *> idxList;
@@ -39,7 +38,7 @@ llvm::Value *weasel::Context::codegen(StringLiteralExpression *expr) const
     return llvm::ConstantExpr::getGetElementPtr(str->getType()->getElementType(), str, idxList, true);
 }
 
-llvm::Value *weasel::Context::codegen(ArrayLiteralExpression *expr)
+llvm::Value *weasel::WeaselCodegen::codegen(ArrayLiteralExpression *expr)
 {
     auto items = expr->getItems();
     auto numItem = items.size();
@@ -74,7 +73,7 @@ llvm::Value *weasel::Context::codegen(ArrayLiteralExpression *expr)
     return getBuilder()->CreateLoad(gv->getType(), gv);
 }
 
-llvm::Value *weasel::Context::codegen(NilLiteralExpression *expr)
+llvm::Value *weasel::WeaselCodegen::codegen(NilLiteralExpression *expr)
 {
     auto typeV = expr->getType()->codegen(this);
     return llvm::ConstantPointerNull::getNullValue(typeV);

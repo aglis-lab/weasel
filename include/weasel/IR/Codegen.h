@@ -1,5 +1,8 @@
 #pragma once
 
+#include "weasel/AST/AST.h"
+#include "weasel/Table/ContextTable.h"
+
 #include <vector>
 #include <unordered_map>
 
@@ -9,9 +12,6 @@
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/MDBuilder.h>
-
-#include "weasel/AST/AST.h"
-#include "weasel/Table/ContextTable.h"
 
 namespace weasel
 {
@@ -24,63 +24,15 @@ namespace weasel
     };
 
     // Analysis Context
-    class Context : ContextTable
+    class WeaselCodegen : ContextTable
     {
-    private:
-        llvm::Module *_module;
-        llvm::MDBuilder *_mdBuilder;
-        llvm::LLVMContext *_context;
-        llvm::IRBuilder<> *_builder;
-        Function *_currentFunction = nullptr;
-        unsigned long _counter = 0;
-
-        // Helper for Looping //
-        std::vector<llvm::BasicBlock *> _breakBlocks;
-        std::vector<llvm::BasicBlock *> _continueBlocks;
-        std::unordered_map<std::string, llvm::StructType *> _structTypes;
-
-    private:
-        llvm::MDNode *getTBAA(llvm::Type *type) const;
-        llvm::MDNode *getTBAARoot() const;
-        llvm::MDNode *getTBAAChar() const;
-        llvm::MDNode *getTBAAShort() const;
-        llvm::MDNode *getTBAAInt() const;
-        llvm::MDNode *getTBAALong() const;
-        llvm::MDNode *getTBAAPointer() const;
-
-        // Helper for Break looping //
-        inline void addbreakBlock(llvm::BasicBlock *block) { _breakBlocks.push_back(block); }
-        inline void removeBreakBlock() { _breakBlocks.pop_back(); }
-        inline bool isBreakBlockExist() const { return !_breakBlocks.empty(); }
-        inline llvm::BasicBlock *getBreakBlock() const { return _breakBlocks.back(); }
-
-        // Helper for Continue Looping //
-        inline void addContinueBlock(llvm::BasicBlock *block) { _continueBlocks.push_back(block); }
-        inline void removeContinueBlock() { _continueBlocks.pop_back(); }
-        inline bool isContinueBlockExist() const { return !_continueBlocks.empty(); }
-        inline llvm::BasicBlock *getContinueBlock() const { return _continueBlocks.back(); }
-
-        // Helper for User Defined Struct //
-        inline void addStructType(const std::string &name, llvm::StructType *type) { _structTypes[name] = type; }
-        inline llvm::StructType *findStructType(const std::string &name)
-        {
-            if (_structTypes.find(name) != _structTypes.end())
-            {
-                return _structTypes[name];
-            }
-
-            return nullptr;
-        }
-
     public:
-        Context(llvm::LLVMContext *context, const std::string &moduleName);
+        WeaselCodegen(llvm::LLVMContext *context, const std::string &moduleName);
 
         llvm::LLVMContext *getContext() const { return _context; }
         llvm::Module *getModule() const { return _module; }
         llvm::IRBuilder<> *getBuilder() const { return _builder; }
         llvm::MDBuilder *getMDBuilder() const { return _mdBuilder; }
-
-        std::string getDefaultLabel();
 
     public:
         llvm::Type *codegen(Type *type);
@@ -133,5 +85,49 @@ namespace weasel
 
         // User Defined
         llvm::Value *codegen(Function *func);
+
+    private:
+        llvm::Module *_module;
+        llvm::MDBuilder *_mdBuilder;
+        llvm::LLVMContext *_context;
+        llvm::IRBuilder<> *_builder;
+
+        // Helper for Looping //
+        std::vector<llvm::BasicBlock *> _breakBlocks;
+        std::vector<llvm::BasicBlock *> _continueBlocks;
+        std::unordered_map<std::string, llvm::StructType *> _structTypes;
+
+    private:
+        llvm::MDNode *getTBAA(llvm::Type *type) const;
+        llvm::MDNode *getTBAARoot() const;
+        llvm::MDNode *getTBAAChar() const;
+        llvm::MDNode *getTBAAShort() const;
+        llvm::MDNode *getTBAAInt() const;
+        llvm::MDNode *getTBAALong() const;
+        llvm::MDNode *getTBAAPointer() const;
+
+        // Helper for Break looping //
+        void addbreakBlock(llvm::BasicBlock *block) { _breakBlocks.push_back(block); }
+        void removeBreakBlock() { _breakBlocks.pop_back(); }
+        bool isBreakBlockExist() const { return !_breakBlocks.empty(); }
+        llvm::BasicBlock *getBreakBlock() const { return _breakBlocks.back(); }
+
+        // Helper for Continue Looping //
+        void addContinueBlock(llvm::BasicBlock *block) { _continueBlocks.push_back(block); }
+        void removeContinueBlock() { _continueBlocks.pop_back(); }
+        bool isContinueBlockExist() const { return !_continueBlocks.empty(); }
+        llvm::BasicBlock *getContinueBlock() const { return _continueBlocks.back(); }
+
+        // Helper for User Defined Struct //
+        void addStructType(const std::string &name, llvm::StructType *type) { _structTypes[name] = type; }
+        llvm::StructType *findStructType(const std::string &name)
+        {
+            if (_structTypes.find(name) != _structTypes.end())
+            {
+                return _structTypes[name];
+            }
+
+            return nullptr;
+        }
     };
 } // namespace weasel

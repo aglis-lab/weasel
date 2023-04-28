@@ -13,17 +13,46 @@ namespace weasel
 
     class Parser : ParserTable
     {
+    public:
+        Parser(Lexer *lexer) : _lexer(lexer) {}
+
+        // Gets Parser Value
+        std::vector<StructType *> getUserTypes() const { return _userTypes; }
+        std::vector<Function *> getFunctions() const { return _functions; }
+        std::vector<Function *> getFunctionsParallel() const
+        {
+            std::vector<Function *> funs;
+            for (auto item : _functions)
+            {
+                if (item->getParallel())
+                {
+                    funs.push_back(item);
+                }
+            }
+
+            return funs;
+        }
+
+        // Helper
+        Type *parseDataType();
+        void ignoreNewline();
+
+        // Lexer
+        Lexer *getLexer() const { return _lexer; }
+
+    public:
+        void parse();
+
     private:
         Lexer *_lexer;
-        Function *_currentFunction;
         std::vector<StructType *> _userTypes;
         std::vector<Function *> _functions;
 
     private:
-        inline void addFunction(Function *fun) { _functions.push_back(fun); }
-        inline unsigned functionCount() const { return _functions.size(); }
-        inline Function *lastFunction() const { return _functions.back(); }
-        inline Function *findFunction(const std::string &identifier)
+        void addFunction(Function *fun) { _functions.push_back(fun); }
+        unsigned functionCount() const { return _functions.size(); }
+        Function *lastFunction() const { return _functions.back(); }
+        Function *findFunction(const std::string &identifier)
         {
             for (auto item : getFunctions())
             {
@@ -36,10 +65,10 @@ namespace weasel
             return nullptr;
         }
 
-        inline void addUserType(StructType *type) { _userTypes.push_back(type); }
-        inline unsigned userTypeCount() const { return _userTypes.size(); }
-        inline StructType *getLastUserType() const { return _userTypes.back(); }
-        inline StructType *findUserType(const std::string &typeName)
+        void addUserType(StructType *type) { _userTypes.push_back(type); }
+        unsigned userTypeCount() const { return _userTypes.size(); }
+        StructType *getLastUserType() const { return _userTypes.back(); }
+        StructType *findUserType(const std::string &typeName)
         {
             for (auto item : getUserTypes())
             {
@@ -94,35 +123,5 @@ namespace weasel
         Expression *parseIdentifierExpression();
         Expression *parseExpressionOperator(unsigned prec, Expression *lhs);
         Expression *parseArrayExpression();
-
-    public:
-        Parser(Lexer *lexer) : _lexer(lexer) {}
-
-        // Gets Parser Value
-        inline std::vector<StructType *> getUserTypes() const { return _userTypes; }
-        inline std::vector<Function *> getFunctions() const { return _functions; }
-        inline std::vector<Function *> getFunctionsParallel() const
-        {
-            std::vector<Function *> funs;
-            for (auto item : _functions)
-            {
-                if (item->getParallel())
-                {
-                    funs.push_back(item);
-                }
-            }
-
-            return funs;
-        }
-
-        // Helper
-        Type *parseDataType();
-        void ignoreNewline();
-
-        // Lexer
-        Lexer *getLexer() const { return _lexer; }
-
-    public:
-        void parse();
     };
 } // namespace weasel

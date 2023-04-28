@@ -15,17 +15,17 @@
 #include <llvm/IR/LegacyPassManager.h>
 
 #include "weasel/Symbol/Symbol.h"
-#include "weasel/Codegen/Codegen.h"
+#include "weasel/Driver/Driver.h"
 #include "weasel/Passes/Passes.h"
 #include "weasel/Metadata/Metadata.h"
 
-weasel::Codegen::Codegen(Context *context, weasel::Parser *parser)
+weasel::Driver::Driver(WeaselCodegen *context, weasel::Parser *parser)
 {
     _context = context;
     _parser = parser;
 }
 
-bool weasel::Codegen::compile(std::string defTargetTriple)
+bool weasel::Driver::compile(std::string defTargetTriple)
 {
     auto pass = Passes(getModule());
     for (const auto &item : getFunctions())
@@ -89,7 +89,7 @@ bool weasel::Codegen::compile(std::string defTargetTriple)
     return true;
 }
 
-void weasel::Codegen::createIR(char *outputFile) const
+void weasel::Driver::createIR(char *outputFile) const
 {
     std::error_code errCode;
     llvm::raw_fd_ostream dest(std::string(outputFile) + ".ir", errCode, llvm::sys::fs::OF_None);
@@ -103,7 +103,7 @@ void weasel::Codegen::createIR(char *outputFile) const
     dest.flush();
 }
 
-void weasel::Codegen::createObject(char *outputFile) const
+void weasel::Driver::createObject(char *outputFile) const
 {
     std::string err;
     std::error_code errCode;

@@ -1,141 +1,141 @@
-#include "weasel/AST/AST.h"
-#include "weasel/IR/Context.h"
+#include <weasel/AST/AST.h>
+#include <weasel/IR/Codegen.h>
 
 // Literal
-llvm::Value *weasel::NumberLiteralExpression::codegen(Context *c)
+llvm::Value *weasel::NumberLiteralExpression::codegen(WeaselCodegen *c)
 {
     return c->codegen(this);
 }
 
-llvm::Value *weasel::DoubleLiteralExpression::codegen(Context *c)
+llvm::Value *weasel::DoubleLiteralExpression::codegen(WeaselCodegen *c)
 {
     return c->codegen(this);
 }
 
-llvm::Value *weasel::FloatLiteralExpression::codegen(Context *c)
+llvm::Value *weasel::FloatLiteralExpression::codegen(WeaselCodegen *c)
 {
     return c->codegen(this);
 }
 
-llvm::Value *weasel::BoolLiteralExpression::codegen(Context *c)
+llvm::Value *weasel::BoolLiteralExpression::codegen(WeaselCodegen *c)
 {
     return c->codegen(this);
 }
 
-llvm::Value *weasel::CharLiteralExpression::codegen(Context *c)
+llvm::Value *weasel::CharLiteralExpression::codegen(WeaselCodegen *c)
 {
     return c->codegen(this);
 }
 
-llvm::Value *weasel::ArrayLiteralExpression::codegen(Context *c)
+llvm::Value *weasel::ArrayLiteralExpression::codegen(WeaselCodegen *c)
 {
     return c->codegen(this);
 }
 
-llvm::Value *weasel::StringLiteralExpression::codegen(Context *c)
+llvm::Value *weasel::StringLiteralExpression::codegen(WeaselCodegen *c)
 {
     return c->codegen(this);
 }
 
-llvm::Value *weasel::NilLiteralExpression::codegen(Context *c)
+llvm::Value *weasel::NilLiteralExpression::codegen(WeaselCodegen *c)
 {
     return c->codegen(this);
 }
 
 // Expression
-llvm::Value *weasel::DeclarationStatement::codegen(Context *c)
+llvm::Value *weasel::DeclarationStatement::codegen(WeaselCodegen *c)
 {
     return c->codegen(this);
 }
 
-llvm::Value *weasel::VariableExpression::codegen(Context *c)
+llvm::Value *weasel::VariableExpression::codegen(WeaselCodegen *c)
 {
     return c->codegen(this);
 }
 
-llvm::Value *weasel::FieldExpression::codegen(Context *c)
+llvm::Value *weasel::FieldExpression::codegen(WeaselCodegen *c)
 {
     return c->codegen(this);
 }
 
-llvm::Value *weasel::ArrayExpression::codegen(Context *c)
+llvm::Value *weasel::ArrayExpression::codegen(WeaselCodegen *c)
 {
     return c->codegen(this);
 }
 
-llvm::Value *weasel::ArithmeticExpression::codegen(Context *c)
+llvm::Value *weasel::ArithmeticExpression::codegen(WeaselCodegen *c)
 {
     return c->codegen(this);
 }
 
-llvm::Value *weasel::LogicalExpression::codegen(Context *c)
+llvm::Value *weasel::LogicalExpression::codegen(WeaselCodegen *c)
 {
     return c->codegen(this);
 }
 
-llvm::Value *weasel::AssignmentExpression::codegen(Context *c)
+llvm::Value *weasel::AssignmentExpression::codegen(WeaselCodegen *c)
 {
     return c->codegen(this);
 }
 
-llvm::Value *weasel::ComparisonExpression::codegen(Context *c)
+llvm::Value *weasel::ComparisonExpression::codegen(WeaselCodegen *c)
 {
     return c->codegen(this);
 }
 
-llvm::Value *weasel::CallExpression::codegen(Context *c)
+llvm::Value *weasel::CallExpression::codegen(WeaselCodegen *c)
 {
     return c->codegen(this);
 }
 
-llvm::Value *weasel::ReturnExpression::codegen(Context *c)
+llvm::Value *weasel::ReturnExpression::codegen(WeaselCodegen *c)
 {
     return c->codegen(this);
 }
 
-llvm::Value *weasel::BreakExpression::codegen(Context *c)
+llvm::Value *weasel::BreakExpression::codegen(WeaselCodegen *c)
 {
     return c->codegen(this);
 }
 
-llvm::Value *weasel::ContinueExpression::codegen(Context *c)
+llvm::Value *weasel::ContinueExpression::codegen(WeaselCodegen *c)
 {
     return c->codegen(this);
 }
 
-llvm::Value *weasel::StructExpression::codegen(Context *c)
+llvm::Value *weasel::StructExpression::codegen(WeaselCodegen *c)
 {
     return c->codegen(this);
 }
 
-llvm::Value *weasel::Function::codegen(Context *c)
+llvm::Value *weasel::Function::codegen(WeaselCodegen *c)
 {
     return c->codegen(this);
 }
 
 // Operator Expression
-llvm::Value *weasel::UnaryExpression::codegen(Context *c)
+llvm::Value *weasel::UnaryExpression::codegen(WeaselCodegen *c)
 {
     return c->codegen(this);
 }
 
-llvm::Value *weasel::TypeCastExpression::codegen(Context *c)
+llvm::Value *weasel::TypeCastExpression::codegen(WeaselCodegen *c)
 {
     return c->codegen(this);
 }
 
 // Statement
-llvm::Value *weasel::CompoundStatement::codegen(Context *c)
+llvm::Value *weasel::CompoundStatement::codegen(WeaselCodegen *c)
 {
     return c->codegen(this);
 }
 
-llvm::Value *weasel::ConditionStatement::codegen(Context *c)
+llvm::Value *weasel::ConditionStatement::codegen(WeaselCodegen *c)
 {
     return c->codegen(this);
 }
 
-llvm::Value *weasel::LoopingStatement::codegen(Context *c)
+llvm::Value *weasel::LoopingStatement::codegen(WeaselCodegen *c)
 {
     return c->codegen(this);
 }

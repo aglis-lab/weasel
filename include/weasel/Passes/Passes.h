@@ -23,6 +23,7 @@ namespace weasel
 
     public:
         Passes(llvm::Module *module);
+
         bool run(llvm::Function &fun);
     };
 }
