@@ -1,7 +1,7 @@
 #pragma once
 
-#include "weasel/Lexer/Token.h"
-#include "weasel/Basic/FileManager.h"
+#include <weasel/Lexer/Token.h>
+#include <weasel/Basic/FileManager.h>
 
 namespace weasel
 {

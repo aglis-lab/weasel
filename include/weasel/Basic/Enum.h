@@ -1,3 +1,5 @@
+#pragma once
+
 template <typename Enumeration>
 auto enumToInt(Enumeration const value) -> typename std::underlying_type<Enumeration>::type
 {

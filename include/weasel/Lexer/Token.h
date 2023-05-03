@@ -1,7 +1,8 @@
 #pragma once
 
 #include <string>
-#include "weasel/Basic/Enum.h"
+
+#include <weasel/Basic/Enum.h>
 
 #define __defaultPrecOrder 20
 

@@ -13,15 +13,13 @@
 #include <weasel/Printer/Printer.h>
 #include <weasel/Parser/Parser.h>
 #include <weasel/IR/Codegen.h>
-#include <weasel/AST/AST.h>
 #include <weasel/Symbol/Symbol.h>
 #include <weasel/Basic/FileManager.h>
 #include <weasel/Driver/Driver.h>
 #include <weasel/Analysis/AnalysisSemantic.h>
+#include <weasel/IR/Module.h>
 
 #include <glog/logging.h>
-
-void debug(const std::vector<weasel::Function *> objects);
 
 int main(int argc, char *argv[])
 {
@@ -45,8 +43,9 @@ int main(int argc, char *argv[])
 
     // Prepare Lexer and Parser
     LOG(INFO) << "Initializing Parser...\n";
+    auto weaselModule = weasel::Module();
     auto lexer = weasel::Lexer(&fileManager);
-    auto parser = weasel::Parser(&lexer);
+    auto parser = weasel::Parser(&lexer, &weaselModule);
 
     // Parse into AST
     LOG(INFO) << "Parsing...\n";
@@ -54,7 +53,8 @@ int main(int argc, char *argv[])
 
     // Debugging AST
     LOG(INFO) << "Debug AST...\n";
-    debug(parser.getFunctions());
+    fmt::println(""); // Newline for after LOG INFO
+    weasel::Printer().print(&weaselModule);
 
     // Initialize LLVM
     llvm::InitializeAllTargetInfos();
@@ -62,25 +62,19 @@ int main(int argc, char *argv[])
     llvm::InitializeNativeTargetAsmParser();
     llvm::InitializeNativeTargetAsmPrinter();
 
-    // Only Codegen that have a relationship with the LLVM System
-    /*
-    Codegen(LLVMContext);
-    Driver(Codegen, Module);
-    */
-
     // Prepare for codegen
     auto llvmContext = llvm::LLVMContext();
-    auto context = weasel::WeaselCodegen(&llvmContext, "CoreModule");
-    auto codegen = weasel::Driver(&context, &parser);
+    auto codegen = weasel::WeaselCodegen(&llvmContext, "CoreModule");
+    auto driver = weasel::Driver(&codegen, &parser);
     // auto analysis = weasel::AnalysisSemantic(&parser);
 
     LOG(INFO) << "Compiling...\n";
-    auto isCompileSuccess = codegen.compile();
+    auto isCompileSuccess = driver.compile();
     if (!isCompileSuccess)
     {
-        if (!codegen.getError().empty())
+        if (!driver.getError().empty())
         {
-            std::cerr << "Driver Compile : " << codegen.getError() << "\n";
+            std::cerr << "Driver Compile : " << driver.getError() << "\n";
         }
     }
 
@@ -89,7 +83,7 @@ int main(int argc, char *argv[])
     // analysis.typeChecking();
 
     LOG(INFO) << "Create LLVM IR...\n";
-    codegen.createIR(outputPath);
+    driver.createIR(outputPath);
 
     if (!weasel::ErrorTable::getErrors().empty())
     {
@@ -102,32 +96,6 @@ int main(int argc, char *argv[])
     LOG(INFO) << "Create Output Objects...\n";
     if (isCompileSuccess)
     {
-        codegen.createObject(outputPath);
+        driver.createObject(outputPath);
     }
-}
-
-void debug(const std::vector<weasel::Function *> objects)
-{
-    /*
-
-    out = stdout
-    for _, item on module->userTypes {
-        item->print(out)
-    }
-
-    for _, item on module->functions {
-        item->print(out)
-    }
-
-    */
-
-    std::cerr << std::endl;
-
-    auto printer = weasel::Printer();
-    for (auto obj : objects)
-    {
-        obj->print(&printer);
-    }
-
-    std::cerr << std::endl;
 }

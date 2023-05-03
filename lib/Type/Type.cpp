@@ -165,19 +165,19 @@ std::string weasel::Type::getTypeName()
             type = "long";
         }
 
-        return fmt::format("{}{}", prefix, type);
+        return fmt::format("@{}{}", prefix, type);
     }
     case TypeID::DoubleType:
     {
-        return "double";
+        return "@double";
     }
     case TypeID::FloatType:
     {
-        return "float";
+        return "@float";
     }
     case TypeID::VoidType:
     {
-        return "void";
+        return "@void";
     }
     case TypeID::PointerType:
     {
@@ -185,7 +185,7 @@ std::string weasel::Type::getTypeName()
     }
     default:
     {
-        return "no-type";
+        return "@no-type";
     }
     }
 }

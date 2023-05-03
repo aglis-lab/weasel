@@ -63,3 +63,29 @@ weasel::Token weasel::Parser::getNextToken(bool skipSpace)
 {
     return _lexer->getNextToken(skipSpace);
 }
+
+weasel::StructType *weasel::Parser::findUserType(const std::string &typeName)
+{
+    for (auto item : getUserTypes())
+    {
+        if (item->getIdentifier() == typeName)
+        {
+            return item;
+        }
+    }
+
+    return nullptr;
+}
+
+weasel::Function *weasel::Parser::findFunction(const std::string &identifier)
+{
+    for (auto item : getFunctions())
+    {
+        if (item->getIdentifier() == identifier)
+        {
+            return item;
+        }
+    }
+
+    return nullptr;
+}

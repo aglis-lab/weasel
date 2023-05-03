@@ -6,11 +6,17 @@ project(weasel VERSION 0.0.1)
 # CMAKE LINKER
 set(CMAKE_LINKER ld.lld)
 
-# FIND THREADS
+# Find THREADS
 find_package(Threads REQUIRED)
 
-# FIND FMT
-find_package(fmt)
+# Find FMT
+find_package(fmt REQUIRED)
+
+# Find Google Loging
+find_package (glog REQUIRED)
+
+# Find LLVM PACKAGE
+find_package(LLVM REQUIRED CONFIG)
 
 # SPIRV
 set(SPIRV_DIR ${CMAKE_SOURCE_DIR}/spirv)
@@ -25,23 +31,19 @@ set(SPIRV_CROSS_LIB_DIR ${SPIRV_CROSS_DIR}/build)
 # WEASEL PARALLEL
 set(WEASEL_PARALLEL_LIB_DIR ${CMAKE_SOURCE_DIR}/build/libparallel)
 
+# WEASEL CMAKE
+set(WEASEL_DIR ${CMAKE_SOURCE_DIR}/cmake)
+
 # LLVM
 set(LLVM_DIR /opt/homebrew/opt/llvm@13/lib/cmake/llvm/)
-set(WEASEL_DIR ${CMAKE_SOURCE_DIR}/cmake)
 
 # CXX
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# FMT
-set(FMT_INCLUDE_DIRS third-party/fmt/include)
-
 # SET WEASEL LIBS
-set(WEASEL_LIBS WeaselLib fmt::fmt Threads::Threads)
-
-# LLVM FIND PACKAGE
-find_package(LLVM REQUIRED CONFIG)
+set(WEASEL_LIBS WeaselLib)
 
 list(APPEND CMAKE_MODULE_PATH ${LLVM_CMAKE_DIR})
 
@@ -63,9 +65,6 @@ add_definitions(${LLVM_DEFINITIONS})
 
 # INCLUDE LLVM LIBRARY
 include_directories(${LLVM_INCLUDE_DIRS})
-
-# INCLUDE LLVM LIBRARY
-include_directories(${FMT_INCLUDE_DIRS})
 
 # WEASEL DIRECTORIES
 add_subdirectory(lib)

@@ -1,3 +1,5 @@
+#pragma once
+
 namespace weasel
 {
     class Expression;

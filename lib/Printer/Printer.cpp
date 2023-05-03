@@ -1,6 +1,17 @@
 #include <weasel/Printer/Printer.h>
 #include <weasel/Util/Util.h>
 
+void weasel::Printer::print(weasel::Module *module)
+{
+    for (auto item : module->getFunctions())
+    {
+        item->print(this);
+
+        // Newline after function declaration or definition
+        fmt::println("");
+    }
+}
+
 void weasel::Printer::print(weasel::Function *expr)
 {
     std::string prefix = "@declare";
@@ -120,6 +131,14 @@ void weasel::Printer::print(weasel::CallExpression *expr)
     }
 
     fmt::println(" )");
+}
+
+void weasel::Printer::print(weasel::ReturnExpression *expr)
+{
+    fmt::print("{: >{}}return ", "", this->getCurrentShift());
+    expr->getValue()->print(this);
+
+    fmt::println("");
 }
 
 //

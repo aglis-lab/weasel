@@ -105,6 +105,7 @@ void weasel::CallExpression::print(Printer *printer)
 
 void weasel::ReturnExpression::print(Printer *printer)
 {
+    printer->print(this);
     // auto val = fmt::format("return {}", this->getValue()->getType()->getTypeName());
     // this->printDebug(val, shift);
 }

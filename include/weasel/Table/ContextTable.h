@@ -5,7 +5,7 @@
 #include <list>
 #include <string>
 
-#include "weasel/Table/Table.h"
+#include <weasel/Table/Table.h>
 
 namespace weasel
 {

@@ -1,5 +1,8 @@
-#include "weasel/AST/AST.h"
+#pragma once
+
 #include <vector>
+
+#include <weasel/AST/AST.h>
 
 namespace weasel
 {

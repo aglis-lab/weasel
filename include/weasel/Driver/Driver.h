@@ -11,12 +11,12 @@ namespace weasel
     class Driver
     {
     private:
-        WeaselCodegen *_context;
+        WeaselCodegen *_codegen;
         Parser *_parser;
         std::string _err;
 
     public:
-        Driver(WeaselCodegen *context, Parser *parser);
+        Driver(WeaselCodegen *codegen, Parser *parser);
 
         bool compile(std::string targetTriple = "");
 
@@ -27,8 +27,8 @@ namespace weasel
         inline std::vector<StructType *> getUserTypes() const { return _parser->getUserTypes(); }
 
     public:
-        llvm::Module *getModule() const { return _context->getModule(); }
-        llvm::LLVMContext *getContext() const { return _context->getContext(); }
+        llvm::Module *getModule() const { return _codegen->getModule(); }
+        llvm::LLVMContext *getContext() const { return _codegen->getContext(); }
 
         std::string getError() const { return _err; }
     };

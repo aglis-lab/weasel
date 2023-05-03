@@ -14,14 +14,14 @@
 #include <llvm/IR/Verifier.h>
 #include <llvm/IR/LegacyPassManager.h>
 
-#include "weasel/Symbol/Symbol.h"
-#include "weasel/Driver/Driver.h"
-#include "weasel/Passes/Passes.h"
-#include "weasel/Metadata/Metadata.h"
+#include <weasel/Symbol/Symbol.h>
+#include <weasel/Driver/Driver.h>
+#include <weasel/Passes/Passes.h>
+#include <weasel/Metadata/Metadata.h>
 
-weasel::Driver::Driver(WeaselCodegen *context, weasel::Parser *parser)
+weasel::Driver::Driver(weasel::WeaselCodegen *codegen, weasel::Parser *parser)
 {
-    _context = context;
+    _codegen = codegen;
     _parser = parser;
 }
 
@@ -38,7 +38,7 @@ bool weasel::Driver::compile(std::string defTargetTriple)
             return false;
         }
 
-        auto obj = item->codegen(_context);
+        auto obj = item->codegen(_codegen);
         assert(obj != nullptr);
 
         auto fun = llvm::dyn_cast<llvm::Function>(obj);

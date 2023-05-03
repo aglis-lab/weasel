@@ -3,6 +3,7 @@
 #include <fmt/core.h>
 
 #include <weasel/AST/AST.h>
+#include <weasel/IR/Module.h>
 
 #define DEFAULT_SHIFT 3
 
@@ -21,12 +22,15 @@ namespace weasel
         void print(weasel::ConditionStatement *expr);
         void print(weasel::AssignmentExpression *expr);
         void print(weasel::CallExpression *expr);
+        void print(weasel::ReturnExpression *expr);
 
         // Without Newline Operand
         void print(weasel::NumberLiteralExpression *expr);
         void print(weasel::StringLiteralExpression *expr);
         void print(weasel::VariableExpression *expr);
         void print(weasel::ComparisonExpression *expr);
+
+        void print(weasel::Module *module);
 
     private:
         int getCurrentShift() { return _currentShift; }

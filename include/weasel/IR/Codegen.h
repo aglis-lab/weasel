@@ -1,7 +1,7 @@
 #pragma once
 
-#include "weasel/AST/AST.h"
-#include "weasel/Table/ContextTable.h"
+#include <weasel/AST/AST.h>
+#include <weasel/Table/ContextTable.h>
 
 #include <vector>
 #include <unordered_map>

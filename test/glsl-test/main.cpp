@@ -48,21 +48,21 @@ int main(int argc, char *argv[])
         return 0;
     }
 
-    // Prepare Lexer and Parser
-    auto lexer = weasel::Lexer(&fileManager);
-    auto parser = weasel::Parser(&lexer);
+    // // Prepare Lexer and Parser
+    // auto lexer = weasel::Lexer(&fileManager);
+    // auto parser = weasel::Parser(&lexer);
 
-    // Parse into AST
-    LOG(INFO) << "Parsing...\n";
-    parser.parse();
+    // // Parse into AST
+    // LOG(INFO) << "Parsing...\n";
+    // parser.parse();
 
-    // Debugging AST
-    LOG(INFO) << "Debug AST...\n";
-    debug(parser.getFunctionsParallel());
+    // // Debugging AST
+    // LOG(INFO) << "Debug AST...\n";
+    // debug(parser.getFunctionsParallel());
 
-    // Transpiling to GLSL Shading Language
-    LOG(INFO) << "Transpiling AST to GLSL ...\n";
-    auto pass = weasel::PassesGLSL(parser.getFunctionsParallel());
+    // // Transpiling to GLSL Shading Language
+    // LOG(INFO) << "Transpiling AST to GLSL ...\n";
+    // auto pass = weasel::PassesGLSL(parser.getFunctionsParallel());
 
-    pass.run();
+    // pass.run();
 }

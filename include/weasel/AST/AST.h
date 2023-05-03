@@ -4,10 +4,9 @@
 #include <string>
 #include <vector>
 
-#include "weasel/Type/Type.h"
-#include "weasel/Lexer/Token.h"
-#include "weasel/Type/Type.h"
-#include "weasel/Basic/Cast.h"
+#include <weasel/Lexer/Token.h>
+#include <weasel/Type/Type.h>
+#include <weasel/Basic/Cast.h>
 
 namespace llvm
 {
@@ -68,6 +67,11 @@ namespace weasel
     protected:
         Linkage _linkage;
         std::string _identifier;
+    };
+
+    // Global Variable
+    class GlobalVariable : public GlobalObject
+    {
     };
 
     // Function

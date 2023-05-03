@@ -12,7 +12,7 @@ We also can binding the library created by weasel language into another language
 
 # Flow Code
 
-- Module -> FileManager -> Lexer -> Parser
+- FileManager -> Lexer -> Parser <- Module
 - Module -> Codegen(LLVM Module) -> Driver
 - Module -> Printer
 

@@ -2,7 +2,8 @@
 
 #include <vector>
 #include <iostream>
-#include "weasel/Lexer/Token.h"
+
+#include <weasel/Lexer/Token.h>
 
 namespace llvm
 {

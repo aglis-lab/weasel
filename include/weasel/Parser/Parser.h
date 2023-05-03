@@ -2,10 +2,11 @@
 
 #include <list>
 
-#include "weasel/AST/AST.h"
-#include "weasel/Lexer/Lexer.h"
-#include "weasel/Type/Type.h"
-#include "weasel/Table/ParserTable.h"
+#include <weasel/AST/AST.h>
+#include <weasel/Lexer/Lexer.h>
+#include <weasel/Type/Type.h>
+#include <weasel/Table/ParserTable.h>
+#include <weasel/IR/Module.h>
 
 namespace weasel
 {
@@ -14,24 +15,11 @@ namespace weasel
     class Parser : ParserTable
     {
     public:
-        Parser(Lexer *lexer) : _lexer(lexer) {}
+        Parser(Lexer *lexer, Module *module) : _lexer(lexer), _module(module) {}
 
         // Gets Parser Value
-        std::vector<StructType *> getUserTypes() const { return _userTypes; }
-        std::vector<Function *> getFunctions() const { return _functions; }
-        std::vector<Function *> getFunctionsParallel() const
-        {
-            std::vector<Function *> funs;
-            for (auto item : _functions)
-            {
-                if (item->getParallel())
-                {
-                    funs.push_back(item);
-                }
-            }
-
-            return funs;
-        }
+        std::vector<StructType *> getUserTypes() const { return _module->getUserTypes(); }
+        std::vector<Function *> getFunctions() const { return _module->getFunctions(); }
 
         // Helper
         Type *parseDataType();
@@ -45,41 +33,18 @@ namespace weasel
 
     private:
         Lexer *_lexer;
-        std::vector<StructType *> _userTypes;
-        std::vector<Function *> _functions;
+        Module *_module;
 
     private:
-        void addFunction(Function *fun) { _functions.push_back(fun); }
-        unsigned functionCount() const { return _functions.size(); }
-        Function *lastFunction() const { return _functions.back(); }
-        Function *findFunction(const std::string &identifier)
-        {
-            for (auto item : getFunctions())
-            {
-                if (item->getIdentifier() == identifier)
-                {
-                    return item;
-                }
-            }
+        void addFunction(Function *fun) { _module->addFunction(fun); }
+        unsigned functionCount() const { return getFunctions().size(); }
+        Function *lastFunction() const { return getFunctions().back(); }
+        Function *findFunction(const std::string &identifier);
 
-            return nullptr;
-        }
-
-        void addUserType(StructType *type) { _userTypes.push_back(type); }
-        unsigned userTypeCount() const { return _userTypes.size(); }
-        StructType *getLastUserType() const { return _userTypes.back(); }
-        StructType *findUserType(const std::string &typeName)
-        {
-            for (auto item : getUserTypes())
-            {
-                if (item->getIdentifier() == typeName)
-                {
-                    return item;
-                }
-            }
-
-            return nullptr;
-        }
+        void addUserType(StructType *type) { _module->addUserType(type); }
+        unsigned userTypeCount() const { return getUserTypes().size(); }
+        StructType *getLastUserType() const { return getUserTypes().back(); }
+        StructType *findUserType(const std::string &typeName);
 
     private:
         bool expectToken(TokenKind kind) { return _lexer->expect(kind); }

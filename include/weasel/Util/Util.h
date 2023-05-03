@@ -1,3 +1,5 @@
+#pragma once
+
 /*
 Brought from
 https://github.com/pocoproject/poco
