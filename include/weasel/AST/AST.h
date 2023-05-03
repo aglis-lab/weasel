@@ -8,6 +8,8 @@
 #include <weasel/Type/Type.h>
 #include <weasel/Basic/Cast.h>
 
+#include <glog/logging.h>
+
 namespace llvm
 {
     class Value;
@@ -49,6 +51,7 @@ namespace weasel
     public:
         virtual llvm::Value *codegen(WeaselCodegen *codegen) = 0;
         virtual void print(Printer *printer) = 0;
+        // virtual void printAsOperand(Printer *printer) = 0;
 
     private:
         Token _token; // Token each expression
@@ -122,7 +125,7 @@ namespace weasel
     class ReturnExpression : public Expression
     {
     public:
-        ReturnExpression(Token token, Expression *value) : Expression(token), _value(value) {}
+        ReturnExpression(Token token, Expression *value) : Expression(token, value->getType()), _value(value) {}
 
         Expression *getValue() const { return _value; }
 

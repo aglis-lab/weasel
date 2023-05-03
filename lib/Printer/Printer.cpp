@@ -25,7 +25,8 @@ void weasel::Printer::print(weasel::Function *expr)
     for (int i = 0; i < argSize; i++)
     {
         auto item = expr->getArguments()[i];
-        argStr += item->getType()->getTypeName();
+        auto identifier = item->getArgumentName();
+        argStr += fmt::format("{} {}", identifier, item->getType()->getTypeName());
 
         if (i != argSize - 1)
         {
@@ -118,7 +119,7 @@ void weasel::Printer::print(weasel::AssignmentExpression *expr)
 
 void weasel::Printer::print(weasel::CallExpression *expr)
 {
-    fmt::print("{: >{}}@call {} ( ", "", this->getCurrentShift(), expr->getFunction()->getIdentifier());
+    fmt::print("{: >{}}@call {}(", "", this->getCurrentShift(), expr->getFunction()->getIdentifier());
 
     for (auto arg : expr->getArguments())
     {
@@ -130,7 +131,7 @@ void weasel::Printer::print(weasel::CallExpression *expr)
         }
     }
 
-    fmt::println(" )");
+    fmt::println(")");
 }
 
 void weasel::Printer::print(weasel::ReturnExpression *expr)

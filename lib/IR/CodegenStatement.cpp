@@ -11,6 +11,8 @@ weasel::WeaselCodegen::WeaselCodegen(llvm::LLVMContext *context, const std::stri
 
 llvm::Value *weasel::WeaselCodegen::codegen(weasel::Function *funAST)
 {
+    LOG(INFO) << "Codegen Function\n";
+
     auto funName = funAST->getIdentifier();
     auto funType = funAST->getType();
     auto isVararg = funType->isSpread();
@@ -73,6 +75,8 @@ llvm::Value *weasel::WeaselCodegen::codegen(weasel::Function *funAST)
 
 llvm::Value *weasel::WeaselCodegen::codegen(CallExpression *expr)
 {
+    LOG(INFO) << "Codegen Call Function\n";
+
     auto identifier = expr->getFunction()->getIdentifier();
     auto args = expr->getArguments();
     auto fun = getModule()->getFunction(identifier);
@@ -156,6 +160,8 @@ llvm::Value *weasel::WeaselCodegen::codegen(ContinueExpression *expr)
 
 llvm::Value *weasel::WeaselCodegen::codegen(ReturnExpression *expr)
 {
+    LOG(INFO) << "Codegen Return Function\n";
+
     if (expr->getValue() == nullptr)
     {
         return getBuilder()->CreateRetVoid();

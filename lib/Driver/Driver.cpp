@@ -27,6 +27,8 @@ weasel::Driver::Driver(weasel::WeaselCodegen *codegen, weasel::Parser *parser)
 
 bool weasel::Driver::compile(std::string defTargetTriple)
 {
+    LOG(INFO) << "Try Codegen...\n";
+
     auto pass = Passes(getModule());
     for (const auto &item : getFunctions())
     {
@@ -52,6 +54,8 @@ bool weasel::Driver::compile(std::string defTargetTriple)
 
         pass.run(*fun);
     }
+
+    LOG(INFO) << "Finish Codegen...\n";
 
     if (!defTargetTriple.empty())
     {
