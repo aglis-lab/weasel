@@ -166,22 +166,25 @@ weasel::Expression *weasel::Parser::parseParenExpression()
     return expr;
 }
 
+// Default Type
 weasel::Expression *weasel::Parser::parseArrayExpression()
 {
-    auto exp = ArrayLiteralExpression::create();
+    LOG(INFO) << "Parsing Array\n";
+
+    std::vector<weasel::Expression *> items;
 
     getNextToken(); // eat [
     while (!getCurrentToken().isKind(TokenKind::TokenDelimCloseSquareBracket))
     {
-        exp->addItem(parseLiteralExpression());
-
-        if (getNextToken().isKind(TokenKind::TokenPuncComma))
+        items.push_back(parseLiteralExpression());
+        if (getCurrentToken().isKind(TokenKind::TokenPuncComma))
         {
-            getNextToken();
+            getNextToken(); // eat ,
         }
     }
 
-    return exp;
+    getNextToken(); // eat ]
+    return new ArrayLiteralExpression(items);
 }
 
 weasel::Expression *weasel::Parser::parseStructExpression()
@@ -322,8 +325,11 @@ weasel::Expression *weasel::Parser::parsePrimaryExpression()
         case TokenKind::TokenOperatorNegation:
             op = UnaryExpression::Negation;
             break;
-        default:
+        case TokenKind::TokenOperatorAnd:
             op = UnaryExpression::Borrow;
+            break;
+        default:
+            op = UnaryExpression::Positive;
         }
 
         return new UnaryExpression(token, op, expr);

@@ -25,9 +25,11 @@ void weasel::Printer::print(weasel::Module *module)
 void weasel::Printer::print(weasel::Function *expr)
 {
     std::string prefix = "@declare";
+    char newlineOp = '\0';
     if (expr->getBody()->getBody().size() > 0)
     {
         prefix = "@define";
+        newlineOp = ':';
     }
 
     std::string argStr;
@@ -47,7 +49,7 @@ void weasel::Printer::print(weasel::Function *expr)
     auto retStr = expr->getType()->getTypeName();
     auto identifier = expr->getIdentifier();
 
-    fmt::println("{: >{}}{} {}({}) {}:", "", this->getCurrentShift(), prefix, identifier, argStr, retStr);
+    fmt::println("{: >{}}{} {}({}) {}{}", "", this->getCurrentShift(), prefix, identifier, argStr, retStr, newlineOp);
 
     auto lastShift = this->getCurrentShift();
     this->setCurrentShift(lastShift + DEFAULT_SHIFT);
@@ -71,7 +73,7 @@ void weasel::Printer::print(weasel::DeclarationStatement *expr)
     {
         fmt::print(" = ");
 
-        expr->getValue()->print(this);
+        expr->getValue()->printAsOperand(this);
     }
 
     fmt::println("");
@@ -121,42 +123,31 @@ void weasel::Printer::print(weasel::ConditionStatement *expr)
 void weasel::Printer::print(weasel::AssignmentExpression *expr)
 {
     fmt::print("{: >{}}", "", this->getCurrentShift());
-    expr->getLHS()->print(this);
+    expr->getLHS()->printAsOperand(this);
     fmt::print(" = ");
-    expr->getRHS()->print(this);
+    expr->getRHS()->printAsOperand(this);
     fmt::println("");
 }
 
 void weasel::Printer::print(weasel::CallExpression *expr)
 {
-    fmt::print("{: >{}}@call {}(", "", this->getCurrentShift(), expr->getFunction()->getIdentifier());
-
-    for (auto arg : expr->getArguments())
-    {
-        arg->print(this);
-
-        if (arg != expr->getArguments().back())
-        {
-            fmt::print(", ");
-        }
-    }
-
-    fmt::println(")");
+    fmt::print("{: >{}}", "", this->getCurrentShift());
+    this->printAsOperand(expr);
+    fmt::println("");
 }
 
 void weasel::Printer::print(weasel::ReturnExpression *expr)
 {
-    fmt::print("{: >{}}return ", "", this->getCurrentShift());
-    if (!expr->getType()->isVoidType())
-    {
-        expr->getValue()->print(this);
-    }
+    fmt::print("{: >{}}", "", this->getCurrentShift());
+    this->printAsOperand(expr);
     fmt::println("");
 }
 
-//
-// SIMPLE OPERAND WITHPUT NEWLINE INSTRUCTION //
-//
+void weasel::Printer::print(weasel::UnaryExpression *expr)
+{
+    this->printAsOperand(expr);
+    fmt::println("");
+}
 
 void weasel::Printer::print(weasel::BoolLiteralExpression *expr)
 {
@@ -182,7 +173,97 @@ void weasel::Printer::print(weasel::VariableExpression *expr)
 
 void weasel::Printer::print(weasel::ComparisonExpression *expr)
 {
-    expr->getLHS()->print(this);
+    this->printAsOperand(expr);
+    fmt::println("");
+}
+
+//
+// PRINT AS OPERAND //
+// SIMPLE OPERAND WITHPUT NEWLINE INSTRUCTION //
+//
+void weasel::Printer::printAsOperand(weasel::NumberLiteralExpression *expr)
+{
+    fmt::print("{} {}", expr->getValue(), expr->getType()->getTypeName());
+}
+
+void weasel::Printer::printAsOperand(weasel::DoubleLiteralExpression *expr)
+{
+    fmt::print("{} {}", expr->getValue(), expr->getType()->getTypeName());
+}
+
+void weasel::Printer::printAsOperand(weasel::BoolLiteralExpression *expr)
+{
+    fmt::print("{} {}", expr->getValue(), expr->getType()->getTypeName());
+}
+
+void weasel::Printer::printAsOperand(weasel::VariableExpression *expr)
+{
+    fmt::print("{} {}", expr->getIdentifier(), expr->getType()->getTypeName());
+}
+
+void weasel::Printer::printAsOperand(weasel::AssignmentExpression *expr)
+{
+    expr->getLHS()->printAsOperand(this);
+    fmt::print(" = ");
+    expr->getRHS()->printAsOperand(this);
+}
+
+void weasel::Printer::printAsOperand(weasel::ComparisonExpression *expr)
+{
+    expr->getLHS()->printAsOperand(this);
     fmt::print(" {} ", expr->getOperator().getValue());
-    expr->getRHS()->print(this);
+    expr->getRHS()->printAsOperand(this);
+}
+
+void weasel::Printer::printAsOperand(weasel::CallExpression *expr)
+{
+    fmt::print("@call {}(", expr->getFunction()->getIdentifier());
+    for (auto arg : expr->getArguments())
+    {
+        arg->printAsOperand(this);
+
+        if (arg != expr->getArguments().back())
+        {
+            fmt::print(", ");
+        }
+    }
+    fmt::print(")");
+}
+
+void weasel::Printer::printAsOperand(weasel::ReturnExpression *expr)
+{
+    fmt::print("return");
+    if (!expr->getType()->isVoidType())
+    {
+        fmt::print(" ");
+        expr->getValue()->print(this);
+    }
+}
+
+void weasel::Printer::printAsOperand(weasel::UnaryExpression *expr)
+{
+    std::string op = "not-op";
+    switch (expr->getOperator())
+    {
+    case UnaryExpression::Dereference:
+        op = "*";
+        break;
+    case UnaryExpression::Negative:
+        op = "-";
+        break;
+    case UnaryExpression::Positive:
+        op = "+";
+        break;
+    case UnaryExpression::Not:
+        op = "!";
+        break;
+    case UnaryExpression::Negation:
+        op = "~";
+        break;
+    case UnaryExpression::Borrow:
+        op = "&";
+    }
+
+    fmt::print(op);
+    expr->getExpression()->printAsOperand(this);
 }

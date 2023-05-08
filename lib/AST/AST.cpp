@@ -1,12 +1,44 @@
 #include <weasel/AST/AST.h>
 #include <weasel/IR/Codegen.h>
 
+// Constructor for ArrayLiteral
+weasel::ArrayLiteralExpression::ArrayLiteralExpression(std::vector<Expression *> items)
+{
+    _items = items;
+
+    Type *itemType;
+    if (items.size() == 0)
+    {
+        itemType = Type::getVoidType();
+    }
+    else
+    {
+        itemType = items[0]->getType();
+    }
+
+    for (auto item : items)
+    {
+        if (!item->getType()->isEqual(itemType))
+        {
+            LOG(ERROR) << "Array item's type isn't equal or different";
+        }
+    }
+
+    _type = Type::getArrayType(itemType, items.size());
+}
+
 // Function
 weasel::Function::~Function()
 {
     _arguments.clear();
 
     delete _body;
+}
+
+// ArrayLiteralExpression Expression
+weasel::ArrayLiteralExpression::~ArrayLiteralExpression()
+{
+    _items.clear();
 }
 
 // LoopingStatement Expression

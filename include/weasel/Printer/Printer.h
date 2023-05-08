@@ -23,13 +23,23 @@ namespace weasel
         void print(weasel::AssignmentExpression *expr);
         void print(weasel::CallExpression *expr);
         void print(weasel::ReturnExpression *expr);
-
-        // Without Newline Operand
+        void print(weasel::VariableExpression *expr);
+        void print(weasel::ComparisonExpression *expr);
+        void print(weasel::UnaryExpression *expr);
         void print(weasel::BoolLiteralExpression *expr);
         void print(weasel::NumberLiteralExpression *expr);
         void print(weasel::StringLiteralExpression *expr);
-        void print(weasel::VariableExpression *expr);
-        void print(weasel::ComparisonExpression *expr);
+
+        // Without Newline Operand
+        void printAsOperand(weasel::NumberLiteralExpression *expr);
+        void printAsOperand(weasel::DoubleLiteralExpression *expr);
+        void printAsOperand(weasel::BoolLiteralExpression *expr);
+        void printAsOperand(weasel::VariableExpression *expr);
+        void printAsOperand(weasel::AssignmentExpression *expr);
+        void printAsOperand(weasel::ComparisonExpression *expr);
+        void printAsOperand(weasel::CallExpression *expr);
+        void printAsOperand(weasel::ReturnExpression *expr);
+        void printAsOperand(weasel::UnaryExpression *expr);
 
         void print(weasel::Module *module);
 

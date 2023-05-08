@@ -51,9 +51,9 @@ namespace weasel
     public:
         virtual llvm::Value *codegen(WeaselCodegen *codegen) = 0;
         virtual void print(Printer *printer) = 0;
-        // virtual void printAsOperand(Printer *printer) = 0;
+        virtual void printAsOperand(Printer *printer) = 0;
 
-    private:
+    protected:
         Token _token; // Token each expression
         Type *_type;
         std::vector<MetaID> _metas;
@@ -101,6 +101,7 @@ namespace weasel
     public:
         llvm::Value *codegen(WeaselCodegen *c) override;
         void print(Printer *printer) override;
+        void printAsOperand(Printer *printer) override{};
 
     public:
         ~Function();
@@ -133,6 +134,7 @@ namespace weasel
     public:
         llvm::Value *codegen(WeaselCodegen *codegen) override;
         void print(Printer *printer) override;
+        void printAsOperand(Printer *printer) override;
 
         ~ReturnExpression();
 
@@ -151,6 +153,7 @@ namespace weasel
     public:
         llvm::Value *codegen(WeaselCodegen *codegen) override;
         void print(Printer *printer) override;
+        void printAsOperand(Printer *printer) override;
 
         ~BreakExpression();
 
@@ -169,6 +172,7 @@ namespace weasel
     public:
         llvm::Value *codegen(WeaselCodegen *codegen) override;
         void print(Printer *printer) override;
+        void printAsOperand(Printer *printer) override;
 
         ~ContinueExpression();
 
@@ -188,6 +192,7 @@ namespace weasel
     public:
         llvm::Value *codegen(WeaselCodegen *codegen) override;
         void print(Printer *printer) override;
+        void printAsOperand(Printer *printer) override;
 
         ~CallExpression();
 
@@ -207,6 +212,7 @@ namespace weasel
     public:
         llvm::Value *codegen(WeaselCodegen *codegen) override;
         void print(Printer *printer) override;
+        void printAsOperand(Printer *printer) override;
 
         ~VariableExpression() {}
 
@@ -224,6 +230,7 @@ namespace weasel
     public:
         llvm::Value *codegen(WeaselCodegen *codegen) override;
         void print(Printer *printer) override;
+        void printAsOperand(Printer *printer) override;
 
         ~ArrayExpression();
 
@@ -262,6 +269,7 @@ namespace weasel
     public:
         llvm::Value *codegen(WeaselCodegen *codegen) override;
         void print(Printer *printer) override;
+        void printAsOperand(Printer *printer) override{};
 
         ~StructExpression();
 
@@ -284,6 +292,7 @@ namespace weasel
     public:
         llvm::Value *codegen(WeaselCodegen *codegen) override;
         void print(Printer *printer) override;
+        void printAsOperand(Printer *printer) override;
 
         ~FieldExpression();
 
@@ -295,9 +304,6 @@ namespace weasel
     // Number Literal Expression
     class NumberLiteralExpression : public LiteralExpression
     {
-    private:
-        long long _value; // 64 bit(8 bytes)
-
     public:
         NumberLiteralExpression(Token token, long long value, unsigned width = 32) : LiteralExpression(token, Type::getIntegerType(width)), _value(value) {}
 
@@ -306,14 +312,15 @@ namespace weasel
     public:
         llvm::Value *codegen(WeaselCodegen *codegen) override;
         void print(Printer *printer) override;
+        void printAsOperand(Printer *printer) override;
+
+    private:
+        long long _value; // 64 bit(8 bytes)
     };
 
     // Float Literal Expression
     class FloatLiteralExpression : public LiteralExpression
     {
-    private:
-        float _value; // 32 bit(4 bytes)
-
     public:
         FloatLiteralExpression(Token token, double value) : LiteralExpression(token, Type::getFloatType()), _value(value) {}
 
@@ -322,14 +329,15 @@ namespace weasel
     public:
         llvm::Value *codegen(WeaselCodegen *codegen) override;
         void print(Printer *printer) override;
+        void printAsOperand(Printer *printer) override;
+
+    private:
+        float _value; // 32 bit(4 bytes)
     };
 
     // Float Literal Expression
     class DoubleLiteralExpression : public LiteralExpression
     {
-    private:
-        double _value; // 64 bit(8 bytes)
-
     public:
         DoubleLiteralExpression(Token token, double value) : LiteralExpression(token, Type::getDoubleType()), _value(value) {}
 
@@ -338,14 +346,15 @@ namespace weasel
     public:
         llvm::Value *codegen(WeaselCodegen *codegen) override;
         void print(Printer *printer) override;
+        void printAsOperand(Printer *printer) override;
+
+    private:
+        double _value; // 64 bit(8 bytes)
     };
 
     // Boolean Literal Expression
     class BoolLiteralExpression : public LiteralExpression
     {
-    private:
-        bool _value;
-
     public:
         BoolLiteralExpression(Token token, bool value) : LiteralExpression(token, Type::getIntegerType(1)), _value(value) {}
 
@@ -354,14 +363,15 @@ namespace weasel
     public:
         llvm::Value *codegen(WeaselCodegen *codegen) override;
         void print(Printer *printer) override;
+        void printAsOperand(Printer *printer) override;
+
+    private:
+        bool _value;
     };
 
     // Character Literal Expression
     class CharLiteralExpression : public LiteralExpression
     {
-    private:
-        char _value;
-
     public:
         CharLiteralExpression(Token token, char value) : LiteralExpression(token, Type::getIntegerType(8)), _value(value) {}
 
@@ -370,14 +380,15 @@ namespace weasel
     public:
         llvm::Value *codegen(WeaselCodegen *codegen) override;
         void print(Printer *printer) override;
+        void printAsOperand(Printer *printer) override;
+
+    private:
+        char _value;
     };
 
     // String Literal Expression
     class StringLiteralExpression : public LiteralExpression
     {
-    private:
-        std::string _value;
-
     public:
         StringLiteralExpression(Token token, const std::string &value) : LiteralExpression(token, Type::getArrayType(Type::getIntegerType(8), value.size())), _value(value) {}
 
@@ -386,6 +397,10 @@ namespace weasel
     public:
         llvm::Value *codegen(WeaselCodegen *codegen) override;
         void print(Printer *printer) override;
+        void printAsOperand(Printer *printer) override;
+
+    private:
+        std::string _value;
     };
 
     // Nil Literal Expression
@@ -397,16 +412,15 @@ namespace weasel
     public:
         llvm::Value *codegen(WeaselCodegen *codegen) override;
         void print(Printer *printer) override;
+        void printAsOperand(Printer *printer) override;
     };
 
     // Array Expression
     class ArrayLiteralExpression : public Expression
     {
     public:
-        static ArrayLiteralExpression *create()
-        {
-            return new ArrayLiteralExpression();
-        }
+        ArrayLiteralExpression() = default;
+        ArrayLiteralExpression(std::vector<Expression *> items);
 
     public:
         void addItem(Expression *item) { _items.push_back(item); }
@@ -415,14 +429,9 @@ namespace weasel
     public:
         llvm::Value *codegen(WeaselCodegen *codegen) override;
         void print(Printer *printer) override;
+        void printAsOperand(Printer *printer) override;
 
-        ~ArrayLiteralExpression()
-        {
-            _items.clear();
-        }
-
-    protected:
-        ArrayLiteralExpression() = default;
+        ~ArrayLiteralExpression();
 
     private:
         std::vector<Expression *> _items;
@@ -431,9 +440,6 @@ namespace weasel
     // Type Casting Operator Expression
     class TypeCastExpression : public Expression
     {
-    private:
-        Expression *_rhs;
-
     public:
         TypeCastExpression(Token op, Type *type, Expression *rhs) : Expression(op, type), _rhs(rhs) {}
 
@@ -442,15 +448,15 @@ namespace weasel
     public:
         llvm::Value *codegen(WeaselCodegen *codegen) override;
         void print(Printer *printer) override;
+        void printAsOperand(Printer *printer) override;
+
+    private:
+        Expression *_rhs;
     };
 
     // Binary Operator Expression
     class ArithmeticExpression : public Expression
     {
-    private:
-        Expression *_lhs;
-        Expression *_rhs;
-
     public:
         ArithmeticExpression(Token op, Expression *lhs, Expression *rhs) : Expression(op, lhs->getType()), _lhs(lhs), _rhs(rhs) {}
 
@@ -461,15 +467,16 @@ namespace weasel
     public:
         llvm::Value *codegen(WeaselCodegen *codegen) override;
         void print(Printer *printer) override;
+        void printAsOperand(Printer *printer) override;
+
+    private:
+        Expression *_lhs;
+        Expression *_rhs;
     };
 
     // Binary Operator Expression
     class LogicalExpression : public Expression
     {
-    private:
-        Expression *_lhs;
-        Expression *_rhs;
-
     public:
         LogicalExpression(Token op, Expression *lhs, Expression *rhs) : Expression(op, lhs->getType()), _lhs(lhs), _rhs(rhs) {}
 
@@ -480,15 +487,16 @@ namespace weasel
     public:
         llvm::Value *codegen(WeaselCodegen *codegen) override;
         void print(Printer *printer) override;
+        void printAsOperand(Printer *printer) override;
+
+    private:
+        Expression *_lhs;
+        Expression *_rhs;
     };
 
     // Assignment Operator Expression
     class AssignmentExpression : public Expression
     {
-    private:
-        Expression *_lhs;
-        Expression *_rhs;
-
     public:
         AssignmentExpression(Token op, Expression *lhs, Expression *rhs) : Expression(op, lhs->getType()), _lhs(lhs), _rhs(rhs) {}
 
@@ -499,15 +507,16 @@ namespace weasel
     public:
         llvm::Value *codegen(WeaselCodegen *codegen) override;
         void print(Printer *printer) override;
+        void printAsOperand(Printer *printer) override;
+
+    private:
+        Expression *_lhs;
+        Expression *_rhs;
     };
 
     // Comparison Operator Expression
     class ComparisonExpression : public Expression
     {
-    private:
-        Expression *_lhs;
-        Expression *_rhs;
-
     public:
         ComparisonExpression(Token op, Expression *lhs, Expression *rhs) : Expression(op, Type::getBoolType()), _lhs(lhs), _rhs(rhs) {}
 
@@ -518,6 +527,11 @@ namespace weasel
     public:
         llvm::Value *codegen(WeaselCodegen *codegen) override;
         void print(Printer *printer) override;
+        void printAsOperand(Printer *printer) override;
+
+    private:
+        Expression *_lhs;
+        Expression *_rhs;
     };
 
     // Unary Operator Expression
@@ -533,10 +547,6 @@ namespace weasel
             Not,         // ! Expression
             Negation,    // ~ Expression
         };
-
-    private:
-        Expression *_rhs;
-        Operator _op;
 
     public:
         UnaryExpression(Token token, Operator op, Expression *rhs) : Expression(token), _rhs(rhs), _op(op)
@@ -560,16 +570,16 @@ namespace weasel
     public:
         llvm::Value *codegen(WeaselCodegen *codegen) override;
         void print(Printer *printer) override;
+        void printAsOperand(Printer *printer) override;
+
+    private:
+        Expression *_rhs;
+        Operator _op;
     };
 
     // Declaration Statement
     class DeclarationStatement : public Expression
     {
-    private:
-        std::string _identifier;
-        Qualifier _qualifier;
-        Expression *_value;
-
     public:
         DeclarationStatement(Token token, std::string identifier, Qualifier qualifier, Type *type, Expression *value = nullptr) : Expression(token, type), _identifier(identifier), _qualifier(qualifier), _value(value) {}
 
@@ -580,16 +590,19 @@ namespace weasel
     public:
         llvm::Value *codegen(WeaselCodegen *codegen) override;
         void print(Printer *printer) override;
+        void printAsOperand(Printer *printer) override;
 
         ~DeclarationStatement();
+
+    private:
+        std::string _identifier;
+        Qualifier _qualifier;
+        Expression *_value;
     };
 
     // Statement Expression
     class CompoundStatement : public Expression
     {
-    private:
-        std::vector<Expression *> _body;
-
     public:
         CompoundStatement() = default;
 
@@ -600,16 +613,16 @@ namespace weasel
     public:
         llvm::Value *codegen(WeaselCodegen *codegen) override;
         void print(Printer *printer) override;
+        void printAsOperand(Printer *printer) override;
 
         ~CompoundStatement();
+
+    private:
+        std::vector<Expression *> _body;
     };
 
     class ConditionStatement : public Expression
     {
-    private:
-        std::vector<Expression *> _conditions;
-        std::vector<CompoundStatement *> _statements;
-
     public:
         ConditionStatement(const Token &token, const std::vector<Expression *> &conditions, const std::vector<CompoundStatement *> &statements) : Expression(token), _conditions(conditions), _statements(statements) {}
 
@@ -620,16 +633,17 @@ namespace weasel
     public:
         llvm::Value *codegen(WeaselCodegen *codegen) override;
         void print(Printer *printer) override;
+        void printAsOperand(Printer *printer) override;
 
         ~ConditionStatement();
+
+    private:
+        std::vector<Expression *> _conditions;
+        std::vector<CompoundStatement *> _statements;
     };
 
     class LoopingStatement : public Expression
     {
-    private:
-        std::vector<Expression *> _conditions;
-        CompoundStatement *_body;
-
     public:
         LoopingStatement(const Token &token, std::vector<Expression *> conditions, CompoundStatement *body) : Expression(token), _conditions(conditions), _body(body) {}
 
@@ -641,8 +655,13 @@ namespace weasel
     public:
         llvm::Value *codegen(WeaselCodegen *codegen) override;
         void print(Printer *printer) override;
+        void printAsOperand(Printer *printer) override;
 
         ~LoopingStatement();
+
+    private:
+        std::vector<Expression *> _conditions;
+        CompoundStatement *_body;
     };
 } // namespace weasel
 

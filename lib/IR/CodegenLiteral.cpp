@@ -40,10 +40,13 @@ llvm::Value *weasel::WeaselCodegen::codegen(StringLiteralExpression *expr) const
 
 llvm::Value *weasel::WeaselCodegen::codegen(ArrayLiteralExpression *expr)
 {
+    LOG(INFO) << "Codegen Array Literal";
+
     auto items = expr->getItems();
     auto numItem = items.size();
-    auto *valueTy = llvm::ArrayType::get(getBuilder()->getInt32Ty(), numItem);
-    auto *valueNull = llvm::Constant::getNullValue(valueTy);
+    auto itemType = expr->getType()->getContainedType()->codegen(this);
+    auto arrayType = llvm::ArrayType::get(itemType, numItem);
+    auto valueNull = llvm::Constant::getNullValue(arrayType);
     auto valueArr = std::vector<llvm::Constant *>(numItem);
     auto i = 0;
 
@@ -61,16 +64,16 @@ llvm::Value *weasel::WeaselCodegen::codegen(ArrayLiteralExpression *expr)
         i++;
     }
 
-    auto init = llvm::ConstantArray::get(valueTy, valueArr);
+    auto init = llvm::ConstantArray::get(arrayType, valueArr);
     auto linkage = llvm::GlobalVariable::LinkageTypes::PrivateLinkage;
-    auto gv = new llvm::GlobalVariable(*getModule(), valueTy, true, linkage, init);
+    auto gv = new llvm::GlobalVariable(*getModule(), itemType, true, linkage, init);
     auto dataLayout = llvm::DataLayout(getModule());
-    auto alignNum = dataLayout.getPrefTypeAlignment(valueTy);
+    auto alignNum = dataLayout.getPrefTypeAlignment(arrayType);
 
     gv->setAlignment(llvm::Align(std::max((unsigned int)16, alignNum)));
     gv->setUnnamedAddr(llvm::GlobalValue::UnnamedAddr::Local);
 
-    return getBuilder()->CreateLoad(gv->getType(), gv);
+    return getBuilder()->CreateLoad(arrayType, gv);
 }
 
 llvm::Value *weasel::WeaselCodegen::codegen(NilLiteralExpression *expr)

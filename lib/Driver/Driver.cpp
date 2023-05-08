@@ -84,9 +84,6 @@ bool weasel::Driver::compile(std::string defTargetTriple)
     if (llvm::verifyModule(*getModule()))
     {
         _err = "Error when constructing module\n";
-
-        llvm::errs() << *getModule();
-
         return false;
     }
 

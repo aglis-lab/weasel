@@ -21,7 +21,7 @@ llvm::Value *weasel::WeaselCodegen::castInteger(llvm::Value *val, llvm::Type *ty
 
 llvm::Value *weasel::WeaselCodegen::codegen(weasel::Function *funAST)
 {
-    LOG(INFO) << "Codegen Function\n";
+    LOG(INFO) << "Codegen Function " << funAST->getIdentifier();
 
     auto funName = funAST->getIdentifier();
     auto funType = funAST->getType();
@@ -417,6 +417,8 @@ llvm::Value *weasel::WeaselCodegen::codegen(StructExpression *expr)
 
 llvm::Value *weasel::WeaselCodegen::codegen(DeclarationStatement *expr)
 {
+    LOG(INFO) << "Codegen Declaration Statement";
+
     // Get Value Representation
     auto declType = expr->getType();
     auto valueExpr = expr->getValue();
@@ -530,6 +532,8 @@ llvm::Value *weasel::WeaselCodegen::codegen(DeclarationStatement *expr)
 
 llvm::Value *weasel::WeaselCodegen::codegen(CompoundStatement *expr)
 {
+    LOG(INFO) << "Codegen Compound Statement";
+
     // Enter to new statement
     enterScope();
 

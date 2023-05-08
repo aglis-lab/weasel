@@ -229,6 +229,10 @@ std::string weasel::Type::getTypeName()
     {
         return fmt::format("{}{}", '*', this->getContainedType()->getTypeName());
     }
+    case TypeID::ArrayType:
+    {
+        return fmt::format("[]{}", this->getContainedType()->getTypeName());
+    }
     default:
     {
         return "@no-type";

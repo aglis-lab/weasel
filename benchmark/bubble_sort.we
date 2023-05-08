@@ -29,7 +29,7 @@ fun printArray(arr []int, size int) {
 // Driver program to test above functions
 fun main()
 {
-    let arr = [ 5, 1, 4, 2, 8 ];
+    let arr []int = [ 5, 1, 4, 2, 8 ];
     let n = sizeof(arr) / sizeof(arr[0]);
 
     bubbleSort(arr, n);
