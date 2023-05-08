@@ -1,7 +1,53 @@
 #include <iostream>
+
 #include <fmt/core.h>
-#include "weasel/IR/Codegen.h"
-#include "weasel/Type/Type.h"
+
+#include <weasel/IR/Codegen.h>
+#include <weasel/Type/Type.h>
+
+int weasel::StructType::findTypeName(const std::string &typeName)
+{
+    auto exist = std::find(_typeNames.begin(), _typeNames.end(), typeName);
+    if (exist == _typeNames.end())
+    {
+        return -1;
+    }
+
+    return exist - _typeNames.begin();
+}
+
+void weasel::StructType::addField(const std::string &fieldName, Type *type)
+{
+    _typeNames.push_back(fieldName);
+
+    addContainedType(type);
+}
+
+bool weasel::StructType::isPreferConstant()
+{
+    for (auto &item : getContainedTypes())
+    {
+        if (item->isArrayType())
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+void weasel::Type::replaceContainedTypes(const std::vector<Type *> &containedTypes)
+{
+    for (auto item : _containedTypes)
+    {
+        delete item;
+        item = nullptr;
+    }
+
+    _containedTypes.clear();
+
+    _containedTypes = containedTypes;
+}
 
 int weasel::Type::getTypeWidth()
 {

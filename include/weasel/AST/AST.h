@@ -126,6 +126,7 @@ namespace weasel
     {
     public:
         ReturnExpression(Token token, Expression *value) : Expression(token, value->getType()), _value(value) {}
+        ReturnExpression(Token token, Expression *value, Type *type) : Expression(token, type), _value(value) {}
 
         Expression *getValue() const { return _value; }
 
@@ -554,10 +555,7 @@ namespace weasel
         Expression *getExpression() const { return _rhs; }
         Operator getOperator() const { return _op; }
 
-        ~UnaryExpression()
-        {
-            delete _rhs;
-        }
+        ~UnaryExpression();
 
     public:
         llvm::Value *codegen(WeaselCodegen *codegen) override;
@@ -583,10 +581,7 @@ namespace weasel
         llvm::Value *codegen(WeaselCodegen *codegen) override;
         void print(Printer *printer) override;
 
-        ~DeclarationStatement()
-        {
-            delete _value;
-        }
+        ~DeclarationStatement();
     };
 
     // Statement Expression
@@ -606,10 +601,7 @@ namespace weasel
         llvm::Value *codegen(WeaselCodegen *codegen) override;
         void print(Printer *printer) override;
 
-        ~CompoundStatement()
-        {
-            _body.clear();
-        }
+        ~CompoundStatement();
     };
 
     class ConditionStatement : public Expression
@@ -650,11 +642,7 @@ namespace weasel
         llvm::Value *codegen(WeaselCodegen *codegen) override;
         void print(Printer *printer) override;
 
-        ~LoopingStatement()
-        {
-            delete _body;
-            _conditions.clear();
-        }
+        ~LoopingStatement();
     };
 } // namespace weasel
 

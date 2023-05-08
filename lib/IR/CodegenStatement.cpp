@@ -9,6 +9,16 @@ weasel::WeaselCodegen::WeaselCodegen(llvm::LLVMContext *context, const std::stri
     _builder = new llvm::IRBuilder<>(*_context);
 }
 
+llvm::Value *weasel::WeaselCodegen::castInteger(llvm::Value *val, llvm::Type *type, bool isSign)
+{
+    if (isSign)
+    {
+        return getBuilder()->CreateSExtOrTrunc(val, type);
+    }
+
+    return getBuilder()->CreateZExtOrTrunc(val, type);
+}
+
 llvm::Value *weasel::WeaselCodegen::codegen(weasel::Function *funAST)
 {
     LOG(INFO) << "Codegen Function\n";
@@ -25,7 +35,8 @@ llvm::Value *weasel::WeaselCodegen::codegen(weasel::Function *funAST)
     }
 
     auto linkage = llvm::GlobalValue::LinkageTypes::ExternalLinkage;
-    auto funTyLLVM = llvm::FunctionType::get(funType->codegen(this), args, isVararg);
+    auto returnType = funType->codegen(this);
+    auto funTyLLVM = llvm::FunctionType::get(returnType, args, isVararg);
     auto funLLVM = llvm::Function::Create(funTyLLVM, linkage, funName, getModule());
     if (funAST->isInline())
     {
@@ -41,6 +52,8 @@ llvm::Value *weasel::WeaselCodegen::codegen(weasel::Function *funAST)
 
         // Enter to new scope
         enterScope();
+
+        LOG(INFO) << "Codegen Function Arguments\n";
 
         auto idx = 0;
         for (auto &item : funLLVM->args())
@@ -59,12 +72,40 @@ llvm::Value *weasel::WeaselCodegen::codegen(weasel::Function *funAST)
             addAttribute(ContextAttribute::get(argName, alloc, AttributeKind::Parameter));
         }
 
+        // Create Return Block and Value
+        _returnBlock = llvm::BasicBlock::Create(*getContext());
+        if (!funAST->getType()->isVoidType())
+        {
+            _returnValue = getBuilder()->CreateAlloca(funTyLLVM->getReturnType());
+        }
+
         // Create Block
+        LOG(INFO) << "Codegen Function Body\n";
+
         funAST->getBody()->codegen(this);
-        if (funLLVM->getReturnType()->isVoidTy() && llvm::dyn_cast<llvm::ReturnInst>(&getBuilder()->GetInsertBlock()->back()) == nullptr)
+
+        if (llvm::dyn_cast<llvm::BranchInst>(&getBuilder()->GetInsertBlock()->back()) == nullptr)
+        {
+            getBuilder()->CreateBr(_returnBlock);
+        }
+
+        // Evaluate Return
+        funLLVM->getBasicBlockList().push_back(_returnBlock);
+        getBuilder()->SetInsertPoint(_returnBlock);
+
+        if (funAST->getType()->isVoidType())
         {
             getBuilder()->CreateRetVoid();
         }
+        else
+        {
+            auto loadReturnValue = getBuilder()->CreateLoad(funTyLLVM->getReturnType(), _returnValue);
+            getBuilder()->CreateRet(loadReturnValue);
+        }
+
+        // Release Return Block and Value
+        _returnValue = nullptr;
+        _returnBlock = nullptr;
 
         // Exit fromscope
         exitScope();
@@ -162,36 +203,27 @@ llvm::Value *weasel::WeaselCodegen::codegen(ReturnExpression *expr)
 {
     LOG(INFO) << "Codegen Return Function\n";
 
-    if (expr->getValue() == nullptr)
+    if (!expr->getType()->isVoidType())
     {
-        return getBuilder()->CreateRetVoid();
-    }
-
-    // Get Last Function from symbol table
-    auto fun = getBuilder()->GetInsertBlock()->getParent();
-    auto returnTyV = fun->getReturnType();
-
-    auto val = expr->getValue()->codegen(this);
-    assert(val && "Expression value cannot be null value");
-
-    if (returnTyV->getTypeID() != val->getType()->getTypeID())
-    {
-        return ErrorTable::addError(expr->getToken(), "Return Type with value type is different");
-    }
-
-    if (returnTyV->isIntegerTy())
-    {
-        if (expr->getType()->isSigned())
+        auto val = expr->getValue()->codegen(this);
+        if (expr->getType()->isIntegerType())
         {
-            val = getBuilder()->CreateSExtOrTrunc(val, returnTyV);
+            auto returnTyV = getBuilder()->GetInsertBlock()->getParent()->getReturnType();
+
+            if (expr->getType()->isSigned())
+            {
+                val = getBuilder()->CreateSExtOrTrunc(val, returnTyV);
+            }
+            else
+            {
+                val = getBuilder()->CreateZExtOrTrunc(val, returnTyV);
+            }
         }
-        else
-        {
-            val = getBuilder()->CreateZExtOrTrunc(val, returnTyV);
-        }
+
+        getBuilder()->CreateStore(val, _returnValue);
     }
 
-    return getBuilder()->CreateRet(val);
+    return getBuilder()->CreateBr(_returnBlock);
 }
 
 llvm::Value *weasel::WeaselCodegen::codegen(VariableExpression *expr)

@@ -14,6 +14,7 @@ namespace weasel
 {
     class WeaselCodegen;
     class StructType;
+    class Printer;
 
     enum class TypeID
     {
@@ -77,18 +78,7 @@ namespace weasel
         unsigned getContainedNums() const { return _containedTypes.size(); }
         std::vector<Type *> getContainedTypes() const { return _containedTypes; }
         void addContainedType(Type *containedType) { _containedTypes.push_back(containedType); }
-        void replaceContainedTypes(const std::vector<Type *> &containedTypes)
-        {
-            for (auto item : _containedTypes)
-            {
-                delete item;
-                item = nullptr;
-            }
-
-            _containedTypes.clear();
-
-            _containedTypes = containedTypes;
-        }
+        void replaceContainedTypes(const std::vector<Type *> &containedTypes);
 
         // Generator
         static Type *getVoidType() { return new Type(TypeID::VoidType, 0, false); }
@@ -102,16 +92,18 @@ namespace weasel
         // Check Type
         bool isEqual(Type *type);
 
-        std::string getTypeName();
-
     public:
         virtual ~Type();
         virtual llvm::Type *codegen(WeaselCodegen *codegen);
+        // virtual void print(Printer *printer) = 0;
+
+        std::string getTypeName();
 
     protected:
         bool _isSpread = false;
         bool _isSigned = true;
         int _width = 32; // width in bit
+
         TypeID _typeId = TypeID::VoidType;
         std::vector<Type *> _containedTypes;
 
@@ -139,37 +131,14 @@ namespace weasel
         void setIdentifier(std::string identifier) { _identifier = identifier; }
 
         std::vector<std::string> getTypeNames() const { return _typeNames; }
-        int findTypeName(const std::string &typeName)
-        {
-            auto exist = std::find(_typeNames.begin(), _typeNames.end(), typeName);
-            if (exist == _typeNames.end())
-            {
-                return -1;
-            }
+        int findTypeName(const std::string &typeName);
 
-            return exist - _typeNames.begin();
-        }
-        void addField(const std::string &fieldName, Type *type)
-        {
-            _typeNames.push_back(fieldName);
-            addContainedType(type);
-        }
-
-        bool isPreferConstant()
-        {
-            for (auto &item : getContainedTypes())
-            {
-                if (item->isArrayType())
-                {
-                    return false;
-                }
-            }
-
-            return true;
-        }
+        void addField(const std::string &fieldName, Type *type);
+        bool isPreferConstant();
 
     public:
         llvm::Type *codegen(WeaselCodegen *codegen) override;
+        // void print(Printer *printer) override;
     };
 
     class ArgumentType

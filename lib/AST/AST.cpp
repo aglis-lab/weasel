@@ -9,6 +9,32 @@ weasel::Function::~Function()
     delete _body;
 }
 
+// LoopingStatement Expression
+weasel::LoopingStatement::~LoopingStatement()
+{
+    delete _body;
+
+    _conditions.clear();
+}
+
+// CompoundStatement Expression
+weasel::CompoundStatement::~CompoundStatement()
+{
+    _body.clear();
+}
+
+// DeclarationStatement Expression
+weasel::DeclarationStatement::~DeclarationStatement()
+{
+    delete _value;
+}
+
+// Unary Expression
+weasel::UnaryExpression::~UnaryExpression()
+{
+    delete _rhs;
+}
+
 // Return Expression
 weasel::ReturnExpression::~ReturnExpression()
 {

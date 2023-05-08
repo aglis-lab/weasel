@@ -39,15 +39,7 @@ namespace weasel
         llvm::Type *codegen(StructType *type);
 
         // Integer Fast Casting
-        llvm::Value *castInteger(llvm::Value *val, llvm::Type *type, bool isSign = false)
-        {
-            if (isSign)
-            {
-                return getBuilder()->CreateSExtOrTrunc(val, type);
-            }
-
-            return getBuilder()->CreateZExtOrTrunc(val, type);
-        }
+        llvm::Value *castInteger(llvm::Value *val, llvm::Type *type, bool isSign = false);
 
         // Literal Expression
         llvm::Value *codegen(BoolLiteralExpression *expr) const;
@@ -87,15 +79,22 @@ namespace weasel
         llvm::Value *codegen(Function *func);
 
     private:
+        // Helper Builder //
         llvm::Module *_module;
         llvm::MDBuilder *_mdBuilder;
         llvm::LLVMContext *_context;
         llvm::IRBuilder<> *_builder;
 
-        // Helper for Looping //
+        // Helper Variable for Looping //
         std::vector<llvm::BasicBlock *> _breakBlocks;
         std::vector<llvm::BasicBlock *> _continueBlocks;
+
+        // Helper Variable for Struct Types //
         std::unordered_map<std::string, llvm::StructType *> _structTypes;
+
+        // Helper For Return Function //
+        llvm::Value *_returnValue;
+        llvm::BasicBlock *_returnBlock;
 
     private:
         llvm::MDNode *getTBAA(llvm::Type *type) const;

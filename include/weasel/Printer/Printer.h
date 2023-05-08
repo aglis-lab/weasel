@@ -25,6 +25,7 @@ namespace weasel
         void print(weasel::ReturnExpression *expr);
 
         // Without Newline Operand
+        void print(weasel::BoolLiteralExpression *expr);
         void print(weasel::NumberLiteralExpression *expr);
         void print(weasel::StringLiteralExpression *expr);
         void print(weasel::VariableExpression *expr);

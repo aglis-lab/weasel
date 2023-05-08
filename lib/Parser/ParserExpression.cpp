@@ -423,7 +423,7 @@ weasel::Expression *weasel::Parser::parseReturnExpression()
 
     if (getNextToken().isNewline())
     {
-        return new ReturnExpression(retToken, nullptr);
+        return new ReturnExpression(retToken, nullptr, weasel::Type::getVoidType());
     }
 
     return new ReturnExpression(retToken, parseExpression());

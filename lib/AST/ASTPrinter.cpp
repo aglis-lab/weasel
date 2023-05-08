@@ -22,7 +22,7 @@ void weasel::FloatLiteralExpression::print(Printer *printer)
 
 void weasel::BoolLiteralExpression::print(Printer *printer)
 {
-    // this->printDebug("Bool Literal", shift);
+    printer->print(this);
 }
 
 void weasel::CharLiteralExpression::print(Printer *printer)

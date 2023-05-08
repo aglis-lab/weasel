@@ -3,6 +3,16 @@
 
 void weasel::Printer::print(weasel::Module *module)
 {
+    // // Print user types or struct
+    // for (auto item : module->getUserTypes())
+    // {
+    //     item->print(this);
+
+    //     // Newline after function declaration or definition
+    //     fmt::println("");
+    // }
+
+    // Print it's function and it's body
     for (auto item : module->getFunctions())
     {
         item->print(this);
@@ -137,14 +147,21 @@ void weasel::Printer::print(weasel::CallExpression *expr)
 void weasel::Printer::print(weasel::ReturnExpression *expr)
 {
     fmt::print("{: >{}}return ", "", this->getCurrentShift());
-    expr->getValue()->print(this);
-
+    if (!expr->getType()->isVoidType())
+    {
+        expr->getValue()->print(this);
+    }
     fmt::println("");
 }
 
 //
 // SIMPLE OPERAND WITHPUT NEWLINE INSTRUCTION //
 //
+
+void weasel::Printer::print(weasel::BoolLiteralExpression *expr)
+{
+    fmt::print("{} {}", expr->getValue(), expr->getType()->getTypeName());
+}
 
 void weasel::Printer::print(weasel::NumberLiteralExpression *expr)
 {
