@@ -1,0 +1,39 @@
+fun printf(msg *byte, param ...*long) int { }
+
+fun swap(xp *int, yp *int) {
+    let temp = *xp
+    *xp = *yp
+    *yp = temp
+}
+
+// A function to implement bubble sort
+fun bubbleSort(arr []int, n int) {
+    for let i = 0; i < n - 1; i++ {
+        // Last i elements are already in place
+        for let j = 0; j < n - i - 1; j++ {
+            if arr[j] > arr[j + 1] {
+                swap(&arr[j], &arr[j + 1]);
+            }
+        }
+    }
+}
+
+/* Function to print an array */
+fun printArray(arr []int, size int) {
+    for let i = 0; i < size; i++ {
+        printf("%d ", arr[i]);
+    }
+    printf("\n");
+}
+
+// Driver program to test above functions
+fun main()
+{
+    let arr = [ 5, 1, 4, 2, 8 ];
+    let n = sizeof(arr) / sizeof(arr[0]);
+
+    bubbleSort(arr, n);
+
+    printf("Sorted array: \n");
+    printArray(arr, n);
+}
