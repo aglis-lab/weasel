@@ -7,10 +7,12 @@ namespace weasel
     class Builder
     {
     public:
-        Builder(/* args */) {}
+        Builder() {}
         ~Builder() {}
 
+        void setCompoundStatemen(CompoundStatement *statement);
+
     private:
-        CompoundStatement _statement;
+        CompoundStatement *_statement;
     };
 } // namespace weasel

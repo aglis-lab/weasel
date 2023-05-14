@@ -23,7 +23,13 @@ namespace weasel
     class CompoundStatement;
 
     enum class Linkage;
-    enum class MetaID;
+
+    // Access Type
+    enum class AccessID
+    {
+        Load,
+        Allocation,
+    };
 
     // Expression
     class Expression
@@ -31,7 +37,7 @@ namespace weasel
     public:
         Expression() : _token(Token::create()) {}
         Expression(Token token) : _token(token) {}
-        Expression(Token token, Type *type) : _token(token), _type(type) {}
+        Expression(Token token, Type *type, bool isConstant = false) : _token(token), _type(type), _isConstant(isConstant) {}
 
         Token getToken() const;
         Type *getType() const;
@@ -41,10 +47,12 @@ namespace weasel
         bool isCompoundExpression();
 
     public:
-        // TODO: Rewrite all of this logic
-        void addMeta(MetaID meta) { _metas.push_back(meta); }
-        bool isRHS();
-        bool isLHS();
+        bool isConstant() const { return _isConstant; }
+
+        void setAccess(AccessID accessID) { _accessID = accessID; }
+        AccessID getAccess() const { return _accessID; }
+        bool isAccessLoad() const { return _accessID == AccessID::Load; }
+        bool isAccessAllocation() const { return _accessID == AccessID::Allocation; }
 
         virtual ~Expression();
 
@@ -56,7 +64,9 @@ namespace weasel
     protected:
         Token _token; // Token each expression
         Type *_type;
-        std::vector<MetaID> _metas;
+
+        AccessID _accessID;
+        bool _isConstant;
     };
 
     // Global Value
@@ -119,7 +129,7 @@ namespace weasel
     class LiteralExpression : public Expression
     {
     public:
-        LiteralExpression(Token token, Type *type) : Expression(token, type) {}
+        LiteralExpression(Token token, Type *type) : Expression(token, type, true) {}
     };
 
     // Return Expression
@@ -709,12 +719,4 @@ namespace weasel
         /// be referred to from other translation units.
         ExternalLinkage
     };
-
-    // MetaID
-    enum class MetaID
-    {
-        RHS,
-        LHS,
-    };
-
 } // namespace weasel

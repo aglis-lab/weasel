@@ -225,10 +225,11 @@ llvm::Value *weasel::WeaselCodegen::codegen(AssignmentExpression *expr)
 
     // Codegen RHS First
     // Because RHS may depend on LHS because some reason
+    rhs->setAccess(AccessID::Load);
     auto rhsVal = rhs->codegen(this);
 
     // Set LHS Meta
-    lhs->addMeta(MetaID::LHS);
+    lhs->setAccess(AccessID::Allocation);
     auto lhsVal = lhs->codegen(this);
 
     if (rhsType->isIntegerType())
@@ -250,7 +251,7 @@ llvm::Value *weasel::WeaselCodegen::codegen(AssignmentExpression *expr)
         getBuilder()->CreateStore(rhsVal, lhsVal);
     }
 
-    if (expr->isLHS())
+    if (expr->isAccessAllocation())
     {
         return lhsVal;
     }
@@ -285,11 +286,8 @@ llvm::Value *weasel::WeaselCodegen::codegen(ComparisonExpression *expr)
         rhs->setType(lhsType);
     }
 
-    // Set LHS Meta
-    if (expr->isLHS())
-    {
-        lhs->addMeta(MetaID::LHS);
-    }
+    lhs->setAccess(AccessID::Load);
+    rhs->setAccess(AccessID::Load);
 
     auto lhsVal = lhs->codegen(this);
     auto rhsVal = rhs->codegen(this);
@@ -376,7 +374,7 @@ llvm::Value *weasel::WeaselCodegen::codegen(ComparisonExpression *expr)
     }
     default:
     {
-        assert(false);
+        return ErrorTable::addError(opToken, "Unimplemented operator " + opToken.getValue());
     }
     }
 }
@@ -456,7 +454,7 @@ llvm::Value *weasel::WeaselCodegen::codegen(UnaryExpression *expr)
 
     if (op == UnaryExpression::Dereference)
     {
-        if (expr->isLHS())
+        if (expr->isAccessAllocation())
         {
             return rhsVal;
         }

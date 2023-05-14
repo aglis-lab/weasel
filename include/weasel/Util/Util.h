@@ -30,4 +30,9 @@ namespace util
         str.swap(result);
         return str;
     }
+
+    std::string normalizeStringLiteral(std::string str)
+    {
+        return replaceInPlace(str, std::string("\n"), std::string("\\n"));
+    }
 } // namespace Util

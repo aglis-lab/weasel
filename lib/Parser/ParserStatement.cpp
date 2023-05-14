@@ -136,6 +136,7 @@ weasel::Expression *weasel::Parser::parseLoopingStatement()
             {
                 return ErrorTable::addError(getCurrentToken(), "Invalid Loop condition expression");
             }
+
             if (getNextToken().isSemiColon())
             {
                 conditions.push_back(nullptr);

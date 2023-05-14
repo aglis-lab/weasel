@@ -66,14 +66,14 @@ llvm::Value *weasel::WeaselCodegen::codegen(ArrayLiteralExpression *expr)
 
     auto init = llvm::ConstantArray::get(arrayType, valueArr);
     auto linkage = llvm::GlobalVariable::LinkageTypes::PrivateLinkage;
-    auto gv = new llvm::GlobalVariable(*getModule(), itemType, true, linkage, init);
+    auto gv = new llvm::GlobalVariable(*getModule(), arrayType, true, linkage, init);
     auto dataLayout = llvm::DataLayout(getModule());
     auto alignNum = dataLayout.getPrefTypeAlignment(arrayType);
 
     gv->setAlignment(llvm::Align(std::max((unsigned int)16, alignNum)));
     gv->setUnnamedAddr(llvm::GlobalValue::UnnamedAddr::Local);
 
-    return getBuilder()->CreateLoad(arrayType, gv);
+    return gv;
 }
 
 llvm::Value *weasel::WeaselCodegen::codegen(NilLiteralExpression *expr)

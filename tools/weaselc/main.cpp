@@ -24,7 +24,7 @@
 int main(int argc, char *argv[])
 {
     // Init Loging
-    // google::InitGoogleLogging(argv[0]);
+    google::InitGoogleLogging(argv[0]);
 
     if (argc <= 2)
     {
@@ -52,9 +52,8 @@ int main(int argc, char *argv[])
     parser.parse();
 
     // Debugging AST
-    LOG(INFO) << "Debug AST...\n";
-    fmt::println(""); // Newline for after LOG INFO
-    weasel::Printer().print(&weaselModule);
+    // LOG(INFO) << "Debug AST...\n\n";
+    // weasel::Printer().print(&weaselModule);
 
     // Initialize LLVM
     llvm::InitializeAllTargetInfos();

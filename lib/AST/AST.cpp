@@ -134,29 +134,3 @@ weasel::Type *weasel::Expression::getType() const { return _type; }
 void weasel::Expression::setType(Type *type) { _type = type; }
 
 bool weasel::Expression::isNoType() const { return _type == nullptr; }
-
-bool weasel::Expression::isRHS()
-{
-    for (auto item : _metas)
-    {
-        if (item == MetaID::RHS)
-        {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-bool weasel::Expression::isLHS()
-{
-    for (auto item : _metas)
-    {
-        if (item == MetaID::LHS)
-        {
-            return true;
-        }
-    }
-
-    return false;
-}

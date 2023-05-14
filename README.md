@@ -159,8 +159,8 @@ We also can binding the library created by weasel language into another language
 ### Data Type
 
 - [x] integer
-- [ ] float
-- [ ] boolean
+- [x] float
+- [x] boolean
 - [ ] string
 - [ ] []rune or []char
 
@@ -173,8 +173,6 @@ We also can binding the library created by weasel language into another language
 - [x] Procedure and function names
 - [x] Literal Constant
 - [x] Strings Literal
-- [ ] Compiler generated temporaries
-- [ ] Labels in source languages
 
 ### Error Table
 
@@ -229,14 +227,17 @@ We also can binding the library created by weasel language into another language
 
 ### If / Else Statement
 
-- [ ] Support if decision
-- [ ] Support else if decision
-- [ ] Support else decision
+- [x] Support if decision
+- [x] Support else if decision
+- [x] Support else decision
 
 ### For Statement
 
-- [ ] Support For-loop statement
-- [ ] Support For(while) statement
+- [x] Support For-loop statement
+- [x] Support For(while) statement
+
+### Switch Statement
+
 - [ ] Support For(switch) statement
 
 ### Struct

@@ -37,7 +37,7 @@ void weasel::CharLiteralExpression::print(Printer *printer)
 // ArrayLiteralExpression
 void weasel::ArrayLiteralExpression::print(Printer *printer)
 {
-    fmt::print("Unimplemented array literal printer");
+    printer->print(this);
 }
 
 // StringLiteralExpression
@@ -67,13 +67,13 @@ void weasel::VariableExpression::print(Printer *printer)
 // FieldExpression
 void weasel::FieldExpression::print(Printer *printer)
 {
-    fmt::print("Unimplemented field expression printer");
+    printer->print(this);
 }
 
 // ArrayExpression
 void weasel::ArrayExpression::print(Printer *printer)
 {
-    fmt::print("Unimplemented array printer");
+    printer->print(this);
 }
 
 // LogicalExpression
@@ -85,7 +85,7 @@ void weasel::LogicalExpression::print(Printer *printer)
 // ArithmeticExpression
 void weasel::ArithmeticExpression::print(Printer *printer)
 {
-    fmt::print("Unimplemented arithmetic printer");
+    printer->print(this);
 }
 
 // AssignmentExpression
@@ -145,7 +145,7 @@ void weasel::ConditionStatement::print(Printer *printer)
 // LoopingStatement
 void weasel::LoopingStatement::print(Printer *printer)
 {
-    fmt::print("Unimplemented looping printer");
+    printer->print(this);
 }
 
 // Operator Expression
@@ -193,19 +193,19 @@ void weasel::BoolLiteralExpression::printAsOperand(Printer *printer)
 // CharLiteralExpression
 void weasel::CharLiteralExpression::printAsOperand(Printer *printer)
 {
-    fmt::print("Unimplemented char printer");
+    printer->printAsOperand(this);
 }
 
 // ArrayLiteralExpression
 void weasel::ArrayLiteralExpression::printAsOperand(Printer *printer)
 {
-    fmt::print("Unimplemented array literal printer");
+    printer->printAsOperand(this);
 }
 
 // StringLiteralExpression
 void weasel::StringLiteralExpression::printAsOperand(Printer *printer)
 {
-    fmt::print("Unimplemented string literal printer");
+    printer->printAsOperand(this);
 }
 
 // NilLiteralExpression
@@ -217,7 +217,7 @@ void weasel::NilLiteralExpression::printAsOperand(Printer *printer)
 // Statement
 void weasel::DeclarationStatement::printAsOperand(Printer *printer)
 {
-    fmt::print("Unimplemented declaration printer");
+    printer->printAsOperand(this);
 }
 
 // Expression
@@ -229,13 +229,13 @@ void weasel::VariableExpression::printAsOperand(Printer *printer)
 // FieldExpression
 void weasel::FieldExpression::printAsOperand(Printer *printer)
 {
-    fmt::print("Unimplemented field expression printer");
+    printer->print(this);
 }
 
 // ArrayExpression
 void weasel::ArrayExpression::printAsOperand(Printer *printer)
 {
-    fmt::print("Unimplemented array printer");
+    printer->printAsOperand(this);
 }
 
 // LogicalExpression
@@ -247,7 +247,7 @@ void weasel::LogicalExpression::printAsOperand(Printer *printer)
 // ArithmeticExpression
 void weasel::ArithmeticExpression::printAsOperand(Printer *printer)
 {
-    fmt::print("Unimplemented arithmetic printer");
+    printer->printAsOperand(this);
 }
 
 // AssignmentExpression

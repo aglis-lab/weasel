@@ -6,6 +6,9 @@ project(weasel VERSION 0.0.1)
 # CMAKE LINKER
 set(CMAKE_LINKER ld.lld)
 
+# LLVM
+set(LLVM_DIR /opt/homebrew/opt/llvm@13/lib/cmake/llvm/)
+
 # Find THREADS
 find_package(Threads REQUIRED)
 
@@ -33,9 +36,6 @@ set(WEASEL_PARALLEL_LIB_DIR ${CMAKE_SOURCE_DIR}/build/libparallel)
 
 # WEASEL CMAKE
 set(WEASEL_DIR ${CMAKE_SOURCE_DIR}/cmake)
-
-# LLVM
-set(LLVM_DIR /opt/homebrew/opt/llvm@13/lib/cmake/llvm/)
 
 # CXX
 set(CMAKE_CXX_STANDARD 17)

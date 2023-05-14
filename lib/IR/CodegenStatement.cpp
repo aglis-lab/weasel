@@ -125,6 +125,7 @@ llvm::Value *weasel::WeaselCodegen::codegen(CallExpression *expr)
     std::vector<llvm::Value *> argsV;
     for (size_t i = 0; i < args.size(); i++)
     {
+        args[i]->setAccess(AccessID::Load);
         argsV.push_back(args[i]->codegen(this));
         if (!argsV.back())
         {
@@ -228,6 +229,8 @@ llvm::Value *weasel::WeaselCodegen::codegen(ReturnExpression *expr)
 
 llvm::Value *weasel::WeaselCodegen::codegen(VariableExpression *expr)
 {
+    LOG(INFO) << "Codegen Variable";
+
     // Get Allocator from Symbol Table
     auto varName = expr->getIdentifier();
     auto type = expr->getType();
@@ -248,18 +251,24 @@ llvm::Value *weasel::WeaselCodegen::codegen(VariableExpression *expr)
         return getBuilder()->CreateBitCast(alloc, getBuilder()->getInt8PtrTy());
     }
 
-    if (expr->isLHS())
+    if (type->isArrayType())
+    {
+        return getBuilder()->CreateInBoundsGEP(type->codegen(this), alloc, {getBuilder()->getInt64(0), getBuilder()->getInt64(0)});
+    }
+
+    if (expr->isAccessAllocation())
     {
         return alloc;
     }
 
-    auto typeVal = type->codegen(this);
-    return getBuilder()->CreateLoad(typeVal, alloc);
+    return getBuilder()->CreateLoad(type->codegen(this), alloc);
 }
 
 // TODO: String as array of byte
 llvm::Value *weasel::WeaselCodegen::codegen(ArrayExpression *expr)
 {
+    LOG(INFO) << "Codege Array Expression";
+
     // Get Index
     auto indexExpr = expr->getIndex();
     auto indexV = indexExpr->codegen(this);
@@ -270,9 +279,11 @@ llvm::Value *weasel::WeaselCodegen::codegen(ArrayExpression *expr)
     // Get Allocator from Symbol Table
     auto varName = expr->getIdentifier();
     auto attr = findAttribute(varName);
-    assert(!attr.isEmpty());
+
+    assert(!attr.isEmpty() && "Cannot find variable");
 
     auto alloc = attr.getValue();
+
     assert(alloc);
 
     // Casting to integer 64
@@ -292,7 +303,7 @@ llvm::Value *weasel::WeaselCodegen::codegen(ArrayExpression *expr)
     }
 
     auto elemIndex = getBuilder()->CreateInBoundsGEP(typeV, alloc, idxList);
-    if (expr->isLHS())
+    if (expr->isAccessAllocation())
     {
         return elemIndex;
     }
@@ -522,7 +533,20 @@ llvm::Value *weasel::WeaselCodegen::codegen(DeclarationStatement *expr)
     }
 
     auto alloc = this->getBuilder()->CreateAlloca(declTypeV, nullptr);
-    this->getBuilder()->CreateStore(valueV, alloc);
+
+    // Check if Array Literal
+    if (dynamic_cast<ArrayLiteralExpression *>(valueExpr))
+    {
+        auto arrayPtr = this->getBuilder()->CreateBitCast(alloc, getBuilder()->getInt8PtrTy());
+        auto align = declType->getContainedType()->getTypeWidthByte();
+        auto size = align * valueType->getTypeWidth();
+
+        this->getBuilder()->CreateMemCpy(arrayPtr, llvm::MaybeAlign(align), valueV, llvm::MaybeAlign(align), getBuilder()->getInt64(size));
+    }
+    else
+    {
+        this->getBuilder()->CreateStore(valueV, alloc);
+    }
 
     // Add Variable Declaration to symbol table
     addAttribute(ContextAttribute::get(varName, alloc, AttributeKind::Variable));
@@ -539,7 +563,7 @@ llvm::Value *weasel::WeaselCodegen::codegen(CompoundStatement *expr)
 
     for (auto &item : expr->getBody())
     {
-        item->addMeta(MetaID::LHS);
+        item->setAccess(AccessID::Allocation);
         item->codegen(this);
     }
 
@@ -620,6 +644,8 @@ llvm::Value *weasel::WeaselCodegen::codegen(ConditionStatement *expr)
 
 llvm::Value *weasel::WeaselCodegen::codegen(LoopingStatement *expr)
 {
+    LOG(INFO) << "Codegen For Loop Statement";
+
     auto isInfinity = expr->isInfinityCondition();
     auto isSingleCondition = expr->isSingleCondition();
     auto currentBlock = this->getBuilder()->GetInsertBlock();
@@ -631,9 +657,12 @@ llvm::Value *weasel::WeaselCodegen::codegen(LoopingStatement *expr)
     auto conditions = expr->getConditions();
 
     // Make Sure every variable or expression have LHS Meta Data
-    for (auto &item : conditions)
+    for (auto item : conditions)
     {
-        item->addMeta(MetaID::LHS);
+        if (item != nullptr)
+        {
+            item->setAccess(AccessID::Allocation);
+        }
     }
 
     // Enter to new statement

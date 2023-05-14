@@ -39,19 +39,19 @@ llvm::MDNode *weasel::WeaselCodegen::getTBAA(llvm::Type *type) const
     {
         node = getTBAAPointer();
     }
-    else if (width == 8)
+    else if (width == 8u)
     {
         node = getTBAAChar();
     }
-    else if (width == 16)
+    else if (width == 16u)
     {
         node = getTBAAShort();
     }
-    else if (width == 32)
+    else if (width == 32u)
     {
         node = getTBAAInt();
     }
-    else if (width == 64)
+    else if (width == 64u)
     {
         node = getTBAALong();
     }

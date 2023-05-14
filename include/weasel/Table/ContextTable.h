@@ -39,7 +39,10 @@ namespace weasel
 
     public:
         inline std::list<ContextAttribute> getAttributes() const { return _attributes; }
-        inline void addAttribute(const ContextAttribute &attr) { _attributes.push_back(attr); }
+        inline void addAttribute(const ContextAttribute &attr)
+        {
+            _attributes.push_back(attr);
+        }
 
         inline void enterScope() { _attributes.push_back(ContextAttribute::getEmpty()); }
         inline void exitScope()
@@ -57,7 +60,7 @@ namespace weasel
         }
         inline ContextAttribute findAttribute(const std::string &identifier)
         {
-            for (std::list<ContextAttribute>::reverse_iterator item = _attributes.rbegin(); item != _attributes.rend(); ++item)
+            for (auto item = _attributes.rbegin(); item != _attributes.rend(); ++item)
             {
                 if ((*item).getIdentifier() == identifier)
                 {

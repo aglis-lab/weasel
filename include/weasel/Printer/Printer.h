@@ -12,10 +12,11 @@ namespace weasel
     class Printer
     {
     public:
-        Printer(/* args */) {}
+        Printer(std::FILE *out = stdout) : _out(out) {}
         ~Printer() {}
 
     public:
+        void print(weasel::Module *module);
         void print(weasel::Function *expr);
         void print(weasel::DeclarationStatement *expr);
         void print(weasel::CompoundStatement *expr);
@@ -29,6 +30,11 @@ namespace weasel
         void print(weasel::BoolLiteralExpression *expr);
         void print(weasel::NumberLiteralExpression *expr);
         void print(weasel::StringLiteralExpression *expr);
+        void print(weasel::FieldExpression *expr);
+        void print(weasel::ArrayExpression *expr);
+        void print(weasel::LoopingStatement *expr);
+        void print(weasel::ArithmeticExpression *expr);
+        void print(weasel::ArrayLiteralExpression *expr);
 
         // Without Newline Operand
         void printAsOperand(weasel::NumberLiteralExpression *expr);
@@ -40,8 +46,16 @@ namespace weasel
         void printAsOperand(weasel::CallExpression *expr);
         void printAsOperand(weasel::ReturnExpression *expr);
         void printAsOperand(weasel::UnaryExpression *expr);
+        void printAsOperand(weasel::FieldExpression *expr);
+        void printAsOperand(weasel::ArrayExpression *expr);
+        void printAsOperand(weasel::DeclarationStatement *expr);
+        void printAsOperand(weasel::ArithmeticExpression *expr);
+        void printAsOperand(weasel::StringLiteralExpression *expr);
+        void printAsOperand(weasel::CharLiteralExpression *expr);
+        void printAsOperand(weasel::ArrayLiteralExpression *expr);
 
-        void print(weasel::Module *module);
+    private:
+        std::FILE *_out;
 
     private:
         int getCurrentShift() { return _currentShift; }
