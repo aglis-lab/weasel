@@ -20,8 +20,8 @@ namespace weasel
 
         bool compile(std::string targetTriple = "");
 
-        void createObject(char *outputFile) const;
-        void createIR(char *outputFile) const;
+        void createObject(std::string outputFile) const;
+        void createIR(std::string outputFile) const;
 
         inline std::vector<Function *> getFunctions() const { return _parser->getFunctions(); }
         inline std::vector<StructType *> getUserTypes() const { return _parser->getUserTypes(); }

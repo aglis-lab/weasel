@@ -1,0 +1,5 @@
+fun printf(msg *byte, param ...*long) int { }
+
+fun main() {
+    printf("Hello World\n")
+}

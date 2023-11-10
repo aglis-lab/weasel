@@ -13,7 +13,8 @@ weasel::Metadata::Metadata(llvm::LLVMContext *context)
 
 llvm::Metadata *weasel::Metadata::getFlagsMetadata()
 {
-    return getBuilder()->createConstant(llvm::ConstantInt::get(llvm::Type::getInt32Ty(*getContext()), 4));
+    // TODO: return getBuilder()->createConstant(llvm::ConstantInt::get(llvm::Type::getInt32Ty(*getContext()), 4));
+    return getBuilder()->createConstant(llvm::Constant::getIntegerValue(llvm::Type::getInt32Ty(*getContext()), llvm::APInt(32, 4, false)));
 }
 
 llvm::Metadata *weasel::Metadata::getVersionMetadata()
@@ -24,8 +25,11 @@ llvm::Metadata *weasel::Metadata::getVersionMetadata()
 llvm::MDNode *weasel::Metadata::getCLVersionMetadata()
 {
     auto metas = std::vector<llvm::Metadata *>{
-        getBuilder()->createConstant(llvm::ConstantInt::get(llvm::Type::getInt32Ty(*getContext()), 2)),
-        getBuilder()->createConstant(llvm::ConstantInt::get(llvm::Type::getInt32Ty(*getContext()), 0)),
+        // getBuilder()->createConstant(llvm::ConstantInt::get(llvm::Type::getInt32Ty(*getContext()), 2)),
+        // getBuilder()->createConstant(llvm::ConstantInt::get(llvm::Type::getInt32Ty(*getContext()), 0)),
+
+        getBuilder()->createConstant(llvm::Constant::getIntegerValue(llvm::Type::getInt32Ty(*getContext()), llvm::APInt(32, 2, false))),
+        getBuilder()->createConstant(llvm::Constant::getIntegerValue(llvm::Type::getInt32Ty(*getContext()), llvm::APInt(32, 0, false))),
     };
     return llvm::MDNode::get(*getContext(), metas);
 }

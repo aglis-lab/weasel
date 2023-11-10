@@ -4,7 +4,7 @@
 #include <weasel/Table/ContextTable.h>
 
 #include <vector>
-#include <unordered_map>
+#include <map>
 
 #include <llvm/IR/Value.h>
 #include <llvm/IR/Constant.h>
@@ -35,6 +35,7 @@ namespace weasel
         llvm::MDBuilder *getMDBuilder() const { return _mdBuilder; }
 
     public:
+        // Type
         llvm::Type *codegen(Type *type);
         llvm::Type *codegen(StructType *type);
 
@@ -89,14 +90,29 @@ namespace weasel
         std::vector<llvm::BasicBlock *> _breakBlocks;
         std::vector<llvm::BasicBlock *> _continueBlocks;
 
-        // Helper Variable for Struct Types //
-        std::unordered_map<std::string, llvm::StructType *> _structTypes;
-
         // Helper For Return Function //
         llvm::Value *_returnValue;
         llvm::BasicBlock *_returnBlock;
 
+        // Helper Variable for Struct Types //
+        std::map<std::string, llvm::StructType *> _structTypes;
+
     private:
+        std::map<Expression *, llvm::AllocaInst *> _allocaMap;
+
+        void traverseAllocaExpression(Expression *expr);
+
+        void setAllocaMap(Expression *expr, llvm::AllocaInst *val)
+        {
+            _allocaMap[expr] = val;
+        }
+        llvm::AllocaInst *getAllocaMap(Expression *expr)
+        {
+            return _allocaMap[expr];
+        }
+
+    private:
+        // MDNode
         llvm::MDNode *getTBAA(llvm::Type *type) const;
         llvm::MDNode *getTBAARoot() const;
         llvm::MDNode *getTBAAChar() const;

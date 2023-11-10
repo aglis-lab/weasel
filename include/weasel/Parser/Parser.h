@@ -58,6 +58,9 @@ namespace weasel
 
         Expression *createOperatorExpression(Token op, Expression *lhs, Expression *rhs);
 
+        // Impl Functions
+        Function *parseImpl();
+
         // Function
         Function *parseDeclareFunction(StructType *type);
         Function *parseFunction(StructType *type = nullptr);

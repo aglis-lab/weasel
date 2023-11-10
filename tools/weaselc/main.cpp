@@ -3,7 +3,7 @@
 #include <llvm/Support/TargetSelect.h>
 #include <llvm/ADT/STLExtras.h>
 #include <llvm/Target/TargetMachine.h>
-#include <llvm/Support/TargetRegistry.h>
+#include <llvm/MC/TargetRegistry.h>
 #include <llvm/Support/FileSystem.h>
 #include <llvm/Support/Host.h>
 #include <llvm/Analysis/TargetLibraryInfo.h>
@@ -18,22 +18,30 @@
 #include <weasel/Driver/Driver.h>
 #include <weasel/Analysis/AnalysisSemantic.h>
 #include <weasel/IR/Module.h>
+#include <weasel/Basic/String.h>
+#include <weasel-c/BuildSystem.h>
 
 #include <glog/logging.h>
+
+#include <filesystem>
+
+namespace fs = std::__fs::filesystem;
 
 int main(int argc, char *argv[])
 {
     // Init Loging
     google::InitGoogleLogging(argv[0]);
 
-    if (argc <= 2)
+    if (argc <= 1)
     {
         std::cerr << "Not Input files\n";
         return 1;
     }
 
+    auto outputExecutable = "temp/main";
     auto filePath = argv[1];
-    auto outputPath = argv[2];
+    auto filename = splitString(filePath, "/").back();
+    auto outputPath = (std::string)fs::temp_directory_path() + filename + ".o";
     auto fileManager = weasel::FileManager(filePath);
     if (!fileManager.isValid())
     {
@@ -56,14 +64,14 @@ int main(int argc, char *argv[])
     // weasel::Printer().print(&weaselModule);
 
     // Initialize LLVM
-    llvm::InitializeAllTargetInfos();
+    // llvm::InitializeAllTargetInfos();
     llvm::InitializeNativeTarget();
     llvm::InitializeNativeTargetAsmParser();
     llvm::InitializeNativeTargetAsmPrinter();
 
     // Prepare for codegen
-    auto llvmContext = llvm::LLVMContext();
-    auto codegen = weasel::WeaselCodegen(&llvmContext, "CoreModule");
+    auto llvmContext = new llvm::LLVMContext();
+    auto codegen = weasel::WeaselCodegen(llvmContext, "CoreModule");
     auto driver = weasel::Driver(&codegen, &parser);
     // auto analysis = weasel::AnalysisSemantic(&parser);
 
@@ -82,8 +90,7 @@ int main(int argc, char *argv[])
     // analysis.typeChecking();
 
     LOG(INFO) << "Create LLVM IR...\n";
-    driver.createIR(outputPath);
-
+    driver.createIR(outputExecutable);
     if (!weasel::ErrorTable::getErrors().empty())
     {
         std::cerr << "\n=> Error Information\n";
@@ -96,5 +103,18 @@ int main(int argc, char *argv[])
     if (isCompileSuccess)
     {
         driver.createObject(outputPath);
+    }
+
+    LOG(INFO) << "Create Executable File...\n";
+    weasel::BuildSystem buildSystem({outputPath});
+    buildSystem.addBuildArgument({"o", outputExecutable});
+    auto result = buildSystem.exec();
+    if (!result.empty())
+    {
+        std::cerr << result << std::endl;
+    }
+    else
+    {
+        buildSystem.runExecutable();
     }
 }

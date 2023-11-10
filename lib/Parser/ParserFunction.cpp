@@ -1,6 +1,11 @@
 #include "weasel/Parser/Parser.h"
 #include "weasel/Symbol/Symbol.h"
 
+weasel::Function *weasel::Parser::parseImpl()
+{
+    return nullptr;
+}
+
 weasel::Function *weasel::Parser::parseFunction(StructType *type)
 {
     auto fun = parseDeclareFunction(type);

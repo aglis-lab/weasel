@@ -6,19 +6,25 @@ void weasel::Parser::parse()
 {
     while (!getNextToken().isEnd())
     {
-        if (getCurrentToken().isKeyParallel())
+        // TODO: Not support parallel yet...
+        // if (getCurrentToken().isKeyParallel())
+        // {
+        //     auto type = findUserType(getCurrentToken().getValue());
+        //     assert(type && "parallel struct type should be defined internally!");
+
+        //     getNextToken(true);
+        //     auto fun = parseFunction(type);
+        //     if (fun)
+        //     {
+        //         fun->setParallel(true);
+
+        //         addFunction(fun);
+        //     }
+        // }
+
+        if (getCurrentToken().isKeyImpl())
         {
-            auto type = findUserType(getCurrentToken().getValue());
-            assert(type && "parallel struct type should be defined internally!");
-
-            getNextToken(true);
-            auto fun = parseFunction(type);
-            if (fun)
-            {
-                fun->setParallel(true);
-
-                addFunction(fun);
-            }
+            parseImpl();
         }
 
         if (getCurrentToken().isKeyFunction())

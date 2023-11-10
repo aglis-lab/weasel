@@ -20,6 +20,7 @@ fun bubbleSort(arr []int, n int) {
 
 /* Function to print an array */
 fun printArray(arr []int, size int) {
+    printf("Sorted array: \n")
     for let i = 0; i < size; i = i + 1 {
         printf("%d ", arr[i])
     }
@@ -32,6 +33,5 @@ fun main() {
     let n = 5
 
     bubbleSort(arr, n)
-    printf("Sorted array: \n")
     printArray(arr, n)
 }

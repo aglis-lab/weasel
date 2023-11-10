@@ -1,0 +1,16 @@
+fun printf(msg *byte, param ...*long) int { }
+
+struct Thread {
+    signal int
+}
+
+fun main() {
+    let threads [5]Thread
+    let threadArgs [5]int
+    let rc int
+
+    for let i = 0; i < 5; i++ {
+        threadArgs[i] = i;
+        printf("spawning thread %d\n", i);
+    }
+}

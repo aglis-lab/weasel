@@ -47,14 +47,22 @@ llvm::Value *weasel::WeaselCodegen::codegen(weasel::Function *funAST)
     funLLVM->setDSOLocal(true);
     if (funAST->isDefine())
     {
-        auto entry = llvm::BasicBlock::Create(*getContext(), "entry", funLLVM);
-        getBuilder()->SetInsertPoint(entry);
+        auto entryBlock = llvm::BasicBlock::Create(*getContext(), "entry", funLLVM);
+        getBuilder()->SetInsertPoint(entryBlock);
 
         // Enter to new scope
         enterScope();
 
         LOG(INFO) << "Codegen Function Arguments\n";
 
+        // Allocate Arguments
+        struct AllocateArgument
+        {
+            llvm::AllocaInst *alloca;
+            llvm::Argument *arg;
+        };
+
+        std::vector<AllocateArgument> argAllocs;
         auto idx = 0;
         for (auto &item : funLLVM->args())
         {
@@ -63,14 +71,29 @@ llvm::Value *weasel::WeaselCodegen::codegen(weasel::Function *funAST)
 
             item.setName(argName);
 
-            // Store Param to new variable
+            // Allocate Argument
             auto alloc = getBuilder()->CreateAlloca(item.getType());
+            argAllocs.push_back(AllocateArgument{alloc, &item});
 
-            // Store
-            getBuilder()->CreateStore(&item, alloc);
-
+            // Add Attribute
             addAttribute(ContextAttribute::get(argName, alloc, AttributeKind::Parameter));
         }
+
+        // Create Block
+        LOG(INFO) << "Codegen Function Body\n";
+
+        // TODO: Make it more better
+        // Traverse Alloca Expression to make sure every alloca is on the start
+        traverseAllocaExpression(funAST->getBody());
+
+        // Store argument value
+        for (auto item : argAllocs)
+        {
+            getBuilder()->CreateStore(item.arg, item.alloca);
+        }
+
+        // Codegen Function Body
+        funAST->getBody()->codegen(this);
 
         // Create Return Block and Value
         _returnBlock = llvm::BasicBlock::Create(*getContext());
@@ -79,11 +102,7 @@ llvm::Value *weasel::WeaselCodegen::codegen(weasel::Function *funAST)
             _returnValue = getBuilder()->CreateAlloca(funTyLLVM->getReturnType());
         }
 
-        // Create Block
-        LOG(INFO) << "Codegen Function Body\n";
-
-        funAST->getBody()->codegen(this);
-
+        // Create Default Return Block
         if (llvm::dyn_cast<llvm::BranchInst>(&getBuilder()->GetInsertBlock()->back()) == nullptr)
         {
             getBuilder()->CreateBr(_returnBlock);
@@ -434,21 +453,13 @@ llvm::Value *weasel::WeaselCodegen::codegen(DeclarationStatement *expr)
     auto declType = expr->getType();
     auto valueExpr = expr->getValue();
 
-    if (declType == nullptr && valueExpr != nullptr && valueExpr->getType() != nullptr)
-    {
-        declType = valueExpr->getType();
-        expr->setType(declType);
-    }
-
     // Allocating Address for declaration
     auto varName = expr->getIdentifier();
     auto declTypeV = declType->codegen(this);
-    assert(declTypeV != nullptr);
 
-    // Default Value
+    // Set Default Value if no value expression
     if (valueExpr == nullptr)
     {
-        auto alloc = this->getBuilder()->CreateAlloca(declTypeV, nullptr);
         llvm::Constant *constantVal = nullptr;
 
         // Default Value for integer
@@ -464,6 +475,7 @@ llvm::Value *weasel::WeaselCodegen::codegen(DeclarationStatement *expr)
         }
 
         // Store Default Value
+        auto alloc = this->getAllocaMap(expr);
         if (constantVal != nullptr)
         {
             this->getBuilder()->CreateStore(constantVal, alloc);
@@ -475,6 +487,7 @@ llvm::Value *weasel::WeaselCodegen::codegen(DeclarationStatement *expr)
         return nullptr;
     }
 
+    // TODO: Change this to Analysis type checking
     auto valueType = valueExpr->getType();
     if (valueType->isVoidType())
     {
@@ -489,6 +502,7 @@ llvm::Value *weasel::WeaselCodegen::codegen(DeclarationStatement *expr)
     }
 
     // Check if StructExpression
+    // TODO: Change this to Analysis type checking
     {
         auto temp = dynamic_cast<StructExpression *>(valueExpr);
         if (temp != nullptr)
@@ -497,6 +511,8 @@ llvm::Value *weasel::WeaselCodegen::codegen(DeclarationStatement *expr)
         }
     }
 
+    // Codegen Value Expression
+    // TODO: Change this to Analysis type checking
     auto valueV = valueExpr->codegen(this);
     if (valueV == nullptr)
     {
@@ -527,12 +543,14 @@ llvm::Value *weasel::WeaselCodegen::codegen(DeclarationStatement *expr)
         return nullptr;
     }
 
+    // TODO: Add metadata for auto type casting
     if (declType->isPrimitiveType() && declType->getTypeWidth() != valueType->getTypeWidth())
     {
         valueV = this->getBuilder()->CreateSExtOrTrunc(valueV, declTypeV);
     }
 
-    auto alloc = this->getBuilder()->CreateAlloca(declTypeV, nullptr);
+    // auto alloc = this->getBuilder()->CreateAlloca(declTypeV, nullptr);
+    auto alloc = this->getAllocaMap(expr);
 
     // Check if Array Literal
     if (dynamic_cast<ArrayLiteralExpression *>(valueExpr))

@@ -3,11 +3,14 @@
 cmake_minimum_required(VERSION 3.15)
 project(weasel VERSION 0.0.1)
 
+# Set LLVM Version
+set(LLVM_VERSION 15)
+
 # CMAKE LINKER
-set(CMAKE_LINKER ld.lld)
+set(CMAKE_LINKER ld64.lld)
 
 # LLVM
-set(LLVM_DIR /opt/homebrew/opt/llvm@13/lib/cmake/llvm/)
+set(LLVM_DIR /opt/homebrew/opt/llvm@${LLVM_VERSION}/lib/cmake/llvm/)
 
 # Find THREADS
 find_package(Threads REQUIRED)

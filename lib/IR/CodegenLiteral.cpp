@@ -1,5 +1,7 @@
 #include "weasel/IR/Codegen.h"
 
+#include <math.h>
+
 llvm::Value *weasel::WeaselCodegen::codegen(BoolLiteralExpression *expr) const
 {
     return getBuilder()->getInt1(expr->getValue());
@@ -30,12 +32,13 @@ llvm::Value *weasel::WeaselCodegen::codegen(DoubleLiteralExpression *expr) const
 
 llvm::Value *weasel::WeaselCodegen::codegen(StringLiteralExpression *expr) const
 {
-    auto *str = getBuilder()->CreateGlobalString(expr->getValue());
-    std::vector<llvm::Value *> idxList;
-    idxList.push_back(getBuilder()->getInt64(0));
-    idxList.push_back(getBuilder()->getInt64(0));
+    auto *globalStringVariable = getBuilder()->CreateGlobalString(expr->getValue());
+    std::vector<llvm::Value *> idxList = {
+        this->getBuilder()->getInt64(0),
+        this->getBuilder()->getInt64(0),
+    };
 
-    return llvm::ConstantExpr::getGetElementPtr(str->getType()->getElementType(), str, idxList, true);
+    return llvm::ConstantExpr::getGetElementPtr(globalStringVariable->getValueType(), globalStringVariable, idxList, true);
 }
 
 llvm::Value *weasel::WeaselCodegen::codegen(ArrayLiteralExpression *expr)
@@ -70,7 +73,7 @@ llvm::Value *weasel::WeaselCodegen::codegen(ArrayLiteralExpression *expr)
     auto dataLayout = llvm::DataLayout(getModule());
     auto alignNum = dataLayout.getPrefTypeAlignment(arrayType);
 
-    gv->setAlignment(llvm::Align(std::max((unsigned int)16, alignNum)));
+    gv->setAlignment(llvm::Align(std::max((uint64_t)16, alignNum)));
     gv->setUnnamedAddr(llvm::GlobalValue::UnnamedAddr::Local);
 
     return gv;

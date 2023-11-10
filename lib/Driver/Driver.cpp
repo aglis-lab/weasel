@@ -7,9 +7,9 @@
 #include <llvm/Target/TargetOptions.h>
 #include <llvm/Target/TargetMachine.h>
 #include <llvm/Support/Host.h>
-#include <llvm/Support/TargetRegistry.h>
 #include <llvm/Support/ToolOutputFile.h>
 #include <llvm/Support/FileSystem.h>
+#include <llvm/MC/TargetRegistry.h>
 #include <llvm/Bitcode/BitcodeWriter.h>
 #include <llvm/IR/Verifier.h>
 #include <llvm/IR/LegacyPassManager.h>
@@ -32,6 +32,7 @@ bool weasel::Driver::compile(std::string defTargetTriple)
     auto pass = Passes(getModule());
     for (const auto &item : getFunctions())
     {
+        // Check function conflict
         auto identifier = item->getIdentifier();
         auto exist = getModule()->getFunction(identifier);
         if (exist)
@@ -40,18 +41,22 @@ bool weasel::Driver::compile(std::string defTargetTriple)
             return false;
         }
 
+        // Codegen Function
         auto obj = item->codegen(_codegen);
         assert(obj != nullptr);
 
+        // Casting function obj to llvm function
         auto fun = llvm::dyn_cast<llvm::Function>(obj);
         assert(fun != nullptr);
 
+        // Verify Function
         if (llvm::verifyFunction(*fun, &llvm::errs()))
         {
             _err = "Error when verifying function " + identifier + "\n";
             return false;
         }
 
+        // Give Passes to the function
         pass.run(*fun);
     }
 
@@ -90,10 +95,10 @@ bool weasel::Driver::compile(std::string defTargetTriple)
     return true;
 }
 
-void weasel::Driver::createIR(char *outputFile) const
+void weasel::Driver::createIR(std::string outputFile) const
 {
     std::error_code errCode;
-    llvm::raw_fd_ostream dest(std::string(outputFile) + ".ir", errCode, llvm::sys::fs::OF_None);
+    llvm::raw_fd_ostream dest(outputFile + ".ir", errCode, llvm::sys::fs::OF_None);
     if (errCode)
     {
         llvm::errs() << "Could not open file : " << errCode.message() << "\n";
@@ -104,7 +109,7 @@ void weasel::Driver::createIR(char *outputFile) const
     dest.flush();
 }
 
-void weasel::Driver::createObject(char *outputFile) const
+void weasel::Driver::createObject(std::string outputFile) const
 {
     std::string err;
     std::error_code errCode;

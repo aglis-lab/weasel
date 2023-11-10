@@ -1,7 +1,6 @@
 #include <iostream>
 
-// Use ld.lld -L /usr/local/lib
-int main()
+int main(int argc, char *argv[])
 {
     std::cout << "Try to cage weasel\n";
 }
