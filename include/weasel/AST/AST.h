@@ -1,12 +1,12 @@
 #pragma once
 
-// Include Standard Library
 #include <string>
 #include <vector>
 
-#include <weasel/Lexer/Token.h>
-#include <weasel/Type/Type.h>
-#include <weasel/Basic/Cast.h>
+#include "weasel/Lexer/Token.h"
+#include "weasel/Type/Type.h"
+#include "weasel/Basic/Cast.h"
+#include "weasel/Basic/Error.h"
 
 #include <glog/logging.h>
 
@@ -37,6 +37,7 @@ namespace weasel
     public:
         Expression() : _token(Token::create()) {}
         Expression(Token token) : _token(token) {}
+        Expression(Token token, Error *error) : _token(token), _error(error) {}
         Expression(Token token, Type *type, bool isConstant = false) : _token(token), _type(type), _isConstant(isConstant) {}
 
         Token getToken() const;
@@ -61,9 +62,14 @@ namespace weasel
         virtual void print(Printer *printer) = 0;
         virtual void printAsOperand(Printer *printer) = 0;
 
+    public:
+        void makeError(Error *);
+        bool isError() const;
+
     protected:
         Token _token; // Token each expression
         Type *_type;
+        Error *_error;
 
         AccessID _accessID;
         bool _isConstant;
@@ -123,6 +129,19 @@ namespace weasel
         bool _isDefine = false;
         bool _isInline = false;
         bool _isParallel = false;
+    };
+
+    class ImplFunctions
+    {
+    public:
+        ImplFunctions(StructType *structType) : _structType(structType){};
+        ~ImplFunctions(){};
+
+        void addFunction(Function *fun);
+
+    private:
+        std::vector<Function *> _functions;
+        StructType *_structType;
     };
 
     // Literal Expression
@@ -279,7 +298,7 @@ namespace weasel
     public:
         llvm::Value *codegen(WeaselCodegen *codegen) override;
         void print(Printer *printer) override;
-        void printAsOperand(Printer *printer) override{};
+        void printAsOperand(Printer *printer) override;
 
         ~StructExpression();
 

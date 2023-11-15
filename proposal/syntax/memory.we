@@ -1,0 +1,44 @@
+// Can't be used Symbol
+// ! => miss understanding with not
+
+// swift automaticly allocate class as arc or shared pointer
+// zig use manual heap allocation
+
+// The Question is, we use struct which always get a default value
+// Why we need optional for struct
+// The Answer is, that we want to assign nil into struct
+
+// Is that mean the value of those optional value is a pointer?
+
+// Unsafe Pointer
+// let a *Car
+
+// Shared Pointer
+// let a Car
+
+// Weak Pointer
+// let a weak Car
+
+// Strong Pointer
+// let a own Car
+
+// Optional (Fixed)
+// let op ?Car
+
+struct Car {
+    name string
+    distance int = 12
+}
+
+fun assign(car ?Car) {
+    let giveme = Car{}  // stack allocation
+
+    car = &giveme       // error because struct get destroyed after
+
+    // stack allocation will be cleared after function return
+}
+
+fun main() {
+    // Automatic Reference Counting
+    let car ?Car
+}

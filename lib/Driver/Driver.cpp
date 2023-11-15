@@ -3,6 +3,7 @@
 //
 #include <iostream>
 #include <fstream>
+
 #include <llvm/IR/Function.h>
 #include <llvm/Target/TargetOptions.h>
 #include <llvm/Target/TargetMachine.h>
@@ -13,11 +14,13 @@
 #include <llvm/Bitcode/BitcodeWriter.h>
 #include <llvm/IR/Verifier.h>
 #include <llvm/IR/LegacyPassManager.h>
+#include <llvm/Transforms/Scalar/MemCpyOptimizer.h>
+#include <llvm/IR/PassManager.h>
 
-#include <weasel/Symbol/Symbol.h>
-#include <weasel/Driver/Driver.h>
-#include <weasel/Passes/Passes.h>
-#include <weasel/Metadata/Metadata.h>
+#include "weasel/Symbol/Symbol.h"
+#include "weasel/Driver/Driver.h"
+#include "weasel/Passes/Passes.h"
+#include "weasel/Metadata/Metadata.h"
 
 weasel::Driver::Driver(weasel::WeaselCodegen *codegen, weasel::Parser *parser)
 {
@@ -56,6 +59,12 @@ bool weasel::Driver::compile(std::string defTargetTriple)
             return false;
         }
 
+        // if (item->getType()->isStructType())
+        // {
+        //     auto analysis = llvm::FunctionAnalysisManager();
+        //     llvm::MemCpyOptPass().run(*fun, analysis);
+        // }
+
         // Give Passes to the function
         pass.run(*fun);
     }
@@ -85,7 +94,7 @@ bool weasel::Driver::compile(std::string defTargetTriple)
         getModule()->setDataLayout(dataLayout);
     }
 
-    Metadata(getContext()).initModule(getModule());
+    Metadata(getContext(), *getModule()).initModule(getModule());
     if (llvm::verifyModule(*getModule()))
     {
         _err = "Error when constructing module\n";

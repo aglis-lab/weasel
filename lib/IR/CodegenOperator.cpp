@@ -4,8 +4,8 @@
 #include <llvm/IR/Constant.h>
 #include <llvm/IR/Module.h>
 
-#include <weasel/IR/Codegen.h>
-#include <weasel/Symbol/Symbol.h>
+#include "weasel/IR/Codegen.h"
+#include "weasel/Symbol/Symbol.h"
 
 // Unimplemented
 llvm::Value *weasel::WeaselCodegen::codegen(TypeCastExpression *expr)

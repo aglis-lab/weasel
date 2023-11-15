@@ -74,7 +74,6 @@ weasel::StructType *weasel::Parser::parseStruct()
     auto structName = tokenIndentifier.getValue();
     auto structType = StructType::get(structName);
 
-    addUserType(structType);
     while (true)
     {
         if (getNextToken(true).isCloseCurly())

@@ -38,15 +38,7 @@ char *weasel::Lexer::getNextBuffer(size_t slide)
 {
     _currentBuffer += slide; // get next buffer
 
-    if (*_currentBuffer == '\n')
-    {
-        _location.row++;
-        _location.col = 0; // new line didn't produce column value
-    }
-    else
-    {
-        _location.col++;
-    }
+    _location.toNextLine(*_currentBuffer);
 
     return _currentBuffer;
 }
@@ -77,7 +69,6 @@ weasel::Token weasel::Lexer::createToken(weasel::TokenKind kind, char *startBuff
 
 weasel::Token weasel::Lexer::getNextToken(bool skipSpace, bool eat)
 {
-
     do
     {
         _currentToken = getToken();

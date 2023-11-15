@@ -61,7 +61,18 @@ message(STATUS ${LLVM_DEFINITIONS})
 
 # C++ DEFINITIONS
 add_definitions("-Wno-reorder-ctor")
-add_definitions("-std=c++14")
+add_definitions("-std=c++17")
+
+if (MSVC)
+    # warning level 4
+    add_compile_options(/W4)
+else()
+    # additional warnings
+    add_compile_options(-Wall -Wextra -Wpedantic)
+endif()
+
+# Sanitize Address
+# add_compile_options(-fsanitize=address)
 
 # LLVM DEFINITIONS
 add_definitions(${LLVM_DEFINITIONS})

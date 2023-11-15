@@ -4,6 +4,7 @@
 
 #include <weasel/AST/AST.h>
 #include <weasel/IR/Module.h>
+#include <fstream>
 
 #define DEFAULT_SHIFT 3
 
@@ -13,6 +14,8 @@ namespace weasel
     {
     public:
         Printer(std::FILE *out = stdout) : _out(out) {}
+        Printer(std::string outputFile) : _out(fopen(outputFile.c_str(), "w")) {}
+
         ~Printer() {}
 
     public:
@@ -35,6 +38,7 @@ namespace weasel
         void print(weasel::LoopingStatement *expr);
         void print(weasel::ArithmeticExpression *expr);
         void print(weasel::ArrayLiteralExpression *expr);
+        void print(weasel::StructExpression *expr);
 
         // Without Newline Operand
         void printAsOperand(weasel::NumberLiteralExpression *expr);
@@ -53,6 +57,7 @@ namespace weasel
         void printAsOperand(weasel::StringLiteralExpression *expr);
         void printAsOperand(weasel::CharLiteralExpression *expr);
         void printAsOperand(weasel::ArrayLiteralExpression *expr);
+        void printAsOperand(weasel::StructExpression *expr);
 
     private:
         std::FILE *_out;

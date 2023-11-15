@@ -2,7 +2,8 @@
 
 #include <string>
 
-#include <weasel/Basic/Enum.h>
+#include "weasel/Basic/Enum.h"
+#include "weasel/Basic/Location.h"
 
 #define __defaultPrecOrder 20
 
@@ -143,13 +144,6 @@ namespace weasel
         QualConst,
         QualRestrict,
         QualVolatile,
-    };
-
-    // Source Location
-    struct SourceLocation
-    {
-        unsigned row = 1;
-        unsigned col = 1;
     };
 
     // Associativity

@@ -5,6 +5,9 @@ Brought from
 https://github.com/pocoproject/poco
 */
 
+#include <cassert>
+#include <string>
+
 namespace util
 {
     template <class S>

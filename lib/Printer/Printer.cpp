@@ -1,15 +1,15 @@
-#include <weasel/Printer/Printer.h>
-#include <weasel/Util/Util.h>
+#include "weasel/Printer/Printer.h"
+#include "weasel/Util/Util.h"
 
 void weasel::Printer::print(weasel::Module *module)
 {
     // // Print user types or struct
     // for (auto item : module->getUserTypes())
     // {
-    //     item->print(this);
+    //     fmt::println(_out, "@declare ", item->getIdentifier());
 
     //     // Newline after function declaration or definition
-    //     fmt::println(_out,"");
+    //     fmt::println(_out, "");
     // }
 
     // Print it's function and it's body
@@ -25,11 +25,11 @@ void weasel::Printer::print(weasel::Module *module)
 void weasel::Printer::print(weasel::Function *expr)
 {
     std::string prefix = "@declare";
-    char newlineOp = '\0';
+    auto newlineOp = "";
     if (expr->getBody()->getBody().size() > 0)
     {
         prefix = "@define";
-        newlineOp = ':';
+        newlineOp = ":";
     }
 
     std::string argStr;
@@ -224,10 +224,22 @@ void weasel::Printer::print(weasel::ComparisonExpression *expr)
     fmt::println(_out, "");
 }
 
+void weasel::Printer::print(weasel::StructExpression *expr)
+{
+    this->printAsOperand(expr);
+    fmt::println(_out, "");
+}
+
 //
 // PRINT AS OPERAND //
 // SIMPLE OPERAND WITHPUT NEWLINE INSTRUCTION //
 //
+void weasel::Printer::printAsOperand(weasel::StructExpression *expr)
+{
+    // fmt::print(_out, "{} {}", expr->getValue(), expr->getType()->getTypeName());
+    fmt::print(_out, "StructExpression : Not Implemented Yet");
+}
+
 void weasel::Printer::printAsOperand(weasel::NumberLiteralExpression *expr)
 {
     fmt::print(_out, "{} {}", expr->getValue(), expr->getType()->getTypeName());
@@ -274,13 +286,13 @@ void weasel::Printer::printAsOperand(weasel::CallExpression *expr)
             fmt::print(_out, ", ");
         }
     }
-    fmt::print(_out, ")");
+    fmt::print(_out, ") {}", expr->getType()->getTypeName());
 }
 
 void weasel::Printer::printAsOperand(weasel::FieldExpression *expr)
 {
-    expr->getParentField()->printAsOperand(this);
-    fmt::print(_out, ".{}", expr->getField());
+    auto varExpr = dynamic_cast<VariableExpression *>(expr->getParentField());
+    fmt::print(_out, "{}.{} {}", varExpr->getIdentifier(), expr->getField(), expr->getType()->getTypeName());
 }
 
 void weasel::Printer::printAsOperand(weasel::ArrayExpression *expr)

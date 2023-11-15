@@ -6,6 +6,10 @@ Weasel Language named after name of animal https://en.wikipedia.org/wiki/Weasel
 
 GLOG_logtostderr=1 build/tools/weaselc/weaselc temp/main.we
 
+### Debug
+
+llc temp/main.ir -filetype=obj && clang++ temp/main.ir.o -o temp/main.out && ./temp/main.out
+
 # BACKGROUND
 
 Weasel language is a project i created to prove of concept that we can support heterogenous internally inside a language. We can use GPGPU Computing directly supported by the language. Which mean you just directly code to the language and just works.

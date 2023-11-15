@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
     }
 
     auto outputExecutable = "temp/main";
-    auto filePath = argv[1];
+    auto filePath = std::string(argv[1]);
     auto filename = splitString(filePath, "/").back();
     auto outputPath = (std::string)fs::temp_directory_path() + filename + ".o";
     auto fileManager = weasel::FileManager(filePath);
@@ -60,8 +60,8 @@ int main(int argc, char *argv[])
     parser.parse();
 
     // Debugging AST
-    // LOG(INFO) << "Debug AST...\n\n";
-    // weasel::Printer().print(&weaselModule);
+    LOG(INFO) << "Write Weasel AST " << filename << "...\n";
+    weasel::Printer(filePath + ".ir").print(&weaselModule);
 
     // Initialize LLVM
     // llvm::InitializeAllTargetInfos();

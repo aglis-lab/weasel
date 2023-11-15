@@ -1,6 +1,6 @@
-#include "weasel/IR/Codegen.h"
-
 #include <math.h>
+
+#include "weasel/IR/Codegen.h"
 
 llvm::Value *weasel::WeaselCodegen::codegen(BoolLiteralExpression *expr) const
 {

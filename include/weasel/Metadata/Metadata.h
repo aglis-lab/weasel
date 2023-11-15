@@ -6,25 +6,32 @@
 #include <llvm/IR/Module.h>
 #include <llvm/IR/Metadata.h>
 #include <llvm/IR/MDBuilder.h>
+#include <llvm/IR/IntrinsicInst.h>
+#include <llvm/IR/IRBuilder.h>
+#include <llvm/IR/DIBuilder.h>
 
 namespace weasel
 {
     class Metadata
     {
     private:
-        llvm::MDBuilder *_builder;
+        llvm::MDBuilder *_MDbuilder;
         llvm::LLVMContext *_context;
+        llvm::DIBuilder *_DIBuilder;
 
     private:
         llvm::Metadata *getFlagsMetadata();
         llvm::Metadata *getVersionMetadata();
         llvm::MDNode *getCLVersionMetadata();
 
-        llvm::MDBuilder *getBuilder() const { return _builder; }
+        llvm::MDBuilder *getMDBuilder() const { return _MDbuilder; }
         llvm::LLVMContext *getContext() const { return _context; }
+        llvm::DIBuilder *getDIBuilder() const { return _DIBuilder; }
 
     public:
-        Metadata(llvm::LLVMContext *context);
+        Metadata(){};
+
+        Metadata(llvm::LLVMContext *, llvm::Module &);
 
         // void initParallelModule(llvm::Module *module) {
         //     initModule(module);
@@ -32,6 +39,9 @@ namespace weasel
         //     module->getOrInsertNamedMetadata("opencl.ocl.version")->addOperand(getCLVersionMetadata());
         //     module->getOrInsertNamedMetadata("opencl.spir.version")->addOperand(getCLVersionMetadata());
         // }
+
+        // Create Dbg Declare
+        llvm::IntrinsicInst *createDbgDeclare(llvm::IRBuilder<> *, llvm::Module *, llvm::Value *, llvm::Metadata *, llvm::Metadata *);
 
         void initModule(llvm::Module *module)
         {

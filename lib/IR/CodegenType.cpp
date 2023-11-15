@@ -4,8 +4,8 @@
 #include <llvm/IR/Constant.h>
 #include <llvm/IR/Module.h>
 
-#include <weasel/IR/Codegen.h>
-#include <weasel/Symbol/Symbol.h>
+#include "weasel/IR/Codegen.h"
+#include "weasel/Symbol/Symbol.h"
 
 // Weasel User Type System to llvm Type System
 llvm::Type *weasel::WeaselCodegen::codegen(weasel::StructType *structExpr)
@@ -19,7 +19,7 @@ llvm::Type *weasel::WeaselCodegen::codegen(weasel::StructType *structExpr)
         return structExist;
     }
 
-    auto structType = llvm::StructType::create(*getContext(), identifier);
+    auto structType = llvm::StructType::create(*getContext(), "struct." + identifier);
     addStructType(identifier, structType);
 
     for (auto item : types)

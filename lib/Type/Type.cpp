@@ -2,8 +2,24 @@
 
 #include <fmt/core.h>
 
-#include <weasel/IR/Codegen.h>
-#include <weasel/Type/Type.h>
+#include "weasel/IR/Codegen.h"
+#include "weasel/Type/Type.h"
+
+bool weasel::Type::isPossibleStructType() const
+{
+    auto temp = this;
+    if (temp->isStructType())
+    {
+        return true;
+    }
+
+    while (temp->isPointerType())
+    {
+        temp = temp->getContainedType();
+    }
+
+    return temp->isStructType();
+}
 
 int weasel::StructType::findTypeName(const std::string &typeName)
 {
@@ -169,44 +185,40 @@ std::string weasel::Type::getTypeName()
     {
     case TypeID::IntegerType:
     {
-        char prefix = '\0';
+        auto prefix = "";
         std::string type;
         if (!_isSigned)
         {
-            prefix = 'u';
+            prefix = "u";
         }
 
         if (_width == 1)
         {
             type = "bool";
-            prefix = '\0';
+            prefix = "";
         }
-
-        if (_width == 8)
+        else if (_width == 8)
         {
             type = "byte";
 
             if (_isSigned)
             {
-                prefix = 's';
+                prefix = "s";
             }
             else
             {
-                prefix = '\0';
+                prefix = "";
             }
         }
-
-        if (_width == 16)
+        else if (_width == 16)
         {
             type = "short";
         }
-
-        if (_width == 32)
+        else if (_width == 32)
         {
             type = "int";
         }
-
-        if (_width == 64)
+        else if (_width == 64)
         {
             type = "long";
         }
@@ -232,6 +244,11 @@ std::string weasel::Type::getTypeName()
     case TypeID::ArrayType:
     {
         return fmt::format("[]{}", this->getContainedType()->getTypeName());
+    }
+    case TypeID::StructType:
+    {
+        auto val = dynamic_cast<StructType *>(this);
+        return fmt::format("@{}", val->getIdentifier());
     }
     default:
     {

@@ -1,4 +1,5 @@
 #include <iostream>
+
 #include "weasel/Symbol/Symbol.h"
 
 /// Symbol Init ///
@@ -30,7 +31,7 @@ void weasel::ErrorTable::showErrors()
             }
 
             std::cerr << "Error : " << item.getMessage() << " but found " << token.getValue() << " kind of " << token.getTokenKindToInt();
-            std::cerr << " At (" << loc.row << ":" << loc.col << ")\n";
+            std::cerr << " At (" << loc.line << ":" << loc.column << ")\n";
         }
     }
 }

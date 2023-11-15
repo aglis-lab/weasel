@@ -1,4 +1,4 @@
-#include <weasel/IR/Codegen.h>
+#include "weasel/IR/Codegen.h"
 
 llvm::MDNode *weasel::WeaselCodegen::getTBAARoot() const
 {

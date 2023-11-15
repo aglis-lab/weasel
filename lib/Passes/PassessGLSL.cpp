@@ -1,5 +1,6 @@
-#include "weasel/Passes/PassesGLSL.h"
 #include <string>
+
+#include "weasel/Passes/PassesGLSL.h"
 
 bool weasel::PassesGLSL::run()
 {

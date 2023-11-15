@@ -1,1 +1,1 @@
-add_executable(cage cage.cpp)
+add_executable(cage main.cpp)

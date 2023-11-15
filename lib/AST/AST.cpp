@@ -1,6 +1,17 @@
 #include <weasel/AST/AST.h>
 #include <weasel/IR/Codegen.h>
 
+// Expression give error
+void weasel::Expression::makeError(Error *error)
+{
+    _error = error;
+}
+
+bool weasel::Expression::isError() const
+{
+    return _error != nullptr;
+}
+
 // Constructor for ArrayLiteral
 weasel::ArrayLiteralExpression::ArrayLiteralExpression(std::vector<Expression *> items)
 {

@@ -3,7 +3,23 @@
 ## Migrate LLVM
 
 - [x] Use LLVM-13
-- [ ] use LLVM-15
+- [x] use LLVM-15
+- [ ] Use std::string as possible then use char\*
+- [ ] Use sanitize address
+- [ ] Add LLVM Debugging
+  - [ ] Location
+    - [ ] Line
+    - [ ] Column
+    - [ ] Scope
+    - [ ] inlineAt
+  - [ ] Variable
+    - [ ] Name
+    - [ ] Argument
+    - [ ] Scope
+    - [ ] FIle
+    - [ ] Line
+    - [ ] Type
+    - [ ] Flags
 
 ## Features
 
@@ -125,6 +141,48 @@
 - [ ] Add command build
 - [ ] Add command version
 - [ ] Add Command emit llvm ir
+
+## Memory Management
+
+Memory management solution
+
+### Unsafe Pointer Memory
+
+```
+fun createPointer() *Point {
+  let p = Memory.Heap(Point) // unsafe pointer with save heap manager
+  return p // Pass unsafe pointer
+}
+```
+
+### Strong Pointer Memory
+
+```
+fun createPointer() own<Point> {
+  let p = own(Point{}) // strong pointer
+  return p // automaticly move pointer
+}
+```
+
+### Shared Pointer Memory
+
+```
+fun createPointer() shared<Point> {
+  let p = make(Point) // shared pointer
+  return p // automaticly shared pointer and increase counting pointer
+}
+```
+
+### Weak Pointer Memory
+
+```
+fun createPointer() weak<Point> {
+  let p = weak(Point{}) // weak pointer
+  return p // automaticly weak pointer and not increase counting pointer
+}
+```
+
+### Optional Data
 
 ## Analysis
 

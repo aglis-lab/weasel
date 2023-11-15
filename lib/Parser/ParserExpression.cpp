@@ -1,4 +1,5 @@
 #include <iostream>
+
 #include "weasel/Parser/Parser.h"
 #include "weasel/Symbol/Symbol.h"
 
@@ -397,6 +398,8 @@ weasel::Expression *weasel::Parser::parseExpressionOperator(unsigned precOrder, 
 
 weasel::Expression *weasel::Parser::parseFieldExpression(Expression *lhs)
 {
+    LOG(INFO) << "Parse Field Expression of " << lhs->getToken().getValue();
+
     auto type = lhs->getType();
     auto token = getCurrentToken();
     auto identToken = getNextToken();
@@ -408,10 +411,23 @@ weasel::Expression *weasel::Parser::parseFieldExpression(Expression *lhs)
     }
 
     getNextToken(); // eat 'identifier'
+    if (!type->isPossibleStructType())
+    {
+        return ErrorTable::addError(lhs->getToken(), "Field " + identToken.getValue() + " isn't a struct");
+    }
 
     // TODO: Check on Analysis Semantic
     // Checking type field
-    auto structType = dynamic_cast<StructType *>(type);
+    StructType *structType;
+    if (type->isStructType())
+    {
+        structType = dynamic_cast<StructType *>(type);
+    }
+    else
+    {
+        structType = dynamic_cast<StructType *>(type->getContainedType());
+    }
+
     auto idx = structType->findTypeName(identToken.getValue());
     if (idx == -1)
     {
@@ -419,7 +435,6 @@ weasel::Expression *weasel::Parser::parseFieldExpression(Expression *lhs)
     }
 
     auto typeField = structType->getContainedTypes()[idx];
-
     return new FieldExpression(token, identToken.getValue(), lhs, typeField);
 }
 

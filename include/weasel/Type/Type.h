@@ -73,6 +73,9 @@ namespace weasel
                    isStructType();
         }
 
+        // Check possible struct type
+        bool isPossibleStructType() const;
+
         unsigned getContainedWidth() const { return _containedTypes[0]->getTypeWidth(); }
         Type *getContainedType() const { return _containedTypes[0]; }
         unsigned getContainedNums() const { return _containedTypes.size(); }

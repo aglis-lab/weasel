@@ -6,6 +6,11 @@ void weasel::Parser::parse()
 {
     while (!getNextToken().isEnd())
     {
+        while (getCurrentToken().isNewline())
+        {
+            getNextToken();
+        }
+
         // TODO: Not support parallel yet...
         // if (getCurrentToken().isKeyParallel())
         // {
@@ -22,20 +27,25 @@ void weasel::Parser::parse()
         //     }
         // }
 
-        if (getCurrentToken().isKeyImpl())
+        switch (getCurrentToken().getTokenKind())
         {
-            parseImpl();
-        }
-
-        if (getCurrentToken().isKeyFunction())
-        {
+        case TokenKind::TokenKeyStruct:
+            addUserType(parseStruct());
+            break;
+        case TokenKind::TokenKeyFun:
             addFunction(parseFunction());
+            break;
+            // case TokenKind::TokenKeyImpl:
+
+        default:
+            std::cerr << "Unexpected token : " << getCurrentToken().getTokenKindToInt() << " - " << getCurrentToken().getValue() << std::endl;
+            break;
         }
 
-        if (getCurrentToken().isKeyStruct())
-        {
-            parseStruct();
-        }
+        // if (getCurrentToken().isKeyImpl())
+        // {
+        //     parseImpl();
+        // }
     }
 }
 

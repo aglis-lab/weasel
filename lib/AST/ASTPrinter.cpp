@@ -115,7 +115,12 @@ void weasel::ReturnExpression::print(Printer *printer)
 // StructExpression
 void weasel::StructExpression::print(Printer *printer)
 {
-    fmt::print("Unimplemented struct printer");
+    printer->print(this);
+}
+
+void weasel::StructExpression::printAsOperand(Printer *printer)
+{
+    printer->printAsOperand(this);
 }
 
 // BreakExpression

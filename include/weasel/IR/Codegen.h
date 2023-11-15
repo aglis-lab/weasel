@@ -2,6 +2,7 @@
 
 #include <weasel/AST/AST.h>
 #include <weasel/Table/ContextTable.h>
+#include <weasel/Metadata/Metadata.h>
 
 #include <vector>
 #include <map>
@@ -26,6 +27,10 @@ namespace weasel
     // Analysis Context
     class WeaselCodegen : ContextTable
     {
+        // Weasel Package
+    private:
+        weasel::Metadata _metaData;
+
     public:
         WeaselCodegen(llvm::LLVMContext *context, const std::string &moduleName);
 
@@ -91,24 +96,18 @@ namespace weasel
         std::vector<llvm::BasicBlock *> _continueBlocks;
 
         // Helper For Return Function //
-        llvm::Value *_returnValue;
+        llvm::AllocaInst *_returnAlloca;
         llvm::BasicBlock *_returnBlock;
+        llvm::BasicBlock *_allocaBlock;
 
         // Helper Variable for Struct Types //
         std::map<std::string, llvm::StructType *> _structTypes;
 
     private:
-        std::map<Expression *, llvm::AllocaInst *> _allocaMap;
-
-        void traverseAllocaExpression(Expression *expr);
-
-        void setAllocaMap(Expression *expr, llvm::AllocaInst *val)
+        // Create allocation instruction at alloca block
+        llvm::AllocaInst *createAlloca(llvm::Type *type, unsigned int addrSpace = 0, const llvm::Twine &name = "")
         {
-            _allocaMap[expr] = val;
-        }
-        llvm::AllocaInst *getAllocaMap(Expression *expr)
-        {
-            return _allocaMap[expr];
+            return new llvm::AllocaInst(type, addrSpace, name, _allocaBlock);
         }
 
     private:
