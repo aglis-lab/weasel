@@ -67,7 +67,7 @@ weasel::Token weasel::Lexer::createToken(weasel::TokenKind kind, char *startBuff
     return Token::create(kind, _location, startBuffer, endBuffer);
 }
 
-weasel::Token weasel::Lexer::getNextToken(bool skipSpace, bool eat)
+weasel::Token weasel::Lexer::getNextToken(bool skipSpace)
 {
     do
     {

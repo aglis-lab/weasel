@@ -4,7 +4,7 @@ namespace weasel
     struct SourceLocation
     {
         unsigned line = 1;
-        unsigned column = 1;
+        unsigned column = 0;
         unsigned inlineAt = 0;
 
         void toNextLine(char val)

@@ -1,6 +1,16 @@
 #include <weasel/AST/AST.h>
 #include <weasel/IR/Codegen.h>
 
+llvm::Value *weasel::GlobalVariable::codegen(WeaselCodegen *c)
+{
+    return c->codegen(this);
+}
+
+llvm::Value *weasel::MethodCallExpression::codegen(WeaselCodegen *c)
+{
+    return c->codegen(this);
+}
+
 // Literal
 llvm::Value *weasel::NumberLiteralExpression::codegen(WeaselCodegen *c)
 {

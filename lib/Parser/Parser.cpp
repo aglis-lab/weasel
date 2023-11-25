@@ -35,17 +35,20 @@ void weasel::Parser::parse()
         case TokenKind::TokenKeyFun:
             addFunction(parseFunction());
             break;
-            // case TokenKind::TokenKeyImpl:
-
+        case TokenKind::TokenKeyExtern:
+            addFunction(parseExternFunction());
+            break;
+        case TokenKind::TokenKeyImpl:
+            parseImplFunctions();
+            break;
+        case TokenKind::TokenKeyLet:
+        case TokenKind::TokenKeyConst:
+            addGlobalVariable(parseGlobalVariable());
+            break;
         default:
             std::cerr << "Unexpected token : " << getCurrentToken().getTokenKindToInt() << " - " << getCurrentToken().getValue() << std::endl;
             break;
         }
-
-        // if (getCurrentToken().isKeyImpl())
-        // {
-        //     parseImpl();
-        // }
     }
 }
 
@@ -93,11 +96,14 @@ weasel::StructType *weasel::Parser::findUserType(const std::string &typeName)
     return nullptr;
 }
 
-weasel::Function *weasel::Parser::findFunction(const std::string &identifier)
+weasel::Function *weasel::Parser::findFunction(const std::string &identifier, StructType *structType, bool isStatic)
 {
     for (auto item : getFunctions())
     {
-        if (item->getIdentifier() == identifier)
+        auto checkStatic = item->getIsStatic() == isStatic;
+        auto checkStruct = item->getImplStruct() == structType;
+        auto checkIdent = item->getIdentifier() == identifier;
+        if (checkIdent && checkStruct && checkStatic)
         {
             return item;
         }

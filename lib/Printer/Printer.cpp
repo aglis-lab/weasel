@@ -1,6 +1,18 @@
 #include "weasel/Printer/Printer.h"
 #include "weasel/Util/Util.h"
 
+void weasel::Printer::print(weasel::GlobalVariable *expr)
+{
+    this->printAsOperand(expr);
+    fmt::println("");
+}
+
+void weasel::Printer::printAsOperand(weasel::GlobalVariable *expr)
+{
+    fmt::print(_out, "@define {} {} = ", expr->getToken().getValue(), expr->getIdentifier());
+    expr->getValue()->printAsOperand(this);
+}
+
 void weasel::Printer::print(weasel::Module *module)
 {
     // // Print user types or struct
@@ -20,6 +32,17 @@ void weasel::Printer::print(weasel::Module *module)
         // Newline after function declaration or definition
         fmt::println(_out, "");
     }
+}
+
+void weasel::Printer::print(weasel::MethodCallExpression *expr)
+{
+    this->printAsOperand(expr);
+    fmt::println("");
+}
+
+void weasel::Printer::printAsOperand(weasel::MethodCallExpression *expr)
+{
+    fmt::print("no implemented yet");
 }
 
 void weasel::Printer::print(weasel::Function *expr)

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <list>
+
 #include <weasel/Lexer/Token.h>
 #include <weasel/Basic/FileManager.h>
 
@@ -10,19 +12,23 @@ namespace weasel
     public:
         Lexer(FileManager *fileManager);
 
-        Token getNextToken(bool skipSpace = false, bool eat = false);
+        Token getNextToken(bool skipSpace = false);
         Token getCurrentToken() const { return _currentToken; }
         bool expect(TokenKind kind);
 
-    private:
+    private: // Private variable for creating currrent token and buffer
         char *_startBuffer;
         char *_endBuffer;
         char *_currentBuffer;
 
         Token _currentToken = Token::create();
+        // check last token
+        // if last token is newline and current token is newline
+        // we just ignore the current token and continue into next token
+        Token _lastToken = Token::create();
         SourceLocation _location;
 
-    private:
+    private: // Private Function
         // Get and Next Buffer
         char *getNextBuffer(size_t slide = 1);
         inline char checkNextBuffer() const { return *(_currentBuffer + 1); }
@@ -43,5 +49,4 @@ namespace weasel
 
         Token createToken(TokenKind kind, char *startBuffer, char *endBuffer);
     };
-
 } // namespace weasel

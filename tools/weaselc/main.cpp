@@ -83,6 +83,16 @@ int main(int argc, char *argv[])
         {
             std::cerr << "Driver Compile : " << driver.getError() << "\n";
         }
+        return 1;
+    }
+
+    LOG(INFO) << "Check for Error...\n";
+    if (!weasel::ErrorTable::getErrors().empty())
+    {
+        std::cerr << "\n=> Error Information\n";
+        weasel::ErrorTable::showErrors();
+
+        return 1;
     }
 
     // LOG(INFO) << "Semantic Analysis...\n";
@@ -91,19 +101,14 @@ int main(int argc, char *argv[])
 
     LOG(INFO) << "Create LLVM IR...\n";
     driver.createIR(outputExecutable);
-    if (!weasel::ErrorTable::getErrors().empty())
-    {
-        std::cerr << "\n=> Error Information\n";
-        weasel::ErrorTable::showErrors();
-
-        return 0;
-    }
 
     LOG(INFO) << "Create Output Objects...\n";
-    if (isCompileSuccess)
+    if (!isCompileSuccess)
     {
-        driver.createObject(outputPath);
+        return 1;
     }
+
+    driver.createObject(outputPath);
 
     LOG(INFO) << "Create Executable File...\n";
     weasel::BuildSystem buildSystem({outputPath});

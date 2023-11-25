@@ -2,7 +2,7 @@
 
 #include <vector>
 
-#include <weasel/AST/AST.h>
+#include "weasel/AST/AST.h"
 
 namespace weasel
 {
@@ -17,6 +17,19 @@ namespace weasel
 
         std::vector<Function *> getFunctions() const { return _functions; }
         void addFunction(Function *fun) { _functions.push_back(fun); }
+
+        StructType *findStructType(std::string structName)
+        {
+            for (auto item : _userTypes)
+            {
+                if (item->getIdentifier() == structName)
+                {
+                    return item;
+                }
+            }
+
+            return nullptr;
+        }
 
     private:
         std::vector<GlobalVariable *> _globalVariables;

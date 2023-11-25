@@ -5,20 +5,99 @@
 #include "weasel/IR/Codegen.h"
 #include "weasel/Type/Type.h"
 
+std::string weasel::Type::getManglingName()
+{
+    switch (getTypeID())
+    {
+    case TypeID::ArrayType:
+        return "A" + getContainedType()->getManglingName();
+    case TypeID::FloatType:
+        return "f";
+    case TypeID::DoubleType:
+        return "d";
+    case TypeID::VoidType:
+        return "v";
+    case TypeID::PointerType:
+        return "T" + getContainedType()->getManglingName();
+    case TypeID::ReferenceType:
+        return "C" + getContainedType()->getManglingName();
+    case TypeID::StructType:
+        return dynamic_cast<StructType *>(this)->getIdentifier();
+    case TypeID::IntegerType:
+    {
+        if (_width == 1)
+        {
+            return "b";
+        }
+        else if (_width == 8)
+        {
+            if (_isSigned)
+            {
+                return "sb";
+            }
+            else
+            {
+                return "ub";
+            }
+        }
+        else if (_width == 16)
+        {
+            if (_isSigned)
+            {
+                return "s";
+            }
+            else
+            {
+                return "us";
+            }
+        }
+        else if (_width == 32)
+        {
+            if (_isSigned)
+            {
+                return "i";
+            }
+            else
+            {
+                return "ui";
+            }
+        }
+        else if (_width == 64)
+        {
+            if (_isSigned)
+            {
+                return "l";
+            }
+            else
+            {
+                return "ul";
+            }
+        }
+        return "uncover integer mangling type";
+    }
+    default:
+        return "uncover mangling type";
+    }
+}
+
 bool weasel::Type::isPossibleStructType() const
 {
-    auto temp = this;
-    if (temp->isStructType())
+    if (this->isStructType())
     {
         return true;
     }
 
-    while (temp->isPointerType())
+    if (this->isPointerType())
     {
-        temp = temp->getContainedType();
+        return this->getContainedType()->isStructType();
     }
 
-    return temp->isStructType();
+    if (this->isReferenceType())
+    {
+        return this->getContainedType()->isStructType();
+    }
+
+    return false;
 }
 
 int weasel::StructType::findTypeName(const std::string &typeName)
@@ -240,6 +319,10 @@ std::string weasel::Type::getTypeName()
     case TypeID::PointerType:
     {
         return fmt::format("{}{}", '*', this->getContainedType()->getTypeName());
+    }
+    case TypeID::ReferenceType:
+    {
+        return fmt::format("{}{}", '&', this->getContainedType()->getTypeName());
     }
     case TypeID::ArrayType:
     {

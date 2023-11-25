@@ -132,7 +132,7 @@
 
 ### Name Mangling
 
-- [ ] By default use mangling name
+- [x] By default use mangling name
 
 ### Self executable
 

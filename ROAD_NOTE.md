@@ -1,7 +1,13 @@
 ## Current Task
 
-- [ ] Return struct from function
-- [ ] Change struct field
+- [x] Return struct from function
+- [x] Change struct field
+- [x] Use Mangling name
+- [x] Add Parameter Reference Type
+- [ ] Create better error and analysis system
+- [ ] Variable Reference
+- [ ] Global Variable or Value
+- [ ] Add Variable Reference Type (Less Used, ignore it for a moment)
 
 ## Flow for struct inside function
 

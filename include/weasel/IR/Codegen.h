@@ -55,6 +55,7 @@ namespace weasel
         llvm::Value *codegen(DoubleLiteralExpression *expr) const;
         llvm::Value *codegen(StringLiteralExpression *expr) const;
         llvm::Value *codegen(ArrayLiteralExpression *expr);
+        llvm::Value *codegen(GlobalVariable *expr);
 
         // Expression
         llvm::Value *codegen(StructExpression *expr);
@@ -65,6 +66,7 @@ namespace weasel
         llvm::Value *codegen(NilLiteralExpression *expr);
         llvm::Value *codegen(ArrayExpression *expr);
         llvm::Value *codegen(FieldExpression *expr);
+        llvm::Value *codegen(MethodCallExpression *expr);
 
         // Condition Statement
         llvm::Value *codegen(ConditionStatement *expr);

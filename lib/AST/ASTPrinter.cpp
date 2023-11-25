@@ -4,6 +4,28 @@
 #include <weasel/AST/AST.h>
 #include <weasel/IR/Codegen.h>
 
+// GlobalVariable
+void weasel::GlobalVariable::print(Printer *printer)
+{
+    printer->print(this);
+}
+
+void weasel::GlobalVariable::printAsOperand(Printer *printer)
+{
+    printer->printAsOperand(this);
+}
+
+// MethodCallExpression
+void weasel::MethodCallExpression::print(Printer *printer)
+{
+    printer->print(this);
+}
+
+void weasel::MethodCallExpression::printAsOperand(Printer *printer)
+{
+    printer->printAsOperand(this);
+}
+
 // Literal
 void weasel::NumberLiteralExpression::print(Printer *printer)
 {
@@ -234,7 +256,7 @@ void weasel::VariableExpression::printAsOperand(Printer *printer)
 // FieldExpression
 void weasel::FieldExpression::printAsOperand(Printer *printer)
 {
-    printer->print(this);
+    printer->printAsOperand(this);
 }
 
 // ArrayExpression

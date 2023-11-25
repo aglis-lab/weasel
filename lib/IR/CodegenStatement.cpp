@@ -4,6 +4,11 @@
 #include "weasel/IR/Codegen.h"
 #include "weasel/Symbol/Symbol.h"
 
+llvm::Value *weasel::WeaselCodegen::codegen(weasel::GlobalVariable *expr)
+{
+    return nullptr;
+}
+
 llvm::Value *weasel::WeaselCodegen::castInteger(llvm::Value *val, llvm::Type *type, bool isSign)
 {
     if (isSign)
@@ -18,7 +23,7 @@ llvm::Value *weasel::WeaselCodegen::codegen(weasel::Function *funAST)
 {
     LOG(INFO) << "Codegen Function " << funAST->getIdentifier();
 
-    auto funName = funAST->getIdentifier();
+    auto funName = funAST->getManglingName();
     auto funType = funAST->getType();
     auto isVararg = funType->isSpread();
     auto funArgs = funAST->getArguments();
@@ -70,16 +75,16 @@ llvm::Value *weasel::WeaselCodegen::codegen(weasel::Function *funAST)
 
             // Allocate Argument
             llvm::Value *value;
-            if (!item->getType()->isPointerTy())
+            if (argExpr->getType()->isPointerType())
+            {
+                value = item;
+            }
+            else
             {
                 auto alloc = createAlloca(item->getType());
 
                 argAllocs.push_back(AllocateArgument{alloc, item});
                 value = alloc;
-            }
-            else
-            {
-                value = item;
             }
 
             // Add Attribute
@@ -132,16 +137,9 @@ llvm::Value *weasel::WeaselCodegen::codegen(weasel::Function *funAST)
         // Merge entry block into allocablock
         LOG(INFO) << "Merge Block";
         llvm::BranchInst::Create(entryBlock, _allocaBlock);
-        if (llvm::MergeBlockIntoPredecessor(entryBlock))
-        {
-            LOG(INFO) << "Merge Block Success";
-        }
-        else
-        {
-            LOG(INFO) << "Merge Block Failed";
-        }
+        auto mergeEntryBlock = llvm::MergeBlockIntoPredecessor(entryBlock);
+        assert(mergeEntryBlock && "Merge Entry Block into alloca block");
 
-        LOG(INFO) << "Exit Body\n";
         // Release Return Block and Value
         _returnAlloca = nullptr;
         _returnBlock = nullptr;
@@ -153,30 +151,73 @@ llvm::Value *weasel::WeaselCodegen::codegen(weasel::Function *funAST)
     return funLLVM;
 }
 
-llvm::Value *weasel::WeaselCodegen::codegen(CallExpression *expr)
+llvm::Value *weasel::WeaselCodegen::codegen(MethodCallExpression *expr)
 {
-    LOG(INFO) << "Codegen Call Function\n";
+    LOG(INFO) << "Codegen Method Call Function\n";
 
-    auto identifier = expr->getFunction()->getIdentifier();
-    auto args = expr->getArguments();
-    auto fun = getModule()->getFunction(identifier);
+    auto argsFun = expr->getFunction()->getArguments();
+    auto argsCall = expr->getArguments();
+
+    argsCall.insert(argsCall.begin(), expr->getImplExpression());
 
     std::vector<llvm::Value *> argsV;
-    for (size_t i = 0; i < args.size(); i++)
+    for (size_t i = 0; i < argsCall.size(); i++)
     {
-        args[i]->setAccess(AccessID::Load);
-        argsV.push_back(args[i]->codegen(this));
+        auto argCall = argsCall[i];
+        auto argFun = argsFun[i];
+
+        if (argFun->getType()->isReferenceType())
+        {
+            argCall->setAccess(AccessID::Allocation);
+        }
+        else
+        {
+            argCall->setAccess(AccessID::Load);
+        }
+
+        argsV.push_back(argCall->codegen(this));
         if (!argsV.back())
         {
             return ErrorTable::addError(expr->getToken(), "Expected argument list index " + std::to_string(i));
         }
     }
 
-    auto call = getBuilder()->CreateCall(fun, argsV);
+    auto fun = getModule()->getFunction(expr->getFunction()->getManglingName());
+    return getBuilder()->CreateCall(fun, argsV);
+}
 
-    // call->setCallingConv(llvm::CallingConv::C);
+llvm::Value *weasel::WeaselCodegen::codegen(CallExpression *expr)
+{
+    LOG(INFO) << "Codegen Call Function\n";
 
-    return call;
+    auto mangleName = expr->getFunction()->getManglingName();
+    auto args = expr->getArguments();
+    auto fun = getModule()->getFunction(mangleName);
+    auto funArgs = expr->getFunction()->getArguments();
+
+    std::vector<llvm::Value *> argsV;
+    for (size_t i = 0; i < args.size(); i++)
+    {
+        auto arg = args[i];
+        auto funArg = funArgs[i];
+
+        if (funArg->getType()->isReferenceType())
+        {
+            arg->setAccess(AccessID::Allocation);
+        }
+        else
+        {
+            arg->setAccess(AccessID::Load);
+        }
+
+        argsV.push_back(arg->codegen(this));
+        if (!argsV.back())
+        {
+            return ErrorTable::addError(expr->getToken(), "Expected argument list index " + std::to_string(i));
+        }
+    }
+
+    return getBuilder()->CreateCall(fun, argsV);
 }
 
 llvm::Value *weasel::WeaselCodegen::codegen(BreakExpression *expr)
@@ -280,15 +321,15 @@ llvm::Value *weasel::WeaselCodegen::codegen(VariableExpression *expr)
     }
 
     auto alloc = attr.getValue();
+    if (type->isReferenceType())
+    {
+        alloc = getBuilder()->CreateLoad(type->codegen(this), alloc);
+    }
+
     if (llvm::dyn_cast<llvm::Argument>(alloc))
     {
         return alloc;
     }
-
-    // if (type->isStructType())
-    // {
-    //     return getBuilder()->CreateBitCast(alloc, getBuilder()->getInt8PtrTy());
-    // }
 
     if (type->isArrayType())
     {
@@ -297,8 +338,12 @@ llvm::Value *weasel::WeaselCodegen::codegen(VariableExpression *expr)
 
     if (expr->isAccessAllocation())
     {
+        LOG(INFO) << "Access for allocation " << expr->getIdentifier();
+
         return alloc;
     }
+
+    LOG(INFO) << "Access for Load " << expr->getIdentifier();
 
     return getBuilder()->CreateLoad(type->codegen(this), alloc);
 }
@@ -367,12 +412,18 @@ llvm::Value *weasel::WeaselCodegen::codegen(FieldExpression *expr)
 
     auto typeV = type->codegen(this);
     auto attr = findAttribute(parent->getIdentifier());
+    auto alloc = attr.getValue();
+    if (parent->getType()->isReferenceType())
+    {
+        auto pointerType = llvm::PointerType::get(*getContext(), 0);
+        alloc = getBuilder()->CreateLoad(pointerType, alloc);
+    }
+
     auto field = expr->getField();
     auto idx = type->findTypeName(field);
-
     auto range = getBuilder()->getInt32(0);
     auto idxVal = getBuilder()->getInt32(idx);
-    auto inbound = getBuilder()->CreateInBoundsGEP(typeV, attr.getValue(), {range, idxVal});
+    auto inbound = getBuilder()->CreateInBoundsGEP(typeV, alloc, {range, idxVal});
     if (expr->isAccessAllocation())
     {
         return inbound;

@@ -3,6 +3,82 @@
 #include "weasel/Parser/Parser.h"
 #include "weasel/Symbol/Symbol.h"
 
+weasel::GlobalVariable *weasel::Parser::parseGlobalVariable()
+{
+    auto declToken = getCurrentToken();
+    auto idenToken = getNextToken();
+
+    getNextToken(); // eat '=' sign
+
+    auto valueExpr = parseLiteralExpression();
+
+    return new GlobalVariable(declToken, idenToken.getValue(), valueExpr);
+}
+
+weasel::Expression *weasel::Parser::parseMethodCallExpression(Expression *implExpression)
+{
+    auto callToken = getCurrentToken();
+    if (!getNextToken().isOpenParen())
+    {
+        return ErrorTable::addError(getCurrentToken(), "Expected ( for function call");
+    }
+
+    std::vector<Expression *> args;
+    if (!getNextToken().isCloseParen())
+    {
+        while (true)
+        {
+            if (auto arg = parseExpression())
+            {
+                args.push_back(arg);
+            }
+            else
+            {
+                return ErrorTable::addError(getCurrentToken(), "Expected argument expression");
+            }
+
+            if (getCurrentToken().isCloseParen())
+            {
+                break;
+            }
+
+            if (!getCurrentToken().isComma())
+            {
+                return ErrorTable::addError(getCurrentToken(), "Expected ) or , in argument list");
+            }
+
+            getNextToken();
+        }
+    }
+
+    getNextToken(); // eat ')'
+
+    StructType *structType;
+    if (implExpression->getType()->isStructType())
+    {
+        structType = dynamic_cast<StructType *>(implExpression->getType());
+    }
+    else
+    {
+        structType = dynamic_cast<StructType *>(implExpression->getType()->getContainedType());
+    }
+    auto fun = findFunction(callToken.getValue(), structType);
+
+    return new MethodCallExpression(callToken, implExpression, fun, args);
+}
+
+weasel::Expression *weasel::Parser::parseStaticMethodCallExpression(StructType *structType)
+{
+    getNextToken(); // eat last Struct
+
+    // eat '.' and check next token
+    auto callToken = getNextToken();
+
+    // Find Functin Within Struct
+    auto fun = findFunction(callToken.getValue(), structType, true);
+    return parseCallExpression(fun);
+}
+
 weasel::Expression *weasel::Parser::parseLiteralExpression()
 {
     auto token = getCurrentToken();
@@ -145,7 +221,15 @@ weasel::Expression *weasel::Parser::parseIdentifierExpression()
         }
     }
 
-    return new VariableExpression(identToken, identifier, attr.getValue());
+    auto type = attr.getValue();
+    return new VariableExpression(identToken, identifier, type);
+    // auto newVariable = new VariableExpression(identToken, identifier, type);
+    // if (!type->isReferenceType())
+    // {
+    //     return newVariable;
+    // }
+
+    // return new UnaryExpression(identToken, UnaryExpression::Dereference, newVariable);
 }
 
 weasel::Expression *weasel::Parser::parseParenExpression()
@@ -260,12 +344,22 @@ weasel::Expression *weasel::Parser::parsePrimaryExpression()
         // Call or Variable Expression or Struct Expression
         if (getCurrentToken().isIdentifier() || getCurrentToken().isKeyThis())
         {
-            if (findUserType(getCurrentToken().getValue()) != nullptr)
+            auto userType = findUserType(getCurrentToken().getValue());
+            if (userType != nullptr)
             {
-                return parseStructExpression();
+                if (this->expectToken(TokenKind::TokenPuncDot))
+                {
+                    expr = parseStaticMethodCallExpression(userType);
+                }
+                else
+                {
+                    expr = parseStructExpression();
+                }
             }
-
-            expr = parseIdentifierExpression();
+            else
+            {
+                expr = parseIdentifierExpression();
+            }
         }
 
         // Parentise Expression
@@ -410,11 +504,17 @@ weasel::Expression *weasel::Parser::parseFieldExpression(Expression *lhs)
         return ErrorTable::addError(getCurrentToken(), "Expected Identifier for Field Expression");
     }
 
-    getNextToken(); // eat 'identifier'
     if (!type->isPossibleStructType())
     {
         return ErrorTable::addError(lhs->getToken(), "Field " + identToken.getValue() + " isn't a struct");
     }
+
+    if (expectToken(TokenKind::TokenDelimOpenParen))
+    {
+        return parseMethodCallExpression(lhs);
+    }
+
+    getNextToken(); // eat 'identifier'
 
     // TODO: Check on Analysis Semantic
     // Checking type field
@@ -427,7 +527,6 @@ weasel::Expression *weasel::Parser::parseFieldExpression(Expression *lhs)
     {
         structType = dynamic_cast<StructType *>(type->getContainedType());
     }
-
     auto idx = structType->findTypeName(identToken.getValue());
     if (idx == -1)
     {

@@ -26,6 +26,20 @@ weasel::Type *weasel::Parser::parseDataType()
         return Type::getPointerType(containedType);
     }
 
+    // Address of type
+    if (getCurrentToken().isKind(TokenKind::TokenOperatorAnd))
+    {
+        getNextToken(); // eat '&'
+
+        auto containedType = parseDataType();
+        if (containedType == nullptr)
+        {
+            return ErrorTable::addError(getCurrentToken(), "Expected data type after reference type");
+        }
+
+        return Type::getReferenceType(containedType);
+    }
+
     // Array
     if (getCurrentToken().isKind(TokenKind::TokenDelimOpenSquareBracket))
     {

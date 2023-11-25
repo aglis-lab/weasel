@@ -210,12 +210,12 @@ llvm::Value *weasel::WeaselCodegen::codegen(AssignmentExpression *expr)
     auto rhsType = rhs->getType();
 
     // TODO: Migrate to Analysis Check
-    if (!lhsType->isEqual(rhsType))
-    {
-        ErrorTable::addError(expr->getLHS()->getToken(), "Data type look different");
+    // if (!lhsType->isEqual(rhsType))
+    // {
+    //     ErrorTable::addError(expr->getLHS()->getToken(), "Data type look different");
 
-        return lhs->codegen(this);
-    }
+    //     return lhs->codegen(this);
+    // }
 
     // TODO: Migrate to Analysis Check
     if (dynamic_cast<NilLiteralExpression *>(rhs) != nullptr)
@@ -226,24 +226,21 @@ llvm::Value *weasel::WeaselCodegen::codegen(AssignmentExpression *expr)
     // Codegen RHS First
     // Because RHS may depend on LHS because some reason
     rhs->setAccess(AccessID::Load);
-    auto rhsVal = rhs->codegen(this);
-
-    // Set LHS Meta
     lhs->setAccess(AccessID::Allocation);
+
+    auto rhsVal = rhs->codegen(this);
     auto lhsVal = lhs->codegen(this);
 
-    if (rhsType->isIntegerType())
-    {
-        auto lhsTypeV = lhsType->codegen(this);
-
-        rhsVal = castInteger(rhsVal, lhsTypeV, lhsType->isSigned());
-    }
+    // TODO: Casting Integer
+    // if (rhsType->isIntegerType())
+    // {
+    //     auto lhsTypeV = lhsType->codegen(this);
+    //     rhsVal = castInteger(rhsVal, lhsTypeV, lhsType->isSigned());
+    // }
 
     if (rhsType->isStructType())
     {
         auto rhsTypeStruct = dynamic_cast<StructType *>(rhsType);
-        assert(rhsTypeStruct);
-
         getBuilder()->CreateMemCpy(lhsVal, llvm::MaybeAlign(4), rhsVal, llvm::MaybeAlign(4), rhsTypeStruct->getTypeWidthByte());
     }
     else
@@ -257,8 +254,6 @@ llvm::Value *weasel::WeaselCodegen::codegen(AssignmentExpression *expr)
     }
 
     auto lhsTypeV = lhsType->codegen(this);
-    assert(lhsTypeV);
-
     return getBuilder()->CreateLoad(lhsTypeV, lhsVal);
 }
 
@@ -383,16 +378,25 @@ llvm::Value *weasel::WeaselCodegen::codegen(UnaryExpression *expr)
 {
     auto op = expr->getOperator();
     auto rhs = expr->getExpression();
-    auto rhsVal = rhs->codegen(this);
     auto rhsType = rhs->getType();
     auto rhsTypeVal = rhsType->codegen(this);
 
     if (op == UnaryExpression::Borrow)
     {
-        if (auto loadInst = llvm::dyn_cast<llvm::LoadInst>(rhsVal))
+        rhs->setAccess(AccessID::Allocation);
+        return rhs->codegen(this);
+    }
+
+    auto rhsVal = rhs->codegen(this);
+    if (op == UnaryExpression::Dereference)
+    {
+        if (expr->isAccessAllocation())
         {
-            return loadInst->getPointerOperand();
+            return rhsVal;
         }
+
+        auto typeV = rhsType->getContainedType()->codegen(this);
+        return getBuilder()->CreateLoad(typeV, rhsVal);
     }
 
     if (op == UnaryExpression::Negative)
@@ -450,19 +454,6 @@ llvm::Value *weasel::WeaselCodegen::codegen(UnaryExpression *expr)
         }
 
         return getBuilder()->CreateXor(val, 1);
-    }
-
-    if (op == UnaryExpression::Dereference)
-    {
-        if (expr->isAccessAllocation())
-        {
-            return rhsVal;
-        }
-
-        auto typeV = rhsType->getContainedType()->codegen(this);
-        assert(typeV && "Type cannot be null");
-
-        return getBuilder()->CreateLoad(typeV, rhsVal);
     }
 
     if (op == UnaryExpression::Positive)

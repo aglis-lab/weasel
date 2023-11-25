@@ -39,11 +39,69 @@ weasel::ArrayLiteralExpression::ArrayLiteralExpression(std::vector<Expression *>
 }
 
 // Function
+std::string weasel::Function::getManglingName()
+{
+    if (this->isExtern() || this->isMain())
+    {
+        return this->getIdentifier();
+    }
+
+    std::string mangleName;
+
+    // Reserve 50 character
+    mangleName.reserve(50);
+
+    // First prefix
+    mangleName += "_W";
+
+    // Impl Struct
+    if (this->isImplStructExist())
+    {
+        mangleName += "I" + this->getImplStruct()->getManglingName();
+    }
+
+    // Return Type
+    mangleName += "R" + this->getType()->getManglingName();
+
+    // Function Name with prefix
+    mangleName += "7" + this->getIdentifier();
+
+    // Arguments with prefix
+    mangleName += "3";
+    for (auto item : this->getArguments())
+    {
+        mangleName += item->getType()->getManglingName();
+    }
+
+    // End of argument or function
+    mangleName += "_";
+
+    // Return those manglename
+    return mangleName;
+}
+
 weasel::Function::~Function()
 {
-    _arguments.clear();
-
     delete _body;
+
+    for (auto item : _arguments)
+    {
+        delete item;
+    }
+
+    _arguments.clear();
+}
+
+// MethodCall Expression
+weasel::MethodCallExpression::~MethodCallExpression()
+{
+    delete _implExpression;
+    for (auto item : _args)
+    {
+        delete item;
+    }
+
+    _args.clear();
 }
 
 // ArrayLiteralExpression Expression

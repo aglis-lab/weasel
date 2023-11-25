@@ -18,6 +18,7 @@ namespace weasel
         Parser(Lexer *lexer, Module *module) : _lexer(lexer), _module(module) {}
 
         // Gets Parser Value
+        std::vector<GlobalVariable *> getGlobalVariables() const { return _module->getGlobalVariables(); }
         std::vector<StructType *> getUserTypes() const { return _module->getUserTypes(); }
         std::vector<Function *> getFunctions() const { return _module->getFunctions(); }
 
@@ -32,19 +33,25 @@ namespace weasel
         void parse();
 
     private:
+        // Simple Class for accessing token
         Lexer *_lexer;
+
+        // Simple Class for handling and storing global value
         Module *_module;
 
     private:
         void addFunction(Function *fun) { _module->addFunction(fun); }
         unsigned functionCount() const { return getFunctions().size(); }
         Function *lastFunction() const { return getFunctions().back(); }
-        Function *findFunction(const std::string &identifier);
+        Function *findFunction(const std::string &identifier, StructType *structType = nullptr, bool isStatic = false);
 
         void addUserType(StructType *type) { _module->addUserType(type); }
         unsigned userTypeCount() const { return getUserTypes().size(); }
         StructType *getLastUserType() const { return getUserTypes().back(); }
         StructType *findUserType(const std::string &typeName);
+
+        void addGlobalVariable(GlobalVariable *globalVar) { _module->addGlobalVariable(globalVar); }
+        // GlobalVariable *findGlobalVariable(const std::string &globalName);
 
     private:
         bool expectToken(TokenKind kind) { return _lexer->expect(kind); }
@@ -59,11 +66,15 @@ namespace weasel
         Expression *createOperatorExpression(Token op, Expression *lhs, Expression *rhs);
 
         // Impl Functions
-        Function *parseImpl();
+        void parseImplFunctions();
+
+        // Global Variable
+        GlobalVariable *parseGlobalVariable();
 
         // Function
         Function *parseDeclareFunction(StructType *type);
         Function *parseFunction(StructType *type = nullptr);
+        Function *parseExternFunction();
 
         // Parse Global Type
         StructType *parseStruct();
@@ -73,6 +84,8 @@ namespace weasel
         CompoundStatement *parseCompoundStatement();
         Expression *parseConditionStatement();
         Expression *parseLoopingStatement();
+        Expression *parseStaticMethodCallExpression(StructType *structType);
+        Expression *parseMethodCallExpression(Expression *);
 
         // Expression
         Expression *parseExpression();

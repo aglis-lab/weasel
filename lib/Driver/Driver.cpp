@@ -56,6 +56,7 @@ bool weasel::Driver::compile(std::string defTargetTriple)
         if (llvm::verifyFunction(*fun, &llvm::errs()))
         {
             _err = "Error when verifying function " + identifier + "\n";
+            llvm::errs() << *getModule();
             return false;
         }
 

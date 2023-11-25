@@ -27,6 +27,7 @@ namespace weasel
         // Derived Types
         PointerType,
         ArrayType,
+        ReferenceType,
 
         // User Type
         FunctionType,
@@ -62,6 +63,7 @@ namespace weasel
                    isIntegerType();
         }
 
+        bool isReferenceType() const { return _typeId == TypeID::ReferenceType; }
         bool isPointerType() const { return _typeId == TypeID::PointerType; }
         bool isArrayType() const { return _typeId == TypeID::ArrayType; }
         bool isVoidType() const { return _typeId == TypeID::VoidType; }
@@ -89,8 +91,9 @@ namespace weasel
         static Type *getIntegerType(unsigned width = 32, bool isSign = true) { return new Type(TypeID::IntegerType, width, isSign); }
         static Type *getFloatType() { return new Type(TypeID::FloatType, 32); }
         static Type *getDoubleType() { return new Type(TypeID::DoubleType, 64); }
-        static Type *getPointerType(Type *containedType) { return new Type(TypeID::PointerType, containedType); }
         static Type *getArrayType(Type *containedType, unsigned width) { return new Type(TypeID::ArrayType, containedType, width); }
+        static Type *getPointerType(Type *containedType) { return new Type(TypeID::PointerType, containedType); }
+        static Type *getReferenceType(Type *containedType) { return new Type(TypeID::ReferenceType, containedType); }
 
         // Check Type
         bool isEqual(Type *type);
@@ -98,9 +101,9 @@ namespace weasel
     public:
         virtual ~Type();
         virtual llvm::Type *codegen(WeaselCodegen *codegen);
-        // virtual void print(Printer *printer) = 0;
 
         std::string getTypeName();
+        std::string getManglingName();
 
     protected:
         bool _isSpread = false;
@@ -141,7 +144,6 @@ namespace weasel
 
     public:
         llvm::Type *codegen(WeaselCodegen *codegen) override;
-        // void print(Printer *printer) override;
     };
 
     class ArgumentType

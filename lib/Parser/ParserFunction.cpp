@@ -1,9 +1,13 @@
 #include "weasel/Parser/Parser.h"
 #include "weasel/Symbol/Symbol.h"
 
-weasel::Function *weasel::Parser::parseImpl()
+weasel::Function *weasel::Parser::parseExternFunction()
 {
-    return nullptr;
+    getNextToken(true); // eat 'extern'
+    auto fun = parseFunction();
+    fun->setIsExtern(true);
+
+    return fun;
 }
 
 weasel::Function *weasel::Parser::parseFunction(StructType *type)
@@ -13,6 +17,9 @@ weasel::Function *weasel::Parser::parseFunction(StructType *type)
     {
         return nullptr;
     }
+
+    // Set Impl Struct Type
+    fun->setImplStruct(type);
 
     // Ignore new line
     if (getCurrentToken().isNewline())
@@ -59,7 +66,7 @@ weasel::Function *weasel::Parser::parseDeclareFunction(StructType *implType)
     // get next and eat 'fun'
     if (!getNextToken().isIdentifier())
     {
-        return ErrorTable::addError(getCurrentToken(), "Expected an identifier");
+        return ErrorTable::addError(getCurrentToken(), "Expected an identifier when parse function");
     }
 
     // Check Symbol Table
@@ -77,6 +84,7 @@ weasel::Function *weasel::Parser::parseDeclareFunction(StructType *implType)
     getNextToken(); // eat '('
     std::vector<ArgumentType *> types;
     auto isVararg = false;
+    auto isStatic = implType != nullptr;
     while (!getCurrentToken().isCloseParen())
     {
         if (isVararg)
@@ -87,11 +95,16 @@ weasel::Function *weasel::Parser::parseDeclareFunction(StructType *implType)
         auto lastToken = getCurrentToken();
         if (lastToken.isKeyThis())
         {
-            auto argumentType = ArgumentType::create(lastToken.getValue(), implType);
+            // Check if using reference type
+            Type *type = implType;
+            if (getNextToken().isOperatorAnd())
+            {
+                type = Type::getReferenceType(implType);
+                getNextToken(); // eat '&'
+            }
 
-            types.push_back(argumentType);
-
-            getNextToken(); // eat 'this'
+            types.push_back(ArgumentType::create(lastToken.getValue(), type));
+            isStatic = false;
         }
         else
         {
@@ -141,5 +154,26 @@ weasel::Function *weasel::Parser::parseDeclareFunction(StructType *implType)
 
     returnType->setSpread(isVararg);
 
-    return new Function(identifier, returnType, types);
+    auto newFunction = new Function(identifier, returnType, types);
+    newFunction->setIsStatic(isStatic);
+    return newFunction;
+}
+
+void weasel::Parser::parseImplFunctions()
+{
+    auto structName = getNextToken().getValue();
+    auto structType = _module->findStructType(structName);
+
+    getNextToken();     // eat StructName
+    getNextToken(true); // eat '{'
+
+    while (!getCurrentToken().isCloseCurly())
+    {
+        addFunction(parseFunction(structType));
+
+        if (getCurrentToken().isNewline())
+        {
+            getNextToken(true);
+        }
+    }
 }

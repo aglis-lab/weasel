@@ -80,7 +80,7 @@ llvm::Type *weasel::WeaselCodegen::codegen(weasel::Type *type)
         return llvm::ArrayType::get(containedTypeV, type->getTypeWidth());
     }
 
-    if (type->isPointerType())
+    if (type->isPointerType() || type->isReferenceType())
     {
         auto containedType = type->getContainedType();
         auto containedTypeV = containedType->codegen(this);

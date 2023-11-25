@@ -39,6 +39,8 @@ namespace weasel
         void print(weasel::ArithmeticExpression *expr);
         void print(weasel::ArrayLiteralExpression *expr);
         void print(weasel::StructExpression *expr);
+        void print(weasel::MethodCallExpression *expr);
+        void print(weasel::GlobalVariable *expr);
 
         // Without Newline Operand
         void printAsOperand(weasel::NumberLiteralExpression *expr);
@@ -58,6 +60,8 @@ namespace weasel
         void printAsOperand(weasel::CharLiteralExpression *expr);
         void printAsOperand(weasel::ArrayLiteralExpression *expr);
         void printAsOperand(weasel::StructExpression *expr);
+        void printAsOperand(weasel::MethodCallExpression *expr);
+        void printAsOperand(weasel::GlobalVariable *expr);
 
     private:
         std::FILE *_out;

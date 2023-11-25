@@ -9,21 +9,39 @@
 // The Answer is, that we want to assign nil into struct
 
 // Is that mean the value of those optional value is a pointer?
+// No, it is possible with optional struct or even with primitive types
 
-// Unsafe Pointer
-// let a *Car
+// Reference Pointer
+/////
+// let &refCar = car
+
+// Parameter Reference
+/////
+// fun testCar(car &Car)
+
+// Unsafe Pointer and Strong point
+// How if strong pointer inside optional?
+// Strong pointer doesn't need optional, because it is never nil
+/////
+// let strongCar *Car
 
 // Shared Pointer
-// let a Car
+// How if ref inside optional?
+// Shared pointer doesn't need optional, because it is an optional wrap
+/////
+// let sharedCar ?*Car
 
 // Weak Pointer
-// let a weak Car
+// Weak Pointer doesn't need optional
+// How if there are inside generic type
+/////
+// let weak weakRef *Car
 
-// Strong Pointer
-// let a own Car
-
-// Optional (Fixed)
-// let op ?Car
+// Optional
+// Optional is the best way to say if the value is invalid for stack memory
+// For heap memory we already have smart pointer to do that for you
+/////
+// let an ?Car
 
 struct Car {
     name string

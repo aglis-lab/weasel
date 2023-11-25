@@ -3,12 +3,12 @@
 #include <string>
 #include <vector>
 
+#include <glog/logging.h>
+
 #include "weasel/Lexer/Token.h"
 #include "weasel/Type/Type.h"
 #include "weasel/Basic/Cast.h"
 #include "weasel/Basic/Error.h"
-
-#include <glog/logging.h>
 
 namespace llvm
 {
@@ -91,6 +91,18 @@ namespace weasel
     // Global Variable
     class GlobalVariable : public GlobalObject
     {
+    public:
+        GlobalVariable(Token token, const std::string &identifier, Expression *value) : GlobalObject(token, identifier, value->getType()), _value(value) {}
+
+        Expression *getValue() const { return _value; }
+
+    public:
+        llvm::Value *codegen(WeaselCodegen *c) override;
+        void print(Printer *printer) override;
+        void printAsOperand(Printer *printer) override{};
+
+    private:
+        Expression *_value;
     };
 
     // Function
@@ -98,6 +110,8 @@ namespace weasel
     {
     public:
         Function(std::string identifier, Type *type, std::vector<ArgumentType *> arguments) : GlobalObject(Token::create(), identifier, type), _arguments(arguments) {}
+
+        ~Function();
 
         CompoundStatement *getBody() const { return _body; }
         void setBody(CompoundStatement *body) { _body = body; }
@@ -108,40 +122,41 @@ namespace weasel
         void setIsInline(bool val) { _isInline = val; }
         bool isInline() const { return _isInline; }
 
-        void setParallel(bool val) { _isParallel = val; }
-        bool getParallel() const { return _isParallel; }
+        void setIsExtern(bool val) { _isExtern = val; }
+        bool isExtern() const { return _isExtern; }
+
+        bool isMain() const { return this->_identifier == "main"; }
+
+        // void setParallel(bool val) { _isParallel = val; }
+        // bool getParallel() const { return _isParallel; }
 
         void setArguments(std::vector<ArgumentType *> arguments) { _arguments = arguments; }
         std::vector<ArgumentType *> getArguments() const { return _arguments; }
+
+        std::string getManglingName();
+
+        void setImplStruct(StructType *structType) { _implStruct = structType; }
+        bool isImplStructExist() const { return _implStruct != nullptr; }
+        StructType *getImplStruct() const { return _implStruct; }
+
+        void setIsStatic(bool val) { _isStatic = val; }
+        bool getIsStatic() const { return _isStatic; }
 
     public:
         llvm::Value *codegen(WeaselCodegen *c) override;
         void print(Printer *printer) override;
         void printAsOperand(Printer *printer) override{};
 
-    public:
-        ~Function();
-
     private:
         CompoundStatement *_body;
         std::vector<ArgumentType *> _arguments;
+        StructType *_implStruct;
 
         bool _isDefine = false;
         bool _isInline = false;
-        bool _isParallel = false;
-    };
-
-    class ImplFunctions
-    {
-    public:
-        ImplFunctions(StructType *structType) : _structType(structType){};
-        ~ImplFunctions(){};
-
-        void addFunction(Function *fun);
-
-    private:
-        std::vector<Function *> _functions;
-        StructType *_structType;
+        bool _isExtern = false;
+        bool _isStatic = false;
+        // bool _isParallel = false;
     };
 
     // Literal Expression
@@ -328,6 +343,28 @@ namespace weasel
     private:
         std::string _identifier;
         Expression *_parentField;
+    };
+
+    // Method Call
+    // a.b()
+    class MethodCallExpression : public Expression
+    {
+    public:
+        MethodCallExpression(Token token, Expression *implExpression, Function *fun, std::vector<Expression *> args) : Expression(token, fun->getType()), _fun(fun), _args(args), _implExpression(implExpression) {}
+        ~MethodCallExpression();
+
+        std::vector<Expression *> getArguments() const { return _args; }
+        Expression *getImplExpression() const { return _implExpression; }
+        Function *getFunction() const { return _fun; }
+
+        llvm::Value *codegen(WeaselCodegen *codegen) override;
+        void print(Printer *printer) override;
+        void printAsOperand(Printer *printer) override;
+
+    private:
+        Function *_fun;
+        Expression *_implExpression;
+        std::vector<Expression *> _args;
     };
 
     // Number Literal Expression
