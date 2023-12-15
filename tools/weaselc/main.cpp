@@ -73,7 +73,6 @@ int main(int argc, char *argv[])
     auto llvmContext = new llvm::LLVMContext();
     auto codegen = weasel::WeaselCodegen(llvmContext, "CoreModule");
     auto driver = weasel::Driver(&codegen, &parser);
-    // auto analysis = weasel::AnalysisSemantic(&parser);
 
     LOG(INFO) << "Compiling...\n";
     auto isCompileSuccess = driver.compile();
@@ -86,6 +85,11 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    LOG(INFO) << "Semantic Analysis...\n";
+    auto analysis = weasel::AnalysisSemantic(&weaselModule);
+    // analysis.semanticCheck();
+    // analysis.typeChecking();
+
     LOG(INFO) << "Check for Error...\n";
     if (!weasel::ErrorTable::getErrors().empty())
     {
@@ -94,10 +98,6 @@ int main(int argc, char *argv[])
 
         return 1;
     }
-
-    // LOG(INFO) << "Semantic Analysis...\n";
-    // analysis.semanticCheck();
-    // analysis.typeChecking();
 
     LOG(INFO) << "Create LLVM IR...\n";
     driver.createIR(outputExecutable);

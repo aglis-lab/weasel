@@ -4,10 +4,16 @@
 - [x] Change struct field
 - [x] Use Mangling name
 - [x] Add Parameter Reference Type
-- [ ] Create better error and analysis system
+- [ ] Remove Error message from Expression
+- [ ] Add Error to Token
+- [ ] Integrate Error into the Parser
+- [ ] Create LSP Example
+- [ ] Create standalone Analysis System
+- [ ] Create better error
 - [ ] Variable Reference
 - [ ] Global Variable or Value
 - [ ] Add Variable Reference Type (Less Used, ignore it for a moment)
+- [ ] Create LSP for Weasel
 
 ## Flow for struct inside function
 

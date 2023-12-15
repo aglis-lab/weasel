@@ -16,14 +16,20 @@ namespace weasel
     class Error
     {
     private:
-        Token _token;
-        std::string _msg;
+        uint _errorCode;
+        std::string _message;
+        RangeLocation _rangeLocation;
+        Expression *_expression;
+        std::string _additionalInfo;
 
     public:
-        Error(Token token, std::string &msg) : _token(token), _msg(msg) {}
-        Error(Token token, const char *msg) : _token(token), _msg(std::string(msg)) {}
+        Error(uint errorCode, std::string &message) : _errorCode(errorCode), _message(message) {}
 
-        Token getToken() const { return _token; }
-        std::string getMessage() const { return _msg; }
+        void setExpression(Expression *expression)
+        {
+            _expression = expression;
+        }
+
+        std::string getMessage() const { return _message; }
     };
 } // namespace weasel

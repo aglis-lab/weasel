@@ -36,9 +36,17 @@ bool weasel::Lexer::isIdentifier(char c, bool num)
 
 char *weasel::Lexer::getNextBuffer(size_t slide)
 {
-    _currentBuffer += slide; // get next buffer
+    if (this->isNewline())
+    {
+        _location.newLine();
+        _location.incrementColumn(slide - 1);
+    }
+    else
+    {
+        _location.incrementColumn(slide);
+    }
 
-    _location.toNextLine(*_currentBuffer);
+    _currentBuffer += slide; // get next buffer
 
     return _currentBuffer;
 }

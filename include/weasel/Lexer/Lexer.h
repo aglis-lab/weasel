@@ -38,6 +38,8 @@ namespace weasel
         bool isIdentifier(char c, bool num = false);
         inline bool isValidBuffer() const { return _endBuffer - _currentBuffer > 0; }
 
+        inline bool isNewline() const { return *_currentBuffer == '\n'; }
+
         // TODO: Handle special character for parseCharacter or string
         // Token section
         Token getToken();

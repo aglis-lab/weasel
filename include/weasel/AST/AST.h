@@ -37,7 +37,11 @@ namespace weasel
     public:
         Expression() : _token(Token::create()) {}
         Expression(Token token) : _token(token) {}
-        Expression(Token token, Error *error) : _token(token), _error(error) {}
+        Expression(Token token, Error error) : _token(token)
+        {
+            error.setExpression(this);
+            _error = error;
+        }
         Expression(Token token, Type *type, bool isConstant = false) : _token(token), _type(type), _isConstant(isConstant) {}
 
         Token getToken() const;
@@ -63,13 +67,13 @@ namespace weasel
         virtual void printAsOperand(Printer *printer) = 0;
 
     public:
-        void makeError(Error *);
+        void makeError(std::optional<Error> error);
         bool isError() const;
 
     protected:
         Token _token; // Token each expression
         Type *_type;
-        Error *_error;
+        std::optional<Error> _error;
 
         AccessID _accessID;
         bool _isConstant;
@@ -99,7 +103,7 @@ namespace weasel
     public:
         llvm::Value *codegen(WeaselCodegen *c) override;
         void print(Printer *printer) override;
-        void printAsOperand(Printer *printer) override{};
+        void printAsOperand(Printer *printer) override;
 
     private:
         Expression *_value;

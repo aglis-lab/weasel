@@ -2,14 +2,14 @@
 #include <weasel/IR/Codegen.h>
 
 // Expression give error
-void weasel::Expression::makeError(Error *error)
+void weasel::Expression::makeError(std::optional<Error> error)
 {
     _error = error;
 }
 
 bool weasel::Expression::isError() const
 {
-    return _error != nullptr;
+    return _error.has_value();
 }
 
 // Constructor for ArrayLiteral

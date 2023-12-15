@@ -4,10 +4,13 @@ ignore_dirs = [".vscode", ".github", "build", "build-llvm",
                "build-spirv", "llvm-spirv", "llvm-project", ".git"
                ]
 
-
+# Ignore DS Store file
+# Ignore newline character
 def count_line(file):
-    return sum(1 for _ in open(file.absolute()))
+    if file.name == '.DS_Store':
+        return 0
 
+    return sum(1 if len(x) > 1 else 0 for x in open(file.absolute()))
 
 def iter_path(path_name):
 

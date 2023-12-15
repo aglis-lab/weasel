@@ -12,17 +12,16 @@
 
 namespace weasel
 {
-    class ErrorTable
-    {
-    private:
-        ErrorTable() = default;
+    // class ErrorTable
+    // {
+    // private:
+    //     ErrorTable() = default;
 
-        static std::vector<Error> _errors;
+    //     static std::vector<Error> _errors;
 
-    public:
-        static void showErrors();
-        static std::vector<Error> getErrors() { return _errors; }
-        static std::nullptr_t addError(Token token, std::string msg);
-    };
-
+    // public:
+    //     static void showErrors();
+    //     static std::vector<Error> getErrors() { return _errors; }
+    //     static std::nullptr_t addError(Token token, std::string msg);
+    // };
 } // namespace weasel
