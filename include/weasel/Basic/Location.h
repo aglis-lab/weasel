@@ -28,6 +28,7 @@ namespace weasel
         }
     };
 
+    // TODO: Range Location with Source Index
     struct RangeLocation
     {
         SourceLocation startLocation;

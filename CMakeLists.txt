@@ -7,7 +7,7 @@ project(weasel VERSION 0.0.1)
 set(LLVM_VERSION 15)
 
 # CMAKE LINKER
-set(CMAKE_LINKER ld64.lld)
+# set(CMAKE_LINKER ld64.lld)
 
 # LLVM
 set(LLVM_DIR /opt/homebrew/opt/llvm@${LLVM_VERSION}/lib/cmake/llvm/)
@@ -62,13 +62,14 @@ message(STATUS ${LLVM_DEFINITIONS})
 # C++ DEFINITIONS
 add_definitions("-Wno-reorder-ctor")
 add_definitions("-std=c++17")
+add_definitions("-Wno-unused-variable")
 
 if (MSVC)
     # warning level 4
     add_compile_options(/W4)
 else()
     # additional warnings
-    add_compile_options(-Wall -Wextra -Wpedantic)
+    add_compile_options(-Wall -Wextra -Wpedantic -Wno-unused-variable)
 endif()
 
 # Sanitize Address

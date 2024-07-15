@@ -68,6 +68,7 @@ namespace weasel
         bool isArrayType() const { return _typeId == TypeID::ArrayType; }
         bool isVoidType() const { return _typeId == TypeID::VoidType; }
         bool isStructType() const { return _typeId == TypeID::StructType; }
+        bool isValidType() const { return _width != -1; }
         bool isDerivedType() const
         {
             return isPointerType() ||
@@ -94,6 +95,7 @@ namespace weasel
         static Type *getArrayType(Type *containedType, unsigned width) { return new Type(TypeID::ArrayType, containedType, width); }
         static Type *getPointerType(Type *containedType) { return new Type(TypeID::PointerType, containedType); }
         static Type *getReferenceType(Type *containedType) { return new Type(TypeID::ReferenceType, containedType); }
+        static Type *getStructType() { return new Type(TypeID::StructType, -1); }
 
         // Check Type
         bool isEqual(Type *type);

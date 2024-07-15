@@ -1,5 +1,4 @@
 #include "weasel/Parser/Parser.h"
-#include "weasel/Symbol/Symbol.h"
 
 // parse
 void weasel::Parser::parse()
@@ -33,11 +32,29 @@ void weasel::Parser::parse()
             addUserType(parseStruct());
             break;
         case TokenKind::TokenKeyFun:
-            addFunction(parseFunction());
+        {
+            auto fun = parseFunction();
+            addFunction(fun);
+
+            if (fun->isError())
+            {
+                return;
+            }
+
             break;
+        }
         case TokenKind::TokenKeyExtern:
-            addFunction(parseExternFunction());
+        {
+            auto fun = parseExternFunction();
+            addFunction(fun);
+
+            if (fun->isError())
+            {
+                return;
+            }
+
             break;
+        }
         case TokenKind::TokenKeyImpl:
             parseImplFunctions();
             break;
@@ -46,7 +63,7 @@ void weasel::Parser::parse()
             addGlobalVariable(parseGlobalVariable());
             break;
         default:
-            std::cerr << "Unexpected token : " << getCurrentToken().getTokenKindToInt() << " - " << getCurrentToken().getValue() << std::endl;
+            LOG(ERROR) << "Unexpected token : " << getCurrentToken().getTokenKindToInt() << " - " << getCurrentToken().getValue();
             break;
         }
     }
@@ -83,18 +100,19 @@ weasel::Token weasel::Parser::getNextToken(bool skipSpace)
     return _lexer->getNextToken(skipSpace);
 }
 
-weasel::StructType *weasel::Parser::findUserType(const std::string &typeName)
-{
-    for (auto item : getUserTypes())
-    {
-        if (item->getIdentifier() == typeName)
-        {
-            return item;
-        }
-    }
+// TODO: Find User Type
+// weasel::StructType *weasel::Parser::findUserType(const std::string &typeName)
+// {
+//     for (auto item : getUserTypes())
+//     {
+//         if (item->getIdentifier() == typeName)
+//         {
+//             return item;
+//         }
+//     }
 
-    return nullptr;
-}
+//     return nullptr;
+// }
 
 weasel::Function *weasel::Parser::findFunction(const std::string &identifier, StructType *structType, bool isStatic)
 {

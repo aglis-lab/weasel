@@ -1,5 +1,4 @@
 #include "weasel/Parser/Parser.h"
-#include "weasel/Symbol/Symbol.h"
 
 weasel::Expression *weasel::Parser::parseStatement()
 {
@@ -46,12 +45,9 @@ weasel::Expression *weasel::Parser::parseStatement()
     }
 
     auto expr = parseExpression();
-    if (expr == nullptr)
+    if (expr->isError())
     {
-        auto errToken = getCurrentToken();
-
-        getNextTokenUntil(TokenKind::TokenSpaceNewline);
-        return ErrorTable::addError(errToken, "Invalid expression statement");
+        skipUntilNewLine();
     }
 
     return expr;
@@ -59,353 +55,363 @@ weasel::Expression *weasel::Parser::parseStatement()
 
 weasel::StructType *weasel::Parser::parseStruct()
 {
-    if (!getNextToken().isIdentifier() && !getCurrentToken().isKeyParallel())
-    {
-        return ErrorTable::addError(getCurrentToken(), "Invalid Struct expression");
-    }
+    return nullptr;
 
-    auto tokenIndentifier = getCurrentToken();
-    if (!getNextToken(true).isOpenCurly())
-    {
-        return ErrorTable::addError(getCurrentToken(), "Invalid Struct expression");
-    }
+    // if (!getNextToken().isIdentifier() && !getCurrentToken().isKeyParallel())
+    // {
+    //     return ErrorTable::addError(getCurrentToken(), "Invalid Struct expression");
+    // }
 
-    // Parse Struct Properties
-    auto structName = tokenIndentifier.getValue();
-    auto structType = StructType::get(structName);
+    // auto tokenIndentifier = getCurrentToken();
+    // if (!getNextToken(true).isOpenCurly())
+    // {
+    //     return ErrorTable::addError(getCurrentToken(), "Invalid Struct expression");
+    // }
 
-    while (true)
-    {
-        if (getNextToken(true).isCloseCurly())
-        {
-            getNextToken(); // eat '}'
-            break;
-        }
+    // // Parse Struct Properties
+    // auto structName = tokenIndentifier.getValue();
+    // auto structType = StructType::get(structName);
 
-        if (!getCurrentToken().isIdentifier())
-        {
-            return ErrorTable::addError(getCurrentToken(), "Invalid Struct expression");
-        }
+    // while (true)
+    // {
+    //     if (getNextToken(true).isCloseCurly())
+    //     {
+    //         getNextToken(); // eat '}'
+    //         break;
+    //     }
 
-        auto propName = getCurrentToken();
-        getNextToken(); // eat 'identifier'
+    //     if (!getCurrentToken().isIdentifier())
+    //     {
+    //         return ErrorTable::addError(getCurrentToken(), "Invalid Struct expression");
+    //     }
 
-        auto propType = parseDataType();
-        if (propType == nullptr)
-        {
-            return ErrorTable::addError(getCurrentToken(), "Invalid Struct expression");
-        }
+    //     auto propName = getCurrentToken();
+    //     getNextToken(); // eat 'identifier'
 
-        structType->addField(propName.getValue(), propType);
-    }
+    //     auto propType = parseDataType();
+    //     if (propType == nullptr)
+    //     {
+    //         return ErrorTable::addError(getCurrentToken(), "Invalid Struct expression");
+    //     }
 
-    return structType;
+    //     structType->addField(propName.getValue(), propType);
+    // }
+
+    // return structType;
 }
 
 weasel::Expression *weasel::Parser::parseLoopingStatement()
 {
-    auto token = getCurrentToken();
-    auto isInfinity = getNextToken(true).isOpenCurly();
-    auto conditions = std::vector<Expression *>();
+    return nullptr;
 
-    // Check if Infinity Looping
-    if (!isInfinity)
-    {
-        // Initial or Definition
-        if (!getCurrentToken().isSemiColon())
-        {
-            Expression *decl;
-            if (getCurrentToken().isKeyDeclaration())
-            {
-                decl = parseDeclarationExpression();
-            }
-            else
-            {
-                decl = parseExpression();
-            }
+    // auto token = getCurrentToken();
+    // auto isInfinity = getNextToken(true).isOpenCurly();
+    // auto conditions = std::vector<Expression *>();
 
-            conditions.push_back(decl);
-        }
+    // // Check if Infinity Looping
+    // if (!isInfinity)
+    // {
+    //     // Initial or Definition
+    //     if (!getCurrentToken().isSemiColon())
+    //     {
+    //         Expression *decl;
+    //         if (getCurrentToken().isKeyDeclaration())
+    //         {
+    //             decl = parseDeclarationExpression();
+    //         }
+    //         else
+    //         {
+    //             decl = parseExpression();
+    //         }
 
-        // Break if looping is Loop Condition
-        if (!getCurrentToken().isOpenCurly())
-        {
-            // Condition
-            if (!getCurrentToken().isSemiColon())
-            {
-                return ErrorTable::addError(getCurrentToken(), "Invalid Loop condition expression");
-            }
+    //         conditions.push_back(decl);
+    //     }
 
-            if (getNextToken().isSemiColon())
-            {
-                conditions.push_back(nullptr);
-            }
-            else
-            {
-                conditions.push_back(parseExpression());
-            }
+    //     // Break if looping is Loop Condition
+    //     if (!getCurrentToken().isOpenCurly())
+    //     {
+    //         // Condition
+    //         if (!getCurrentToken().isSemiColon())
+    //         {
+    //             return ErrorTable::addError(getCurrentToken(), "Invalid Loop condition expression");
+    //         }
 
-            // Increment
-            if (!getCurrentToken().isSemiColon())
-            {
-                return ErrorTable::addError(getCurrentToken(), "Invalid Loop counting expression");
-            }
-            if (getNextToken().isOpenCurly())
-            {
-                conditions.push_back(nullptr);
-            }
-            else
-            {
-                conditions.push_back(parseExpression());
-            }
-        }
-    }
+    //         if (getNextToken().isSemiColon())
+    //         {
+    //             conditions.push_back(nullptr);
+    //         }
+    //         else
+    //         {
+    //             conditions.push_back(parseExpression());
+    //         }
 
-    if (!getCurrentToken().isOpenCurly())
-    {
-        return ErrorTable::addError(getCurrentToken(), "Invalid Loop body statement");
-    }
+    //         // Increment
+    //         if (!getCurrentToken().isSemiColon())
+    //         {
+    //             return ErrorTable::addError(getCurrentToken(), "Invalid Loop counting expression");
+    //         }
+    //         if (getNextToken().isOpenCurly())
+    //         {
+    //             conditions.push_back(nullptr);
+    //         }
+    //         else
+    //         {
+    //             conditions.push_back(parseExpression());
+    //         }
+    //     }
+    // }
 
-    // Check if All Conditions is empty
-    if (!isInfinity)
-    {
-        isInfinity = true;
+    // if (!getCurrentToken().isOpenCurly())
+    // {
+    //     return ErrorTable::addError(getCurrentToken(), "Invalid Loop body statement");
+    // }
 
-        for (auto &item : conditions)
-        {
-            if (item != nullptr)
-            {
-                isInfinity = false;
-                break;
-            }
-        }
+    // // Check if All Conditions is empty
+    // if (!isInfinity)
+    // {
+    //     isInfinity = true;
 
-        if (isInfinity)
-        {
-            conditions.clear();
-        }
-    }
+    //     for (auto &item : conditions)
+    //     {
+    //         if (item != nullptr)
+    //         {
+    //             isInfinity = false;
+    //             break;
+    //         }
+    //     }
 
-    auto body = parseCompoundStatement();
+    //     if (isInfinity)
+    //     {
+    //         conditions.clear();
+    //     }
+    // }
 
-    return new LoopingStatement(token, conditions, body);
+    // auto body = parseCompoundStatement();
+
+    // return new LoopingStatement(token, conditions, body);
 }
 
 weasel::Expression *weasel::Parser::parseConditionStatement()
 {
-    auto conditions = std::vector<Expression *>();
-    auto stmts = std::vector<CompoundStatement *>();
-    auto token = getCurrentToken();
+    return nullptr;
 
-    while (true)
-    {
-        auto isElseCondition = true;
-        if (getCurrentToken().isKeyIf())
-        {
-            getNextToken(); // eat 'if'
+    // auto conditions = std::vector<Expression *>();
+    // auto stmts = std::vector<CompoundStatement *>();
+    // auto token = getCurrentToken();
 
-            isElseCondition = false;
-        }
+    // while (true)
+    // {
+    //     auto isElseCondition = true;
+    //     if (getCurrentToken().isKeyIf())
+    //     {
+    //         getNextToken(); // eat 'if'
 
-        if (!isElseCondition)
-        {
-            auto expr = parseExpression();
-            if (expr == nullptr)
-            {
-                auto errToken = getCurrentToken();
+    //         isElseCondition = false;
+    //     }
 
-                getNextTokenUntil(TokenKind::TokenSpaceNewline);
-                return ErrorTable::addError(errToken, "Invalid condition expression");
-            }
+    //     if (!isElseCondition)
+    //     {
+    //         auto expr = parseExpression();
+    //         if (expr == nullptr)
+    //         {
+    //             auto errToken = getCurrentToken();
 
-            conditions.push_back(expr);
-        }
+    //             getNextTokenUntil(TokenKind::TokenSpaceNewline);
+    //             return ErrorTable::addError(errToken, "Invalid condition expression");
+    //         }
 
-        auto body = parseCompoundStatement();
-        if (body == nullptr)
-        {
-            auto errToken = getCurrentToken();
+    //         conditions.push_back(expr);
+    //     }
 
-            getNextTokenUntil(TokenKind::TokenSpaceNewline);
-            return ErrorTable::addError(errToken, "Invalid if body statement expression");
-        }
+    //     auto body = parseCompoundStatement();
+    //     if (body == nullptr)
+    //     {
+    //         auto errToken = getCurrentToken();
 
-        stmts.push_back(body);
+    //         getNextTokenUntil(TokenKind::TokenSpaceNewline);
+    //         return ErrorTable::addError(errToken, "Invalid if body statement expression");
+    //     }
 
-        if (isElseCondition)
-        {
-            break;
-        }
+    //     stmts.push_back(body);
 
-        if (getCurrentToken().isKeyElse())
-        {
-            getNextToken(true); // eat 'else'
-            continue;
-        }
+    //     if (isElseCondition)
+    //     {
+    //         break;
+    //     }
 
-        if (isExpectElse())
-        {
-            getNextToken(true); // eat
-            getNextToken(true); // eat 'else'
-            continue;
-        }
+    //     if (getCurrentToken().isKeyElse())
+    //     {
+    //         getNextToken(true); // eat 'else'
+    //         continue;
+    //     }
 
-        break;
-    }
+    //     if (isExpectElse())
+    //     {
+    //         getNextToken(true); // eat
+    //         getNextToken(true); // eat 'else'
+    //         continue;
+    //     }
 
-    return new ConditionStatement(token, conditions, stmts);
+    //     break;
+    // }
+
+    // return new ConditionStatement(token, conditions, stmts);
 }
 
 weasel::CompoundStatement *weasel::Parser::parseCompoundStatement()
 {
-    if (!getCurrentToken().isKind(TokenKind::TokenDelimOpenCurlyBracket))
-    {
-        return nullptr;
-    }
+    return nullptr;
 
-    auto stmt = new CompoundStatement();
-    if (getNextToken(true).isKind(TokenKind::TokenDelimCloseCurlyBracket))
-    {
-        getNextToken();
-        return stmt;
-    }
+    // if (!getCurrentToken().isKind(TokenKind::TokenDelimOpenCurlyBracket))
+    // {
+    //     return nullptr;
+    // }
 
-    // Enter statement scope
-    enterScope();
+    // auto stmt = new CompoundStatement();
+    // if (getNextToken(true).isKind(TokenKind::TokenDelimCloseCurlyBracket))
+    // {
+    //     getNextToken();
+    //     return stmt;
+    // }
 
-    do
-    {
-        auto expr = parseStatement();
-        if (expr != nullptr)
-        {
-            stmt->addBody(expr);
-        }
-        else
-        {
-            ErrorTable::addError(getCurrentToken(), "Expected statement");
-        }
+    // // Enter statement scope
+    // enterScope();
 
-        if (getCurrentToken().isKind(TokenKind::TokenDelimCloseCurlyBracket))
-        {
-            break;
-        }
+    // do
+    // {
+    //     auto expr = parseStatement();
+    //     if (expr != nullptr)
+    //     {
+    //         stmt->addBody(expr);
+    //     }
+    //     else
+    //     {
+    //         ErrorTable::addError(getCurrentToken(), "Expected statement");
+    //     }
 
-        if (expr->isCompoundExpression() && !getCurrentToken().isNewline())
-        {
-            continue;
-        }
+    //     if (getCurrentToken().isKind(TokenKind::TokenDelimCloseCurlyBracket))
+    //     {
+    //         break;
+    //     }
 
-        if (!getCurrentToken().isNewline())
-        {
-            ErrorTable::addError(getCurrentToken(), "Expected New Line");
-        }
+    //     if (expr->isCompoundExpression() && !getCurrentToken().isNewline())
+    //     {
+    //         continue;
+    //     }
 
-        getNextToken(true);
-    } while (!getCurrentToken().isKind(TokenKind::TokenDelimCloseCurlyBracket));
+    //     if (!getCurrentToken().isNewline())
+    //     {
+    //         ErrorTable::addError(getCurrentToken(), "Expected New Line");
+    //     }
 
-    getNextToken(); // eat '}'
+    //     getNextToken(true);
+    // } while (!getCurrentToken().isKind(TokenKind::TokenDelimCloseCurlyBracket));
 
-    // Exit statement scope
-    exitScope();
+    // getNextToken(); // eat '}'
 
-    return stmt;
+    // // Exit statement scope
+    // exitScope();
+
+    // return stmt;
 }
 
 weasel::Expression *weasel::Parser::parseDeclarationExpression()
 {
-    auto qualifier = getQualifier();
-    auto qualToken = getCurrentToken();
+    return nullptr;
 
-    // eat qualifier(let, final, const)
-    if (!getNextToken().isIdentifier())
-    {
-        auto errToken = getCurrentToken();
+    // auto qualifier = getQualifier();
+    // auto qualToken = getCurrentToken();
 
-        getNextTokenUntil(TokenKind::TokenSpaceNewline);
-        return ErrorTable::addError(errToken, "Expected an identifier");
-    }
+    // // eat qualifier(let, final, const)
+    // if (!getNextToken().isIdentifier())
+    // {
+    //     auto errToken = getCurrentToken();
 
-    auto identifier = getCurrentToken().getValue();
+    //     getNextTokenUntil(TokenKind::TokenSpaceNewline);
+    //     return ErrorTable::addError(errToken, "Expected an identifier");
+    // }
 
-    getNextToken(); // eat 'identifier' and get next token
+    // auto identifier = getCurrentToken().getValue();
 
-    auto type = parseDataType();
-    if (getCurrentToken().isNewline())
-    {
-        if (type == nullptr)
-        {
-            return ErrorTable::addError(getCurrentToken(), "Data Type Expected for default value declaration");
-        }
+    // getNextToken(); // eat 'identifier' and get next token
 
-        if (qualifier != Qualifier::QualVolatile)
-        {
-            return ErrorTable::addError(getCurrentToken(), "No Default Value for Non Volatile variable");
-        }
+    // auto type = parseDataType();
+    // if (getCurrentToken().isNewline())
+    // {
+    //     if (type == nullptr)
+    //     {
+    //         return ErrorTable::addError(getCurrentToken(), "Data Type Expected for default value declaration");
+    //     }
 
-        // Insert Symbol Table
-        addAttribute(ParserAttribute::get(identifier, type, AttributeKind::Variable));
+    //     if (qualifier != Qualifier::QualVolatile)
+    //     {
+    //         return ErrorTable::addError(getCurrentToken(), "No Default Value for Non Volatile variable");
+    //     }
 
-        // Create Variable with Default Value
-        return new DeclarationStatement(qualToken, identifier, qualifier, type);
-    }
+    //     // Insert Symbol Table
+    //     addAttribute(ParserAttribute::get(identifier, type, AttributeKind::Variable));
 
-    // Equal
-    if (!getCurrentToken().isOperatorEqual())
-    {
-        auto errToken = getCurrentToken();
+    //     // Create Variable with Default Value
+    //     return new DeclarationStatement(qualToken, identifier, qualifier, type);
+    // }
 
-        getNextTokenUntil(TokenKind::TokenSpaceNewline);
-        return ErrorTable::addError(errToken, "Expected equal sign");
-    }
+    // // Equal
+    // if (!getCurrentToken().isOperatorEqual())
+    // {
+    //     auto errToken = getCurrentToken();
 
-    // Get Next Value
-    if (getNextToken().isNewline())
-    {
-        return ErrorTable::addError(getCurrentToken(), "Expected RHS Value Expression but got 'New line'");
-    }
+    //     getNextTokenUntil(TokenKind::TokenSpaceNewline);
+    //     return ErrorTable::addError(errToken, "Expected equal sign");
+    // }
 
-    auto val = parseExpression();
-    if (!val)
-    {
-        auto errToken = getCurrentToken();
+    // // Get Next Value
+    // if (getNextToken().isNewline())
+    // {
+    //     return ErrorTable::addError(getCurrentToken(), "Expected RHS Value Expression but got 'New line'");
+    // }
 
-        getNextTokenUntil(TokenKind::TokenSpaceNewline);
-        return ErrorTable::addError(errToken, "Expected RHS Value Expression but got not valid expression");
-    }
+    // auto val = parseExpression();
+    // if (!val)
+    // {
+    //     auto errToken = getCurrentToken();
 
-    if (type == nullptr)
-    {
-        if (val->getType() == nullptr)
-        {
-            return ErrorTable::addError(val->getToken(), "Cannot detect declaration and value type");
-        }
+    //     getNextTokenUntil(TokenKind::TokenSpaceNewline);
+    //     return ErrorTable::addError(errToken, "Expected RHS Value Expression but got not valid expression");
+    // }
 
-        type = val->getType();
-    }
+    // if (type == nullptr)
+    // {
+    //     if (val->getType() == nullptr)
+    //     {
+    //         return ErrorTable::addError(val->getToken(), "Cannot detect declaration and value type");
+    //     }
 
-    auto declExpr = new DeclarationStatement(qualToken, identifier, qualifier, type, val);
-    if (getCurrentToken().isOpenCurly())
-    {
-        enterScope();
+    //     type = val->getType();
+    // }
 
-        // Insert Symbol Table
-        addAttribute(ParserAttribute::get(identifier, type, AttributeKind::Variable));
+    // auto declExpr = new DeclarationStatement(qualToken, identifier, qualifier, type, val);
+    // if (getCurrentToken().isOpenCurly())
+    // {
+    //     enterScope();
 
-        // Insert Symbol Table
-        auto compound = parseCompoundStatement();
+    //     // Insert Symbol Table
+    //     addAttribute(ParserAttribute::get(identifier, type, AttributeKind::Variable));
 
-        exitScope();
+    //     // Insert Symbol Table
+    //     auto compound = parseCompoundStatement();
 
-        if (compound != nullptr)
-        {
-            compound->insertBody(0, declExpr);
+    //     exitScope();
 
-            return compound;
-        }
-    }
+    //     if (compound != nullptr)
+    //     {
+    //         compound->insertBody(0, declExpr);
 
-    // Insert Symbol Table
-    addAttribute(ParserAttribute::get(identifier, type, AttributeKind::Variable));
+    //         return compound;
+    //     }
+    // }
 
-    return declExpr;
+    // // Insert Symbol Table
+    // addAttribute(ParserAttribute::get(identifier, type, AttributeKind::Variable));
+
+    // return declExpr;
 }

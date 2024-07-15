@@ -13,7 +13,6 @@
 #include <weasel/Printer/Printer.h>
 #include <weasel/Parser/Parser.h>
 #include <weasel/IR/Codegen.h>
-#include <weasel/Symbol/Symbol.h>
 #include <weasel/Basic/FileManager.h>
 #include <weasel/Driver/Driver.h>
 #include <weasel/Analysis/AnalysisSemantic.h>
@@ -89,15 +88,6 @@ int main(int argc, char *argv[])
     auto analysis = weasel::AnalysisSemantic(&weaselModule);
     // analysis.semanticCheck();
     // analysis.typeChecking();
-
-    LOG(INFO) << "Check for Error...\n";
-    if (!weasel::ErrorTable::getErrors().empty())
-    {
-        std::cerr << "\n=> Error Information\n";
-        weasel::ErrorTable::showErrors();
-
-        return 1;
-    }
 
     LOG(INFO) << "Create LLVM IR...\n";
     driver.createIR(outputExecutable);

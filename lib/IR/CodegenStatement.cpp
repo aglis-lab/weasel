@@ -2,7 +2,6 @@
 #include <llvm/IR/Function.h>
 
 #include "weasel/IR/Codegen.h"
-#include "weasel/Symbol/Symbol.h"
 
 llvm::Value *weasel::WeaselCodegen::codegen(weasel::GlobalVariable *expr)
 {
@@ -164,9 +163,8 @@ llvm::Value *weasel::WeaselCodegen::codegen(MethodCallExpression *expr)
     for (size_t i = 0; i < argsCall.size(); i++)
     {
         auto argCall = argsCall[i];
-        auto argFun = argsFun[i];
 
-        if (argFun->getType()->isReferenceType())
+        if (auto argFun = argsFun[i]; argFun->getType()->isReferenceType())
         {
             argCall->setAccess(AccessID::Allocation);
         }
@@ -175,11 +173,10 @@ llvm::Value *weasel::WeaselCodegen::codegen(MethodCallExpression *expr)
             argCall->setAccess(AccessID::Load);
         }
 
-        argsV.push_back(argCall->codegen(this));
-        if (!argsV.back())
-        {
-            return ErrorTable::addError(expr->getToken(), "Expected argument list index " + std::to_string(i));
-        }
+        auto argVal = argCall->codegen(this);
+        assert(!argVal && "failed codegen argument");
+
+        argsV.push_back(argVal);
     }
 
     auto fun = getModule()->getFunction(expr->getFunction()->getManglingName());
@@ -199,9 +196,8 @@ llvm::Value *weasel::WeaselCodegen::codegen(CallExpression *expr)
     for (size_t i = 0; i < args.size(); i++)
     {
         auto arg = args[i];
-        auto funArg = funArgs[i];
 
-        if (funArg->getType()->isReferenceType())
+        if (auto funArg = funArgs[i]; funArg->getType()->isReferenceType())
         {
             arg->setAccess(AccessID::Allocation);
         }
@@ -210,11 +206,10 @@ llvm::Value *weasel::WeaselCodegen::codegen(CallExpression *expr)
             arg->setAccess(AccessID::Load);
         }
 
-        argsV.push_back(arg->codegen(this));
-        if (!argsV.back())
-        {
-            return ErrorTable::addError(expr->getToken(), "Expected argument list index " + std::to_string(i));
-        }
+        auto argVal = arg->codegen(this);
+        assert(!argVal && "failed codegen argument");
+
+        argsV.push_back(argVal);
     }
 
     return getBuilder()->CreateCall(fun, argsV);
@@ -222,10 +217,7 @@ llvm::Value *weasel::WeaselCodegen::codegen(CallExpression *expr)
 
 llvm::Value *weasel::WeaselCodegen::codegen(BreakExpression *expr)
 {
-    if (!isBreakBlockExist())
-    {
-        return ErrorTable::addError(expr->getToken(), "No looping found");
-    }
+    assert(isBreakBlockExist() && "No looping found");
 
     if (expr->getValue() == nullptr)
     {
@@ -234,10 +226,8 @@ llvm::Value *weasel::WeaselCodegen::codegen(BreakExpression *expr)
 
     auto condExpr = expr->getValue();
     auto condType = condExpr->getType();
-    if (!condType->isBoolType())
-    {
-        return ErrorTable::addError(expr->getToken(), "Break Condition should be boolean");
-    }
+
+    assert(condType->isBoolType() && "Break Condition should be boolean");
 
     auto newBlock = llvm::BasicBlock::Create(*getContext(), "", getBuilder()->GetInsertBlock()->getParent());
     auto breakBlock = getBreakBlock();
@@ -252,10 +242,7 @@ llvm::Value *weasel::WeaselCodegen::codegen(BreakExpression *expr)
 
 llvm::Value *weasel::WeaselCodegen::codegen(ContinueExpression *expr)
 {
-    if (!isContinueBlockExist())
-    {
-        return ErrorTable::addError(expr->getToken(), "No looping found");
-    }
+    assert(isContinueBlockExist() && "No looping found");
 
     if (expr->getValue() == nullptr)
     {
@@ -264,10 +251,8 @@ llvm::Value *weasel::WeaselCodegen::codegen(ContinueExpression *expr)
 
     auto condExpr = expr->getValue();
     auto condType = condExpr->getType();
-    if (!condType->isBoolType())
-    {
-        return ErrorTable::addError(expr->getToken(), "Continue Condition should be boolean");
-    }
+
+    assert(condType->isBoolType() && "Continue Condition should be boolean");
 
     auto newBlock = llvm::BasicBlock::Create(*getContext(), "", getBuilder()->GetInsertBlock()->getParent());
     auto continueBlock = getContinueBlock();
@@ -315,10 +300,8 @@ llvm::Value *weasel::WeaselCodegen::codegen(VariableExpression *expr)
     auto varName = expr->getIdentifier();
     auto type = expr->getType();
     auto attr = findAttribute(varName);
-    if (attr.isEmpty())
-    {
-        return ErrorTable::addError(expr->getToken(), "Variable " + varName + " Not declared");
-    }
+
+    assert(!attr.isEmpty() && "variable isn't declare yet");
 
     auto alloc = attr.getValue();
     if (type->isReferenceType())
@@ -580,37 +563,22 @@ llvm::Value *weasel::WeaselCodegen::codegen(DeclarationStatement *expr)
         return nullptr;
     }
 
-    // TODO: Change this to Analysis type checking
+    // Check if type isn't void
     auto valueType = valueExpr->getType();
-    if (valueType->isVoidType())
-    {
-        return ErrorTable::addError(valueExpr->getToken(), "Cannot assign void to a variable");
-    }
+    assert(!valueType->isVoidType() && "Cannot assign void to a variable");
 
     // Check if type is different
-    // TODO: Change this to Analysis type checking
-    if (!valueType->isEqual(declType))
-    {
-        return ErrorTable::addError(valueExpr->getToken(), "Cannot assign to different type");
-    }
+    assert(!valueType->isEqual(declType) && "Cannot assign to different type");
 
     // Check if StructExpression
-    // TODO: Change this to Analysis type checking
+    if (auto temp = dynamic_cast<StructExpression *>(valueExpr); temp != nullptr)
     {
-        auto temp = dynamic_cast<StructExpression *>(valueExpr);
-        if (temp != nullptr)
-        {
-            temp->setPreferConstant(true);
-        }
+        temp->setPreferConstant(true);
     }
 
     // Codegen Value Expression
-    // TODO: Change this to Analysis type checking
     auto valueV = valueExpr->codegen(this);
-    if (valueV == nullptr)
-    {
-        return ErrorTable::addError(valueExpr->getToken(), "Cannot codegen value expression");
-    }
+    assert(!valueV && "Cannot codegen value expression");
 
     // TODO: LLVM Declare Struct Metadata
     // call void @llvm.dbg.declare(metadata %struct.Person* %3, metadata !20, metadata !DIExpression()), !dbg !28
@@ -695,10 +663,8 @@ llvm::Value *weasel::WeaselCodegen::codegen(ConditionStatement *expr)
         auto condition = conditions[i];
         auto statement = statements[i];
         auto conditionType = condition->getType();
-        if (!conditionType->isBoolType())
-        {
-            return ErrorTable::addError(condition->getToken(), "Expected Boolean Type");
-        }
+
+        assert(conditionType->isBoolType() && "Expected Boolean Type");
 
         auto bodyBlock = llvm::BasicBlock::Create(*getContext(), "", parentFun);
         auto nextBlock = llvm::BasicBlock::Create(*getContext());
@@ -799,10 +765,7 @@ llvm::Value *weasel::WeaselCodegen::codegen(LoopingStatement *expr)
     {
         auto conditionExpr = isSingleCondition ? conditions[0] : conditions[1];
 
-        if (!conditionExpr->getType()->isBoolType())
-        {
-            return ErrorTable::addError(conditionExpr->getToken(), "Expected Boolean Type for Looping Condition");
-        }
+        assert(conditionExpr->getType()->isBoolType() && "Expected Boolean Type for Looping Condition");
 
         this->getBuilder()->CreateCondBr(conditionExpr->codegen(this), bodyBlock, endBlock);
     }

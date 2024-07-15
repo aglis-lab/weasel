@@ -5,7 +5,6 @@
 #include <llvm/IR/Module.h>
 
 #include "weasel/IR/Codegen.h"
-#include "weasel/Symbol/Symbol.h"
 
 // Weasel User Type System to llvm Type System
 llvm::Type *weasel::WeaselCodegen::codegen(weasel::StructType *structExpr)
@@ -13,8 +12,8 @@ llvm::Type *weasel::WeaselCodegen::codegen(weasel::StructType *structExpr)
     auto types = structExpr->getContainedTypes();
     auto typesVal = std::vector<llvm::Type *>();
     auto identifier = structExpr->getIdentifier();
-    auto structExist = findStructType(identifier);
-    if (structExist != nullptr)
+
+    if (auto structExist = findStructType(identifier); structExist != nullptr)
     {
         return structExist;
     }
@@ -24,13 +23,12 @@ llvm::Type *weasel::WeaselCodegen::codegen(weasel::StructType *structExpr)
 
     for (auto item : types)
     {
+        // TODO: Create more proper check for circular type
         if (item->isStructType())
         {
-            auto itemStructType = dynamic_cast<StructType *>(item);
-            if (itemStructType && itemStructType->getIdentifier() == identifier)
+            if (auto itemStructType = dynamic_cast<StructType *>(item); itemStructType)
             {
-                ErrorTable::addError(Token::create(), "Cannot create circular struct");
-                continue;
+                assert(itemStructType->getIdentifier() != identifier && "Cannot create circular struct");
             }
         }
 

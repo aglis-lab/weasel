@@ -1,6 +1,7 @@
 #include "weasel/Basic/Number.h"
 #include "weasel/Parser/Parser.h"
-#include "weasel/Symbol/Symbol.h"
+
+#include <cassert>
 
 void weasel::Parser::ignoreNewline()
 {
@@ -18,10 +19,8 @@ weasel::Type *weasel::Parser::parseDataType()
         getNextToken(); // eat '*'
 
         auto containedType = parseDataType();
-        if (containedType == nullptr)
-        {
-            return ErrorTable::addError(getCurrentToken(), "Expected data type after pointer type");
-        }
+
+        assert(containedType && "Expected data type after pointer type");
 
         return Type::getPointerType(containedType);
     }
@@ -32,10 +31,8 @@ weasel::Type *weasel::Parser::parseDataType()
         getNextToken(); // eat '&'
 
         auto containedType = parseDataType();
-        if (containedType == nullptr)
-        {
-            return ErrorTable::addError(getCurrentToken(), "Expected data type after reference type");
-        }
+
+        assert(containedType && "Expected data type after reference type");
 
         return Type::getReferenceType(containedType);
     }
@@ -47,23 +44,17 @@ weasel::Type *weasel::Parser::parseDataType()
         if (getNextToken().isKind(TokenKind::TokenLitInteger))
         {
             auto numStr = getCurrentToken().getValue();
-            if (!weasel::Number::isInteger(numStr))
-            {
-                return ErrorTable::addError(getCurrentToken(), "Number is not a valid integer");
-            }
 
-            arraySize = Number::toInteger(numStr);
+            assert(weasel::Number::isInteger(numStr) && "Number is not a valid integer");
+
+            arraySize = (int)Number::toInteger(numStr);
 
             getNextToken(); // eat 'integer'
         }
 
-        if (!getCurrentToken().isKind(TokenKind::TokenDelimCloseSquareBracket))
-        {
-            return ErrorTable::addError(getCurrentToken(), "Expected ] for array type");
-        }
+        assert(getCurrentToken().isKind(TokenKind::TokenDelimCloseSquareBracket) && "Expected ] for array type");
 
         getNextToken(); // eat ']'
-
         auto containedType = parseDataType();
         if (containedType == nullptr)
         {
@@ -73,21 +64,11 @@ weasel::Type *weasel::Parser::parseDataType()
         return Type::getArrayType(containedType, arraySize);
     }
 
-    // Check User Type
-    auto userType = findUserType(getCurrentToken().getValue());
-    if (userType != nullptr)
-    {
-        getNextToken(); // remove current User Type
-        return userType;
-    }
-
     // Normal Data Type or no datatype
     auto type = Type::create(getCurrentToken());
-    if (type != nullptr)
-    {
-        // Remove Current Token
-        getNextToken();
-    }
+
+    // Remove Current Token
+    getNextToken();
 
     return type;
 }
@@ -101,9 +82,8 @@ weasel::Expression *weasel::Parser::createOperatorExpression(Token op, Expressio
             auto startBuffer = op.getStartBuffer();
             auto endBuffer = op.getEndBuffer() - 1;
             auto tokenKind = TokenKind::TokenUnknown;
-            auto tokenVal = std::string(startBuffer, endBuffer);
 
-            if (tokenVal == "-")
+            if (auto tokenVal = std::string(startBuffer, endBuffer); tokenVal == "-")
                 tokenKind = TokenKind::TokenOperatorPlus;
             else if (tokenVal == "*")
                 tokenKind = TokenKind::TokenOperatorStar;

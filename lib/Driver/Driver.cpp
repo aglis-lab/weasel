@@ -17,7 +17,6 @@
 #include <llvm/Transforms/Scalar/MemCpyOptimizer.h>
 #include <llvm/IR/PassManager.h>
 
-#include "weasel/Symbol/Symbol.h"
 #include "weasel/Driver/Driver.h"
 #include "weasel/Passes/Passes.h"
 #include "weasel/Metadata/Metadata.h"

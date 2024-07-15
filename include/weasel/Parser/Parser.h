@@ -48,7 +48,9 @@ namespace weasel
         void addUserType(StructType *type) { _module->addUserType(type); }
         unsigned userTypeCount() const { return getUserTypes().size(); }
         StructType *getLastUserType() const { return getUserTypes().back(); }
-        StructType *findUserType(const std::string &typeName);
+
+        // TODO: Find User Type
+        // StructType *findUserType(const std::string &typeName);
 
         void addGlobalVariable(GlobalVariable *globalVar) { _module->addGlobalVariable(globalVar); }
         // GlobalVariable *findGlobalVariable(const std::string &globalName);
@@ -62,6 +64,7 @@ namespace weasel
         Token getCurrentToken() const { return _lexer->getCurrentToken(); }
         Token getNextToken(bool skipSpace = false);
         Token getNextTokenUntil(TokenKind kind);
+        Token skipUntilNewLine() { return getNextTokenUntil(TokenKind::TokenSpaceNewline); }
 
         Expression *createOperatorExpression(Token op, Expression *lhs, Expression *rhs);
 
@@ -84,14 +87,14 @@ namespace weasel
         CompoundStatement *parseCompoundStatement();
         Expression *parseConditionStatement();
         Expression *parseLoopingStatement();
-        Expression *parseStaticMethodCallExpression(StructType *structType);
+        Expression *parseStaticMethodCallExpression();
         Expression *parseMethodCallExpression(Expression *);
 
         // Expression
         Expression *parseExpression();
         Expression *parsePrimaryExpression();
         Expression *parseDeclarationExpression();
-        Expression *parseCallExpression(Function *fun);
+        Expression *parseCallExpression();
         Expression *parseParenExpression();
         Expression *parseReturnExpression();
         Expression *parseBreakExpression();

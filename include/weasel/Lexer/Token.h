@@ -165,8 +165,6 @@ namespace weasel
 // Token Class
 namespace weasel
 {
-    class Context;
-
     class Token
     {
     public:

@@ -254,7 +254,7 @@ weasel::Type *weasel::Type::create(Token token)
         return Type::getVoidType();
 
     default:
-        return nullptr;
+        return Type::getStructType();
     }
 }
 

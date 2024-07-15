@@ -10,6 +10,8 @@
 #include "weasel/Basic/Cast.h"
 #include "weasel/Basic/Error.h"
 
+using namespace std;
+
 namespace llvm
 {
     class Value;
@@ -36,13 +38,9 @@ namespace weasel
     {
     public:
         Expression() : _token(Token::create()) {}
-        Expression(Token token) : _token(token) {}
-        Expression(Token token, Error error) : _token(token)
-        {
-            error.setExpression(this);
-            _error = error;
-        }
-        Expression(Token token, Type *type, bool isConstant = false) : _token(token), _type(type), _isConstant(isConstant) {}
+        explicit Expression(const Token &token) : _token(token) {}
+        Expression(const Token &token, Error &error) : _token(token), _error(error) {}
+        Expression(const Token &token, Type *type, bool isConstant = false) : _token(token), _type(type), _isConstant(isConstant) {}
 
         Token getToken() const;
         Type *getType() const;
@@ -51,7 +49,6 @@ namespace weasel
         bool isNoType() const;
         bool isCompoundExpression();
 
-    public:
         bool isConstant() const { return _isConstant; }
 
         void setAccess(AccessID accessID) { _accessID = accessID; }
@@ -61,29 +58,39 @@ namespace weasel
 
         virtual ~Expression();
 
-    public:
         virtual llvm::Value *codegen(WeaselCodegen *codegen) = 0;
         virtual void print(Printer *printer) = 0;
         virtual void printAsOperand(Printer *printer) = 0;
 
-    public:
-        void makeError(std::optional<Error> error);
+        void setError(Error error);
         bool isError() const;
 
     protected:
         Token _token; // Token each expression
         Type *_type;
-        std::optional<Error> _error;
+        optional<Error> _error;
 
         AccessID _accessID;
         bool _isConstant;
+    };
+
+    // Error Expression
+    class ErrorExpression : public Expression
+    {
+    public:
+        ErrorExpression(const Token token, Error error) : Expression(token, error) {}
+        ~ErrorExpression() {}
+
+        llvm::Value *codegen(WeaselCodegen *c) override {}
+        void print(Printer *printer) override {}
+        void printAsOperand(Printer *printer) override {}
     };
 
     // Global Value
     class GlobalObject : public Expression
     {
     public:
-        GlobalObject(Token token, const std::string &identifier, Type *type) : Expression(token, type), _identifier(identifier) {}
+        GlobalObject(const Token &token, const std::string &identifier, Type *type) : Expression(token, type), _identifier(identifier) {}
 
         std::string getIdentifier() const { return _identifier; }
 
@@ -96,11 +103,10 @@ namespace weasel
     class GlobalVariable : public GlobalObject
     {
     public:
-        GlobalVariable(Token token, const std::string &identifier, Expression *value) : GlobalObject(token, identifier, value->getType()), _value(value) {}
+        GlobalVariable(const Token &token, const std::string &identifier, Expression *value) : GlobalObject(token, identifier, value->getType()), _value(value) {}
 
         Expression *getValue() const { return _value; }
 
-    public:
         llvm::Value *codegen(WeaselCodegen *c) override;
         void print(Printer *printer) override;
         void printAsOperand(Printer *printer) override;
@@ -131,9 +137,6 @@ namespace weasel
 
         bool isMain() const { return this->_identifier == "main"; }
 
-        // void setParallel(bool val) { _isParallel = val; }
-        // bool getParallel() const { return _isParallel; }
-
         void setArguments(std::vector<ArgumentType *> arguments) { _arguments = arguments; }
         std::vector<ArgumentType *> getArguments() const { return _arguments; }
 
@@ -149,7 +152,7 @@ namespace weasel
     public:
         llvm::Value *codegen(WeaselCodegen *c) override;
         void print(Printer *printer) override;
-        void printAsOperand(Printer *printer) override{};
+        void printAsOperand(Printer *printer) override {};
 
     private:
         CompoundStatement *_body;
@@ -233,6 +236,7 @@ namespace weasel
     {
     public:
         CallExpression(Token token, Function *fun, std::vector<Expression *> args) : Expression(token, fun->getType()), _fun(fun), _args(args) {}
+        CallExpression(Token token) : Expression(token) {}
 
         std::vector<Expression *> getArguments() const { return _args; }
         Function *getFunction() const { return _fun; }
@@ -254,6 +258,7 @@ namespace weasel
     {
     public:
         VariableExpression(Token token, std::string identifier, Type *type) : Expression(token, type), _identifier(identifier) {}
+        VariableExpression(Token token, std::string identifier) : Expression(token), _identifier(identifier) {}
 
         std::string getIdentifier() const { return _identifier; }
 
@@ -272,6 +277,7 @@ namespace weasel
     {
     public:
         ArrayExpression(Token token, std::string identifier, Expression *indexExpr, Type *type) : VariableExpression(token, identifier, type), _indexExpr(indexExpr) {}
+        ArrayExpression(Token token, std::string identifier, Expression *indexExpr) : VariableExpression(token, identifier), _indexExpr(indexExpr) {}
 
         Expression *getIndex() const { return _indexExpr; }
 
@@ -308,6 +314,7 @@ namespace weasel
 
     public:
         StructExpression(Token token, StructType *type, const std::vector<StructField *> &fields) : Expression(token, type), _fields(fields) {}
+        StructExpression(Token token) : Expression(token) {}
 
         std::vector<StructField *> getFields() const { return _fields; }
 
@@ -332,9 +339,13 @@ namespace weasel
     class FieldExpression : public Expression
     {
     public:
-        FieldExpression(Token token, std::string identifier, Expression *parent, Type *type) : Expression(token, type), _identifier(identifier), _parentField(parent) {}
+        FieldExpression(Token token, string identifier, Expression *parent, Type *type) : Expression(token, type), _identifier(identifier), _parentField(parent) {}
+        FieldExpression(Token token) : Expression(token) {}
 
-        std::string getField() const { return _identifier; }
+        void setField(string field) { _identifier = field; }
+        void setParentField(Expression *expr) { _parentField = expr; }
+
+        string getField() const { return _identifier; }
         Expression *getParentField() const { return _parentField; }
 
     public:
@@ -345,7 +356,7 @@ namespace weasel
         ~FieldExpression();
 
     private:
-        std::string _identifier;
+        string _identifier;
         Expression *_parentField;
     };
 
@@ -354,10 +365,15 @@ namespace weasel
     class MethodCallExpression : public Expression
     {
     public:
+        MethodCallExpression(Token token) : Expression(token) {}
         MethodCallExpression(Token token, Expression *implExpression, Function *fun, std::vector<Expression *> args) : Expression(token, fun->getType()), _fun(fun), _args(args), _implExpression(implExpression) {}
         ~MethodCallExpression();
 
-        std::vector<Expression *> getArguments() const { return _args; }
+        void setArguments(vector<Expression *> args) { _args = args; }
+        void setImplExpression(Expression *implExpression) { _implExpression = implExpression; }
+        void setFunction(Function *fun) { _fun = fun; }
+
+        vector<Expression *> getArguments() const { return _args; }
         Expression *getImplExpression() const { return _implExpression; }
         Function *getFunction() const { return _fun; }
 
@@ -368,7 +384,7 @@ namespace weasel
     private:
         Function *_fun;
         Expression *_implExpression;
-        std::vector<Expression *> _args;
+        vector<Expression *> _args;
     };
 
     // Number Literal Expression

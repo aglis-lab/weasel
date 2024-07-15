@@ -2,7 +2,7 @@
 #include <weasel/IR/Codegen.h>
 
 // Expression give error
-void weasel::Expression::makeError(std::optional<Error> error)
+void weasel::Expression::setError(Error error)
 {
     _error = error;
 }
