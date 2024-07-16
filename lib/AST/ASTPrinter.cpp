@@ -4,6 +4,8 @@
 #include <weasel/AST/AST.h>
 #include <weasel/IR/Codegen.h>
 
+using namespace weasel;
+
 // GlobalVariable
 void weasel::GlobalVariable::print(Printer *printer)
 {

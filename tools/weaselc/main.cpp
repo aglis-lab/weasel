@@ -25,6 +25,7 @@
 #include <filesystem>
 
 namespace fs = std::__fs::filesystem;
+using namespace std;
 
 int main(int argc, char *argv[])
 {
@@ -50,66 +51,82 @@ int main(int argc, char *argv[])
 
     // Prepare Lexer and Parser
     LOG(INFO) << "Initializing Parser...\n";
-    auto weaselModule = weasel::Module();
-    auto lexer = weasel::Lexer(&fileManager);
-    auto parser = weasel::Parser(&lexer, &weaselModule);
+    auto weaselModule = make_unique<weasel::Module>();
+    auto lexer = weasel::Lexer(fileManager);
+    auto parser = weasel::Parser(lexer, weaselModule.get());
 
     // Parse into AST
     LOG(INFO) << "Parsing...\n";
     parser.parse();
 
-    // Debugging AST
-    LOG(INFO) << "Write Weasel AST " << filename << "...\n";
-    weasel::Printer(filePath + ".ir").print(&weaselModule);
-
-    // Initialize LLVM
-    // llvm::InitializeAllTargetInfos();
-    llvm::InitializeNativeTarget();
-    llvm::InitializeNativeTargetAsmParser();
-    llvm::InitializeNativeTargetAsmPrinter();
-
-    // Prepare for codegen
-    auto llvmContext = new llvm::LLVMContext();
-    auto codegen = weasel::WeaselCodegen(llvmContext, "CoreModule");
-    auto driver = weasel::Driver(&codegen, &parser);
-
-    LOG(INFO) << "Compiling...\n";
-    auto isCompileSuccess = driver.compile();
-    if (!isCompileSuccess)
-    {
-        if (!driver.getError().empty())
-        {
-            std::cerr << "Driver Compile : " << driver.getError() << "\n";
-        }
-        return 1;
-    }
-
+    // Analysis Semantic
     LOG(INFO) << "Semantic Analysis...\n";
-    auto analysis = weasel::AnalysisSemantic(&weaselModule);
-    // analysis.semanticCheck();
+    auto analysis = weasel::AnalysisSemantic(weaselModule.get());
+    analysis.semanticCheck();
     // analysis.typeChecking();
 
-    LOG(INFO) << "Create LLVM IR...\n";
-    driver.createIR(outputExecutable);
-
-    LOG(INFO) << "Create Output Objects...\n";
-    if (!isCompileSuccess)
+    if (!analysis.getErrors().empty())
     {
-        return 1;
+        for (auto item : analysis.getErrors())
+        {
+            LOG(ERROR)
+                << item->getError()->getMessage()
+                << " bug got '" << item->getError()->getToken().getEscapeValue() << "'"
+                << " type of " << item->getError()->getToken().getTokenKindToInt()
+                << " " << item->getError()->getToken().getLocation().toString();
+        }
+
+        return 0;
     }
 
-    driver.createObject(outputPath);
+    // Debugging AST
+    LOG(INFO) << "Write Weasel AST " << filename << "...\n";
+    weasel::Printer(filePath + ".ir").print(weaselModule.get());
 
-    LOG(INFO) << "Create Executable File...\n";
-    weasel::BuildSystem buildSystem({outputPath});
-    buildSystem.addBuildArgument({"o", outputExecutable});
-    auto result = buildSystem.exec();
-    if (!result.empty())
-    {
-        std::cerr << result << std::endl;
-    }
-    else
-    {
-        buildSystem.runExecutable();
-    }
+    return 0;
+    // // Initialize LLVM
+    // // llvm::InitializeAllTargetInfos();
+    // llvm::InitializeNativeTarget();
+    // llvm::InitializeNativeTargetAsmParser();
+    // llvm::InitializeNativeTargetAsmPrinter();
+
+    // // Prepare for codegen
+    // auto llvmContext = make_unique<llvm::LLVMContext>();
+    // auto codegen = weasel::WeaselCodegen(llvmContext.get(), "CoreModule");
+    // auto driver = weasel::Driver(&codegen, weaselModule.get());
+
+    // LOG(INFO) << "Compiling...\n";
+    // auto isCompileSuccess = driver.compile();
+    // if (!isCompileSuccess)
+    // {
+    //     if (!driver.getError().empty())
+    //     {
+    //         std::cerr << "Driver Compile : " << driver.getError() << "\n";
+    //     }
+    //     return 1;
+    // }
+
+    // LOG(INFO) << "Create LLVM IR...\n";
+    // driver.createIR(outputExecutable);
+
+    // LOG(INFO) << "Create Output Objects...\n";
+    // if (!isCompileSuccess)
+    // {
+    //     return 1;
+    // }
+
+    // driver.createObject(outputPath);
+
+    // LOG(INFO) << "Create Executable File...\n";
+    // weasel::BuildSystem buildSystem({outputPath});
+    // buildSystem.addBuildArgument({"o", outputExecutable});
+    // auto result = buildSystem.exec();
+    // if (!result.empty())
+    // {
+    //     std::cerr << result << std::endl;
+    // }
+    // else
+    // {
+    //     buildSystem.runExecutable();
+    // }
 }

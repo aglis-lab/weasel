@@ -11,7 +11,7 @@ void weasel::Parser::ignoreNewline()
     }
 }
 
-weasel::Type *weasel::Parser::parseDataType()
+TypeHandle Parser::parseDataType()
 {
     // Pointer
     if (getCurrentToken().isKind(TokenKind::TokenOperatorStar))
@@ -20,9 +20,7 @@ weasel::Type *weasel::Parser::parseDataType()
 
         auto containedType = parseDataType();
 
-        assert(containedType && "Expected data type after pointer type");
-
-        return Type::getPointerType(containedType);
+        return Type::getPointerType(move(containedType));
     }
 
     // Address of type
@@ -32,9 +30,7 @@ weasel::Type *weasel::Parser::parseDataType()
 
         auto containedType = parseDataType();
 
-        assert(containedType && "Expected data type after reference type");
-
-        return Type::getReferenceType(containedType);
+        return Type::getReferenceType(move(containedType));
     }
 
     // Array
@@ -56,12 +52,8 @@ weasel::Type *weasel::Parser::parseDataType()
 
         getNextToken(); // eat ']'
         auto containedType = parseDataType();
-        if (containedType == nullptr)
-        {
-            return nullptr;
-        }
 
-        return Type::getArrayType(containedType, arraySize);
+        return Type::getArrayType(move(containedType), arraySize);
     }
 
     // Normal Data Type or no datatype
@@ -75,52 +67,55 @@ weasel::Type *weasel::Parser::parseDataType()
 
 weasel::Expression *weasel::Parser::createOperatorExpression(Token op, Expression *lhs, Expression *rhs)
 {
-    if (op.isOperatorAssignment())
-    {
-        if (!op.isOperatorEqual())
-        {
-            auto startBuffer = op.getStartBuffer();
-            auto endBuffer = op.getEndBuffer() - 1;
-            auto tokenKind = TokenKind::TokenUnknown;
+    LOG(INFO) << "Parse Create Operator Expression...";
 
-            if (auto tokenVal = std::string(startBuffer, endBuffer); tokenVal == "-")
-                tokenKind = TokenKind::TokenOperatorPlus;
-            else if (tokenVal == "*")
-                tokenKind = TokenKind::TokenOperatorStar;
-            else if (tokenVal == "/")
-                tokenKind = TokenKind::TokenOperatorSlash;
-            else if (tokenVal == "%")
-                tokenKind = TokenKind::TokenOperatorPercent;
-            else if (tokenVal == "^")
-                tokenKind = TokenKind::TokenOperatorCaret;
-            else if (tokenVal == "|")
-                tokenKind = TokenKind::TokenOperatorOr;
-            else if (tokenVal == "&")
-                tokenKind = TokenKind::TokenOperatorAnd;
-            else if (tokenVal == ">>")
-                tokenKind = TokenKind::TokenOperatorShiftRight;
-            else if (tokenVal == "<<")
-                tokenKind = TokenKind::TokenOperatorShiftLeft;
+    return nullptr;
+    // if (op.isOperatorAssignment())
+    // {
+    //     if (!op.isOperatorEqual())
+    //     {
+    //         auto startBuffer = op.getStartBuffer();
+    //         auto endBuffer = op.getEndBuffer() - 1;
+    //         auto tokenKind = TokenKind::TokenUnknown;
 
-            assert(tokenKind != TokenKind::TokenUnknown);
+    //         if (auto tokenVal = std::string(startBuffer, endBuffer); tokenVal == "-")
+    //             tokenKind = TokenKind::TokenOperatorPlus;
+    //         else if (tokenVal == "*")
+    //             tokenKind = TokenKind::TokenOperatorStar;
+    //         else if (tokenVal == "/")
+    //             tokenKind = TokenKind::TokenOperatorSlash;
+    //         else if (tokenVal == "%")
+    //             tokenKind = TokenKind::TokenOperatorPercent;
+    //         else if (tokenVal == "^")
+    //             tokenKind = TokenKind::TokenOperatorCaret;
+    //         else if (tokenVal == "|")
+    //             tokenKind = TokenKind::TokenOperatorOr;
+    //         else if (tokenVal == "&")
+    //             tokenKind = TokenKind::TokenOperatorAnd;
+    //         else if (tokenVal == ">>")
+    //             tokenKind = TokenKind::TokenOperatorShiftRight;
+    //         else if (tokenVal == "<<")
+    //             tokenKind = TokenKind::TokenOperatorShiftLeft;
 
-            auto token = Token::create(tokenKind, op.getLocation(), startBuffer, endBuffer);
+    //         assert(tokenKind != TokenKind::TokenUnknown);
 
-            rhs = new ArithmeticExpression(token, lhs, rhs);
-        }
+    //         auto token = Token::create(tokenKind, op.getLocation(), startBuffer, endBuffer);
 
-        return new AssignmentExpression(op, lhs, rhs);
-    }
+    //         rhs = new ArithmeticExpression(token, lhs, rhs);
+    //     }
 
-    if (op.isComparison())
-    {
-        return new ComparisonExpression(op, lhs, rhs);
-    }
+    //     return new AssignmentExpression(op, lhs, rhs);
+    // }
 
-    if (op.isOperatorLogical())
-    {
-        return new LogicalExpression(op, lhs, rhs);
-    }
+    // if (op.isComparison())
+    // {
+    //     return new ComparisonExpression(op, lhs, rhs);
+    // }
 
-    return new ArithmeticExpression(op, lhs, rhs);
+    // if (op.isOperatorLogical())
+    // {
+    //     return new LogicalExpression(op, lhs, rhs);
+    // }
+
+    // return new ArithmeticExpression(op, lhs, rhs);
 }

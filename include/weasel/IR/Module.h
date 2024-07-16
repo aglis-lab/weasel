@@ -9,16 +9,30 @@ namespace weasel
     class Module
     {
     public:
-        std::vector<GlobalVariable *> getGlobalVariables() const { return _globalVariables; }
-        void addGlobalVariable(GlobalVariable *val) { _globalVariables.push_back(val); }
+        explicit Module() = default;
 
-        std::vector<StructType *> getUserTypes() const { return _userTypes; }
-        void addUserType(StructType *type) { _userTypes.push_back(type); }
+        std::vector<GlobalVariableHandle> &getGlobalVariables() { return _globalVariables; }
+        void addGlobalVariable(GlobalVariableHandle val) { _globalVariables.push_back(val); }
 
-        std::vector<Function *> getFunctions() const { return _functions; }
-        void addFunction(Function *fun) { _functions.push_back(fun); }
+        std::vector<StructTypeHandle> &getUserTypes() { return _userTypes; }
+        void addUserType(StructTypeHandle type) { _userTypes.push_back(type); }
 
-        StructType *findStructType(std::string structName)
+        void addFunction(FunctionHandle fun) { _functions.push_back(fun); }
+        std::vector<FunctionHandle> &getFunctions() { return _functions; }
+        FunctionHandle findFunction(string_view funName)
+        {
+            for (auto item : getFunctions())
+            {
+                if (item->getIdentifier() == funName)
+                {
+                    return item;
+                }
+            }
+
+            return nullptr;
+        }
+
+        StructTypeHandle findStructType(string_view structName) const
         {
             for (auto item : _userTypes)
             {
@@ -32,8 +46,8 @@ namespace weasel
         }
 
     private:
-        std::vector<GlobalVariable *> _globalVariables;
-        std::vector<StructType *> _userTypes;
-        std::vector<Function *> _functions;
+        std::vector<GlobalVariableHandle> _globalVariables;
+        std::vector<StructTypeHandle> _userTypes;
+        std::vector<FunctionHandle> _functions;
     };
 } // namespace weasel

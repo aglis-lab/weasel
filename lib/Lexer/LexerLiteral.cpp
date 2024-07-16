@@ -3,13 +3,17 @@
 weasel::Token weasel::Lexer::getStringLiteral()
 {
     auto start = getNextBuffer(); // eat double quote (")
-    while (*getNextBuffer() != '"')
+    while (getCurrentBuffer() != getEndBuffer() && *getNextBuffer() != '"')
         ;
 
     auto endString = _currentBuffer;
+    if (*getCurrentBuffer() != '"')
+    {
+        return createToken(TokenKind::TokenUnknown, start, endString);
+    }
 
     getNextBuffer(); // eat double quote (")
-    return this->createToken(TokenKind::TokenLitString, start, endString);
+    return createToken(TokenKind::TokenLitString, start, endString);
 }
 
 weasel::Token weasel::Lexer::getCharacterLiteral()

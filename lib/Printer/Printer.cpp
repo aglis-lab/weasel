@@ -1,19 +1,21 @@
 #include "weasel/Printer/Printer.h"
 #include "weasel/Util/Util.h"
 
-void weasel::Printer::print(weasel::GlobalVariable *expr)
+using namespace weasel;
+
+void Printer::print(GlobalVariable *expr)
 {
-    this->printAsOperand(expr);
+    printAsOperand(expr);
     fmt::println("");
 }
 
-void weasel::Printer::printAsOperand(weasel::GlobalVariable *expr)
+void Printer::printAsOperand(GlobalVariable *expr)
 {
     fmt::print(_out, "@define {} {} = ", expr->getToken().getValue(), expr->getIdentifier());
     expr->getValue()->printAsOperand(this);
 }
 
-void weasel::Printer::print(weasel::Module *module)
+void Printer::print(Module *module)
 {
     // // Print user types or struct
     // for (auto item : module->getUserTypes())
@@ -34,18 +36,18 @@ void weasel::Printer::print(weasel::Module *module)
     }
 }
 
-void weasel::Printer::print(weasel::MethodCallExpression *expr)
+void Printer::print(MethodCallExpression *expr)
 {
-    this->printAsOperand(expr);
+    printAsOperand(expr);
     fmt::println("");
 }
 
-void weasel::Printer::printAsOperand(weasel::MethodCallExpression *expr)
+void Printer::printAsOperand(MethodCallExpression *expr)
 {
     fmt::print("no implemented yet");
 }
 
-void weasel::Printer::print(weasel::Function *expr)
+void Printer::print(Function *expr)
 {
     std::string prefix = "@declare";
     auto newlineOp = "";
@@ -72,42 +74,42 @@ void weasel::Printer::print(weasel::Function *expr)
     auto retStr = expr->getType()->getTypeName();
     auto identifier = expr->getIdentifier();
 
-    fmt::println(_out, "{: >{}}{} {}({}) {}{}", "", this->getCurrentShift(), prefix, identifier, argStr, retStr, newlineOp);
+    fmt::println(_out, "{: >{}}{} {}({}) {}{}", "", getCurrentShift(), prefix, identifier, argStr, retStr, newlineOp);
 
-    auto lastShift = this->getCurrentShift();
-    this->setCurrentShift(lastShift + DEFAULT_SHIFT);
+    auto lastShift = getCurrentShift();
+    setCurrentShift(lastShift + DEFAULT_SHIFT);
 
     expr->getBody()->print(this);
 
-    this->setCurrentShift(lastShift);
+    setCurrentShift(lastShift);
 }
 
-void weasel::Printer::print(weasel::ArrayLiteralExpression *expr)
+void Printer::print(ArrayLiteralExpression *expr)
 {
-    fmt::print(_out, "{: >{}}", "", this->getCurrentShift());
-    this->printAsOperand(expr);
+    fmt::print(_out, "{: >{}}", "", getCurrentShift());
+    printAsOperand(expr);
     fmt::println(_out, "");
 }
 
-void weasel::Printer::print(weasel::ArithmeticExpression *expr)
+void Printer::print(ArithmeticExpression *expr)
 {
-    fmt::print(_out, "{: >{}}", "", this->getCurrentShift());
-    this->printAsOperand(expr);
+    fmt::print(_out, "{: >{}}", "", getCurrentShift());
+    printAsOperand(expr);
     fmt::println(_out, "");
 }
 
-void weasel::Printer::print(weasel::DeclarationStatement *expr)
+void Printer::print(DeclarationStatement *expr)
 {
-    fmt::print(_out, "{: >{}}", "", this->getCurrentShift());
-    this->printAsOperand(expr);
+    fmt::print(_out, "{: >{}}", "", getCurrentShift());
+    printAsOperand(expr);
     fmt::println(_out, "");
 }
 
-void weasel::Printer::print(weasel::LoopingStatement *expr)
+void Printer::print(LoopingStatement *expr)
 {
     auto conditions = expr->getConditions();
 
-    fmt::print(_out, "{: >{}}for ", "", this->getCurrentShift());
+    fmt::print(_out, "{: >{}}for ", "", getCurrentShift());
     for (int i = 0; i < (int)conditions.size(); i++)
     {
         auto isLastElement = i == (int)conditions.size() - 1;
@@ -131,13 +133,13 @@ void weasel::Printer::print(weasel::LoopingStatement *expr)
 
     fmt::println(_out, ":");
 
-    auto lastShift = this->getCurrentShift();
-    this->setCurrentShift(lastShift + DEFAULT_SHIFT);
+    auto lastShift = getCurrentShift();
+    setCurrentShift(lastShift + DEFAULT_SHIFT);
     expr->getBody()->print(this);
-    this->setCurrentShift(lastShift);
+    setCurrentShift(lastShift);
 }
 
-void weasel::Printer::print(weasel::CompoundStatement *expr)
+void Printer::print(CompoundStatement *expr)
 {
     for (auto item : expr->getBody())
     {
@@ -145,7 +147,7 @@ void weasel::Printer::print(weasel::CompoundStatement *expr)
     }
 }
 
-void weasel::Printer::print(weasel::ConditionStatement *expr)
+void Printer::print(ConditionStatement *expr)
 {
     int length = expr->getStatements().size();
     for (int i = 0; i < length; i++)
@@ -154,7 +156,7 @@ void weasel::Printer::print(weasel::ConditionStatement *expr)
 
         if (i == length - 1 && expr->isElseExist())
         {
-            fmt::println(_out, "{: >{}}else:", "", this->getCurrentShift());
+            fmt::println(_out, "{: >{}}else:", "", getCurrentShift());
         }
         else
         {
@@ -166,90 +168,90 @@ void weasel::Printer::print(weasel::ConditionStatement *expr)
                 condStatement = "else if";
             }
 
-            fmt::print(_out, "{: >{}}{} ", "", this->getCurrentShift(), condStatement);
+            fmt::print(_out, "{: >{}}{} ", "", getCurrentShift(), condStatement);
             cond->printAsOperand(this);
             fmt::println(_out, ":");
         }
 
-        auto lastShift = this->getCurrentShift();
-        this->setCurrentShift(lastShift + DEFAULT_SHIFT);
+        auto lastShift = getCurrentShift();
+        setCurrentShift(lastShift + DEFAULT_SHIFT);
         body->print(this);
-        this->setCurrentShift(lastShift);
+        setCurrentShift(lastShift);
     }
 }
 
-void weasel::Printer::print(weasel::FieldExpression *expr)
+void Printer::print(FieldExpression *expr)
 {
-    this->printAsOperand(expr);
+    printAsOperand(expr);
     fmt::println(_out, "");
 }
 
-void weasel::Printer::print(weasel::ArrayExpression *expr)
+void Printer::print(ArrayExpression *expr)
 {
-    this->printAsOperand(expr);
+    printAsOperand(expr);
     fmt::println(_out, "");
 }
 
-void weasel::Printer::print(weasel::AssignmentExpression *expr)
+void Printer::print(AssignmentExpression *expr)
 {
-    fmt::print(_out, "{: >{}}", "", this->getCurrentShift());
+    fmt::print(_out, "{: >{}}", "", getCurrentShift());
     expr->getLHS()->printAsOperand(this);
     fmt::print(_out, " = ");
     expr->getRHS()->printAsOperand(this);
     fmt::println(_out, "");
 }
 
-void weasel::Printer::print(weasel::CallExpression *expr)
+void Printer::print(CallExpression *expr)
 {
-    fmt::print(_out, "{: >{}}", "", this->getCurrentShift());
-    this->printAsOperand(expr);
+    fmt::print(_out, "{: >{}}", "", getCurrentShift());
+    printAsOperand(expr);
     fmt::println(_out, "");
 }
 
-void weasel::Printer::print(weasel::ReturnExpression *expr)
+void Printer::print(ReturnExpression *expr)
 {
-    fmt::print(_out, "{: >{}}", "", this->getCurrentShift());
-    this->printAsOperand(expr);
+    fmt::print(_out, "{: >{}}", "", getCurrentShift());
+    printAsOperand(expr);
     fmt::println(_out, "");
 }
 
-void weasel::Printer::print(weasel::UnaryExpression *expr)
+void Printer::print(UnaryExpression *expr)
 {
-    this->printAsOperand(expr);
+    printAsOperand(expr);
     fmt::println(_out, "");
 }
 
-void weasel::Printer::print(weasel::BoolLiteralExpression *expr)
+void Printer::print(BoolLiteralExpression *expr)
 {
     fmt::print(_out, "{} {}", expr->getValue(), expr->getType()->getTypeName());
 }
 
-void weasel::Printer::print(weasel::NumberLiteralExpression *expr)
+void Printer::print(NumberLiteralExpression *expr)
 {
     fmt::println(_out, "{} {}", expr->getValue(), expr->getType()->getTypeName());
 }
 
-void weasel::Printer::print(weasel::StringLiteralExpression *expr)
+void Printer::print(StringLiteralExpression *expr)
 {
     auto val = expr->getValue();
     util::replaceInPlace(val, std::string("\n"), std::string("\\n"));
     fmt::print(_out, "\"{}\"", val);
 }
 
-void weasel::Printer::print(weasel::VariableExpression *expr)
+void Printer::print(VariableExpression *expr)
 {
     fmt::print(_out, "{} {}", expr->getIdentifier(), expr->getType()->getTypeName());
 }
 
-void weasel::Printer::print(weasel::ComparisonExpression *expr)
+void Printer::print(ComparisonExpression *expr)
 {
-    this->printAsOperand(expr);
+    printAsOperand(expr);
     fmt::println(_out, "");
 }
 
-void weasel::Printer::print(weasel::StructExpression *expr)
+void Printer::print(StructExpression *expr)
 {
-    this->printAsOperand(expr);
+    printAsOperand(expr);
     fmt::println(_out, "");
 }
 
@@ -257,47 +259,47 @@ void weasel::Printer::print(weasel::StructExpression *expr)
 // PRINT AS OPERAND //
 // SIMPLE OPERAND WITHPUT NEWLINE INSTRUCTION //
 //
-void weasel::Printer::printAsOperand(weasel::StructExpression *expr)
+void Printer::printAsOperand(StructExpression *expr)
 {
     // fmt::print(_out, "{} {}", expr->getValue(), expr->getType()->getTypeName());
     fmt::print(_out, "StructExpression : Not Implemented Yet");
 }
 
-void weasel::Printer::printAsOperand(weasel::NumberLiteralExpression *expr)
+void Printer::printAsOperand(NumberLiteralExpression *expr)
 {
     fmt::print(_out, "{} {}", expr->getValue(), expr->getType()->getTypeName());
 }
 
-void weasel::Printer::printAsOperand(weasel::DoubleLiteralExpression *expr)
+void Printer::printAsOperand(DoubleLiteralExpression *expr)
 {
     fmt::print(_out, "{} {}", expr->getValue(), expr->getType()->getTypeName());
 }
 
-void weasel::Printer::printAsOperand(weasel::BoolLiteralExpression *expr)
+void Printer::printAsOperand(BoolLiteralExpression *expr)
 {
     fmt::print(_out, "{} {}", expr->getValue(), expr->getType()->getTypeName());
 }
 
-void weasel::Printer::printAsOperand(weasel::VariableExpression *expr)
+void Printer::printAsOperand(VariableExpression *expr)
 {
     fmt::print(_out, "{} {}", expr->getIdentifier(), expr->getType()->getTypeName());
 }
 
-void weasel::Printer::printAsOperand(weasel::AssignmentExpression *expr)
+void Printer::printAsOperand(AssignmentExpression *expr)
 {
     expr->getLHS()->printAsOperand(this);
     fmt::print(_out, " = ");
     expr->getRHS()->printAsOperand(this);
 }
 
-void weasel::Printer::printAsOperand(weasel::ComparisonExpression *expr)
+void Printer::printAsOperand(ComparisonExpression *expr)
 {
     expr->getLHS()->printAsOperand(this);
     fmt::print(_out, " {} ", expr->getOperator().getValue());
     expr->getRHS()->printAsOperand(this);
 }
 
-void weasel::Printer::printAsOperand(weasel::CallExpression *expr)
+void Printer::printAsOperand(CallExpression *expr)
 {
     fmt::print(_out, "@call {}(", expr->getFunction()->getIdentifier());
     for (auto arg : expr->getArguments())
@@ -309,23 +311,24 @@ void weasel::Printer::printAsOperand(weasel::CallExpression *expr)
             fmt::print(_out, ", ");
         }
     }
+
     fmt::print(_out, ") {}", expr->getType()->getTypeName());
 }
 
-void weasel::Printer::printAsOperand(weasel::FieldExpression *expr)
+void Printer::printAsOperand(FieldExpression *expr)
 {
     auto varExpr = dynamic_cast<VariableExpression *>(expr->getParentField());
-    fmt::print(_out, "{}.{} {}", varExpr->getIdentifier(), expr->getField(), expr->getType()->getTypeName());
+    fmt::print(_out, "{}.{} {}", varExpr->getIdentifier(), expr->getIdentifier(), expr->getType()->getTypeName());
 }
 
-void weasel::Printer::printAsOperand(weasel::ArrayExpression *expr)
+void Printer::printAsOperand(ArrayExpression *expr)
 {
     fmt::print(_out, "{}[", expr->getIdentifier());
     expr->getIndex()->printAsOperand(this);
     fmt::print(_out, "]");
 }
 
-void weasel::Printer::printAsOperand(weasel::ReturnExpression *expr)
+void Printer::printAsOperand(ReturnExpression *expr)
 {
     fmt::print(_out, "return");
     if (!expr->getType()->isVoidType())
@@ -335,7 +338,7 @@ void weasel::Printer::printAsOperand(weasel::ReturnExpression *expr)
     }
 }
 
-void weasel::Printer::printAsOperand(weasel::UnaryExpression *expr)
+void Printer::printAsOperand(UnaryExpression *expr)
 {
     std::string op = "not-op";
     switch (expr->getOperator())
@@ -359,11 +362,11 @@ void weasel::Printer::printAsOperand(weasel::UnaryExpression *expr)
         op = "&";
     }
 
-    fmt::print(_out, op);
+    fmt::print(_out, "{}", op);
     expr->getExpression()->printAsOperand(this);
 }
 
-void weasel::Printer::printAsOperand(weasel::DeclarationStatement *expr)
+void Printer::printAsOperand(DeclarationStatement *expr)
 {
     auto prefix = "@declare";
     if (expr->getValue() != nullptr)
@@ -380,26 +383,26 @@ void weasel::Printer::printAsOperand(weasel::DeclarationStatement *expr)
     }
 }
 
-void weasel::Printer::printAsOperand(weasel::ArithmeticExpression *expr)
+void Printer::printAsOperand(ArithmeticExpression *expr)
 {
     expr->getLHS()->printAsOperand(this);
     fmt::print(_out, " {} ", expr->getOperator().getValue());
     expr->getRHS()->printAsOperand(this);
 }
 
-void weasel::Printer::printAsOperand(weasel::StringLiteralExpression *expr)
+void Printer::printAsOperand(StringLiteralExpression *expr)
 {
     auto val = util::normalizeStringLiteral(expr->getValue());
     fmt::print(_out, "\"{}\"", val);
 }
 
-void weasel::Printer::printAsOperand(weasel::CharLiteralExpression *expr)
+void Printer::printAsOperand(CharLiteralExpression *expr)
 {
     auto val = util::normalizeStringLiteral(std::string(1, expr->getValue()));
     fmt::print(_out, "\'{}\'", val);
 }
 
-void weasel::Printer::printAsOperand(weasel::ArrayLiteralExpression *expr)
+void Printer::printAsOperand(ArrayLiteralExpression *expr)
 {
     auto items = expr->getItems();
     auto count = (int)items.size();

@@ -23,6 +23,14 @@ namespace weasel
     class Printer;
     class WeaselCodegen;
     class CompoundStatement;
+    class Expression;
+    class CallExpression;
+    class Function;
+
+    using ExpressionHandle = shared_ptr<Expression>;
+    using CallExpressionHandle = shared_ptr<CallExpression>;
+    using CompoundStatementHandle = shared_ptr<CompoundStatement>;
+    using FunctionHandle = shared_ptr<Function>;
 
     enum class Linkage;
 
@@ -40,12 +48,13 @@ namespace weasel
         Expression() : _token(Token::create()) {}
         explicit Expression(const Token &token) : _token(token) {}
         Expression(const Token &token, Error &error) : _token(token), _error(error) {}
-        Expression(const Token &token, Type *type, bool isConstant = false) : _token(token), _type(type), _isConstant(isConstant) {}
+        Expression(const Token &token, TypeHandle type, bool isConstant = false) : _token(token), _type(type), _isConstant(isConstant) {}
 
         Token getToken() const;
-        Type *getType() const;
+        TypeHandle getType() const { return _type; }
 
-        void setType(Type *type);
+        void setToken(const Token &token) { _token = token; }
+        void setType(TypeHandle type) { _type = type; }
         bool isNoType() const;
         bool isCompoundExpression();
 
@@ -62,12 +71,14 @@ namespace weasel
         virtual void print(Printer *printer) = 0;
         virtual void printAsOperand(Printer *printer) = 0;
 
-        void setError(Error error);
-        bool isError() const;
+        void setError(Error error) { _error = error; }
+        bool isError() const { return _error.has_value(); }
+
+        optional<Error> getError() const { return _error; }
 
     protected:
         Token _token; // Token each expression
-        Type *_type;
+        TypeHandle _type;
         optional<Error> _error;
 
         AccessID _accessID;
@@ -79,23 +90,27 @@ namespace weasel
     {
     public:
         ErrorExpression(const Token token, Error error) : Expression(token, error) {}
-        ~ErrorExpression() {}
+        ~ErrorExpression() = default;
 
         llvm::Value *codegen(WeaselCodegen *c) override {}
         void print(Printer *printer) override {}
         void printAsOperand(Printer *printer) override {}
     };
 
+    // TODO: Linkage public or private
     // Global Value
     class GlobalObject : public Expression
     {
     public:
-        GlobalObject(const Token &token, const std::string &identifier, Type *type) : Expression(token, type), _identifier(identifier) {}
+        GlobalObject(const Token &token, const std::string &identifier, TypeHandle type) : Expression(token, type), _identifier(identifier) {}
+        GlobalObject() = default;
 
         std::string getIdentifier() const { return _identifier; }
 
+        void setIdentifier(string_view identifier) { _identifier = identifier; }
+
     protected:
-        Linkage _linkage;
+        // Linkage _linkage;
         std::string _identifier;
     };
 
@@ -103,28 +118,28 @@ namespace weasel
     class GlobalVariable : public GlobalObject
     {
     public:
-        GlobalVariable(const Token &token, const std::string &identifier, Expression *value) : GlobalObject(token, identifier, value->getType()), _value(value) {}
+        GlobalVariable() = default;
 
-        Expression *getValue() const { return _value; }
+        Expression *getValue() { return _value.get(); }
 
         llvm::Value *codegen(WeaselCodegen *c) override;
         void print(Printer *printer) override;
         void printAsOperand(Printer *printer) override;
 
     private:
-        Expression *_value;
+        ExpressionHandle _value;
     };
 
     // Function
     class Function : public GlobalObject
     {
     public:
-        Function(std::string identifier, Type *type, std::vector<ArgumentType *> arguments) : GlobalObject(Token::create(), identifier, type), _arguments(arguments) {}
+        Function() = default;
 
-        ~Function();
+        ~Function() override;
 
-        CompoundStatement *getBody() const { return _body; }
-        void setBody(CompoundStatement *body) { _body = body; }
+        CompoundStatementHandle getBody() { return _body; }
+        void setBody(CompoundStatementHandle body) { _body = body; }
 
         void setIsDefine(bool val) { _isDefine = val; }
         bool isDefine() const { return _isDefine; }
@@ -137,14 +152,14 @@ namespace weasel
 
         bool isMain() const { return this->_identifier == "main"; }
 
-        void setArguments(std::vector<ArgumentType *> arguments) { _arguments = arguments; }
-        std::vector<ArgumentType *> getArguments() const { return _arguments; }
+        void setArguments(const vector<ArgumentTypeHandle> &arguments) { _arguments = arguments; }
+        vector<ArgumentTypeHandle> &getArguments() { return _arguments; }
 
-        std::string getManglingName();
+        string getManglingName();
 
-        void setImplStruct(StructType *structType) { _implStruct = structType; }
+        void setImplStruct(StructTypeHandle structType) { _implStruct = structType; }
         bool isImplStructExist() const { return _implStruct != nullptr; }
-        StructType *getImplStruct() const { return _implStruct; }
+        StructType *getImplStruct() { return _implStruct.get(); }
 
         void setIsStatic(bool val) { _isStatic = val; }
         bool getIsStatic() const { return _isStatic; }
@@ -152,35 +167,34 @@ namespace weasel
     public:
         llvm::Value *codegen(WeaselCodegen *c) override;
         void print(Printer *printer) override;
-        void printAsOperand(Printer *printer) override {};
+        void printAsOperand(Printer *) override {}
 
     private:
-        CompoundStatement *_body;
-        std::vector<ArgumentType *> _arguments;
-        StructType *_implStruct;
+        CompoundStatementHandle _body;
+        vector<ArgumentTypeHandle> _arguments;
+        StructTypeHandle _implStruct;
 
+        // TODO: Check if inline, extern, and static function
         bool _isDefine = false;
         bool _isInline = false;
         bool _isExtern = false;
         bool _isStatic = false;
-        // bool _isParallel = false;
     };
 
     // Literal Expression
     class LiteralExpression : public Expression
     {
     public:
-        LiteralExpression(Token token, Type *type) : Expression(token, type, true) {}
+        LiteralExpression(const Token &token, TypeHandle type) : Expression(token, type, true) {}
     };
 
     // Return Expression
     class ReturnExpression : public Expression
     {
     public:
-        ReturnExpression(Token token, Expression *value) : Expression(token, value->getType()), _value(value) {}
-        ReturnExpression(Token token, Expression *value, Type *type) : Expression(token, type), _value(value) {}
+        ReturnExpression(const Token &token, ExpressionHandle value, TypeHandle type) : Expression(token, type), _value(value) {}
 
-        Expression *getValue() const { return _value; }
+        Expression *getValue() { return _value.get(); }
 
     public:
         llvm::Value *codegen(WeaselCodegen *codegen) override;
@@ -190,7 +204,7 @@ namespace weasel
         ~ReturnExpression();
 
     private:
-        Expression *_value;
+        ExpressionHandle _value;
     };
 
     // Return Expression
@@ -231,38 +245,16 @@ namespace weasel
         Expression *_value;
     };
 
-    // Call Expression
-    class CallExpression : public Expression
-    {
-    public:
-        CallExpression(Token token, Function *fun, std::vector<Expression *> args) : Expression(token, fun->getType()), _fun(fun), _args(args) {}
-        CallExpression(Token token) : Expression(token) {}
-
-        std::vector<Expression *> getArguments() const { return _args; }
-        Function *getFunction() const { return _fun; }
-
-    public:
-        llvm::Value *codegen(WeaselCodegen *codegen) override;
-        void print(Printer *printer) override;
-        void printAsOperand(Printer *printer) override;
-
-        ~CallExpression();
-
-    private:
-        Function *_fun;
-        std::vector<Expression *> _args;
-    };
-
     // Variable Expression
     class VariableExpression : public Expression
     {
     public:
-        VariableExpression(Token token, std::string identifier, Type *type) : Expression(token, type), _identifier(identifier) {}
         VariableExpression(Token token, std::string identifier) : Expression(token), _identifier(identifier) {}
+        VariableExpression() {}
 
+        void setIdentifier(string identifier) { _identifier = identifier; }
         std::string getIdentifier() const { return _identifier; }
 
-    public:
         llvm::Value *codegen(WeaselCodegen *codegen) override;
         void print(Printer *printer) override;
         void printAsOperand(Printer *printer) override;
@@ -273,13 +265,35 @@ namespace weasel
         std::string _identifier;
     };
 
+    // Call Expression
+    class CallExpression : public VariableExpression
+    {
+    public:
+        explicit CallExpression(Token token, string identifier) : VariableExpression(token, identifier) {}
+
+        std::vector<ExpressionHandle> &getArguments() { return _args; }
+
+        void setFunction(FunctionHandle fun) { _fun = fun; }
+        FunctionHandle getFunction() { return _fun; }
+
+        llvm::Value *codegen(WeaselCodegen *codegen) override;
+        void print(Printer *printer) override;
+        void printAsOperand(Printer *printer) override;
+
+        ~CallExpression();
+
+    private:
+        FunctionHandle _fun;
+        std::vector<ExpressionHandle> _args;
+    };
+
     class ArrayExpression : public VariableExpression
     {
     public:
-        ArrayExpression(Token token, std::string identifier, Expression *indexExpr, Type *type) : VariableExpression(token, identifier, type), _indexExpr(indexExpr) {}
-        ArrayExpression(Token token, std::string identifier, Expression *indexExpr) : VariableExpression(token, identifier), _indexExpr(indexExpr) {}
+        ArrayExpression() {}
 
-        Expression *getIndex() const { return _indexExpr; }
+        void setIndexExpression(ExpressionHandle expr) { _indexExpr = expr; }
+        Expression *getIndex() { return _indexExpr.get(); }
 
     public:
         llvm::Value *codegen(WeaselCodegen *codegen) override;
@@ -289,7 +303,7 @@ namespace weasel
         ~ArrayExpression();
 
     private:
-        Expression *_indexExpr;
+        ExpressionHandle _indexExpr;
     };
 
     // Struct Expression
@@ -300,20 +314,19 @@ namespace weasel
         {
         private:
             std::string _identifier;
-            Expression *_expr;
+            ExpressionHandle _expr;
 
         public:
-            StructField(const std::string &identifier, Expression *expr) : _identifier(identifier), _expr(expr) {}
+            StructField(const std::string &identifier, ExpressionHandle expr) : _identifier(identifier), _expr(expr) {}
 
             std::string getIdentifier() const { return _identifier; }
-            Expression *getExpression() const { return _expr; }
+            Expression *getExpression() { return _expr.get(); }
             bool isEmptyIdentifier() const { return _identifier.empty(); }
 
             ~StructField();
         };
 
     public:
-        StructExpression(Token token, StructType *type, const std::vector<StructField *> &fields) : Expression(token, type), _fields(fields) {}
         StructExpression(Token token) : Expression(token) {}
 
         std::vector<StructField *> getFields() const { return _fields; }
@@ -336,17 +349,13 @@ namespace weasel
     // Field Expresion
     // a.b : a->b
     // a.*b : a->*b
-    class FieldExpression : public Expression
+    class FieldExpression : public VariableExpression
     {
     public:
-        FieldExpression(Token token, string identifier, Expression *parent, Type *type) : Expression(token, type), _identifier(identifier), _parentField(parent) {}
-        FieldExpression(Token token) : Expression(token) {}
+        explicit FieldExpression(Token token) : VariableExpression(token, token.getValue()) {}
 
-        void setField(string field) { _identifier = field; }
-        void setParentField(Expression *expr) { _parentField = expr; }
-
-        string getField() const { return _identifier; }
-        Expression *getParentField() const { return _parentField; }
+        void setParentField(ExpressionHandle expr) { _parentField = expr; }
+        Expression *getParentField() { return _parentField.get(); }
 
     public:
         llvm::Value *codegen(WeaselCodegen *codegen) override;
@@ -356,8 +365,7 @@ namespace weasel
         ~FieldExpression();
 
     private:
-        string _identifier;
-        Expression *_parentField;
+        ExpressionHandle _parentField;
     };
 
     // Method Call
@@ -365,16 +373,14 @@ namespace weasel
     class MethodCallExpression : public Expression
     {
     public:
-        MethodCallExpression(Token token) : Expression(token) {}
-        MethodCallExpression(Token token, Expression *implExpression, Function *fun, std::vector<Expression *> args) : Expression(token, fun->getType()), _fun(fun), _args(args), _implExpression(implExpression) {}
-        ~MethodCallExpression();
+        using Expression::Expression;
+        ~MethodCallExpression() override;
 
-        void setArguments(vector<Expression *> args) { _args = args; }
-        void setImplExpression(Expression *implExpression) { _implExpression = implExpression; }
+        void setImplExpression(ExpressionHandle implExpression) { _implExpression = implExpression; }
         void setFunction(Function *fun) { _fun = fun; }
 
-        vector<Expression *> getArguments() const { return _args; }
-        Expression *getImplExpression() const { return _implExpression; }
+        vector<ExpressionHandle> getArguments() const { return _args; }
+        ExpressionHandle getImplExpression() { return _implExpression; }
         Function *getFunction() const { return _fun; }
 
         llvm::Value *codegen(WeaselCodegen *codegen) override;
@@ -383,15 +389,15 @@ namespace weasel
 
     private:
         Function *_fun;
-        Expression *_implExpression;
-        vector<Expression *> _args;
+        ExpressionHandle _implExpression;
+        vector<ExpressionHandle> _args;
     };
 
     // Number Literal Expression
     class NumberLiteralExpression : public LiteralExpression
     {
     public:
-        NumberLiteralExpression(Token token, long long value, unsigned width = 32) : LiteralExpression(token, Type::getIntegerType(width)), _value(value) {}
+        NumberLiteralExpression(const Token &token, long long value, unsigned width = 32) : LiteralExpression(token, Type::getIntegerType(width)), _value(value) {}
 
         long long getValue() const { return _value; }
 
@@ -527,9 +533,9 @@ namespace weasel
     class TypeCastExpression : public Expression
     {
     public:
-        TypeCastExpression(Token op, Type *type, Expression *rhs) : Expression(op, type), _rhs(rhs) {}
+        TypeCastExpression(Token op, ExpressionHandle rhs) : Expression(op), _rhs(rhs) {}
 
-        Expression *getExpression() const { return _rhs; }
+        Expression *getExpression() { return _rhs.get(); }
 
     public:
         llvm::Value *codegen(WeaselCodegen *codegen) override;
@@ -537,18 +543,22 @@ namespace weasel
         void printAsOperand(Printer *printer) override;
 
     private:
-        Expression *_rhs;
+        ExpressionHandle _rhs;
     };
 
     // Binary Operator Expression
     class ArithmeticExpression : public Expression
     {
     public:
-        ArithmeticExpression(Token op, Expression *lhs, Expression *rhs) : Expression(op, lhs->getType()), _lhs(lhs), _rhs(rhs) {}
+        ArithmeticExpression(Token op, ExpressionHandle lhs, ExpressionHandle rhs) : Expression(op), _lhs(lhs), _rhs(rhs) {}
+        ArithmeticExpression(Token op) : Expression(op) {}
+
+        void setLHS(ExpressionHandle lhs) { _lhs = lhs; }
+        void setRHS(ExpressionHandle rhs) { _rhs = rhs; }
 
         Token getOperator() const { return getToken(); }
-        Expression *getLHS() const { return _lhs; }
-        Expression *getRHS() const { return _rhs; }
+        Expression *getLHS() { return _lhs.get(); }
+        Expression *getRHS() { return _rhs.get(); }
 
     public:
         llvm::Value *codegen(WeaselCodegen *codegen) override;
@@ -556,19 +566,22 @@ namespace weasel
         void printAsOperand(Printer *printer) override;
 
     private:
-        Expression *_lhs;
-        Expression *_rhs;
+        ExpressionHandle _lhs;
+        ExpressionHandle _rhs;
     };
 
     // Binary Operator Expression
     class LogicalExpression : public Expression
     {
     public:
-        LogicalExpression(Token op, Expression *lhs, Expression *rhs) : Expression(op, lhs->getType()), _lhs(lhs), _rhs(rhs) {}
+        LogicalExpression(Token op) : Expression(op) {}
+
+        void setLHS(ExpressionHandle lhs) { _lhs = lhs; }
+        void setRHS(ExpressionHandle rhs) { _rhs = rhs; }
 
         Token getOperator() const { return getToken(); }
-        Expression *getLHS() const { return _lhs; }
-        Expression *getRHS() const { return _rhs; }
+        Expression *getLHS() { return _lhs.get(); }
+        Expression *getRHS() { return _rhs.get(); }
 
     public:
         llvm::Value *codegen(WeaselCodegen *codegen) override;
@@ -576,19 +589,22 @@ namespace weasel
         void printAsOperand(Printer *printer) override;
 
     private:
-        Expression *_lhs;
-        Expression *_rhs;
+        ExpressionHandle _lhs;
+        ExpressionHandle _rhs;
     };
 
     // Assignment Operator Expression
     class AssignmentExpression : public Expression
     {
     public:
-        AssignmentExpression(Token op, Expression *lhs, Expression *rhs) : Expression(op, lhs->getType()), _lhs(lhs), _rhs(rhs) {}
+        AssignmentExpression(Token op) : Expression(op) {}
+
+        void setLHS(ExpressionHandle lhs) { _lhs = lhs; }
+        void setRHS(ExpressionHandle rhs) { _rhs = rhs; }
 
         Token getOperator() const { return getToken(); }
-        Expression *getLHS() const { return _lhs; }
-        Expression *getRHS() const { return _rhs; }
+        Expression *getLHS() { return _lhs.get(); }
+        Expression *getRHS() { return _rhs.get(); }
 
     public:
         llvm::Value *codegen(WeaselCodegen *codegen) override;
@@ -596,8 +612,8 @@ namespace weasel
         void printAsOperand(Printer *printer) override;
 
     private:
-        Expression *_lhs;
-        Expression *_rhs;
+        ExpressionHandle _lhs;
+        ExpressionHandle _rhs;
     };
 
     // Comparison Operator Expression
@@ -606,9 +622,12 @@ namespace weasel
     public:
         ComparisonExpression(Token op, Expression *lhs, Expression *rhs) : Expression(op, Type::getBoolType()), _lhs(lhs), _rhs(rhs) {}
 
+        void setLHS(ExpressionHandle lhs) { _lhs = lhs; }
+        void setRHS(ExpressionHandle rhs) { _rhs = rhs; }
+
         Token getOperator() const { return getToken(); }
-        Expression *getLHS() const { return _lhs; }
-        Expression *getRHS() const { return _rhs; }
+        Expression *getLHS() { return _lhs.get(); }
+        Expression *getRHS() { return _rhs.get(); }
 
     public:
         llvm::Value *codegen(WeaselCodegen *codegen) override;
@@ -616,8 +635,8 @@ namespace weasel
         void printAsOperand(Printer *printer) override;
 
     private:
-        Expression *_lhs;
-        Expression *_rhs;
+        ExpressionHandle _lhs;
+        ExpressionHandle _rhs;
     };
 
     // Unary Operator Expression
@@ -635,20 +654,12 @@ namespace weasel
         };
 
     public:
-        UnaryExpression(Token token, Operator op, Expression *rhs) : Expression(token), _rhs(rhs), _op(op)
-        {
-            auto type = rhs->getType();
-            if (op == Operator::Borrow)
-                type = Type::getPointerType(type);
-            else if (op == Operator::Dereference)
-                type = type->getContainedType();
-            else if (op == Operator::Not)
-                type = Type::getBoolType();
+        UnaryExpression(Token token, Operator op, ExpressionHandle rhs) : Expression(token), _rhs(rhs), _op(op) {}
+        UnaryExpression(Token token, Operator op) : Expression(token), _op(op) {}
 
-            setType(type);
-        }
+        void setRHS(ExpressionHandle rhs) { _rhs = rhs; }
 
-        Expression *getExpression() const { return _rhs; }
+        Expression *getExpression() { return _rhs.get(); }
         Operator getOperator() const { return _op; }
 
         ~UnaryExpression();
@@ -659,19 +670,21 @@ namespace weasel
         void printAsOperand(Printer *printer) override;
 
     private:
-        Expression *_rhs;
+        ExpressionHandle _rhs;
         Operator _op;
     };
 
     // Declaration Statement
-    class DeclarationStatement : public Expression
+    class DeclarationStatement : public VariableExpression
     {
     public:
-        DeclarationStatement(Token token, std::string identifier, Qualifier qualifier, Type *type, Expression *value = nullptr) : Expression(token, type), _identifier(identifier), _qualifier(qualifier), _value(value) {}
+        DeclarationStatement(Token token) : VariableExpression(token, token.getValue()) {}
+
+        void setQualifier(Qualifier qualifier) { _qualifier = qualifier; }
+        void setValueExpr(ExpressionHandle valueExpr) { _valueExpr = valueExpr; }
 
         Qualifier getQualifier() const { return _qualifier; }
-        std::string getIdentifier() const { return _identifier; }
-        Expression *getValue() const { return _value; }
+        Expression *getValue() { return _valueExpr.get(); }
 
     public:
         llvm::Value *codegen(WeaselCodegen *codegen) override;
@@ -681,9 +694,8 @@ namespace weasel
         ~DeclarationStatement();
 
     private:
-        std::string _identifier;
         Qualifier _qualifier;
-        Expression *_value;
+        ExpressionHandle _valueExpr;
     };
 
     // Statement Expression
@@ -692,9 +704,8 @@ namespace weasel
     public:
         CompoundStatement() = default;
 
-        void addBody(Expression *expr) { _body.push_back(expr); }
-        void insertBody(int pos, Expression *expr) { _body.insert(_body.begin() + pos, expr); }
-        std::vector<Expression *> getBody() const { return _body; }
+        void insertBody(int pos, ExpressionHandle expr) { _body.insert(_body.begin() + pos, expr); }
+        std::vector<ExpressionHandle> &getBody() { return _body; }
 
     public:
         llvm::Value *codegen(WeaselCodegen *codegen) override;
@@ -704,7 +715,7 @@ namespace weasel
         ~CompoundStatement();
 
     private:
-        std::vector<Expression *> _body;
+        std::vector<ExpressionHandle> _body;
     };
 
     class ConditionStatement : public Expression

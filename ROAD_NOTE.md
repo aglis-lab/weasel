@@ -8,11 +8,14 @@
   - [ ] Check Nil Literal Expression
   - [x] Create Error List
   - [x] Find Best strategy for creating syntax error (not continuing the code or parser)
+- [ ] Migrate System Instanll into vcpkg
 - [ ] Make Parser can't detect semantic error
 - [ ] Create Semantic Analysis
   - [ ] Check Variable Exist
   - [ ] Check Type Valid
   - [ ] Check Field Expression Type
+  - [ ] Implementation Scope System
+- [ ] Remove File Buffer
 - [ ] Add Error into Expression as AST Error or Semantic Error
 - [ ] Add Error to Token as Token Error
 - [ ] Integrate Error into the Parser

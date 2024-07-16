@@ -25,7 +25,7 @@ namespace weasel
     };
 
     // Analysis Context
-    class WeaselCodegen : ContextTable
+    class WeaselCodegen : public ContextTable
     {
         // Weasel Package
     private:
@@ -39,7 +39,6 @@ namespace weasel
         llvm::IRBuilder<> *getBuilder() const { return _builder; }
         llvm::MDBuilder *getMDBuilder() const { return _mdBuilder; }
 
-    public:
         // Type
         llvm::Type *codegen(Type *type);
         llvm::Type *codegen(StructType *type);
@@ -138,7 +137,7 @@ namespace weasel
         void addStructType(const std::string &name, llvm::StructType *type) { _structTypes[name] = type; }
         llvm::StructType *findStructType(const std::string &name)
         {
-            if (_structTypes.find(name) != _structTypes.end())
+            if (_structTypes.contains(name))
             {
                 return _structTypes[name];
             }

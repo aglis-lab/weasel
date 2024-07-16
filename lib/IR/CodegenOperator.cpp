@@ -217,7 +217,7 @@ llvm::Value *weasel::WeaselCodegen::codegen(AssignmentExpression *expr)
 
     if (rhsType->isStructType())
     {
-        auto rhsTypeStruct = dynamic_cast<StructType *>(rhsType);
+        auto rhsTypeStruct = dynamic_cast<StructType *>(rhsType.get());
         getBuilder()->CreateMemCpy(lhsVal, llvm::MaybeAlign(4), rhsVal, llvm::MaybeAlign(4), rhsTypeStruct->getTypeWidthByte());
     }
     else

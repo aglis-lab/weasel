@@ -386,11 +386,11 @@ llvm::Value *weasel::WeaselCodegen::codegen(FieldExpression *expr)
     StructType *type;
     if (parent->getType()->isStructType())
     {
-        type = dynamic_cast<StructType *>(parent->getType());
+        type = dynamic_cast<StructType *>(parent->getType().get());
     }
     else
     {
-        type = dynamic_cast<StructType *>(parent->getType()->getContainedType());
+        type = dynamic_cast<StructType *>(parent->getType()->getContainedType().get());
     }
 
     auto typeV = type->codegen(this);
@@ -402,7 +402,7 @@ llvm::Value *weasel::WeaselCodegen::codegen(FieldExpression *expr)
         alloc = getBuilder()->CreateLoad(pointerType, alloc);
     }
 
-    auto field = expr->getField();
+    auto field = expr->getIdentifier();
     auto idx = type->findTypeName(field);
     auto range = getBuilder()->getInt32(0);
     auto idxVal = getBuilder()->getInt32(idx);
@@ -427,7 +427,7 @@ llvm::Value *weasel::WeaselCodegen::codegen(StructExpression *expr)
 
     // Remove PreferConstant Check
     // Just check directly onto the fields
-    auto type = dynamic_cast<StructType *>(expr->getType());
+    auto type = dynamic_cast<StructType *>(expr->getType().get());
     auto isConstant = expr->getIsPreferConstant() && type->isPreferConstant();
     auto fields = expr->getFields();
     if (isConstant)

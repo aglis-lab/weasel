@@ -26,7 +26,7 @@ llvm::Type *weasel::WeaselCodegen::codegen(weasel::StructType *structExpr)
         // TODO: Create more proper check for circular type
         if (item->isStructType())
         {
-            if (auto itemStructType = dynamic_cast<StructType *>(item); itemStructType)
+            if (auto itemStructType = dynamic_cast<StructType *>(item.get()); itemStructType)
             {
                 assert(itemStructType->getIdentifier() != identifier && "Cannot create circular struct");
             }

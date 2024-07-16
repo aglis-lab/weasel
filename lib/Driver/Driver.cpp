@@ -21,10 +21,10 @@
 #include "weasel/Passes/Passes.h"
 #include "weasel/Metadata/Metadata.h"
 
-weasel::Driver::Driver(weasel::WeaselCodegen *codegen, weasel::Parser *parser)
+weasel::Driver::Driver(weasel::WeaselCodegen *codegen, const Module &module)
 {
     _codegen = codegen;
-    _parser = parser;
+    _module = module;
 }
 
 bool weasel::Driver::compile(std::string defTargetTriple)

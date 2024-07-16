@@ -10,62 +10,65 @@ void weasel::Parser::parse()
             getNextToken();
         }
 
-        // TODO: Not support parallel yet...
-        // if (getCurrentToken().isKeyParallel())
-        // {
-        //     auto type = findUserType(getCurrentToken().getValue());
-        //     assert(type && "parallel struct type should be defined internally!");
-
-        //     getNextToken(true);
-        //     auto fun = parseFunction(type);
-        //     if (fun)
-        //     {
-        //         fun->setParallel(true);
-
-        //         addFunction(fun);
-        //     }
-        // }
-
-        switch (getCurrentToken().getTokenKind())
+        if (getCurrentToken().isEnd())
         {
-        case TokenKind::TokenKeyStruct:
-            addUserType(parseStruct());
-            break;
-        case TokenKind::TokenKeyFun:
+            return;
+        }
+
+        if (getCurrentToken().isKeyFunction() || getCurrentToken().isKeyExtern())
         {
+            auto isExtern = false;
+            if (getCurrentToken().isKeyExtern())
+            {
+                isExtern = true;
+                getNextToken(); // eat 'extern'
+            }
+
             auto fun = parseFunction();
-            addFunction(fun);
-
-            if (fun->isError())
-            {
-                return;
-            }
-
-            break;
+            fun->setIsExtern(isExtern);
+            getModule()->addFunction(fun);
         }
-        case TokenKind::TokenKeyExtern:
-        {
-            auto fun = parseExternFunction();
-            addFunction(fun);
 
-            if (fun->isError())
-            {
-                return;
-            }
+        // switch (getCurrentToken().getTokenKind())
+        // {
+        // case TokenKind::TokenKeyStruct:
+        //     addUserType(parseStruct());
+        //     break;
+        // case TokenKind::TokenKeyFun:
+        // {
+        //     auto fun = parseFunction();
+        //     addFunction(fun);
 
-            break;
-        }
-        case TokenKind::TokenKeyImpl:
-            parseImplFunctions();
-            break;
-        case TokenKind::TokenKeyLet:
-        case TokenKind::TokenKeyConst:
-            addGlobalVariable(parseGlobalVariable());
-            break;
-        default:
-            LOG(ERROR) << "Unexpected token : " << getCurrentToken().getTokenKindToInt() << " - " << getCurrentToken().getValue();
-            break;
-        }
+        //     if (fun->isError())
+        //     {
+        //         return;
+        //     }
+
+        //     break;
+        // }
+        // case TokenKind::TokenKeyExtern:
+        // {
+        //     auto fun = parseExternFunction();
+        //     addFunction(fun);
+
+        //     if (fun->isError())
+        //     {
+        //         return;
+        //     }
+
+        //     break;
+        // }
+        // case TokenKind::TokenKeyImpl:
+        //     parseImplFunctions();
+        //     break;
+        // case TokenKind::TokenKeyLet:
+        // case TokenKind::TokenKeyConst:
+        //     addGlobalVariable(parseGlobalVariable());
+        //     break;
+        // default:
+        //     LOG(ERROR) << "Unexpected token : " << getCurrentToken().getTokenKindToInt() << " - " << getCurrentToken().getValue();
+        //     break;
+        // }
     }
 }
 
@@ -95,9 +98,9 @@ weasel::Token weasel::Parser::getNextTokenUntil(weasel::TokenKind kind)
 }
 
 // Get Next Token
-weasel::Token weasel::Parser::getNextToken(bool skipSpace)
+Token Parser::getNextToken(bool skipSpace)
 {
-    return _lexer->getNextToken(skipSpace);
+    return _lexer.getNextToken(skipSpace);
 }
 
 // TODO: Find User Type
@@ -114,18 +117,18 @@ weasel::Token weasel::Parser::getNextToken(bool skipSpace)
 //     return nullptr;
 // }
 
-weasel::Function *weasel::Parser::findFunction(const std::string &identifier, StructType *structType, bool isStatic)
-{
-    for (auto item : getFunctions())
-    {
-        auto checkStatic = item->getIsStatic() == isStatic;
-        auto checkStruct = item->getImplStruct() == structType;
-        auto checkIdent = item->getIdentifier() == identifier;
-        if (checkIdent && checkStruct && checkStatic)
-        {
-            return item;
-        }
-    }
+// FunctionHandle Parser::findFunction(const string &identifier, StructType *structType, bool isStatic)
+// {
+//     for (auto item : getFunctions())
+//     {
+//         auto checkStatic = item->getIsStatic() == isStatic;
+//         auto checkStruct = item->getImplStruct() == structType;
+//         auto checkIdent = item->getIdentifier() == identifier;
+//         if (checkIdent && checkStruct && checkStatic)
+//         {
+//             return item;
+//         }
+//     }
 
-    return nullptr;
-}
+//     return nullptr;
+// }

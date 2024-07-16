@@ -61,7 +61,7 @@ message(STATUS ${LLVM_DEFINITIONS})
 
 # C++ DEFINITIONS
 add_definitions("-Wno-reorder-ctor")
-add_definitions("-std=c++17")
+add_definitions("-std=c++20")
 add_definitions("-Wno-unused-variable")
 
 if (MSVC)

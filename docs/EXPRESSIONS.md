@@ -6,6 +6,10 @@
 User.doSomething()
 ```
 
+Semantic Check
+
+- Struct Type
+
 ### Struct Expression
 
 ### Field Expression
@@ -13,4 +17,12 @@ User.doSomething()
 ```
 mystruct.MyField
 Test().MyField
+```
+
+### Function
+
+```
+fun Hello(age int) {
+  // Body
+}
 ```

@@ -24,6 +24,12 @@ We also can binding the library created by weasel language into another language
 - Module -> Codegen(LLVM Module) -> Driver
 - Module -> Printer
 
+### Module
+
+Module is a parser manager to make parsing data can be parallel
+
+###
+
 # Third-Party
 
 - fmt (install on system)

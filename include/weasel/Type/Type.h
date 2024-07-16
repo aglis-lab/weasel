@@ -15,6 +15,14 @@ namespace weasel
     class WeaselCodegen;
     class StructType;
     class Printer;
+    class Type;
+    class ArgumentType;
+    class GlobalVariable;
+
+    using TypeHandle = shared_ptr<Type>;
+    using StructTypeHandle = shared_ptr<StructType>;
+    using ArgumentTypeHandle = shared_ptr<ArgumentType>;
+    using GlobalVariableHandle = shared_ptr<GlobalVariable>;
 
     enum class TypeID
     {
@@ -32,6 +40,9 @@ namespace weasel
         // User Type
         FunctionType,
         StructType,
+
+        // Unknown Type
+        UnknownType
     };
 
     // Data Type
@@ -39,7 +50,16 @@ namespace weasel
     {
     public:
         // Create Type From Token
-        static Type *create(Token token);
+        static TypeHandle create(Token token);
+
+        Type() : _typeId(TypeID::UnknownType), _width(0), _isSigned(true) {}
+
+        Type(TypeID typeId, uint width = 0, bool isSign = true) : _typeId(typeId), _width(width), _isSigned(isSign) {}
+
+        Type(TypeID typeId, TypeHandle containedType, unsigned width = 0, bool isSign = true) : _typeId(typeId), _width(width), _isSigned(isSign)
+        {
+            _containedTypes.push_back(move(containedType));
+        }
 
     public:
         TypeID getTypeID() const { return _typeId; }
@@ -77,28 +97,29 @@ namespace weasel
         }
 
         // Check possible struct type
-        bool isPossibleStructType() const;
+        bool isPossibleStructType();
 
         unsigned getContainedWidth() const { return _containedTypes[0]->getTypeWidth(); }
-        Type *getContainedType() const { return _containedTypes[0]; }
+        TypeHandle getContainedType() { return _containedTypes[0]; }
         unsigned getContainedNums() const { return _containedTypes.size(); }
-        std::vector<Type *> getContainedTypes() const { return _containedTypes; }
-        void addContainedType(Type *containedType) { _containedTypes.push_back(containedType); }
-        void replaceContainedTypes(const std::vector<Type *> &containedTypes);
+        std::vector<TypeHandle> getContainedTypes() const { return _containedTypes; }
+        void addContainedType(TypeHandle containedType) { _containedTypes.push_back(move(containedType)); }
 
         // Generator
-        static Type *getVoidType() { return new Type(TypeID::VoidType, 0, false); }
-        static Type *getBoolType() { return getIntegerType(1, false); }
-        static Type *getIntegerType(unsigned width = 32, bool isSign = true) { return new Type(TypeID::IntegerType, width, isSign); }
-        static Type *getFloatType() { return new Type(TypeID::FloatType, 32); }
-        static Type *getDoubleType() { return new Type(TypeID::DoubleType, 64); }
-        static Type *getArrayType(Type *containedType, unsigned width) { return new Type(TypeID::ArrayType, containedType, width); }
-        static Type *getPointerType(Type *containedType) { return new Type(TypeID::PointerType, containedType); }
-        static Type *getReferenceType(Type *containedType) { return new Type(TypeID::ReferenceType, containedType); }
-        static Type *getStructType() { return new Type(TypeID::StructType, -1); }
+        static TypeHandle getVoidType() { return make_shared<Type>(TypeID::VoidType, 0, false); }
+        static TypeHandle getBoolType() { return getIntegerType(1, false); }
+        static TypeHandle getIntegerType(unsigned width = 32, bool isSign = true) { return make_shared<Type>(TypeID::IntegerType, width, isSign); }
+        static TypeHandle getFloatType() { return make_shared<Type>(TypeID::FloatType, 32); }
+        static TypeHandle getDoubleType() { return make_shared<Type>(TypeID::DoubleType, 64); }
+        static TypeHandle getArrayType(TypeHandle containedType, unsigned width) { return make_shared<Type>(TypeID::ArrayType, move(containedType), width); }
+        static TypeHandle getPointerType(TypeHandle containedType) { return make_shared<Type>(TypeID::PointerType, move(containedType)); }
+        static TypeHandle getReferenceType(TypeHandle containedType) { return make_shared<Type>(TypeID::ReferenceType, move(containedType)); }
+        static TypeHandle getReferenceType() { return make_shared<Type>(TypeID::ReferenceType); }
+        static TypeHandle getStructType() { return make_shared<Type>(TypeID::StructType, -1); }
+        static TypeHandle getUnknownType() { return make_shared<Type>(TypeID::UnknownType); }
 
         // Check Type
-        bool isEqual(Type *type);
+        bool isEqual(TypeHandle type);
 
     public:
         virtual ~Type();
@@ -113,13 +134,8 @@ namespace weasel
         int _width = 32; // width in bit
 
         TypeID _typeId = TypeID::VoidType;
-        std::vector<Type *> _containedTypes;
-
-        Type(TypeID typeId, Type *containedType, unsigned width = 0, bool isSign = true) : _typeId(typeId), _width(width), _isSigned(isSign)
-        {
-            _containedTypes.push_back(containedType);
-        }
-        Type(TypeID typeId, unsigned width, bool isSign = true) : _typeId(typeId), _width(width), _isSigned(isSign) {}
+        Token _token = Token::create();
+        std::vector<TypeHandle> _containedTypes;
     };
 
     // Struct Value
@@ -141,7 +157,7 @@ namespace weasel
         std::vector<std::string> getTypeNames() const { return _typeNames; }
         int findTypeName(const std::string &typeName);
 
-        void addField(const std::string &fieldName, Type *type);
+        void addField(const std::string &fieldName, TypeHandle type);
         bool isPreferConstant();
 
     public:
@@ -151,20 +167,20 @@ namespace weasel
     class ArgumentType
     {
     public:
-        std::string getArgumentName() const { return _argumentName; }
-        Type *getType() const { return _type; }
-
-    public:
-        static ArgumentType *create(std::string argumentName, Type *type)
-        {
-            return new ArgumentType(argumentName, type);
-        }
-
-    protected:
         ArgumentType(std::string argumentName, Type *type) : _argumentName(argumentName), _type(type) {}
+
+        ArgumentType() {}
+
+        static ArgumentTypeHandle create() { return make_shared<ArgumentType>(); }
+
+        std::string getArgumentName() const { return _argumentName; }
+        TypeHandle getType() { return _type; }
+
+        void setArgumentName(string argumentName) { _argumentName = argumentName; }
+        void setType(TypeHandle type) { _type = type; }
 
     private:
         std::string _argumentName;
-        Type *_type;
+        TypeHandle _type;
     };
 } // namespace weasel

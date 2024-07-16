@@ -1,15 +1,8 @@
 #include "weasel/Lexer/Lexer.h"
 
-weasel::Lexer::Lexer(FileManager *fileManager)
-{
-    _currentBuffer = _startBuffer = fileManager->getStartBuffer();
-    _endBuffer = _startBuffer + fileManager->getSize();
-}
-
 bool weasel::Lexer::compareBuffer(char *startBuffer, char *endBuffer, const char *compareBuffer)
 {
     auto length = endBuffer - startBuffer;
-
     if (length != ((long)strlen(compareBuffer)))
     {
         return false;
@@ -34,12 +27,16 @@ bool weasel::Lexer::isIdentifier(char c, bool num)
     return num ? isalnum(c) : isalpha(c);
 }
 
+// This Method can't support newline '\n' at middle of slide
+// ex:
+// ab\nf
+// if slide 4 that's mean newline is at a middle of slide
 char *weasel::Lexer::getNextBuffer(size_t slide)
 {
-    if (this->isNewline())
+    if (isLastNewline())
     {
         _location.newLine();
-        _location.incrementColumn(slide - 1);
+        _location.incrementColumn(0);
     }
     else
     {
@@ -48,12 +45,12 @@ char *weasel::Lexer::getNextBuffer(size_t slide)
 
     _currentBuffer += slide; // get next buffer
 
-    return _currentBuffer;
+    return getCurrentBuffer();
 }
 
 bool weasel::Lexer::expect(weasel::TokenKind kind)
 {
-    auto lastBuffer = _currentBuffer;
+    auto lastBuffer = getCurrentBuffer();
     auto ok = true;
     auto token = getToken();
     while (token.isKind(TokenKind::TokenSpaceNewline))
@@ -72,7 +69,9 @@ bool weasel::Lexer::expect(weasel::TokenKind kind)
 
 weasel::Token weasel::Lexer::createToken(weasel::TokenKind kind, char *startBuffer, char *endBuffer)
 {
-    return Token::create(kind, _location, startBuffer, endBuffer);
+    uint tokenStartColumn = _location.column - ((endBuffer - startBuffer) - 1);
+
+    return Token::create(kind, SourceLocation(startBuffer - getStartBuffer(), _location.line, tokenStartColumn), startBuffer, endBuffer);
 }
 
 weasel::Token weasel::Lexer::getNextToken(bool skipSpace)
@@ -85,16 +84,16 @@ weasel::Token weasel::Lexer::getNextToken(bool skipSpace)
     return _currentToken;
 }
 
-weasel::Token weasel::Lexer::getToken()
+Token Lexer::getToken()
 {
-    if (_currentBuffer == _endBuffer)
+    if (getCurrentBuffer() == getEndBuffer())
     {
-        return this->createToken(TokenKind::TokenEOF, _currentBuffer, _endBuffer);
+        return createToken(TokenKind::TokenEOF, getCurrentBuffer(), getEndBuffer());
     }
 
-    while (isspace(*_currentBuffer))
+    while (isspace(*getCurrentBuffer()))
     {
-        if (*_currentBuffer == '\n')
+        if (*getCurrentBuffer() == '\n')
         {
             // New Line always come at the end of code
             // getNextChar will force new character from user input
@@ -102,28 +101,28 @@ weasel::Token weasel::Lexer::getToken()
             // Instead make lastChar empty char will not need new character
             // And next iteration will be ignored
             getNextBuffer();
-            return this->createToken(TokenKind::TokenSpaceNewline, _currentBuffer - 1, _currentBuffer);
+            return createToken(TokenKind::TokenSpaceNewline, getCurrentBuffer() - 1, getCurrentBuffer());
         }
 
         getNextBuffer();
     }
 
     // Check if identifier
-    if (isIdentifier(*_currentBuffer))
+    if (isIdentifier(*getCurrentBuffer()))
     {
-        auto *start = _currentBuffer;
+        auto *start = getCurrentBuffer();
         while (isIdentifier(*getNextBuffer(), true))
             ;
 
         /// Check Keyword ///
-        auto token = getKeyword(start, _currentBuffer);
+        auto token = getKeyword(start, getCurrentBuffer());
         if (!token.isUnknown())
         {
             return token;
         }
 
         // Check if data type
-        token = getType(start, _currentBuffer);
+        token = getType(start, getCurrentBuffer());
         if (!token.isUnknown())
         {
             return token;
@@ -131,81 +130,81 @@ weasel::Token weasel::Lexer::getToken()
 
         TokenKind kind = TokenKind::TokenIdentifier;
         // Check NIl Literal
-        if (compareBuffer(start, _currentBuffer, "nil"))
+        if (compareBuffer(start, getCurrentBuffer(), "nil"))
         {
             kind = TokenKind::TokenLitNil;
         }
-        else if (compareBuffer(start, _currentBuffer, "true") || compareBuffer(start, _currentBuffer, "false"))
+        else if (compareBuffer(start, getCurrentBuffer(), "true") || compareBuffer(start, getCurrentBuffer(), "false"))
         {
             // Check Boolean Literal
             kind = TokenKind::TokenLitBool;
         }
 
         // Identifier
-        return this->createToken(kind, start, _currentBuffer);
+        return createToken(kind, start, getCurrentBuffer());
     }
 
     // Check if Number
-    if (isdigit(*_currentBuffer) || (*_currentBuffer == '.' && isdigit(checkNextBuffer())))
+    if (isdigit(*getCurrentBuffer()) || (*getCurrentBuffer() == '.' && isdigit(checkNextBuffer())))
     {
-        auto start = _currentBuffer;
+        auto start = getCurrentBuffer();
         auto numDot = 0;
 
         do
         {
-            if (*_currentBuffer == '.')
+            if (*getCurrentBuffer() == '.')
             {
                 numDot++;
             }
 
             getNextBuffer();
-        } while (isdigit(*_currentBuffer) || *_currentBuffer == '.');
+        } while (isdigit(*getCurrentBuffer()) || *getCurrentBuffer() == '.');
 
         if (numDot >= 2)
         {
-            return this->createToken(TokenKind::TokenUnknown, start, _currentBuffer);
+            return createToken(TokenKind::TokenUnknown, start, getCurrentBuffer());
         }
 
-        if (*_currentBuffer == 'd')
+        if (*getCurrentBuffer() == 'd')
         {
             getNextBuffer(); // eat 'd' for double
 
-            return this->createToken(TokenKind::TokenLitDouble, start, _currentBuffer);
+            return createToken(TokenKind::TokenLitDouble, start, getCurrentBuffer());
         }
 
-        if (numDot == 1 || *_currentBuffer == 'f')
+        if (numDot == 1 || *getCurrentBuffer() == 'f')
         {
-            if (*_currentBuffer == 'f')
+            if (*getCurrentBuffer() == 'f')
             {
                 getNextBuffer(); // eat 'f' if exist
             }
 
-            return this->createToken(TokenKind::TokenLitFloat, start, _currentBuffer);
+            return createToken(TokenKind::TokenLitFloat, start, getCurrentBuffer());
         }
 
         // Number Literal
-        return this->createToken(TokenKind::TokenLitInteger, start, _currentBuffer);
+        return createToken(TokenKind::TokenLitInteger, start, getCurrentBuffer());
     }
 
     // String Literal
-    if (*_currentBuffer == '"')
+    if (*getCurrentBuffer() == '"')
     {
         return getStringLiteral();
     }
 
     // Character Literal
-    if (*_currentBuffer == '\'')
+    if (*getCurrentBuffer() == '\'')
     {
         return getCharacterLiteral();
     }
 
     // Save Current Buffer
-    auto *lastBuffer = _currentBuffer;
+    auto *lastBuffer = getCurrentBuffer();
     getNextBuffer();
 
     // TODO: You need to save some comment to make a documentation
     // Single Line Comment
-    if (*lastBuffer == '/' && *_currentBuffer == '/')
+    if (*lastBuffer == '/' && *getCurrentBuffer() == '/')
     {
         while (*getNextBuffer() != '\n' && isValidBuffer())
             ;
@@ -215,7 +214,7 @@ weasel::Token weasel::Lexer::getToken()
     // TODO: You need to save some comment to make a documentation
     // TODO: Should Error when EOF
     // Multiple Line Comment
-    if (*lastBuffer == '/' && *_currentBuffer == '*')
+    if (*lastBuffer == '/' && *getCurrentBuffer() == '*')
     {
         lastBuffer = getNextBuffer();
         if (!isValidBuffer())
@@ -231,13 +230,13 @@ weasel::Token weasel::Lexer::getToken()
                 return getToken();
             }
 
-            if (*lastBuffer == '*' && *_currentBuffer == '/')
+            if (*lastBuffer == '*' && *getCurrentBuffer() == '/')
             {
                 getNextBuffer(); // eat /
                 return getToken();
             }
 
-            lastBuffer = _currentBuffer;
+            lastBuffer = getCurrentBuffer();
         }
     }
 
@@ -250,11 +249,11 @@ weasel::Token weasel::Lexer::getToken()
         }
     }
 
-    auto *start = _currentBuffer - 1;
-    while (!isspace(*_currentBuffer))
+    auto *start = getCurrentBuffer() - 1;
+    while (!isspace(*getCurrentBuffer()))
     {
         getNextBuffer();
     }
 
-    return this->createToken(TokenKind::TokenUnknown, start, _currentBuffer);
+    return createToken(TokenKind::TokenUnknown, start, getCurrentBuffer());
 }

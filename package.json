@@ -13,10 +13,9 @@
     "spirv": "./config/spirv.sh",
     "spirv-cross": "./config/spirv-cross.sh",
     "spirv-clspv": "./config/spirv-clspv.sh",
-
     "build": "./config/build.sh",
-
-    "weaselc-test": "./config/test-weasel.sh temp/test.we temp/test",
+    "dev": "bun run build && bun run weaselc-test",
+    "weaselc-test": "GLOG_logtostderr=1 ./build/tools/weaselc/weaselc temp/test.we",
     "cross-test": "./build/test/cross-test/cross-test",
     "metal-test": "./build/test/metal-test/metal-test",
     "vulkan-test": "./build/test/vulkan-test/vulkan-test",
