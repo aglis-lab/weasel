@@ -36,7 +36,7 @@ char *weasel::Lexer::getNextBuffer(size_t slide)
     if (isLastNewline())
     {
         _location.newLine();
-        _location.incrementColumn(0);
+        _location.incrementColumn(slide);
     }
     else
     {

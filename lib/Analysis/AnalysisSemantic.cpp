@@ -71,7 +71,7 @@ void AnalysisSemantic::callExpressionCheck(CallExpressionHandle expr)
     if (!fun)
     {
         expr->setError(Errors::getInstance().functionNotDefined.withToken(expr->getToken()));
-        return;
+        return onError(expr);
     }
 
     expr->setType(fun->getType());
