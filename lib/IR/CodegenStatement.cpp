@@ -207,7 +207,7 @@ llvm::Value *weasel::WeaselCodegen::codegen(CallExpression *expr)
         }
 
         auto argVal = arg->codegen(this);
-        assert(!argVal && "failed codegen argument");
+        assert(argVal && "failed codegen argument");
 
         argsV.push_back(argVal);
     }

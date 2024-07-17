@@ -53,9 +53,11 @@ namespace weasel
         Error expectedExpression = Error(10, ErrorKind::SyntaxError, "expected expression");
         Error returnTypeNotValid = Error(11, ErrorKind::SyntaxError, "return type not valid");
         Error invalidVararg = Error(12, ErrorKind::SyntaxError, "variadic number argument should be final argument");
+        Error expectedDataType = Error(13, ErrorKind::SyntaxError, "expected data type");
+        Error expectedNewLine = Error(14, ErrorKind::SyntaxError, "expected newline");
 
         // SEMANTIC ERROR
-        Error functionNotDefined = Error(13, ErrorKind::SemanticError, "function not declared");
+        Error functionNotDefined = Error(100, ErrorKind::SemanticError, "function not declared");
 
     private:
         Errors() = default;

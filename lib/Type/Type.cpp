@@ -102,35 +102,17 @@ bool weasel::Type::isPossibleStructType()
     return false;
 }
 
-int weasel::StructType::findTypeName(const std::string &typeName)
+int StructType::findTypeName(const string &typeName)
 {
-    auto exist = std::find(_typeNames.begin(), _typeNames.end(), typeName);
-    if (exist == _typeNames.end())
+    for (size_t i = 0; i < _fields.size(); i++)
     {
-        return -1;
-    }
-
-    return exist - _typeNames.begin();
-}
-
-void weasel::StructType::addField(const std::string &fieldName, TypeHandle type)
-{
-    _typeNames.push_back(fieldName);
-
-    addContainedType(move(type));
-}
-
-bool weasel::StructType::isPreferConstant()
-{
-    for (auto &item : getContainedTypes())
-    {
-        if (item->isArrayType())
+        if (_fields[i].getIdentifier() == typeName)
         {
-            return false;
+            return i;
         }
     }
 
-    return true;
+    return -1;
 }
 
 int weasel::Type::getTypeWidth()

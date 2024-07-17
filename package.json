@@ -9,11 +9,12 @@
     "test": "test"
   },
   "scripts": {
+    "preset": "rm -rf build && cmake --preset=default",
     "llvm": "./config/llvm.sh",
     "spirv": "./config/spirv.sh",
     "spirv-cross": "./config/spirv-cross.sh",
     "spirv-clspv": "./config/spirv-clspv.sh",
-    "build": "./config/build.sh",
+    "build": "cmake --build build -j 8",
     "dev": "bun run build && bun run weaselc-test",
     "weaselc-test": "GLOG_logtostderr=1 ./build/tools/weaselc/weaselc temp/test.we",
     "cross-test": "./build/test/cross-test/cross-test",

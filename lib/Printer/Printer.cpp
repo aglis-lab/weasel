@@ -17,14 +17,20 @@ void Printer::printAsOperand(GlobalVariable *expr)
 
 void Printer::print(Module *module)
 {
-    // // Print user types or struct
-    // for (auto item : module->getUserTypes())
-    // {
-    //     fmt::println(_out, "@declare ", item->getIdentifier());
+    // Print user types or struct
+    for (auto item : module->getUserTypes())
+    {
+        fmt::println(_out, "@type {}:", item->getIdentifier());
 
-    //     // Newline after function declaration or definition
-    //     fmt::println(_out, "");
-    // }
+        auto fieldShift = getCurrentShift() + DEFAULT_SHIFT;
+        for (auto field : item->getFields())
+        {
+            fmt::println(_out, "{: >{}}{} {}", "", fieldShift, field.getIdentifier(), field.getType()->getTypeName());
+        }
+
+        // Newline after function declaration or definition
+        fmt::println(_out, "");
+    }
 
     // Print it's function and it's body
     for (auto item : module->getFunctions())
@@ -51,7 +57,7 @@ void Printer::print(Function *expr)
 {
     std::string prefix = "@declare";
     auto newlineOp = "";
-    if (expr->getBody()->getBody().size() > 0)
+    if (expr->getBody() && expr->getBody()->getBody().size() > 0)
     {
         prefix = "@define";
         newlineOp = ":";
@@ -79,7 +85,10 @@ void Printer::print(Function *expr)
     auto lastShift = getCurrentShift();
     setCurrentShift(lastShift + DEFAULT_SHIFT);
 
-    expr->getBody()->print(this);
+    if (expr->getBody())
+    {
+        expr->getBody()->print(this);
+    }
 
     setCurrentShift(lastShift);
 }

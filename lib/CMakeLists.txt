@@ -5,4 +5,4 @@ file(GLOB SOURCES */*.cpp)
 
 add_library(WeaselLib STATIC ${SOURCES})
 
-target_link_libraries(WeaselLib glog::glog fmt::fmt Threads::Threads)
+target_link_libraries(WeaselLib glog::glog)

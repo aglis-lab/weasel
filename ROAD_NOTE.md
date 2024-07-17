@@ -8,7 +8,7 @@
   - [ ] Check Nil Literal Expression
   - [x] Create Error List
   - [x] Find Best strategy for creating syntax error (not continuing the code or parser)
-- [ ] Migrate System Instanll into vcpkg
+- [ ] Migrate System Install into vcpkg
 - [ ] Make Parser can't detect semantic error
 - [ ] Create Semantic Analysis
   - [ ] Check Variable Exist

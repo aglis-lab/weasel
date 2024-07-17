@@ -56,52 +56,56 @@ ExpressionHandle Parser::parseStatement()
     return expr;
 }
 
-// weasel::StructType *weasel::Parser::parseStruct()
-// {
-//     return nullptr;
+StructTypeHandle Parser::parseStruct()
+{
+    auto structType = make_shared<StructType>();
+    if (!getNextToken().isIdentifier())
+    {
+        structType->setError(Errors::getInstance().expectedIdentifier.withToken(getCurrentToken()));
+        return structType;
+    }
 
-//     // if (!getNextToken().isIdentifier() && !getCurrentToken().isKeyParallel())
-//     // {
-//     //     return ErrorTable::addError(getCurrentToken(), "Invalid Struct expression");
-//     // }
+    auto tokenIndentifier = getCurrentToken();
+    if (!getNextToken().isOpenCurly())
+    {
+        structType->setError(Errors::getInstance().expectedOpenCurly.withToken(getCurrentToken()));
+        return structType;
+    }
 
-//     // auto tokenIndentifier = getCurrentToken();
-//     // if (!getNextToken(true).isOpenCurly())
-//     // {
-//     //     return ErrorTable::addError(getCurrentToken(), "Invalid Struct expression");
-//     // }
+    getNextToken(true); // eat '{' and '\n'
 
-//     // // Parse Struct Properties
-//     // auto structName = tokenIndentifier.getValue();
-//     // auto structType = StructType::get(structName);
+    structType->setIdentifier(tokenIndentifier.getValue());
+    while (!getCurrentToken().isCloseCurly())
+    {
+        if (!getCurrentToken().isIdentifier())
+        {
+            structType->setError(Errors::getInstance().expectedIdentifier.withToken(getCurrentToken()));
+            return structType;
+        }
 
-//     // while (true)
-//     // {
-//     //     if (getNextToken(true).isCloseCurly())
-//     //     {
-//     //         getNextToken(); // eat '}'
-//     //         break;
-//     //     }
+        auto identToken = getCurrentToken();
+        getNextToken(); // eat 'identifier'
+        if (!(getCurrentToken().isDataType() || getCurrentToken().isIdentifier()))
+        {
+            structType->setError(Errors::getInstance().expectedDataType.withToken(getCurrentToken()));
+            return structType;
+        }
 
-//     //     if (!getCurrentToken().isIdentifier())
-//     //     {
-//     //         return ErrorTable::addError(getCurrentToken(), "Invalid Struct expression");
-//     //     }
+        auto propType = parseDataType();
+        structType->getFields().push_back(StructTypeField(identToken, identToken.getValue(), propType));
+        if (!getCurrentToken().isNewline())
+        {
+            structType->setError(Errors::getInstance().expectedNewLine.withToken(getCurrentToken()));
+            return structType;
+        }
 
-//     //     auto propName = getCurrentToken();
-//     //     getNextToken(); // eat 'identifier'
+        getNextToken(); // eat '\n'
+    }
 
-//     //     auto propType = parseDataType();
-//     //     if (propType == nullptr)
-//     //     {
-//     //         return ErrorTable::addError(getCurrentToken(), "Invalid Struct expression");
-//     //     }
+    getNextToken(); // eat '}'
 
-//     //     structType->addField(propName.getValue(), propType);
-//     // }
-
-//     // return structType;
-// }
+    return structType;
+}
 
 // weasel::Expression *weasel::Parser::parseLoopingStatement()
 // {

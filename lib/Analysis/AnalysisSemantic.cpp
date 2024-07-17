@@ -1,15 +1,17 @@
 #include "weasel/Analysis/AnalysisSemantic.h"
 
-void AnalysisSemantic::onError(ExpressionHandle expr)
-{
-    getErrors().push_back(expr);
-}
-
 void AnalysisSemantic::semanticCheck()
 {
-    // TODO: Semantic for User Type
+    // Struct Type
     for (auto item : getModule()->getUserTypes())
     {
+        if (item->isError())
+        {
+            onStructError(item);
+            break;
+        }
+
+        // TODO: Semantic for User Type
     }
 
     // Functions
@@ -17,8 +19,8 @@ void AnalysisSemantic::semanticCheck()
     {
         if (item->isError())
         {
-            auto token = item->getError().value().getToken();
-            LOG(INFO) << item->getIdentifier() << " " << item->getError().value().getMessage() << " but got " << token.getValue() << " " << token.getLocation().toString();
+            onError(item);
+            break;
         }
 
         for (auto arg : item->getArguments())
@@ -29,8 +31,12 @@ void AnalysisSemantic::semanticCheck()
         // TODO: Check Function Return Type
 
         // Check Compound Statement
-        compoundStatementCheck(item->getBody());
+        statementCheck(item->getBody());
     }
+}
+
+void AnalysisSemantic::userTypeCheck(StructTypeHandle expr)
+{
 }
 
 void AnalysisSemantic::compoundStatementCheck(CompoundStatementHandle expr)
@@ -48,6 +54,11 @@ void AnalysisSemantic::compoundStatementCheck(CompoundStatementHandle expr)
 
 void AnalysisSemantic::statementCheck(ExpressionHandle expr)
 {
+    if (!expr)
+    {
+        return;
+    }
+
     if (expr->isError())
     {
         return onError(expr);

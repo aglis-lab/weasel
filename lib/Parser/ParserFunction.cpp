@@ -12,6 +12,11 @@ FunctionHandle Parser::parseFunction()
         return fun;
     }
 
+    if (getCurrentToken().isNewline())
+    {
+        return fun;
+    }
+
     if (!getCurrentToken().isOpenCurly())
     {
         fun->setError(Errors::getInstance().expectedOpenCurly.withToken(getCurrentToken()));
@@ -115,24 +120,12 @@ FunctionHandle Parser::parseDeclareFunction()
         return fun;
     }
 
-    getNextToken(); // eat )
-
-    if (!getCurrentToken().isOpenCurly() && !getCurrentToken().isDataType())
-    {
-        fun->setError(Errors::getInstance().returnTypeNotValid.withToken(getCurrentToken()));
-        return fun;
-    }
+    getNextToken(); // eat ')'
 
     auto returnType = Type::getVoidType();
-    if (getCurrentToken().isDataType())
+    if (getCurrentToken().isDataType() || getCurrentToken().isIdentifier())
     {
         returnType = parseDataType();
-    }
-
-    if (!getCurrentToken().isOpenCurly())
-    {
-        fun->setError(Errors::getInstance().expectedOpenCurly.withToken(getCurrentToken()));
-        return fun;
     }
 
     if (isVararg)

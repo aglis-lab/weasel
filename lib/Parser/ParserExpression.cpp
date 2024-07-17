@@ -95,34 +95,35 @@ ExpressionHandle Parser::parseLiteralExpression()
 
     auto token = getCurrentToken();
     getNextToken(); // eat 'literal'
-    //     if (token.isKind(TokenKind::TokenLitBool))
-    //     {
-    //         return new BoolLiteralExpression(token, token.getValue() == "true");
-    //     }
 
-    //     if (token.isKind(TokenKind::TokenLitChar))
-    //     {
-    //         auto val = token.getValue()[0];
-    //         return new CharLiteralExpression(token, val);
-    //     }
+    if (token.isKind(TokenKind::TokenLitBool))
+    {
+        return make_shared<BoolLiteralExpression>(token, token.getValue() == "true");
+    }
 
-    //     if (token.isKind(TokenKind::TokenLitInteger))
-    //     {
-    //         auto value = strtoll(token.getValue().c_str(), nullptr, 10);
-    //         return new NumberLiteralExpression(token, value);
-    //     }
+    if (token.isKind(TokenKind::TokenLitChar))
+    {
+        auto val = token.getValue()[0];
+        return make_shared<CharLiteralExpression>(token, val);
+    }
 
-    //     if (token.isKind(TokenKind::TokenLitFloat))
-    //     {
-    //         auto value = std::stof(token.getValue());
-    //         return new FloatLiteralExpression(token, value);
-    //     }
+    if (token.isKind(TokenKind::TokenLitInteger))
+    {
+        auto value = strtoll(token.getValue().c_str(), nullptr, 10);
+        return make_shared<NumberLiteralExpression>(token, value);
+    }
 
-    //     if (token.isKind(TokenKind::TokenLitDouble))
-    //     {
-    //         auto value = std::stod(token.getValue());
-    //         return new DoubleLiteralExpression(token, value);
-    //     }
+    if (token.isKind(TokenKind::TokenLitFloat))
+    {
+        auto value = std::stof(token.getValue());
+        return make_shared<FloatLiteralExpression>(token, value);
+    }
+
+    if (token.isKind(TokenKind::TokenLitDouble))
+    {
+        auto value = std::stod(token.getValue());
+        return make_shared<DoubleLiteralExpression>(token, value);
+    }
 
     if (token.isKind(TokenKind::TokenLitString))
     {

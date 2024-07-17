@@ -15,6 +15,12 @@ void weasel::Parser::parse()
             return;
         }
 
+        if (getCurrentToken().isKeyStruct())
+        {
+            auto structType = parseStruct();
+            getModule()->addUserType(structType);
+        }
+
         if (getCurrentToken().isKeyFunction() || getCurrentToken().isKeyExtern())
         {
             auto isExtern = false;
@@ -28,47 +34,6 @@ void weasel::Parser::parse()
             fun->setIsExtern(isExtern);
             getModule()->addFunction(fun);
         }
-
-        // switch (getCurrentToken().getTokenKind())
-        // {
-        // case TokenKind::TokenKeyStruct:
-        //     addUserType(parseStruct());
-        //     break;
-        // case TokenKind::TokenKeyFun:
-        // {
-        //     auto fun = parseFunction();
-        //     addFunction(fun);
-
-        //     if (fun->isError())
-        //     {
-        //         return;
-        //     }
-
-        //     break;
-        // }
-        // case TokenKind::TokenKeyExtern:
-        // {
-        //     auto fun = parseExternFunction();
-        //     addFunction(fun);
-
-        //     if (fun->isError())
-        //     {
-        //         return;
-        //     }
-
-        //     break;
-        // }
-        // case TokenKind::TokenKeyImpl:
-        //     parseImplFunctions();
-        //     break;
-        // case TokenKind::TokenKeyLet:
-        // case TokenKind::TokenKeyConst:
-        //     addGlobalVariable(parseGlobalVariable());
-        //     break;
-        // default:
-        //     LOG(ERROR) << "Unexpected token : " << getCurrentToken().getTokenKindToInt() << " - " << getCurrentToken().getValue();
-        //     break;
-        // }
     }
 }
 

@@ -4,13 +4,15 @@ cmake_minimum_required(VERSION 3.15)
 project(weasel VERSION 0.0.1)
 
 # Set LLVM Version
-set(LLVM_VERSION 15)
+set(LLVM_VERSION 17)
 
 # CMAKE LINKER
-# set(CMAKE_LINKER ld64.lld)
+set(CMAKE_LINKER ld64.lld)
 
 # LLVM
 set(LLVM_DIR /opt/homebrew/opt/llvm@${LLVM_VERSION}/lib/cmake/llvm/)
+
+set(CMAKE_MAKE_PROGRAM Ninja)
 
 # Find THREADS
 find_package(Threads REQUIRED)
@@ -19,7 +21,7 @@ find_package(Threads REQUIRED)
 find_package(fmt REQUIRED)
 
 # Find Google Loging
-find_package (glog REQUIRED)
+find_package(glog REQUIRED)
 
 # Find LLVM PACKAGE
 find_package(LLVM REQUIRED CONFIG)

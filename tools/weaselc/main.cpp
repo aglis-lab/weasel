@@ -65,13 +65,28 @@ int main(int argc, char *argv[])
     analysis.semanticCheck();
     // analysis.typeChecking();
 
+    if (!analysis.getTypeErrors().empty())
+    {
+        for (auto item : analysis.getTypeErrors())
+        {
+            LOG(ERROR)
+                << item->getError()->getMessage()
+                << " but got '" << item->getError()->getToken().getEscapeValue() << "'"
+                << " type of " << item->getError()->getToken().getTokenKindToInt()
+                << " " << item->getError()->getToken().getLocation().toString()
+                << " from " << item->getToken().getValue();
+        }
+
+        return 0;
+    }
+
     if (!analysis.getErrors().empty())
     {
         for (auto item : analysis.getErrors())
         {
             LOG(ERROR)
                 << item->getError()->getMessage()
-                << " bug got '" << item->getError()->getToken().getEscapeValue() << "'"
+                << " but got '" << item->getError()->getToken().getEscapeValue() << "'"
                 << " type of " << item->getError()->getToken().getTokenKindToInt()
                 << " " << item->getError()->getToken().getLocation().toString();
         }
@@ -83,50 +98,49 @@ int main(int argc, char *argv[])
     LOG(INFO) << "Write Weasel AST " << filename << "...\n";
     weasel::Printer(filePath + ".ir").print(weaselModule.get());
 
-    return 0;
-    // // Initialize LLVM
-    // // llvm::InitializeAllTargetInfos();
-    // llvm::InitializeNativeTarget();
-    // llvm::InitializeNativeTargetAsmParser();
-    // llvm::InitializeNativeTargetAsmPrinter();
+    // Initialize LLVM
+    // llvm::InitializeAllTargetInfos();
+    llvm::InitializeNativeTarget();
+    llvm::InitializeNativeTargetAsmParser();
+    llvm::InitializeNativeTargetAsmPrinter();
 
-    // // Prepare for codegen
-    // auto llvmContext = make_unique<llvm::LLVMContext>();
-    // auto codegen = weasel::WeaselCodegen(llvmContext.get(), "CoreModule");
-    // auto driver = weasel::Driver(&codegen, weaselModule.get());
+    // Prepare for codegen
+    auto llvmContext = make_unique<llvm::LLVMContext>();
+    auto codegen = weasel::WeaselCodegen(llvmContext.get(), "CoreModule");
+    auto driver = weasel::Driver(&codegen, weaselModule.get());
 
-    // LOG(INFO) << "Compiling...\n";
-    // auto isCompileSuccess = driver.compile();
-    // if (!isCompileSuccess)
-    // {
-    //     if (!driver.getError().empty())
-    //     {
-    //         std::cerr << "Driver Compile : " << driver.getError() << "\n";
-    //     }
-    //     return 1;
-    // }
+    LOG(INFO) << "Compiling...\n";
+    auto isCompileSuccess = driver.compile();
+    if (!isCompileSuccess)
+    {
+        if (!driver.getError().empty())
+        {
+            std::cerr << "Driver Compile : " << driver.getError() << "\n";
+        }
+        return 1;
+    }
 
-    // LOG(INFO) << "Create LLVM IR...\n";
-    // driver.createIR(outputExecutable);
+    LOG(INFO) << "Create LLVM IR...\n";
+    driver.createIR(outputExecutable);
 
-    // LOG(INFO) << "Create Output Objects...\n";
-    // if (!isCompileSuccess)
-    // {
-    //     return 1;
-    // }
+    LOG(INFO) << "Create Output Objects...\n";
+    if (!isCompileSuccess)
+    {
+        return 1;
+    }
 
-    // driver.createObject(outputPath);
+    driver.createObject(outputPath);
 
-    // LOG(INFO) << "Create Executable File...\n";
-    // weasel::BuildSystem buildSystem({outputPath});
-    // buildSystem.addBuildArgument({"o", outputExecutable});
-    // auto result = buildSystem.exec();
-    // if (!result.empty())
-    // {
-    //     std::cerr << result << std::endl;
-    // }
-    // else
-    // {
-    //     buildSystem.runExecutable();
-    // }
+    LOG(INFO) << "Create Executable File...\n";
+    weasel::BuildSystem buildSystem({outputPath});
+    buildSystem.addBuildArgument({"o", outputExecutable});
+    auto result = buildSystem.exec();
+    if (!result.empty())
+    {
+        std::cerr << result << std::endl;
+    }
+    else
+    {
+        buildSystem.runExecutable();
+    }
 }

@@ -12,19 +12,19 @@ namespace weasel
     {
     private:
         WeaselCodegen *_codegen;
-        Module _module;
+        Module *_module;
         std::string _err;
 
     public:
-        Driver(WeaselCodegen *codegen, const Module &module);
+        Driver(WeaselCodegen *codegen, Module *module);
 
         bool compile(std::string targetTriple = "");
 
         void createObject(std::string outputFile) const;
         void createIR(std::string outputFile) const;
 
-        vector<FunctionHandle> &getFunctions() { return _module.getFunctions(); }
-        vector<StructTypeHandle> &getUserTypes() { return _module.getUserTypes(); }
+        vector<FunctionHandle> &getFunctions() { return _module->getFunctions(); }
+        vector<StructTypeHandle> &getUserTypes() { return _module->getUserTypes(); }
 
         llvm::Module *getModule() const { return _codegen->getModule(); }
         llvm::LLVMContext *getContext() const { return _codegen->getContext(); }

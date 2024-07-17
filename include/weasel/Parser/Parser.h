@@ -67,6 +67,7 @@ namespace weasel
         Token getNextTokenUntil(TokenKind kind);
         Token skipUntilNewLine() { return getNextTokenUntil(TokenKind::TokenSpaceNewline); }
 
+        // Operator Expression
         Expression *createOperatorExpression(Token op, Expression *lhs, Expression *rhs);
 
         // Impl Functions
@@ -80,7 +81,7 @@ namespace weasel
         FunctionHandle parseFunction();
 
         // Parse Global Type
-        // StructType *parseStruct();
+        StructTypeHandle parseStruct();
 
         // Statement
         ExpressionHandle parseStatement();

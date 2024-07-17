@@ -4,6 +4,7 @@
 #include <iostream>
 
 #include <weasel/Lexer/Token.h>
+#include <weasel/Basic/Error.h>
 
 namespace llvm
 {
@@ -58,7 +59,7 @@ namespace weasel
 
         Type(TypeID typeId, TypeHandle containedType, unsigned width = 0, bool isSign = true) : _typeId(typeId), _width(width), _isSigned(isSign)
         {
-            _containedTypes.push_back(move(containedType));
+            _containedTypes.push_back(containedType);
         }
 
     public:
@@ -102,7 +103,7 @@ namespace weasel
         unsigned getContainedWidth() const { return _containedTypes[0]->getTypeWidth(); }
         TypeHandle getContainedType() { return _containedTypes[0]; }
         unsigned getContainedNums() const { return _containedTypes.size(); }
-        std::vector<TypeHandle> getContainedTypes() const { return _containedTypes; }
+        vector<TypeHandle> getContainedTypes() const { return _containedTypes; }
         void addContainedType(TypeHandle containedType) { _containedTypes.push_back(move(containedType)); }
 
         // Generator
@@ -125,8 +126,8 @@ namespace weasel
         virtual ~Type();
         virtual llvm::Type *codegen(WeaselCodegen *codegen);
 
-        std::string getTypeName();
-        std::string getManglingName();
+        string getTypeName();
+        string getManglingName();
 
     protected:
         bool _isSpread = false;
@@ -135,30 +136,66 @@ namespace weasel
 
         TypeID _typeId = TypeID::VoidType;
         Token _token = Token::create();
-        std::vector<TypeHandle> _containedTypes;
+        vector<TypeHandle> _containedTypes;
+    };
+
+    class StructTypeField
+    {
+    private:
+        Token _token;
+        string _identifier;
+        TypeHandle _type;
+
+    public:
+        StructTypeField(Token token, string identifier, TypeHandle type) : _token(token), _identifier(identifier), _type(type) {}
+        ~StructTypeField() = default;
+
+        string getIdentifier() const { return _identifier; }
+        TypeHandle getType() const { return _type; }
     };
 
     // Struct Value
     class StructType : public Type
     {
     private:
-        std::vector<std::string> _typeNames;
-        std::string _identifier;
-
-        StructType(std::string structName) : Type(TypeID::StructType, 0, false) { setIdentifier(structName); }
-
-    public:
-        static StructType *get(const std::string &structName) { return new StructType(structName); }
+        vector<StructTypeField> _fields;
+        string _identifier;
+        optional<Error> _error;
 
     public:
-        std::string getIdentifier() const { return _identifier; }
-        void setIdentifier(std::string identifier) { _identifier = identifier; }
+        StructType() : Type(TypeID::StructType, 0, false) {}
+        StructType(string structName) : Type(TypeID::StructType, 0, false), _identifier(structName) {}
 
-        std::vector<std::string> getTypeNames() const { return _typeNames; }
-        int findTypeName(const std::string &typeName);
+        optional<Error> getError() const { return _error; }
+        void setError(Error error) { _error = error; }
 
-        void addField(const std::string &fieldName, TypeHandle type);
-        bool isPreferConstant();
+        string getIdentifier() const { return _identifier; }
+        void setIdentifier(string identifier) { _identifier = identifier; }
+
+        int findTypeName(const string &typeName);
+
+        vector<StructTypeField> &getFields() { return _fields; }
+        void addField(const StructTypeField &field)
+        {
+            _fields.push_back(field);
+        }
+        bool isPreferConstant() const
+        {
+            for (auto &item : getContainedTypes())
+            {
+                if (item->isArrayType())
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        void setToken(Token token) { _token = token; }
+        Token getToken() const { return _token; }
+
+        bool isError() const { return _error.has_value(); }
 
     public:
         llvm::Type *codegen(WeaselCodegen *codegen) override;
@@ -167,20 +204,20 @@ namespace weasel
     class ArgumentType
     {
     public:
-        ArgumentType(std::string argumentName, Type *type) : _argumentName(argumentName), _type(type) {}
+        ArgumentType(string argumentName, Type *type) : _argumentName(argumentName), _type(type) {}
 
         ArgumentType() {}
 
         static ArgumentTypeHandle create() { return make_shared<ArgumentType>(); }
 
-        std::string getArgumentName() const { return _argumentName; }
+        string getArgumentName() const { return _argumentName; }
         TypeHandle getType() { return _type; }
 
         void setArgumentName(string argumentName) { _argumentName = argumentName; }
         void setType(TypeHandle type) { _type = type; }
 
     private:
-        std::string _argumentName;
+        string _argumentName;
         TypeHandle _type;
     };
 } // namespace weasel
