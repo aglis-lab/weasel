@@ -12,6 +12,7 @@ namespace weasel
 
     public:
         explicit FileManager(const string &filePath);
+        ~FileManager() {}
 
         bool isValid() const { return _startBuffer != nullptr; }
         size_t getSize() const { return _size; }

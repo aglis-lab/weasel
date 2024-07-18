@@ -89,6 +89,49 @@ weasel::GlobalVariable *weasel::Parser::parseGlobalVariable()
 //     return parseCallExpression();
 // }
 
+ExpressionHandle Parser::parseUnaryExpression()
+{
+    LOG(INFO) << "Parse Unary Expression...";
+
+    auto token = getCurrentToken();
+
+    getNextToken(); // eat ' & | * | - | ! | ~ '
+
+    auto expr = parsePrimaryExpression();
+    if (expr->isError())
+    {
+        skipUntilNewLine();
+        return expr;
+    }
+
+    UnaryExpression::Operator op;
+    switch (token.getTokenKind())
+    {
+    case TokenKind::TokenOperatorStar:
+        op = UnaryExpression::Dereference;
+        break;
+    case TokenKind::TokenOperatorNegative:
+        op = UnaryExpression::Negative;
+        break;
+    case TokenKind::TokenOperatorPlus:
+        op = UnaryExpression::Positive;
+        break;
+    case TokenKind::TokenOperatorNot:
+        op = UnaryExpression::Not;
+        break;
+    case TokenKind::TokenOperatorNegation:
+        op = UnaryExpression::Negation;
+        break;
+    case TokenKind::TokenOperatorAnd:
+        op = UnaryExpression::Borrow;
+        break;
+    default:
+        op = UnaryExpression::Positive;
+    }
+
+    return make_shared<UnaryExpression>(token, op, expr);
+}
+
 ExpressionHandle Parser::parseLiteralExpression()
 {
     LOG(INFO) << "Parse Literal Expression...";
@@ -172,6 +215,11 @@ ExpressionHandle Parser::parseCallExpression()
         {
             auto arg = parseExpression();
             expr->getArguments().push_back(arg);
+            if (arg->isError())
+            {
+                skipUntilNewLine();
+                return expr;
+            }
 
             if (getCurrentToken().isCloseParen())
             {
@@ -203,6 +251,7 @@ ExpressionHandle Parser::parseIdentifierExpression()
         return parseCallExpression();
     }
 
+    // TODO: Access Array Expression
     // if (getCurrentToken().isOpenSquare())
     // {
     //     getNextToken(); // eat [
@@ -216,26 +265,27 @@ ExpressionHandle Parser::parseIdentifierExpression()
     //     return new ArrayExpression(indexExpr->getToken(), identifier, indexExpr);
     // }
 
-    return make_shared<ErrorExpression>(getCurrentToken(), Errors::getInstance().unimplementedSyntax.withToken(getCurrentToken()));
-    // return new VariableExpression(identToken, identifier);
+    auto identToken = getCurrentToken();
+    getNextToken(); // eat 'identifier'
+
+    return make_shared<VariableExpression>(identToken, identToken.getValue());
 }
 
-// weasel::Expression *weasel::Parser::parseParenExpression()
-// {
-//     getNextToken(); // eat (
-//     auto expr = parseExpression();
+ExpressionHandle Parser::parseParenExpression()
+{
+    LOG(INFO) << "Parse paren Expression...";
 
-//     if (!getCurrentToken().isCloseParen())
-//     {
-//         expr->setError(Errors::getInstance().expectedOpenParen);
+    getNextToken(); // eat '('
+    auto expr = parseExpression();
+    if (!getCurrentToken().isCloseParen())
+    {
+        expr->setError(Errors::getInstance().expectedOpenParen.withToken(getCurrentToken()));
+        return expr;
+    }
 
-//         return expr;
-//     }
-
-//     getNextToken(); // eat ')'
-
-//     return expr;
-// }
+    getNextToken(); // eat ')'
+    return expr;
+}
 
 // Default Type
 // weasel::Expression *weasel::Parser::parseArrayExpression()
@@ -339,11 +389,11 @@ ExpressionHandle Parser::parsePrimaryExpression()
             }
         }
 
-        //     // Parentise Expression
-        //     else if (getCurrentToken().isOpenParen())
-        //     {
-        //         expr = parseParenExpression();
-        //     }
+        // Parentise Expression
+        else if (getCurrentToken().isOpenParen())
+        {
+            expr = parseParenExpression();
+        }
 
         //     // Array Expression
         //     else if (getCurrentToken().isOpenSquare())
@@ -366,47 +416,11 @@ ExpressionHandle Parser::parsePrimaryExpression()
         return parseLiteralExpression();
     }
 
-    // // Unary Expression
-    // if (getCurrentToken().isOperatorUnary())
-    // {
-    //     auto token = getCurrentToken();
-
-    //     getNextToken(); // eat ' & | * | - | ! | ~ '
-
-    //     auto expr = parsePrimaryExpression();
-    //     if (expr->isError())
-    //     {
-    //         skipUntilNewLine();
-    //         return expr;
-    //     }
-
-    //     UnaryExpression::Operator op;
-    //     switch (token.getTokenKind())
-    //     {
-    //     case TokenKind::TokenOperatorStar:
-    //         op = UnaryExpression::Dereference;
-    //         break;
-    //     case TokenKind::TokenOperatorNegative:
-    //         op = UnaryExpression::Negative;
-    //         break;
-    //     case TokenKind::TokenOperatorPlus:
-    //         op = UnaryExpression::Positive;
-    //         break;
-    //     case TokenKind::TokenOperatorNot:
-    //         op = UnaryExpression::Not;
-    //         break;
-    //     case TokenKind::TokenOperatorNegation:
-    //         op = UnaryExpression::Negation;
-    //         break;
-    //     case TokenKind::TokenOperatorAnd:
-    //         op = UnaryExpression::Borrow;
-    //         break;
-    //     default:
-    //         op = UnaryExpression::Positive;
-    //     }
-
-    //     return new UnaryExpression(token, op, expr);
-    // }
+    // Unary Expression
+    if (getCurrentToken().isOperatorUnary())
+    {
+        return parseUnaryExpression();
+    }
 
     return make_shared<ErrorExpression>(getCurrentToken(), Errors::getInstance().expectedExpression.withToken(getCurrentToken()));
 }
@@ -429,44 +443,49 @@ ExpressionHandle Parser::parseExpressionOperator(unsigned precOrder, ExpressionH
 {
     LOG(INFO) << "Parse Expression Operator...";
 
-    return lhs;
+    while (true)
+    {
+        auto binOp = getCurrentToken();
+        if (!binOp.isOperator())
+        {
+            return lhs;
+        }
 
-    // while (true)
-    // {
-    //     auto binOp = getCurrentToken();
-    //     if (!binOp.isOperator() || binOp.isNewline())
-    //     {
-    //         return lhs;
-    //     }
+        auto prec = binOp.getPrecedence();
+        if (prec.order > precOrder)
+        {
+            return lhs;
+        }
 
-    //     auto prec = binOp.getPrecedence();
-    //     if (prec.order > precOrder)
-    //     {
-    //         return lhs;
-    //     }
+        getNextToken(); // eat 'operator'
 
-    //     getNextToken(); // eat 'operator'
-    //     if (binOp.isOperatorCast())
-    //     {
-    //         auto castType = parseDataType();
-    //         lhs = new TypeCastExpression(binOp, castType, lhs);
+        if (binOp.isOperatorCast())
+        {
+            auto castType = parseDataType();
+            lhs = make_shared<TypeCastExpression>(binOp, castType, lhs);
 
-    //         continue;
-    //     }
+            continue;
+        }
 
-    //     auto rhs = parsePrimaryExpression();
-    //     if (rhs->isError())
-    //     {
-    //         // Skip Expression till newline
-    //         skipUntilNewLine();
-    //     }
-    //     else
-    //     {
-    //         rhs = parseExpressionOperator(prec.order, rhs);
-    //     }
+        auto rhs = parsePrimaryExpression();
+        if (rhs->isError())
+        {
+            // Skip Expression till newline
+            skipUntilNewLine();
+        }
+        else
+        {
+            rhs = parseExpressionOperator(prec.order, rhs);
+        }
 
-    //     lhs = createOperatorExpression(binOp, lhs, rhs);
-    // }
+        lhs = createOperatorExpression(binOp, lhs, rhs);
+        if (rhs->isError())
+        {
+            return lhs;
+        }
+    }
+
+    return make_shared<ErrorExpression>(getCurrentToken(), Errors::getInstance().unimplementedSyntax.withToken(getCurrentToken()));
 }
 
 // weasel::Expression *weasel::Parser::parseFieldExpression(Expression *lhs)

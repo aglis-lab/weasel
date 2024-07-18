@@ -65,57 +65,56 @@ TypeHandle Parser::parseDataType()
     return type;
 }
 
-weasel::Expression *weasel::Parser::createOperatorExpression(Token op, Expression *lhs, Expression *rhs)
+ExpressionHandle Parser::createOperatorExpression(Token op, ExpressionHandle lhs, ExpressionHandle rhs)
 {
     LOG(INFO) << "Parse Create Operator Expression...";
 
-    return nullptr;
-    // if (op.isOperatorAssignment())
-    // {
-    //     if (!op.isOperatorEqual())
-    //     {
-    //         auto startBuffer = op.getStartBuffer();
-    //         auto endBuffer = op.getEndBuffer() - 1;
-    //         auto tokenKind = TokenKind::TokenUnknown;
+    if (op.isOperatorAssignment())
+    {
+        if (!op.isOperatorEqual())
+        {
+            auto startBuffer = op.getStartBuffer();
+            auto endBuffer = op.getEndBuffer() - 1;
+            auto tokenKind = TokenKind::TokenUnknown;
 
-    //         if (auto tokenVal = std::string(startBuffer, endBuffer); tokenVal == "-")
-    //             tokenKind = TokenKind::TokenOperatorPlus;
-    //         else if (tokenVal == "*")
-    //             tokenKind = TokenKind::TokenOperatorStar;
-    //         else if (tokenVal == "/")
-    //             tokenKind = TokenKind::TokenOperatorSlash;
-    //         else if (tokenVal == "%")
-    //             tokenKind = TokenKind::TokenOperatorPercent;
-    //         else if (tokenVal == "^")
-    //             tokenKind = TokenKind::TokenOperatorCaret;
-    //         else if (tokenVal == "|")
-    //             tokenKind = TokenKind::TokenOperatorOr;
-    //         else if (tokenVal == "&")
-    //             tokenKind = TokenKind::TokenOperatorAnd;
-    //         else if (tokenVal == ">>")
-    //             tokenKind = TokenKind::TokenOperatorShiftRight;
-    //         else if (tokenVal == "<<")
-    //             tokenKind = TokenKind::TokenOperatorShiftLeft;
+            if (auto tokenVal = string_view(startBuffer, endBuffer); tokenVal == "-")
+                tokenKind = TokenKind::TokenOperatorPlus;
+            else if (tokenVal == "*")
+                tokenKind = TokenKind::TokenOperatorStar;
+            else if (tokenVal == "/")
+                tokenKind = TokenKind::TokenOperatorSlash;
+            else if (tokenVal == "%")
+                tokenKind = TokenKind::TokenOperatorPercent;
+            else if (tokenVal == "^")
+                tokenKind = TokenKind::TokenOperatorCaret;
+            else if (tokenVal == "|")
+                tokenKind = TokenKind::TokenOperatorOr;
+            else if (tokenVal == "&")
+                tokenKind = TokenKind::TokenOperatorAnd;
+            else if (tokenVal == ">>")
+                tokenKind = TokenKind::TokenOperatorShiftRight;
+            else if (tokenVal == "<<")
+                tokenKind = TokenKind::TokenOperatorShiftLeft;
 
-    //         assert(tokenKind != TokenKind::TokenUnknown);
+            assert(tokenKind != TokenKind::TokenUnknown);
 
-    //         auto token = Token::create(tokenKind, op.getLocation(), startBuffer, endBuffer);
+            auto token = Token::create(tokenKind, op.getLocation(), startBuffer, endBuffer);
 
-    //         rhs = new ArithmeticExpression(token, lhs, rhs);
-    //     }
+            rhs = make_shared<ArithmeticExpression>(token, lhs, rhs);
+        }
 
-    //     return new AssignmentExpression(op, lhs, rhs);
-    // }
+        return make_shared<AssignmentExpression>(op, lhs, rhs);
+    }
 
-    // if (op.isComparison())
-    // {
-    //     return new ComparisonExpression(op, lhs, rhs);
-    // }
+    if (op.isComparison())
+    {
+        return make_shared<ComparisonExpression>(op, lhs, rhs);
+    }
 
-    // if (op.isOperatorLogical())
-    // {
-    //     return new LogicalExpression(op, lhs, rhs);
-    // }
+    if (op.isOperatorLogical())
+    {
+        return make_shared<LogicalExpression>(op, lhs, rhs);
+    }
 
-    // return new ArithmeticExpression(op, lhs, rhs);
+    return make_shared<ArithmeticExpression>(op, lhs, rhs);
 }

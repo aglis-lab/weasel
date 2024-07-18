@@ -8,8 +8,11 @@
   - [ ] Check Nil Literal Expression
   - [x] Create Error List
   - [x] Find Best strategy for creating syntax error (not continuing the code or parser)
-- [ ] Migrate System Install into vcpkg
+- [x] Migrate System Install into vcpkg
+- [ ] Add Token into Type
+  - [ ] Seman
 - [ ] Make Parser can't detect semantic error
+- [ ] LLVM 17 Pointer Type System
 - [ ] Create Semantic Analysis
   - [ ] Check Variable Exist
   - [ ] Check Type Valid

@@ -84,6 +84,7 @@ namespace weasel
                    isIntegerType();
         }
 
+        bool isUnknownType() const { return _typeId == TypeID::UnknownType; }
         bool isReferenceType() const { return _typeId == TypeID::ReferenceType; }
         bool isPointerType() const { return _typeId == TypeID::PointerType; }
         bool isArrayType() const { return _typeId == TypeID::ArrayType; }

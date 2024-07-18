@@ -378,13 +378,13 @@ void Printer::printAsOperand(UnaryExpression *expr)
 void Printer::printAsOperand(DeclarationStatement *expr)
 {
     auto prefix = "@declare";
-    if (expr->getValue() != nullptr)
+    if (expr->getValue())
     {
         prefix = "@define";
     }
 
     fmt::print(_out, "{} {} {}", prefix, expr->getIdentifier(), expr->getType()->getTypeName());
-    if (expr->getValue() != nullptr)
+    if (expr->getValue())
     {
         fmt::print(_out, " = ");
 

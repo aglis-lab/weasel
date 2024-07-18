@@ -67,33 +67,3 @@ Token Parser::getNextToken(bool skipSpace)
 {
     return _lexer.getNextToken(skipSpace);
 }
-
-// TODO: Find User Type
-// weasel::StructType *weasel::Parser::findUserType(const std::string &typeName)
-// {
-//     for (auto item : getUserTypes())
-//     {
-//         if (item->getIdentifier() == typeName)
-//         {
-//             return item;
-//         }
-//     }
-
-//     return nullptr;
-// }
-
-// FunctionHandle Parser::findFunction(const string &identifier, StructType *structType, bool isStatic)
-// {
-//     for (auto item : getFunctions())
-//     {
-//         auto checkStatic = item->getIsStatic() == isStatic;
-//         auto checkStruct = item->getImplStruct() == structType;
-//         auto checkIdent = item->getIdentifier() == identifier;
-//         if (checkIdent && checkStruct && checkStatic)
-//         {
-//             return item;
-//         }
-//     }
-
-//     return nullptr;
-// }

@@ -2,7 +2,8 @@
 #include <vector>
 
 #define DEFAULT_LINKER "ld64.lld"
-#define LLVM_PATH "/opt/homebrew/Cellar/llvm@15/15.0.7"
+#define LLVM_PATH "/opt/homebrew/Cellar/llvm@17/17.0.6"
+#define CLANG_PATH "/lib/clang/17"
 
 // Invoke ld.lld (Unix), ld64.lld (macOS), lld-link (Windows), wasm-ld (WebAssembly) instead
 
@@ -53,7 +54,7 @@ namespace weasel
         // TODO: Need to make it automatic
         // Default Build Arguments
         _buildArguments.push_back({"syslibroot", "/Library/Developer/CommandLineTools/SDKs/MacOSX14.sdk"});
-        _buildArguments.push_back({"lSystem", string(LLVM_PATH) + "/lib/clang/15.0.7/lib/darwin/libclang_rt.osx.a"});
+        _buildArguments.push_back({"lSystem", string(LLVM_PATH) + CLANG_PATH + "/lib/darwin/libclang_rt.osx.a"});
         _buildArguments.push_back({"arch", "arm64"});
         _buildArguments.push_back({"platform_version", "macos 14.0.0 14.0.0"});
         _buildArguments.push_back({"no_deduplicate", ""});

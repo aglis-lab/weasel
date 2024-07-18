@@ -10,13 +10,15 @@
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/DIBuilder.h>
 
+using namespace std;
+
 namespace weasel
 {
     class Metadata
     {
     private:
-        llvm::MDBuilder *_MDbuilder;
         llvm::LLVMContext *_context;
+        llvm::MDBuilder *_MDbuilder;
         llvm::DIBuilder *_DIBuilder;
 
     private:
@@ -24,14 +26,19 @@ namespace weasel
         llvm::Metadata *getVersionMetadata();
         llvm::MDNode *getCLVersionMetadata();
 
-        llvm::MDBuilder *getMDBuilder() const { return _MDbuilder; }
         llvm::LLVMContext *getContext() const { return _context; }
-        llvm::DIBuilder *getDIBuilder() const { return _DIBuilder; }
+        llvm::MDBuilder *getMDBuilder() { return _MDbuilder; }
+        llvm::DIBuilder *getDIBuilder() { return _DIBuilder; }
 
     public:
-        Metadata(){};
+        Metadata() = default;
 
-        Metadata(llvm::LLVMContext *, llvm::Module &);
+        Metadata(llvm::LLVMContext *context, llvm::Module *module)
+        {
+            _context = context;
+            _MDbuilder = new llvm::MDBuilder(*context);
+            _DIBuilder = new llvm::DIBuilder(*module);
+        }
 
         // void initParallelModule(llvm::Module *module) {
         //     initModule(module);

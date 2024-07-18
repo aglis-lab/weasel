@@ -13,6 +13,7 @@ set(CMAKE_LINKER ld64.lld)
 set(LLVM_DIR /opt/homebrew/opt/llvm@${LLVM_VERSION}/lib/cmake/llvm/)
 
 set(CMAKE_MAKE_PROGRAM Ninja)
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O1 -fsanitize=address -g -fno-omit-frame-pointer")
 
 # Find THREADS
 find_package(Threads REQUIRED)

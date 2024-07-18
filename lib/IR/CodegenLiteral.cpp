@@ -2,12 +2,12 @@
 
 #include "weasel/IR/Codegen.h"
 
-llvm::Value *weasel::WeaselCodegen::codegen(BoolLiteralExpression *expr) const
+llvm::Value *weasel::WeaselCodegen::codegen(BoolLiteralExpression *expr)
 {
     return getBuilder()->getInt1(expr->getValue());
 }
 
-llvm::Value *weasel::WeaselCodegen::codegen(CharLiteralExpression *expr) const
+llvm::Value *weasel::WeaselCodegen::codegen(CharLiteralExpression *expr)
 {
     return getBuilder()->getInt8(expr->getValue());
 }
@@ -18,19 +18,19 @@ llvm::Value *weasel::WeaselCodegen::codegen(NumberLiteralExpression *expr)
     return llvm::ConstantInt::get(typeVal, expr->getValue());
 }
 
-llvm::Value *weasel::WeaselCodegen::codegen(FloatLiteralExpression *expr) const
+llvm::Value *weasel::WeaselCodegen::codegen(FloatLiteralExpression *expr)
 {
     auto floatTy = getBuilder()->getFloatTy();
     return llvm::ConstantFP::get(floatTy, expr->getValue());
 }
 
-llvm::Value *weasel::WeaselCodegen::codegen(DoubleLiteralExpression *expr) const
+llvm::Value *weasel::WeaselCodegen::codegen(DoubleLiteralExpression *expr)
 {
     auto doubleTy = getBuilder()->getDoubleTy();
     return llvm::ConstantFP::get(doubleTy, expr->getValue());
 }
 
-llvm::Value *weasel::WeaselCodegen::codegen(StringLiteralExpression *expr) const
+llvm::Value *weasel::WeaselCodegen::codegen(StringLiteralExpression *expr)
 {
     auto *globalStringVariable = getBuilder()->CreateGlobalString(expr->getValue());
     std::vector<llvm::Value *> idxList = {

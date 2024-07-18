@@ -1,6 +1,11 @@
 #include <weasel/AST/AST.h>
 #include <weasel/IR/Codegen.h>
 
+bool weasel::Expression::isCompoundExpression()
+{
+    return dynamic_cast<weasel::CompoundStatement *>(this) != nullptr;
+}
+
 // Constructor for ArrayLiteral
 weasel::ArrayLiteralExpression::ArrayLiteralExpression(std::vector<Expression *> items)
 {
@@ -57,10 +62,10 @@ std::string weasel::Function::getManglingName()
 
     // Arguments with prefix
     mangleName += "3";
-    // for (auto item : this->getArguments())
-    // {
-    //     mangleName += item->getType()->getManglingName();
-    // }
+    for (auto item : this->getArguments())
+    {
+        mangleName += item->getType()->getManglingName();
+    }
 
     // End of argument or function
     mangleName += "_";
@@ -184,7 +189,3 @@ weasel::Expression::~Expression()
 {
     // delete _type;
 }
-
-weasel::Token weasel::Expression::getToken() const { return _token; }
-
-bool weasel::Expression::isNoType() const { return _type == nullptr; }

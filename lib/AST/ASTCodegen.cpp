@@ -149,9 +149,3 @@ llvm::Value *weasel::LoopingStatement::codegen(WeaselCodegen *c)
 {
     return c->codegen(this);
 }
-
-// Some Type Checking
-bool weasel::Expression::isCompoundExpression()
-{
-    return dynamic_cast<weasel::CompoundStatement *>(this) != nullptr;
-}

@@ -55,9 +55,15 @@ namespace weasel
         Error invalidVararg = Error(12, ErrorKind::SyntaxError, "variadic number argument should be final argument");
         Error expectedDataType = Error(13, ErrorKind::SyntaxError, "expected data type");
         Error expectedNewLine = Error(14, ErrorKind::SyntaxError, "expected newline");
+        Error expectedDefaultValue = Error(15, ErrorKind::SyntaxError, "data type expected for default value declaration");
+        Error expectedEqualSign = Error(16, ErrorKind::SyntaxError, "expected equal sign");
+        Error expectedRHSValue = Error(17, ErrorKind::SyntaxError, "expected RHS value expression");
 
         // SEMANTIC ERROR
         Error functionNotDefined = Error(100, ErrorKind::SemanticError, "function not declared");
+        Error datatypeDifferent = Error(101, ErrorKind::SemanticError, "data type different");
+        Error variableNotDefined = Error(102, ErrorKind::SemanticError, "variable isn't defined");
+        Error lhsNotAssignable = Error(103, ErrorKind::SemanticError, "left expression isn't assignable");
 
     private:
         Errors() = default;

@@ -17,9 +17,9 @@
 #include <llvm/Transforms/Scalar/MemCpyOptimizer.h>
 #include <llvm/IR/PassManager.h>
 
-#include "weasel/Driver/Driver.h"
-#include "weasel/Passes/Passes.h"
-#include "weasel/Metadata/Metadata.h"
+#include <weasel/Driver/Driver.h>
+#include <weasel/Passes/Passes.h>
+#include <weasel/Metadata/Metadata.h>
 
 weasel::Driver::Driver(weasel::WeaselCodegen *codegen, Module *module)
 {
@@ -55,7 +55,7 @@ bool weasel::Driver::compile(std::string defTargetTriple)
         if (llvm::verifyFunction(*fun, &llvm::errs()))
         {
             _err = "Error when verifying function " + identifier + "\n";
-            llvm::errs() << *getModule();
+            llvm::errs() << getModule();
             return false;
         }
 
@@ -85,7 +85,7 @@ bool weasel::Driver::compile(std::string defTargetTriple)
         assert(target != nullptr);
 
         auto targetOpts = llvm::TargetOptions();
-        auto rm = llvm::Optional<llvm::Reloc::Model>();
+        auto rm = optional<llvm::Reloc::Model>();
         auto targetMachine = target->createTargetMachine(targetTriple, cpu, features, targetOpts, rm);
 
         dataLayout = targetMachine->createDataLayout();
@@ -94,7 +94,7 @@ bool weasel::Driver::compile(std::string defTargetTriple)
         getModule()->setDataLayout(dataLayout);
     }
 
-    Metadata(getContext(), *getModule()).initModule(getModule());
+    Metadata(getContext(), getModule()).initModule(getModule());
     if (llvm::verifyModule(*getModule()))
     {
         _err = "Error when constructing module\n";
@@ -114,7 +114,7 @@ void weasel::Driver::createIR(std::string outputFile) const
         exit(1);
     }
 
-    dest << *getModule();
+    dest << getModule();
     dest.flush();
 }
 
@@ -141,7 +141,7 @@ void weasel::Driver::createObject(std::string outputFile) const
 
     auto cpu = "generic";
     auto features = "";
-    auto rm = llvm::Optional<llvm::Reloc::Model>();
+    auto rm = optional<llvm::Reloc::Model>();
     auto targetOpts = llvm::TargetOptions();
     auto targetMachine = target->createTargetMachine(targetTriple, cpu, features, targetOpts, rm);
 

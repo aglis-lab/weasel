@@ -34,10 +34,12 @@ namespace weasel
     public:
         WeaselCodegen(llvm::LLVMContext *context, const std::string &moduleName);
 
+        ~WeaselCodegen() {}
+
         llvm::LLVMContext *getContext() const { return _context; }
-        llvm::Module *getModule() const { return _module; }
-        llvm::IRBuilder<> *getBuilder() const { return _builder; }
-        llvm::MDBuilder *getMDBuilder() const { return _mdBuilder; }
+        llvm::Module *getModule() { return _module; }
+        llvm::IRBuilder<> *getBuilder() { return _builder; }
+        llvm::MDBuilder *getMDBuilder() { return _mdBuilder; }
 
         // Type
         llvm::Type *codegen(Type *type);
@@ -47,12 +49,12 @@ namespace weasel
         llvm::Value *castInteger(llvm::Value *val, llvm::Type *type, bool isSign = false);
 
         // Literal Expression
-        llvm::Value *codegen(BoolLiteralExpression *expr) const;
-        llvm::Value *codegen(CharLiteralExpression *expr) const;
+        llvm::Value *codegen(BoolLiteralExpression *expr);
+        llvm::Value *codegen(CharLiteralExpression *expr);
         llvm::Value *codegen(NumberLiteralExpression *expr);
-        llvm::Value *codegen(FloatLiteralExpression *expr) const;
-        llvm::Value *codegen(DoubleLiteralExpression *expr) const;
-        llvm::Value *codegen(StringLiteralExpression *expr) const;
+        llvm::Value *codegen(FloatLiteralExpression *expr);
+        llvm::Value *codegen(DoubleLiteralExpression *expr);
+        llvm::Value *codegen(StringLiteralExpression *expr);
         llvm::Value *codegen(ArrayLiteralExpression *expr);
         llvm::Value *codegen(GlobalVariable *expr);
 
@@ -87,9 +89,9 @@ namespace weasel
 
     private:
         // Helper Builder //
+        llvm::LLVMContext *_context;
         llvm::Module *_module;
         llvm::MDBuilder *_mdBuilder;
-        llvm::LLVMContext *_context;
         llvm::IRBuilder<> *_builder;
 
         // Helper Variable for Looping //
@@ -113,13 +115,13 @@ namespace weasel
 
     private:
         // MDNode
-        llvm::MDNode *getTBAA(llvm::Type *type) const;
-        llvm::MDNode *getTBAARoot() const;
-        llvm::MDNode *getTBAAChar() const;
-        llvm::MDNode *getTBAAShort() const;
-        llvm::MDNode *getTBAAInt() const;
-        llvm::MDNode *getTBAALong() const;
-        llvm::MDNode *getTBAAPointer() const;
+        llvm::MDNode *getTBAA(llvm::Type *type);
+        llvm::MDNode *getTBAARoot();
+        llvm::MDNode *getTBAAChar();
+        llvm::MDNode *getTBAAShort();
+        llvm::MDNode *getTBAAInt();
+        llvm::MDNode *getTBAALong();
+        llvm::MDNode *getTBAAPointer();
 
         // Helper for Break looping //
         void addbreakBlock(llvm::BasicBlock *block) { _breakBlocks.push_back(block); }

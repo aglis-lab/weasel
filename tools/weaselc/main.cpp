@@ -51,9 +51,9 @@ int main(int argc, char *argv[])
 
     // Prepare Lexer and Parser
     LOG(INFO) << "Initializing Parser...\n";
-    auto weaselModule = make_unique<weasel::Module>();
+    auto weaselModule = weasel::Module();
     auto lexer = weasel::Lexer(fileManager);
-    auto parser = weasel::Parser(lexer, weaselModule.get());
+    auto parser = weasel::Parser(lexer, &weaselModule);
 
     // Parse into AST
     LOG(INFO) << "Parsing...\n";
@@ -61,9 +61,8 @@ int main(int argc, char *argv[])
 
     // Analysis Semantic
     LOG(INFO) << "Semantic Analysis...\n";
-    auto analysis = weasel::AnalysisSemantic(weaselModule.get());
+    auto analysis = weasel::AnalysisSemantic(&weaselModule);
     analysis.semanticCheck();
-    // analysis.typeChecking();
 
     if (!analysis.getTypeErrors().empty())
     {
@@ -88,7 +87,8 @@ int main(int argc, char *argv[])
                 << item->getError()->getMessage()
                 << " but got '" << item->getError()->getToken().getEscapeValue() << "'"
                 << " type of " << item->getError()->getToken().getTokenKindToInt()
-                << " " << item->getError()->getToken().getLocation().toString();
+                << " " << item->getError()->getToken().getLocation().toString()
+                << " from " << item->getToken().getValue();
         }
 
         return 0;
@@ -96,7 +96,7 @@ int main(int argc, char *argv[])
 
     // Debugging AST
     LOG(INFO) << "Write Weasel AST " << filename << "...\n";
-    weasel::Printer(filePath + ".ir").print(weaselModule.get());
+    weasel::Printer(filePath + ".ir").print(&weaselModule);
 
     // Initialize LLVM
     // llvm::InitializeAllTargetInfos();
@@ -105,9 +105,9 @@ int main(int argc, char *argv[])
     llvm::InitializeNativeTargetAsmPrinter();
 
     // Prepare for codegen
-    auto llvmContext = make_unique<llvm::LLVMContext>();
-    auto codegen = weasel::WeaselCodegen(llvmContext.get(), "CoreModule");
-    auto driver = weasel::Driver(&codegen, weaselModule.get());
+    auto llvmContext = llvm::LLVMContext();
+    auto codegen = weasel::WeaselCodegen(&llvmContext, "CoreModule");
+    auto driver = weasel::Driver(&codegen, &weaselModule);
 
     LOG(INFO) << "Compiling...\n";
     auto isCompileSuccess = driver.compile();

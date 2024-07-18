@@ -40,23 +40,6 @@ namespace weasel
         // Simple Class for handling and storing global value
         Module *_module;
 
-    private:
-        // void addFunction(FunctionHandle fun) { _module.addFunction(fun); }
-        // unsigned functionCount() const { return getFunctions().size(); }
-        // FunctionHandle lastFunction() const { return getFunctions().back(); }
-        // FunctionHandle findFunction(const std::string &identifier, StructType *structType = nullptr, bool isStatic = false);
-
-        // void addUserType(StructTypeHandle type) { _module.addUserType(type); }
-        // unsigned userTypeCount() const { return getUserTypes().size(); }
-        // StructTypeHandle getLastUserType() const { return getUserTypes().back(); }
-
-        // TODO: Find User Type
-        // StructType *findUserType(const std::string &typeName);
-
-        // void addGlobalVariable(GlobalVariableHandle globalVar) { _module.addGlobalVariable(globalVar); }
-        // GlobalVariable *findGlobalVariable(const std::string &globalName);
-
-    private:
         bool expectToken(TokenKind kind) { return _lexer.expect(kind); }
         bool isExpectElse() { return expectToken(TokenKind::TokenKeyElse); }
 
@@ -68,7 +51,7 @@ namespace weasel
         Token skipUntilNewLine() { return getNextTokenUntil(TokenKind::TokenSpaceNewline); }
 
         // Operator Expression
-        Expression *createOperatorExpression(Token op, Expression *lhs, Expression *rhs);
+        ExpressionHandle createOperatorExpression(Token op, ExpressionHandle lhs, ExpressionHandle rhs);
 
         // Impl Functions
         void parseImplFunctions();
@@ -86,7 +69,7 @@ namespace weasel
         // Statement
         ExpressionHandle parseStatement();
         CompoundStatementHandle parseCompoundStatement();
-        // Expression *parseConditionStatement();
+        ExpressionHandle parseConditionStatement();
         // Expression *parseLoopingStatement();
         // ExpressionHandle parseStaticMethodCallExpression();
         // Expression *parseMethodCallExpression(Expression *);
@@ -94,9 +77,10 @@ namespace weasel
         // Expression
         ExpressionHandle parseExpression();
         ExpressionHandle parsePrimaryExpression();
-        // Expression *parseDeclarationExpression();
+        ExpressionHandle parseDeclarationExpression();
         ExpressionHandle parseCallExpression();
-        // Expression *parseParenExpression();
+        ExpressionHandle parseParenExpression();
+        ExpressionHandle parseUnaryExpression();
         // Expression *parseReturnExpression();
         // Expression *parseBreakExpression();
         // Expression *parseContinueExpression();
