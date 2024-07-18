@@ -13,16 +13,17 @@ set(CMAKE_LINKER ld64.lld)
 set(LLVM_DIR /opt/homebrew/opt/llvm@${LLVM_VERSION}/lib/cmake/llvm/)
 
 set(CMAKE_MAKE_PROGRAM Ninja)
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O1 -fsanitize=address -g -fno-omit-frame-pointer")
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -g3 -fno-omit-frame-pointer")
+# set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address -g3")
 
 # Find THREADS
 find_package(Threads REQUIRED)
 
 # Find FMT
-find_package(fmt REQUIRED)
+find_package(fmt CONFIG REQUIRED)
 
 # Find Google Loging
-find_package(glog REQUIRED)
+find_package(glog CONFIG REQUIRED)
 
 # Find LLVM PACKAGE
 find_package(LLVM REQUIRED CONFIG)
