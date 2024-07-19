@@ -68,7 +68,7 @@ void Printer::print(Function *expr)
     for (int i = 0; i < argSize; i++)
     {
         auto item = expr->getArguments()[i];
-        auto identifier = item->getArgumentName();
+        auto identifier = item->getIdentifier();
         argStr += fmt::format("{} {}", identifier, item->getType()->getTypeName());
 
         if (i != argSize - 1)

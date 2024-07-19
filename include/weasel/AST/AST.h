@@ -26,11 +26,13 @@ namespace weasel
     class Expression;
     class CallExpression;
     class Function;
+    class ArgumentExpression;
 
     using ExpressionHandle = shared_ptr<Expression>;
     using CallExpressionHandle = shared_ptr<CallExpression>;
     using CompoundStatementHandle = shared_ptr<CompoundStatement>;
     using FunctionHandle = shared_ptr<Function>;
+    using ArgumentExpressionHandle = shared_ptr<ArgumentExpression>;
 
     enum class Linkage;
 
@@ -130,57 +132,6 @@ namespace weasel
 
     private:
         ExpressionHandle _value;
-    };
-
-    // Function
-    class Function : public GlobalObject
-    {
-    public:
-        Function() = default;
-
-        ~Function() override;
-
-        CompoundStatementHandle getBody() { return _body; }
-        void setBody(CompoundStatementHandle body) { _body = body; }
-
-        void setIsDefine(bool val) { _isDefine = val; }
-        bool isDefine() const { return _isDefine; }
-
-        void setIsInline(bool val) { _isInline = val; }
-        bool isInline() const { return _isInline; }
-
-        void setIsExtern(bool val) { _isExtern = val; }
-        bool isExtern() const { return _isExtern; }
-
-        bool isMain() const { return this->_identifier == "main"; }
-
-        void setArguments(const vector<ArgumentTypeHandle> &arguments) { _arguments = arguments; }
-        vector<ArgumentTypeHandle> &getArguments() { return _arguments; }
-
-        string getManglingName();
-
-        void setImplStruct(StructTypeHandle structType) { _implStruct = structType; }
-        bool isImplStructExist() const { return _implStruct != nullptr; }
-        StructType *getImplStruct() { return _implStruct.get(); }
-
-        void setIsStatic(bool val) { _isStatic = val; }
-        bool getIsStatic() const { return _isStatic; }
-
-    public:
-        llvm::Value *codegen(WeaselCodegen *c) override;
-        void print(Printer *printer) override;
-        void printAsOperand(Printer *) override {}
-
-    private:
-        CompoundStatementHandle _body;
-        vector<ArgumentTypeHandle> _arguments;
-        StructTypeHandle _implStruct;
-
-        // TODO: Check if inline, extern, and static function
-        bool _isDefine = false;
-        bool _isInline = false;
-        bool _isExtern = false;
-        bool _isStatic = false;
     };
 
     // Literal Expression
@@ -765,6 +716,70 @@ namespace weasel
     private:
         vector<Expression *> _conditions;
         CompoundStatement *_body;
+    };
+
+    // Argument Expression
+    class ArgumentExpression : public VariableExpression
+    {
+    private:
+    public:
+        ArgumentExpression() = default;
+        ~ArgumentExpression() = default;
+
+        llvm::Value *codegen(WeaselCodegen *c) {}
+        void print(Printer *printer) {}
+        void printAsOperand(Printer *printer) {}
+    };
+
+    // Function
+    class Function : public GlobalObject
+    {
+    public:
+        Function() = default;
+
+        ~Function() override;
+
+        CompoundStatementHandle getBody() { return _body; }
+        void setBody(CompoundStatementHandle body) { _body = body; }
+
+        void setIsDefine(bool val) { _isDefine = val; }
+        bool isDefine() const { return _isDefine; }
+
+        void setIsInline(bool val) { _isInline = val; }
+        bool isInline() const { return _isInline; }
+
+        void setIsExtern(bool val) { _isExtern = val; }
+        bool isExtern() const { return _isExtern; }
+
+        bool isMain() const { return this->_identifier == "main"; }
+
+        void setArguments(const vector<ArgumentExpressionHandle> &arguments) { _arguments = arguments; }
+        vector<ArgumentExpressionHandle> &getArguments() { return _arguments; }
+
+        string getManglingName();
+
+        void setImplStruct(StructTypeHandle structType) { _implStruct = structType; }
+        bool isImplStructExist() const { return _implStruct != nullptr; }
+        StructType *getImplStruct() { return _implStruct.get(); }
+
+        void setIsStatic(bool val) { _isStatic = val; }
+        bool getIsStatic() const { return _isStatic; }
+
+    public:
+        llvm::Value *codegen(WeaselCodegen *c) override;
+        void print(Printer *printer) override;
+        void printAsOperand(Printer *) override {}
+
+    private:
+        CompoundStatementHandle _body;
+        vector<ArgumentExpressionHandle> _arguments;
+        StructTypeHandle _implStruct;
+
+        // TODO: Check if inline, extern, and static function
+        bool _isDefine = false;
+        bool _isInline = false;
+        bool _isExtern = false;
+        bool _isStatic = false;
     };
 } // namespace weasel
 

@@ -10,9 +10,9 @@
   - [x] Find Best strategy for creating syntax error (not continuing the code or parser)
 - [x] Migrate System Install into vcpkg
 - [ ] Add Token into Type
-  - [ ] Seman
 - [ ] Make Parser can't detect semantic error
 - [ ] LLVM 17 Pointer Type System
+- [ ] Change ArgumentType into Expression
 - [ ] Create Semantic Analysis
   - [ ] Check Variable Exist
   - [ ] Check Type Valid

@@ -17,12 +17,10 @@ namespace weasel
     class StructType;
     class Printer;
     class Type;
-    class ArgumentType;
     class GlobalVariable;
 
     using TypeHandle = shared_ptr<Type>;
     using StructTypeHandle = shared_ptr<StructType>;
-    using ArgumentTypeHandle = shared_ptr<ArgumentType>;
     using GlobalVariableHandle = shared_ptr<GlobalVariable>;
 
     enum class TypeID
@@ -200,25 +198,5 @@ namespace weasel
 
     public:
         llvm::Type *codegen(WeaselCodegen *codegen) override;
-    };
-
-    class ArgumentType
-    {
-    public:
-        ArgumentType(string argumentName, Type *type) : _argumentName(argumentName), _type(type) {}
-
-        ArgumentType() {}
-
-        static ArgumentTypeHandle create() { return make_shared<ArgumentType>(); }
-
-        string getArgumentName() const { return _argumentName; }
-        TypeHandle getType() { return _type; }
-
-        void setArgumentName(string argumentName) { _argumentName = argumentName; }
-        void setType(TypeHandle type) { _type = type; }
-
-    private:
-        string _argumentName;
-        TypeHandle _type;
     };
 } // namespace weasel

@@ -99,9 +99,9 @@ FunctionHandle Parser::parseDeclareFunction()
             }
 
             auto type = parseDataType();
-            auto argumentType = ArgumentType::create();
+            auto argumentType = make_shared<ArgumentExpression>();
             argumentType->setType(type);
-            argumentType->setArgumentName(lastToken.getValue());
+            argumentType->setIdentifier(lastToken.getValue());
 
             fun->getArguments().push_back(argumentType);
         }

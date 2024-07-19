@@ -67,7 +67,7 @@ llvm::Value *weasel::WeaselCodegen::codegen(weasel::Function *funAST)
         for (size_t i = 0; i < funArgs.size(); i++)
         {
             auto argExpr = funArgs[i];
-            auto argName = argExpr->getArgumentName();
+            auto argName = argExpr->getIdentifier();
             auto item = funLLVM->getArg(i);
 
             item->setName(argName);

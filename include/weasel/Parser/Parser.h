@@ -15,7 +15,7 @@ namespace weasel
 {
     class ParserAttribute;
 
-    class Parser : public ParserTable
+    class Parser
     {
     public:
         Parser(const Lexer &lexer, Module *module) : _lexer(lexer), _module(module) {}

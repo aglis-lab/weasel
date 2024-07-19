@@ -355,6 +355,7 @@ ExpressionHandle Parser::parseDeclarationExpression()
 
     auto val = parseExpression();
     stmt->setValue(val);
+
     if (getCurrentToken().isOpenCurly())
     {
         // Insert Symbol Table

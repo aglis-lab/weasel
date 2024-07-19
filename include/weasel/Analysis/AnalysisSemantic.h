@@ -50,9 +50,9 @@ namespace weasel
                 {
                     return getDeclarations()[i];
                 }
-
-                return nullptr;
             }
+
+            return nullptr;
         }
 
         vector<ExpressionHandle> &getErrors() { return _errors; }

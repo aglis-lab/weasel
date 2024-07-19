@@ -99,7 +99,9 @@ void AnalysisSemantic::compoundStatementCheck(CompoundStatementHandle expr)
         expressionCheck(item);
     }
 
+    LOG(INFO) << "Declaration 1 => " << getDeclarations().size() << " - " << lastDeclaration;
     getDeclarations().resize(lastDeclaration);
+    LOG(INFO) << "Declaration 1 => " << getDeclarations().size() << " - " << lastDeclaration;
 }
 
 void AnalysisSemantic::conditionStatementChech(ConditionStatementHandle expr)
@@ -176,6 +178,8 @@ void AnalysisSemantic::variableExpressionCheck(VariableExpressionHandle expr)
     LOG(INFO) << "Variable Expression Check";
 
     auto decl = findDeclaration(expr->getIdentifier());
+
+    LOG(INFO) << "FIND " << expr->getIdentifier() << " " << (decl == nullptr);
     if (!decl)
     {
         expr->setError(Errors::getInstance().variableNotDefined.withToken(expr->getToken()));
