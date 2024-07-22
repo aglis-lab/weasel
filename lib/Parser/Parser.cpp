@@ -34,6 +34,11 @@ void weasel::Parser::parse()
             fun->setIsExtern(isExtern);
             getModule()->addFunction(fun);
         }
+
+        if (getCurrentToken().isKeyDeclaration())
+        {
+            getModule()->addGlobalVariable(parseGlobalVariable());
+        }
     }
 }
 

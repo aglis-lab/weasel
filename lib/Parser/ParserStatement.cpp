@@ -16,11 +16,11 @@ ExpressionHandle Parser::parseStatement()
         return parseConditionStatement();
     }
 
-    // // For Statement
-    // if (getCurrentToken().isKeyFor())
-    // {
-    //     return parseLoopingStatement();
-    // }
+    // For Statement
+    if (getCurrentToken().isKeyFor())
+    {
+        return parseLoopingStatement();
+    }
 
     // Variable Definition Expression
     if (getCurrentToken().isKeyDefinition())
@@ -28,23 +28,23 @@ ExpressionHandle Parser::parseStatement()
         return parseDeclarationExpression();
     }
 
-    // // Return Expression
-    // if (getCurrentToken().isKeyReturn())
-    // {
-    //     return parseReturnExpression();
-    // }
+    // Return Expression
+    if (getCurrentToken().isKeyReturn())
+    {
+        return parseReturnExpression();
+    }
 
-    // // Break Expression
-    // if (getCurrentToken().isKeyBreak())
-    // {
-    //     return parseBreakExpression();
-    // }
+    // Break Expression
+    if (getCurrentToken().isKeyBreak())
+    {
+        return parseBreakExpression();
+    }
 
-    // // Continue Expression
-    // if (getCurrentToken().isKeyContinue())
-    // {
-    //     return parseContinueExpression();
-    // }
+    // Continue Expression
+    if (getCurrentToken().isKeyContinue())
+    {
+        return parseContinueExpression();
+    }
 
     auto expr = parseExpression();
     if (expr->isError())
@@ -57,6 +57,8 @@ ExpressionHandle Parser::parseStatement()
 
 StructTypeHandle Parser::parseStruct()
 {
+    LOG(INFO) << "Parse Struct...";
+
     auto structType = make_shared<StructType>();
     if (!getNextToken().isIdentifier())
     {
@@ -106,96 +108,100 @@ StructTypeHandle Parser::parseStruct()
     return structType;
 }
 
-// weasel::Expression *weasel::Parser::parseLoopingStatement()
-// {
-//     return nullptr;
+ExpressionHandle Parser::parseLoopingStatement()
+{
+    LOG(INFO) << "Looping Statement...";
 
-//     // auto token = getCurrentToken();
-//     // auto isInfinity = getNextToken(true).isOpenCurly();
-//     // auto conditions = vector<Expression *>();
+    auto expr = make_shared<LoopingStatement>(getCurrentToken());
+    auto isInfinity = getNextToken().isOpenCurly();
 
-//     // // Check if Infinity Looping
-//     // if (!isInfinity)
-//     // {
-//     //     // Initial or Definition
-//     //     if (!getCurrentToken().isSemiColon())
-//     //     {
-//     //         Expression *decl;
-//     //         if (getCurrentToken().isKeyDeclaration())
-//     //         {
-//     //             decl = parseDeclarationExpression();
-//     //         }
-//     //         else
-//     //         {
-//     //             decl = parseExpression();
-//     //         }
+    // Check if Infinity Looping
+    if (!isInfinity)
+    {
+        // Initial or Definition
+        if (!getCurrentToken().isSemiColon())
+        {
+            ExpressionHandle decl;
+            if (getCurrentToken().isKeyDeclaration())
+            {
+                decl = parseDeclarationExpression();
+            }
+            else
+            {
+                decl = parseExpression();
+            }
 
-//     //         conditions.push_back(decl);
-//     //     }
+            expr->getConditions().push_back(decl);
+        }
 
-//     //     // Break if looping is Loop Condition
-//     //     if (!getCurrentToken().isOpenCurly())
-//     //     {
-//     //         // Condition
-//     //         if (!getCurrentToken().isSemiColon())
-//     //         {
-//     //             return ErrorTable::addError(getCurrentToken(), "Invalid Loop condition expression");
-//     //         }
+        // Break if looping is Loop Condition
+        if (!getCurrentToken().isOpenCurly())
+        {
+            // Condition
+            if (!getCurrentToken().isSemiColon())
+            {
+                expr->setError(Errors::getInstance().expectedSemicolon.withToken(getCurrentToken()));
+                return expr;
+            }
 
-//     //         if (getNextToken().isSemiColon())
-//     //         {
-//     //             conditions.push_back(nullptr);
-//     //         }
-//     //         else
-//     //         {
-//     //             conditions.push_back(parseExpression());
-//     //         }
+            if (getNextToken().isSemiColon())
+            {
+                expr->getConditions().push_back(nullptr);
+            }
+            else
+            {
+                expr->getConditions().push_back(parseExpression());
+            }
 
-//     //         // Increment
-//     //         if (!getCurrentToken().isSemiColon())
-//     //         {
-//     //             return ErrorTable::addError(getCurrentToken(), "Invalid Loop counting expression");
-//     //         }
-//     //         if (getNextToken().isOpenCurly())
-//     //         {
-//     //             conditions.push_back(nullptr);
-//     //         }
-//     //         else
-//     //         {
-//     //             conditions.push_back(parseExpression());
-//     //         }
-//     //     }
-//     // }
+            // Increment
+            if (!getCurrentToken().isSemiColon())
+            {
+                expr->setError(Errors::getInstance().expectedSemicolon.withToken(getCurrentToken()));
+                return expr;
+            }
 
-//     // if (!getCurrentToken().isOpenCurly())
-//     // {
-//     //     return ErrorTable::addError(getCurrentToken(), "Invalid Loop body statement");
-//     // }
+            if (getNextToken().isOpenCurly())
+            {
+                expr->getConditions().push_back(nullptr);
+            }
+            else
+            {
+                expr->getConditions().push_back(parseExpression());
+            }
+        }
+    }
 
-//     // // Check if All Conditions is empty
-//     // if (!isInfinity)
-//     // {
-//     //     isInfinity = true;
+    if (!getCurrentToken().isOpenCurly())
+    {
+        expr->setError(Errors::getInstance().expectedOpenCurly.withToken(getCurrentToken()));
+        return expr;
+    }
 
-//     //     for (auto &item : conditions)
-//     //     {
-//     //         if (item != nullptr)
-//     //         {
-//     //             isInfinity = false;
-//     //             break;
-//     //         }
-//     //     }
+    // Check if All Conditions is empty
+    if (!isInfinity)
+    {
+        isInfinity = true;
 
-//     //     if (isInfinity)
-//     //     {
-//     //         conditions.clear();
-//     //     }
-//     // }
+        for (auto item : expr->getConditions())
+        {
+            if (item != nullptr)
+            {
+                isInfinity = false;
+                break;
+            }
+        }
 
-//     // auto body = parseCompoundStatement();
+        if (isInfinity)
+        {
+            expr->getConditions().clear();
+        }
+    }
 
-//     // return new LoopingStatement(token, conditions, body);
-// }
+    auto body = parseCompoundStatement();
+    expr->setBody(body);
+
+    return expr;
+}
 
 ExpressionHandle Parser::parseConditionStatement()
 {

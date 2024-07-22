@@ -160,7 +160,7 @@ bool Type::isEqual(TypeHandle type)
         return false;
     }
 
-    if (auto val = this->getTypeID() == type->getTypeID(); !val)
+    if (!(getTypeID() == type->getTypeID()))
     {
         return false;
     }

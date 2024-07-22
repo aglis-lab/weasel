@@ -42,6 +42,23 @@ void Printer::print(Module *module)
     }
 }
 
+void Printer::print(BreakExpression *expr)
+{
+    printAsOperand(expr);
+    fmt::println(_out, "");
+}
+
+void Printer::printAsOperand(BreakExpression *expr)
+{
+    fmt::print(_out, "{: >{}}break", "", getCurrentShift());
+    if (expr->getValue())
+    {
+        fmt::print(_out, "(");
+        expr->getValue()->printAsOperand(this);
+        fmt::print(_out, ")");
+    }
+}
+
 void Printer::print(MethodCallExpression *expr)
 {
     printAsOperand(expr);

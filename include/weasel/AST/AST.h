@@ -53,7 +53,7 @@ namespace weasel
         Expression(const Token &token, TypeHandle type, bool isConstant = false) : _token(token), _type(type), _isConstant(isConstant) {}
 
         Token getToken() const { return _token; }
-        TypeHandle getType() const { return _type; }
+        TypeHandle &getType() { return _type; }
 
         void setToken(const Token &token) { _token = token; }
         void setType(TypeHandle type) { _type = type; }
@@ -118,22 +118,6 @@ namespace weasel
         string _identifier;
     };
 
-    // Global Variable
-    class GlobalVariable : public GlobalObject
-    {
-    public:
-        GlobalVariable() = default;
-
-        Expression *getValue() { return _value.get(); }
-
-        llvm::Value *codegen(WeaselCodegen *c) override;
-        void print(Printer *printer) override;
-        void printAsOperand(Printer *printer) override;
-
-    private:
-        ExpressionHandle _value;
-    };
-
     // Literal Expression
     class LiteralExpression : public Expression
     {
@@ -145,9 +129,10 @@ namespace weasel
     class ReturnExpression : public Expression
     {
     public:
-        ReturnExpression(const Token &token, ExpressionHandle value, TypeHandle type) : Expression(token, type), _value(value) {}
+        ReturnExpression(const Token &token, ExpressionHandle value) : Expression(token), _value(value) {}
+        ReturnExpression(const Token &token, TypeHandle type) : Expression(token, type) {}
 
-        Expression *getValue() { return _value.get(); }
+        ExpressionHandle &getValue() { return _value; }
 
     public:
         llvm::Value *codegen(WeaselCodegen *codegen) override;
@@ -166,7 +151,8 @@ namespace weasel
     public:
         BreakExpression(Token token, Expression *value) : Expression(token), _value(value) {}
 
-        Expression *getValue() const { return _value; }
+        void setValue(ExpressionHandle expr) { _value = expr; }
+        ExpressionHandle &getValue() { return _value; }
 
     public:
         llvm::Value *codegen(WeaselCodegen *codegen) override;
@@ -176,16 +162,16 @@ namespace weasel
         ~BreakExpression();
 
     private:
-        Expression *_value;
+        ExpressionHandle _value;
     };
 
     // Return Expression
     class ContinueExpression : public Expression
     {
     public:
-        ContinueExpression(Token token, Expression *value) : Expression(token), _value(value) {}
+        ContinueExpression(Token token, ExpressionHandle value) : Expression(token), _value(value) {}
 
-        Expression *getValue() const { return _value; }
+        ExpressionHandle getValue() const { return _value; }
 
     public:
         llvm::Value *codegen(WeaselCodegen *codegen) override;
@@ -195,7 +181,7 @@ namespace weasel
         ~ContinueExpression();
 
     private:
-        Expression *_value;
+        ExpressionHandle _value;
     };
 
     // Variable Expression
@@ -582,8 +568,8 @@ namespace weasel
         void setRHS(ExpressionHandle rhs) { _rhs = rhs; }
 
         Token getOperator() const { return getToken(); }
-        Expression *getLHS() { return _lhs.get(); }
-        Expression *getRHS() { return _rhs.get(); }
+        ExpressionHandle getLHS() { return _lhs; }
+        ExpressionHandle getRHS() { return _rhs; }
 
     public:
         llvm::Value *codegen(WeaselCodegen *codegen) override;
@@ -615,7 +601,7 @@ namespace weasel
 
         void setRHS(ExpressionHandle rhs) { _rhs = rhs; }
 
-        Expression *getExpression() { return _rhs.get(); }
+        ExpressionHandle getExpression() { return _rhs; }
         Operator getOperator() const { return _op; }
 
         ~UnaryExpression();
@@ -638,10 +624,10 @@ namespace weasel
         DeclarationStatement(Token token) : VariableExpression(token, token.getValue()) {}
 
         void setQualifier(Qualifier qualifier) { _qualifier = qualifier; }
-        void setValue(ExpressionHandle valueExpr) { _valueExpr = valueExpr; }
+        void setValue(ExpressionHandle value) { _value = value; }
 
         Qualifier getQualifier() const { return _qualifier; }
-        ExpressionHandle getValue() { return _valueExpr; }
+        ExpressionHandle getValue() { return _value; }
 
     public:
         llvm::Value *codegen(WeaselCodegen *codegen) override;
@@ -650,9 +636,9 @@ namespace weasel
 
         ~DeclarationStatement();
 
-    private:
+    protected:
         Qualifier _qualifier;
-        ExpressionHandle _valueExpr;
+        ExpressionHandle _value;
     };
 
     // Statement Expression
@@ -699,10 +685,13 @@ namespace weasel
     class LoopingStatement : public Expression
     {
     public:
-        LoopingStatement(const Token &token, vector<Expression *> conditions, CompoundStatement *body) : Expression(token), _conditions(conditions), _body(body) {}
+        LoopingStatement(const Token &token) : Expression(token) {}
 
-        vector<Expression *> getConditions() const { return _conditions; }
-        CompoundStatement *getBody() const { return _body; }
+        vector<ExpressionHandle> &getConditions() { return _conditions; }
+
+        void setBody(CompoundStatementHandle expr) { _body = expr; }
+        CompoundStatementHandle &getBody() { return _body; }
+
         bool isInfinityCondition() const { return _conditions.empty(); }
         bool isSingleCondition() const { return _conditions.size() == 1; }
 
@@ -714,8 +703,8 @@ namespace weasel
         ~LoopingStatement();
 
     private:
-        vector<Expression *> _conditions;
-        CompoundStatement *_body;
+        vector<ExpressionHandle> _conditions;
+        CompoundStatementHandle _body;
     };
 
     // Argument Expression
@@ -729,6 +718,17 @@ namespace weasel
         llvm::Value *codegen(WeaselCodegen *c) {}
         void print(Printer *printer) {}
         void printAsOperand(Printer *printer) {}
+    };
+
+    // Global Variable
+    class GlobalVariable : public DeclarationStatement
+    {
+    public:
+        GlobalVariable() = default;
+
+        llvm::Value *codegen(WeaselCodegen *c);
+        void print(Printer *printer);
+        void printAsOperand(Printer *printer);
     };
 
     // Function

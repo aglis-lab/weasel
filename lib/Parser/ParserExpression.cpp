@@ -3,20 +3,18 @@
 #include "weasel/Parser/Parser.h"
 #include <weasel/Basic/Error.h>
 
-weasel::GlobalVariable *weasel::Parser::parseGlobalVariable()
+GlobalVariableHandle Parser::parseGlobalVariable()
 {
     LOG(INFO) << "Parse Global Variable...";
 
     return nullptr;
+    // auto stmt = static_pointer_cast<DeclarationStatement>(parseDeclarationExpression());
+    // if (!stmt->isError() && stmt->getQualifier() != Qualifier::QualConst)
+    // {
+    //     return stmt;
+    // }
 
-    // auto declToken = getCurrentToken();
-    // auto idenToken = getNextToken();
-
-    // getNextToken(); // eat '=' sign
-
-    // auto valueExpr = parseLiteralExpression();
-
-    // return new GlobalVariable(declToken, idenToken.getValue(), valueExpr);
+    // return stmt;
 }
 
 // weasel::Expression *weasel::Parser::parseMethodCallExpression(Expression *implExpression)
@@ -517,36 +515,43 @@ ExpressionHandle Parser::parseExpressionOperator(unsigned precOrder, ExpressionH
 //     return expr;
 // }
 
-// weasel::Expression *weasel::Parser::parseReturnExpression()
-// {
-//     auto retToken = getCurrentToken();
+ExpressionHandle Parser::parseReturnExpression()
+{
+    LOG(INFO) << "Parse Return Expression...";
 
-//     if (getNextToken().isNewline())
-//     {
-//         return new ReturnExpression(retToken, nullptr, weasel::Type::getVoidType());
-//     }
+    auto retToken = getCurrentToken();
+    if (getNextToken().isNewline())
+    {
+        return make_shared<ReturnExpression>(retToken, weasel::Type::getVoidType());
+    }
 
-//     return new ReturnExpression(retToken, parseExpression());
-// }
+    auto exprValue = parseExpression();
+    return make_shared<ReturnExpression>(retToken, exprValue);
+}
 
-// weasel::Expression *weasel::Parser::parseBreakExpression()
-// {
-//     auto token = getCurrentToken();
-//     if (getNextToken().isOpenParen())
-//     {
-//         return new BreakExpression(token, parseExpression());
-//     }
+ExpressionHandle Parser::parseBreakExpression()
+{
+    LOG(INFO) << "Parse Break Expression...";
 
-//     return new BreakExpression(token, nullptr);
-// }
+    auto token = getCurrentToken();
+    auto expr = make_shared<BreakExpression>(token, nullptr);
+    if (getNextToken().isOpenParen())
+    {
+        expr->setValue(parseExpression());
+    }
 
-// weasel::Expression *weasel::Parser::parseContinueExpression()
-// {
-//     auto token = getCurrentToken();
-//     if (getNextToken().isOpenParen())
-//     {
-//         return new ContinueExpression(token, parseExpression());
-//     }
+    return expr;
+}
 
-//     return new ContinueExpression(token, nullptr);
-// }
+ExpressionHandle Parser::parseContinueExpression()
+{
+    LOG(INFO) << "Parse Continue Expression...";
+
+    auto token = getCurrentToken();
+    if (getNextToken().isOpenParen())
+    {
+        return make_shared<ContinueExpression>(token, parseExpression());
+    }
+
+    return make_shared<ContinueExpression>(token, nullptr);
+}

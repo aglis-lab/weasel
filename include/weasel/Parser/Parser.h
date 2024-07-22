@@ -57,7 +57,7 @@ namespace weasel
         void parseImplFunctions();
 
         // Global Variable
-        GlobalVariable *parseGlobalVariable();
+        GlobalVariableHandle parseGlobalVariable();
 
         // Function
         FunctionHandle parseDeclareFunction();
@@ -70,7 +70,7 @@ namespace weasel
         ExpressionHandle parseStatement();
         CompoundStatementHandle parseCompoundStatement();
         ExpressionHandle parseConditionStatement();
-        // Expression *parseLoopingStatement();
+        ExpressionHandle parseLoopingStatement();
         // ExpressionHandle parseStaticMethodCallExpression();
         // Expression *parseMethodCallExpression(Expression *);
 
@@ -81,9 +81,9 @@ namespace weasel
         ExpressionHandle parseCallExpression();
         ExpressionHandle parseParenExpression();
         ExpressionHandle parseUnaryExpression();
-        // Expression *parseReturnExpression();
-        // Expression *parseBreakExpression();
-        // Expression *parseContinueExpression();
+        ExpressionHandle parseReturnExpression();
+        ExpressionHandle parseBreakExpression();
+        ExpressionHandle parseContinueExpression();
         // Expression *parseStructExpression();
         // Expression *parseFieldExpression(Expression *lhs);
 

@@ -7,6 +7,13 @@ namespace weasel
     using DeclarationStatementHandle = shared_ptr<DeclarationStatement>;
     using VariableExpressionHandle = shared_ptr<VariableExpression>;
     using AssignmentExpressionHandle = shared_ptr<AssignmentExpression>;
+    using ComparisonExpressionHandle = shared_ptr<ComparisonExpression>;
+    using ReturnExpressionHandle = shared_ptr<ReturnExpression>;
+    using BreakExpressionHandle = shared_ptr<BreakExpression>;
+    using ContinueExpressionHandle = shared_ptr<ContinueExpression>;
+    using LoopingStatementHandle = shared_ptr<LoopingStatement>;
+    using ArithmeticExpressionHandle = shared_ptr<ArithmeticExpression>;
+    using UnaryExpressionHandle = shared_ptr<UnaryExpression>;
 
     class AnalysisSemantic
     {
@@ -30,6 +37,13 @@ namespace weasel
         void declarationStatementCheck(DeclarationStatementHandle expr);
         void variableExpressionCheck(VariableExpressionHandle expr);
         void assignmentExpressionCheck(AssignmentExpressionHandle expr);
+        void comparisonExpressionCheck(ComparisonExpressionHandle expr);
+        void returnExpressionCheck(ReturnExpressionHandle expr);
+        void breakExpressionCheck(BreakExpressionHandle expr);
+        void continueExpressionCheck(ContinueExpressionHandle expr);
+        void loopingStatementCheck(LoopingStatementHandle expr);
+        void arithmeticExpressionCheck(ArithmeticExpressionHandle expr);
+        void unaryExpressionCheck(UnaryExpressionHandle expr);
 
         void onError(ExpressionHandle expr)
         {

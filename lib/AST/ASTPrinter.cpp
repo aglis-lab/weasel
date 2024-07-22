@@ -150,7 +150,12 @@ void weasel::StructExpression::printAsOperand(Printer *printer)
 // BreakExpression
 void weasel::BreakExpression::print(Printer *printer)
 {
-    fmt::print("Unimplemented break printer");
+    printer->print(this);
+}
+
+void weasel::BreakExpression::printAsOperand(Printer *printer)
+{
+    printer->printAsOperand(this);
 }
 
 // ContinueExpression
@@ -301,12 +306,6 @@ void weasel::CallExpression::printAsOperand(Printer *printer)
 void weasel::ReturnExpression::printAsOperand(Printer *printer)
 {
     printer->printAsOperand(this);
-}
-
-// BreakExpression
-void weasel::BreakExpression::printAsOperand(Printer *printer)
-{
-    fmt::print("Unimplemented break printer");
 }
 
 // ContinueExpression

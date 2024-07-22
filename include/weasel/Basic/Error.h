@@ -58,12 +58,17 @@ namespace weasel
         Error expectedDefaultValue = Error(15, ErrorKind::SyntaxError, "data type expected for default value declaration");
         Error expectedEqualSign = Error(16, ErrorKind::SyntaxError, "expected equal sign");
         Error expectedRHSValue = Error(17, ErrorKind::SyntaxError, "expected RHS value expression");
+        Error expectedSemicolon = Error(18, ErrorKind::SyntaxError, "expected ';'");
 
         // SEMANTIC ERROR
         Error functionNotDefined = Error(100, ErrorKind::SemanticError, "function not declared");
         Error datatypeDifferent = Error(101, ErrorKind::SemanticError, "data type different");
         Error variableNotDefined = Error(102, ErrorKind::SemanticError, "variable isn't defined");
         Error lhsNotAssignable = Error(103, ErrorKind::SemanticError, "left expression isn't assignable");
+        Error breakExpressionInvalid = Error(104, ErrorKind::SemanticError, "break expression should be return boolean type");
+
+        // Internal Error
+        Error missingImplementation = Error(200, ErrorKind::SemanticError, "internal error, missing expression implementation");
 
     private:
         Errors() = default;

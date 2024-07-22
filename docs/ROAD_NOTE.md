@@ -18,6 +18,7 @@
   - [ ] Check Type Valid
   - [ ] Check Field Expression Type
   - [ ] Implementation Scope System
+  - [ ] Improve Return Type System
 - [ ] Remove File Buffer
 - [ ] Add Error into Expression as AST Error or Semantic Error
 - [ ] Add Error to Token as Token Error

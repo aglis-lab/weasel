@@ -33,7 +33,10 @@ void AnalysisSemantic::semanticCheck()
         // TODO: Check Function Return Type
 
         // Check Compound Statement
-        expressionCheck(item->getBody());
+        if (item->getBody())
+        {
+            expressionCheck(item->getBody());
+        }
     }
 }
 
@@ -45,7 +48,8 @@ void AnalysisSemantic::expressionCheck(ExpressionHandle expr)
 {
     if (!expr)
     {
-        return;
+        LOG(ERROR) << Errors::getInstance().missingImplementation.getMessage();
+        exit(1);
     }
 
     if (expr->isError())
@@ -56,32 +60,77 @@ void AnalysisSemantic::expressionCheck(ExpressionHandle expr)
     auto exprName = typeid(*expr).name();
     if (typeid(CompoundStatement).name() == exprName)
     {
-        compoundStatementCheck(static_pointer_cast<CompoundStatement>(expr));
+        return compoundStatementCheck(static_pointer_cast<CompoundStatement>(expr));
     }
-    else if (typeid(CallExpression).name() == exprName)
+
+    if (typeid(CallExpression).name() == exprName)
     {
-        callExpressionCheck(static_pointer_cast<CallExpression>(expr));
+        return callExpressionCheck(static_pointer_cast<CallExpression>(expr));
     }
-    else if (typeid(ConditionStatement).name() == exprName)
+
+    if (typeid(ConditionStatement).name() == exprName)
     {
-        conditionStatementChech(static_pointer_cast<ConditionStatement>(expr));
+        return conditionStatementChech(static_pointer_cast<ConditionStatement>(expr));
     }
-    else if (typeid(DeclarationStatement).name() == exprName)
+
+    if (typeid(DeclarationStatement).name() == exprName)
     {
-        declarationStatementCheck(static_pointer_cast<DeclarationStatement>(expr));
+        return declarationStatementCheck(static_pointer_cast<DeclarationStatement>(expr));
     }
-    else if (typeid(VariableExpression).name() == exprName)
+
+    if (typeid(VariableExpression).name() == exprName)
     {
-        variableExpressionCheck(static_pointer_cast<VariableExpression>(expr));
+        return variableExpressionCheck(static_pointer_cast<VariableExpression>(expr));
     }
-    else if (typeid(AssignmentExpression).name() == exprName)
+
+    if (typeid(AssignmentExpression).name() == exprName)
     {
-        assignmentExpressionCheck(static_pointer_cast<AssignmentExpression>(expr));
+        return assignmentExpressionCheck(static_pointer_cast<AssignmentExpression>(expr));
     }
-    // else if (typeid(LiteralExpression).name() == exprName)
-    // {
-    //     literalExpressionCheck(static_pointer_cast<LiteralExpression>(expr));
-    // }
+
+    if (typeid(ComparisonExpression).name() == exprName)
+    {
+        return comparisonExpressionCheck(static_pointer_cast<ComparisonExpression>(expr));
+    }
+
+    if (typeid(ReturnExpression).name() == exprName)
+    {
+        return returnExpressionCheck(static_pointer_cast<ReturnExpression>(expr));
+    }
+
+    if (typeid(LoopingStatement).name() == exprName)
+    {
+        return loopingStatementCheck(static_pointer_cast<LoopingStatement>(expr));
+    }
+
+    if (typeid(ArithmeticExpression).name() == exprName)
+    {
+        return arithmeticExpressionCheck(static_pointer_cast<ArithmeticExpression>(expr));
+    }
+
+    if (typeid(BreakExpression).name() == exprName)
+    {
+        return breakExpressionCheck(static_pointer_cast<BreakExpression>(expr));
+    }
+
+    if (typeid(ContinueExpression).name() == exprName)
+    {
+        return continueExpressionCheck(static_pointer_cast<ContinueExpression>(expr));
+    }
+
+    if (typeid(UnaryExpression).name() == exprName)
+    {
+        return unaryExpressionCheck(static_pointer_cast<UnaryExpression>(expr));
+    }
+
+    if (dynamic_pointer_cast<LiteralExpression>(expr))
+    {
+        LOG(INFO) << "Literal Expression Check";
+        return;
+    }
+
+    LOG(ERROR) << expr->getToken().getEscapeValue() << " " << Errors::getInstance().missingImplementation.getMessage();
+    exit(1);
 }
 
 void AnalysisSemantic::compoundStatementCheck(CompoundStatementHandle expr)
@@ -97,11 +146,13 @@ void AnalysisSemantic::compoundStatementCheck(CompoundStatementHandle expr)
     for (auto item : expr->getBody())
     {
         expressionCheck(item);
+        if (item->isError())
+        {
+            break;
+        }
     }
 
-    LOG(INFO) << "Declaration 1 => " << getDeclarations().size() << " - " << lastDeclaration;
     getDeclarations().resize(lastDeclaration);
-    LOG(INFO) << "Declaration 1 => " << getDeclarations().size() << " - " << lastDeclaration;
 }
 
 void AnalysisSemantic::conditionStatementChech(ConditionStatementHandle expr)
@@ -111,6 +162,10 @@ void AnalysisSemantic::conditionStatementChech(ConditionStatementHandle expr)
     for (auto item : expr->getConditions())
     {
         expressionCheck(item);
+        if (item->isError())
+        {
+            break;
+        }
     }
 
     for (auto item : expr->getStatements())
@@ -178,8 +233,6 @@ void AnalysisSemantic::variableExpressionCheck(VariableExpressionHandle expr)
     LOG(INFO) << "Variable Expression Check";
 
     auto decl = findDeclaration(expr->getIdentifier());
-
-    LOG(INFO) << "FIND " << expr->getIdentifier() << " " << (decl == nullptr);
     if (!decl)
     {
         expr->setError(Errors::getInstance().variableNotDefined.withToken(expr->getToken()));
@@ -201,7 +254,7 @@ void AnalysisSemantic::assignmentExpressionCheck(AssignmentExpressionHandle expr
 
     if (!lhs->getType()->isEqual(rhs->getType()))
     {
-        expr->setError(Errors::getInstance().datatypeDifferent.withToken(expr->getToken()));
+        expr->setError(Errors::getInstance().datatypeDifferent.withToken(rhs->getToken()));
         return onError(expr);
     }
 
@@ -211,6 +264,109 @@ void AnalysisSemantic::assignmentExpressionCheck(AssignmentExpressionHandle expr
         return onError(expr);
     }
 
-    lhs->setAccess(AccessID::Load);
     rhs->setAccess(AccessID::Allocation);
+}
+
+void AnalysisSemantic::comparisonExpressionCheck(ComparisonExpressionHandle expr)
+{
+    LOG(INFO) << "Comparison Expression Check";
+
+    expressionCheck(expr->getLHS());
+    expressionCheck(expr->getRHS());
+
+    expr->setAccess(AccessID::Load);
+    expr->setAccess(AccessID::Load);
+}
+
+void AnalysisSemantic::returnExpressionCheck(ReturnExpressionHandle expr)
+{
+    LOG(INFO) << "Return Expression Check";
+
+    if (expr->getValue() && !expr->getValue()->isError())
+    {
+        expressionCheck(expr->getValue());
+
+        if (expr->getValue()->isError())
+        {
+            return;
+        }
+
+        expr->setType(expr->getValue()->getType());
+    }
+}
+
+void AnalysisSemantic::breakExpressionCheck(BreakExpressionHandle expr)
+{
+    LOG(INFO) << "Break Expression Check";
+
+    auto val = expr->getValue();
+    if (val)
+    {
+        expressionCheck(val);
+        if (val->isError())
+        {
+            return;
+        }
+
+        if (!val->getType()->isBoolType())
+        {
+            expr->setError(Errors::getInstance().breakExpressionInvalid.withToken(val->getToken()));
+            return onError(expr);
+        }
+
+        expr->setType(expr->getValue()->getType());
+    }
+}
+
+void AnalysisSemantic::loopingStatementCheck(LoopingStatementHandle expr)
+{
+    LOG(INFO) << "Looping Statement Check";
+
+    for (auto item : expr->getConditions())
+    {
+        expressionCheck(item);
+    }
+
+    expressionCheck(expr->getBody());
+}
+
+void AnalysisSemantic::continueExpressionCheck(ContinueExpressionHandle expr)
+{
+    LOG(INFO) << "Continue Expression Check";
+
+    if (expr->getValue())
+    {
+        expressionCheck(expr->getValue());
+    }
+}
+
+void AnalysisSemantic::arithmeticExpressionCheck(ArithmeticExpressionHandle expr)
+{
+    LOG(INFO) << "Arithmetic Expression Check";
+
+    auto lhs = expr->getLHS();
+    auto rhs = expr->getRHS();
+
+    expressionCheck(lhs);
+    expressionCheck(rhs);
+
+    if (lhs->isError() || rhs->isError())
+    {
+        return;
+    }
+
+    if (!lhs->getType()->isEqual(rhs->getType()))
+    {
+        expr->setError(Errors::getInstance().datatypeDifferent.withToken(rhs->getToken()));
+        return onError(expr);
+    }
+
+    expr->setType(lhs->getType());
+}
+
+void AnalysisSemantic::unaryExpressionCheck(UnaryExpressionHandle expr)
+{
+    LOG(INFO) << "Unary Expression Check";
+
+    expressionCheck(expr->getExpression());
 }

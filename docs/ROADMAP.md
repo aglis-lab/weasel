@@ -165,9 +165,9 @@ fun main() {
 }
 
 // New Point
-fun NewPoint(arena memory.Arena) Pointer<Point> {
+fun NewPoint(arena memory.Arena) *Point {
   // unsafe pointer with safe heap manager
-  let p = arena.New<Point>() {
+  let p = arena.New[Point]() {
     X: 10.2
     Y: 11
   }
@@ -218,7 +218,9 @@ fun Flaying(point weak Point) {
 
 ```
 fun main() {
-  let point = GetPoint().Ref()
+  let point = GetPoint()
+
+  // Another Convention
   if let point, ok = point.Ref(); ok {
     // Do something with point
   }
@@ -230,12 +232,12 @@ fun main() {
   }
 }
 
-fun GetPoint() ?Point {
+fun GetPoint() optional[Point] {
   if let ok = CheckCurrentPoint(); ok {
     return Point{X: 1}
   }
 
-  return nil
+  return ()
 }
 ```
 

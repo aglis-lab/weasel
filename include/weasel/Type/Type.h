@@ -60,6 +60,8 @@ namespace weasel
             _containedTypes.push_back(containedType);
         }
 
+        virtual ~Type();
+
     public:
         TypeID getTypeID() const { return _typeId; }
         int getTypeWidth();
@@ -122,11 +124,13 @@ namespace weasel
         bool isEqual(TypeHandle type);
 
     public:
-        virtual ~Type();
-        virtual llvm::Type *codegen(WeaselCodegen *codegen);
-
         string getTypeName();
         string getManglingName();
+
+        void setToken(Token token) { _token = token; }
+        Token getToken() const { return _token; }
+
+        virtual llvm::Type *codegen(WeaselCodegen *codegen);
 
     protected:
         bool _isSpread = false;
@@ -134,8 +138,8 @@ namespace weasel
         int _width = 32; // width in bit
 
         TypeID _typeId = TypeID::VoidType;
-        Token _token = Token::create();
         vector<TypeHandle> _containedTypes;
+        Token _token = Token::create();
     };
 
     class StructTypeField
@@ -190,9 +194,6 @@ namespace weasel
 
             return true;
         }
-
-        void setToken(Token token) { _token = token; }
-        Token getToken() const { return _token; }
 
         bool isError() const { return _error.has_value(); }
 
