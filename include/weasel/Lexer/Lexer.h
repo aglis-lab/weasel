@@ -5,21 +5,23 @@
 #include <weasel/Lexer/Token.h>
 #include <weasel/Basic/FileManager.h>
 
+using namespace weasel;
+
 namespace weasel
 {
     class Lexer
     {
     public:
-        Lexer(FileManager *fileManager);
+        explicit Lexer(FileManager fileManager) : _currentBuffer(fileManager.getStartBuffer()), _fileManager(fileManager) {}
 
         Token getNextToken(bool skipSpace = false);
         Token getCurrentToken() const { return _currentToken; }
         bool expect(TokenKind kind);
+        Token expect();
 
     private: // Private variable for creating currrent token and buffer
-        char *_startBuffer;
-        char *_endBuffer;
         char *_currentBuffer;
+        FileManager _fileManager;
 
         Token _currentToken = Token::create();
         // check last token
@@ -30,15 +32,19 @@ namespace weasel
 
     private: // Private Function
         // Get and Next Buffer
+        char *getStartBuffer() const { return _fileManager.getStartBuffer(); }
+        char *getCurrentBuffer() const { return _currentBuffer; }
+        char *getEndBuffer() const { return _fileManager.getEndBuffer(); }
         char *getNextBuffer(size_t slide = 1);
-        inline char checkNextBuffer() const { return *(_currentBuffer + 1); }
-        inline void setCurrentBuffer(char *buffer) { _currentBuffer -= _currentBuffer - buffer; }
+        char checkNextBuffer() const { return *(_currentBuffer + 1); }
+        void setCurrentBuffer(const char *buffer) { _currentBuffer -= _currentBuffer - buffer; }
 
         bool compareBuffer(char *startBuffer, char *endBuffer, const char *compareBuffer);
         bool isIdentifier(char c, bool num = false);
-        inline bool isValidBuffer() const { return _endBuffer - _currentBuffer > 0; }
+        bool isValidBuffer() const { return getEndBuffer() - getCurrentBuffer() > 0; }
 
-        inline bool isNewline() const { return *_currentBuffer == '\n'; }
+        bool isNewline() const { return *getCurrentBuffer() == '\n'; }
+        bool isLastNewline() const { return *(getCurrentBuffer() - 1) == '\n'; }
 
         // TODO: Handle special character for parseCharacter or string
         // Token section

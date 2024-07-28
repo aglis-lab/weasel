@@ -5,7 +5,7 @@
 
 weasel::Passes::Passes(llvm::Module *module)
 {
-    _fpm = new llvm::legacy::FunctionPassManager(module);
+    _fpm = make_unique<llvm::legacy::FunctionPassManager>(module);
     // _fpm->add(llvm::createConstraintEliminationPass()); // Propagate constant
     // _fpm->add(llvm::createGVNPass());                   // Eliminate Common SubExpressions.
     // _fpm->add(llvm::createPromoteMemoryToRegisterPass()); // SSA conversion

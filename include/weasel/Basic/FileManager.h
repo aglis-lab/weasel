@@ -3,20 +3,25 @@
 // I modify the implementation from
 // https://github.com/d0k/mappedfile
 
+using namespace std;
+
 namespace weasel
 {
     class FileManager
     {
 
     public:
-        FileManager(const std::string filePath);
+        explicit FileManager(const string &filePath);
+        ~FileManager() {}
 
         bool isValid() const { return _startBuffer != nullptr; }
         size_t getSize() const { return _size; }
         char *getStartBuffer() const { return _startBuffer; }
+        char *getEndBuffer() const { return _endBuffer; }
 
     protected:
         char *_startBuffer;
+        char *_endBuffer;
         size_t _size;
 
     private:

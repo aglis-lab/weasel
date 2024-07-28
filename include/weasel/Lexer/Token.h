@@ -5,7 +5,7 @@
 #include "weasel/Basic/Enum.h"
 #include "weasel/Basic/Location.h"
 
-#define __defaultPrecOrder 20
+constexpr uint __defaultPrecOrder = 20;
 
 // Base
 namespace weasel
@@ -165,12 +165,10 @@ namespace weasel
 // Token Class
 namespace weasel
 {
-    class Context;
-
     class Token
     {
     public:
-        // Fast Checking //
+        // Keyword Checking //
         bool isKind(TokenKind type) const { return type == _kind; }
         bool isKeyFunction() const { return _kind == TokenKind::TokenKeyFun; }
         bool isKeyStruct() const { return _kind == TokenKind::TokenKeyStruct; }
@@ -178,14 +176,15 @@ namespace weasel
         bool isKeyDefer() const { return _kind == TokenKind::TokenKeyDefer; }
         bool isKeyImpl() const { return _kind == TokenKind::TokenKeyImpl; }
         bool isKeyThis() const { return _kind == TokenKind::TokenKeyThis; }
+        bool isKeyExtern() const { return _kind == TokenKind::TokenKeyExtern; }
 
         // Variable //
-        bool isDataType() { return _kind >= TokenKind::TokenTyVoid && _kind <= TokenKind::TokenTyDecimal; }
-        bool isKeyDefinition() { return (_kind == TokenKind::TokenKeyLet || _kind == TokenKind::TokenKeyFinal || _kind == TokenKind::TokenKeyConst); }
-        bool isLiteral() { return _kind >= TokenKind::TokenLitNil && _kind <= TokenKind::TokenLitString; }
+        bool isDataType() const { return _kind >= TokenKind::TokenTyVoid && _kind <= TokenKind::TokenTyDecimal; }
+        bool isKeyDefinition() const { return (_kind == TokenKind::TokenKeyLet || _kind == TokenKind::TokenKeyFinal || _kind == TokenKind::TokenKeyConst); }
+        bool isLiteral() const { return _kind >= TokenKind::TokenLitNil && _kind <= TokenKind::TokenLitString; }
 
         // Operator //
-        bool isOperator() { return _kind >= TokenKind::TokenOperatorStart && _kind <= TokenKind::TokenOperatorEnd; }
+        bool isOperator() const { return _kind >= TokenKind::TokenOperatorStart && _kind <= TokenKind::TokenOperatorEnd; }
         bool isUnknown() const { return _kind == TokenKind::TokenUnknown; }
         bool isNewline() const { return _kind == TokenKind::TokenSpaceNewline; }
         bool isOperatorCast() const { return _kind == TokenKind::TokenOperatorCasting; }
@@ -247,7 +246,7 @@ namespace weasel
         // Keyword //
         bool isKeyParallel() const { return _kind == TokenKind::TokenKeyParallel; }
         bool isKeyFor() const { return _kind == TokenKind::TokenKeyFor; }
-        bool isKeyDeclaration() { return _kind >= TokenKind::TokenKeyStartDeclaration && _kind <= TokenKind::TokenKeyEndDeclaration; }
+        bool isKeyDeclaration() const { return _kind >= TokenKind::TokenKeyStartDeclaration && _kind <= TokenKind::TokenKeyEndDeclaration; }
         bool isKeyBreak() const { return _kind == TokenKind::TokenKeyBreak; }
         bool isKeyContinue() const { return _kind == TokenKind::TokenKeyContinue; }
         bool isKeyReturn() const { return _kind == TokenKind::TokenKeyReturn; }
@@ -263,11 +262,40 @@ namespace weasel
         char *getStartBuffer() const { return _startBuffer; }
         char *getEndBuffer() const { return _endBuffer; }
 
-        std::string getValue() const { return std::string(_startBuffer, _endBuffer); }
+        string getValue() const { return string(getStartBuffer(), getEndBuffer()); }
+        string getEscapeValue() const
+        {
+            string val = "";
+            auto temp = getStartBuffer();
+            while (temp != getEndBuffer())
+            {
+                switch (*temp)
+                {
+                case '\\':
+                    val += "\\\\";
+                    break;
+                case '\n':
+                    val += "\\n";
+                    break;
+                case '\r':
+                    val += "\\r";
+                    break;
+                case '\t':
+                    val += "\\t";
+                    break;
+                default:
+                    val += *temp;
+                }
+
+                temp++;
+            }
+
+            return val;
+        }
 
         SourceLocation getLocation() const { return _location; }
         TokenKind getTokenKind() const { return _kind; }
-        int getTokenKindToInt() { return enumToInt(_kind); }
+        int getTokenKindToInt() const { return enumToInt(_kind); }
 
         Qualifier getQualifier() const;
 

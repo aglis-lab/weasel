@@ -3,8 +3,12 @@
 cmake_minimum_required(VERSION 3.15)
 project(weasel VERSION 0.0.1)
 
+# Set Compiler
+set(CMAKE_C_COMPILER clang)
+set(CMAKE_CXX_COMPILER clang++)
+
 # Set LLVM Version
-set(LLVM_VERSION 15)
+set(LLVM_VERSION 17)
 
 # CMAKE LINKER
 set(CMAKE_LINKER ld64.lld)
@@ -12,14 +16,18 @@ set(CMAKE_LINKER ld64.lld)
 # LLVM
 set(LLVM_DIR /opt/homebrew/opt/llvm@${LLVM_VERSION}/lib/cmake/llvm/)
 
+set(CMAKE_MAKE_PROGRAM Ninja)
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -g3 -fno-omit-frame-pointer")
+# set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address -g3")
+
 # Find THREADS
 find_package(Threads REQUIRED)
 
 # Find FMT
-find_package(fmt REQUIRED)
+find_package(fmt CONFIG REQUIRED)
 
 # Find Google Loging
-find_package (glog REQUIRED)
+find_package(glog CONFIG REQUIRED)
 
 # Find LLVM PACKAGE
 find_package(LLVM REQUIRED CONFIG)
@@ -61,14 +69,15 @@ message(STATUS ${LLVM_DEFINITIONS})
 
 # C++ DEFINITIONS
 add_definitions("-Wno-reorder-ctor")
-add_definitions("-std=c++17")
+add_definitions("-std=c++20")
+add_definitions("-Wno-unused-variable")
 
 if (MSVC)
     # warning level 4
     add_compile_options(/W4)
 else()
     # additional warnings
-    add_compile_options(-Wall -Wextra -Wpedantic)
+    add_compile_options(-Wall -Wextra -Wpedantic -Wno-unused-variable)
 endif()
 
 # Sanitize Address

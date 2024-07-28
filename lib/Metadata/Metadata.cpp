@@ -5,13 +5,6 @@
 
 #define WEASEL_FULL_VERSION "weasel version 0.1.0-experimental"
 
-weasel::Metadata::Metadata(llvm::LLVMContext *context, llvm::Module &module)
-{
-    _context = context;
-    _MDbuilder = new llvm::MDBuilder(*context);
-    _DIBuilder = new llvm::DIBuilder(module);
-}
-
 llvm::Metadata *weasel::Metadata::getFlagsMetadata()
 {
     // TODO: return getBuilder()->createConstant(llvm::ConstantInt::get(llvm::Type::getInt32Ty(*getContext()), 4));

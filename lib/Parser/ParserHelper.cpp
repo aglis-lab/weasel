@@ -1,6 +1,7 @@
 #include "weasel/Basic/Number.h"
 #include "weasel/Parser/Parser.h"
-#include "weasel/Symbol/Symbol.h"
+
+#include <cassert>
 
 void weasel::Parser::ignoreNewline()
 {
@@ -10,7 +11,7 @@ void weasel::Parser::ignoreNewline()
     }
 }
 
-weasel::Type *weasel::Parser::parseDataType()
+TypeHandle Parser::parseDataType()
 {
     // Pointer
     if (getCurrentToken().isKind(TokenKind::TokenOperatorStar))
@@ -18,12 +19,8 @@ weasel::Type *weasel::Parser::parseDataType()
         getNextToken(); // eat '*'
 
         auto containedType = parseDataType();
-        if (containedType == nullptr)
-        {
-            return ErrorTable::addError(getCurrentToken(), "Expected data type after pointer type");
-        }
 
-        return Type::getPointerType(containedType);
+        return Type::getPointerType(move(containedType));
     }
 
     // Address of type
@@ -32,12 +29,8 @@ weasel::Type *weasel::Parser::parseDataType()
         getNextToken(); // eat '&'
 
         auto containedType = parseDataType();
-        if (containedType == nullptr)
-        {
-            return ErrorTable::addError(getCurrentToken(), "Expected data type after reference type");
-        }
 
-        return Type::getReferenceType(containedType);
+        return Type::getReferenceType(move(containedType));
     }
 
     // Array
@@ -47,53 +40,35 @@ weasel::Type *weasel::Parser::parseDataType()
         if (getNextToken().isKind(TokenKind::TokenLitInteger))
         {
             auto numStr = getCurrentToken().getValue();
-            if (!weasel::Number::isInteger(numStr))
-            {
-                return ErrorTable::addError(getCurrentToken(), "Number is not a valid integer");
-            }
 
-            arraySize = Number::toInteger(numStr);
+            assert(weasel::Number::isInteger(numStr) && "Number is not a valid integer");
+
+            arraySize = (int)Number::toInteger(numStr);
 
             getNextToken(); // eat 'integer'
         }
 
-        if (!getCurrentToken().isKind(TokenKind::TokenDelimCloseSquareBracket))
-        {
-            return ErrorTable::addError(getCurrentToken(), "Expected ] for array type");
-        }
+        assert(getCurrentToken().isKind(TokenKind::TokenDelimCloseSquareBracket) && "Expected ] for array type");
 
         getNextToken(); // eat ']'
-
         auto containedType = parseDataType();
-        if (containedType == nullptr)
-        {
-            return nullptr;
-        }
 
-        return Type::getArrayType(containedType, arraySize);
-    }
-
-    // Check User Type
-    auto userType = findUserType(getCurrentToken().getValue());
-    if (userType != nullptr)
-    {
-        getNextToken(); // remove current User Type
-        return userType;
+        return Type::getArrayType(move(containedType), arraySize);
     }
 
     // Normal Data Type or no datatype
     auto type = Type::create(getCurrentToken());
-    if (type != nullptr)
-    {
-        // Remove Current Token
-        getNextToken();
-    }
+
+    // Remove Current Token
+    getNextToken();
 
     return type;
 }
 
-weasel::Expression *weasel::Parser::createOperatorExpression(Token op, Expression *lhs, Expression *rhs)
+ExpressionHandle Parser::createOperatorExpression(Token op, ExpressionHandle lhs, ExpressionHandle rhs)
 {
+    LOG(INFO) << "Parse Create Operator Expression...";
+
     if (op.isOperatorAssignment())
     {
         if (!op.isOperatorEqual())
@@ -101,9 +76,8 @@ weasel::Expression *weasel::Parser::createOperatorExpression(Token op, Expressio
             auto startBuffer = op.getStartBuffer();
             auto endBuffer = op.getEndBuffer() - 1;
             auto tokenKind = TokenKind::TokenUnknown;
-            auto tokenVal = std::string(startBuffer, endBuffer);
 
-            if (tokenVal == "-")
+            if (auto tokenVal = string_view(startBuffer, endBuffer); tokenVal == "-")
                 tokenKind = TokenKind::TokenOperatorPlus;
             else if (tokenVal == "*")
                 tokenKind = TokenKind::TokenOperatorStar;
@@ -126,21 +100,21 @@ weasel::Expression *weasel::Parser::createOperatorExpression(Token op, Expressio
 
             auto token = Token::create(tokenKind, op.getLocation(), startBuffer, endBuffer);
 
-            rhs = new ArithmeticExpression(token, lhs, rhs);
+            rhs = make_shared<ArithmeticExpression>(token, lhs, rhs);
         }
 
-        return new AssignmentExpression(op, lhs, rhs);
+        return make_shared<AssignmentExpression>(op, lhs, rhs);
     }
 
     if (op.isComparison())
     {
-        return new ComparisonExpression(op, lhs, rhs);
+        return make_shared<ComparisonExpression>(op, lhs, rhs);
     }
 
     if (op.isOperatorLogical())
     {
-        return new LogicalExpression(op, lhs, rhs);
+        return make_shared<LogicalExpression>(op, lhs, rhs);
     }
 
-    return new ArithmeticExpression(op, lhs, rhs);
+    return make_shared<ArithmeticExpression>(op, lhs, rhs);
 }

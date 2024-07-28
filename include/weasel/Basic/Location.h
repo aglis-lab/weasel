@@ -1,3 +1,9 @@
+#include <fmt/core.h>
+
+#include <sys/types.h>
+
+using namespace std;
+
 namespace weasel
 {
     /*
@@ -12,11 +18,12 @@ namespace weasel
      * */
     struct SourceLocation
     {
-        int line = 0;
-        int column = -1; // Because we increment when we get first character
+        uint loc = 0;     // Location or index of the character
+        uint line = 0;    // Row
+        uint column = -1; // Because we increment when we get first character
 
         // We need to track the last value
-        void incrementColumn(int val)
+        void incrementColumn(uint val)
         {
             column += val;
         }
@@ -24,10 +31,25 @@ namespace weasel
         void newLine()
         {
             line++;
-            column = 0;
+            column = -1;
+        }
+
+        string toString()
+        {
+            return fmt::format("{{loc: {}, line: {}, column: {}}}", loc, line, column);
+        }
+
+        SourceLocation() {}
+
+        SourceLocation(uint loc, uint line, uint column)
+        {
+            this->loc = loc;
+            this->line = line;
+            this->column = column;
         }
     };
 
+    // TODO: Range Location with Source Index
     struct RangeLocation
     {
         SourceLocation startLocation;

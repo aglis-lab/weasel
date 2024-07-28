@@ -1,56 +1,30 @@
+#include <cassert>
+
 #include "weasel/Parser/Parser.h"
-#include "weasel/Symbol/Symbol.h"
 
-weasel::Function *weasel::Parser::parseExternFunction()
+FunctionHandle Parser::parseFunction()
 {
-    getNextToken(true); // eat 'extern'
-    auto fun = parseFunction();
-    fun->setIsExtern(true);
+    LOG(INFO) << "Parse Function...";
 
-    return fun;
-}
-
-weasel::Function *weasel::Parser::parseFunction(StructType *type)
-{
-    auto fun = parseDeclareFunction(type);
-    if (fun == nullptr)
+    auto fun = parseDeclareFunction();
+    if (fun->isError())
     {
-        return nullptr;
+        return fun;
     }
 
-    // Set Impl Struct Type
-    fun->setImplStruct(type);
-
-    // Ignore new line
     if (getCurrentToken().isNewline())
     {
-        getNextToken(true);
+        return fun;
     }
 
     if (!getCurrentToken().isOpenCurly())
     {
-        return ErrorTable::addError(getCurrentToken(), "Expected {");
-    }
-
-    // Set Symbol for parameters and enter a scope
-    enterScope();
-
-    for (auto &arg : fun->getArguments())
-    {
-        addAttribute(ParserAttribute::get(arg->getArgumentName(), arg->getType(), AttributeKind::Parameter));
+        fun->setError(Errors::getInstance().expectedOpenCurly.withToken(getCurrentToken()));
+        return fun;
     }
 
     auto body = parseCompoundStatement();
-
-    // Exit parameter scope
-    exitScope();
-
-    if (!body)
-    {
-        return ErrorTable::addError(getCurrentToken(), "Expected valid body statement!.");
-    }
-
-    if (!body->getBody().empty())
+    if (body && !body->getBody().empty())
     {
         fun->setIsDefine(true);
     }
@@ -61,59 +35,63 @@ weasel::Function *weasel::Parser::parseFunction(StructType *type)
 }
 
 // 'fun' identifier '(' args ')' funTy
-weasel::Function *weasel::Parser::parseDeclareFunction(StructType *implType)
+FunctionHandle Parser::parseDeclareFunction()
 {
+    LOG(INFO) << "Parse Declare Function...";
+
+    auto fun = make_shared<Function>();
+
     // get next and eat 'fun'
     if (!getNextToken().isIdentifier())
     {
-        return ErrorTable::addError(getCurrentToken(), "Expected an identifier when parse function");
+        fun->setError(Errors::getInstance().expectedIdentifier.withToken(getCurrentToken()));
+        return fun;
     }
 
     // Check Symbol Table
-    auto identifier = getCurrentToken().getValue();
-    if (findFunction(identifier) != nullptr)
-    {
-        return ErrorTable::addError(getCurrentToken(), "Function already declared");
-    }
+    auto identToken = getCurrentToken();
+    fun->setToken(identToken);
+    fun->setIdentifier(identToken.getValue());
 
     if (!getNextToken().isOpenParen())
     {
-        return ErrorTable::addError(getCurrentToken(), "Expected (");
+        fun->setError(Errors::getInstance().expectedOpenParen.withToken(getCurrentToken()));
+        return fun;
     }
 
     getNextToken(); // eat '('
-    std::vector<ArgumentType *> types;
     auto isVararg = false;
-    auto isStatic = implType != nullptr;
+    // auto isStatic = implType != nullptr;
     while (!getCurrentToken().isCloseParen())
     {
         if (isVararg)
         {
-            return ErrorTable::addError(getCurrentToken(), "Variable number argument should be final argument");
+            fun->setError(Errors::getInstance().invalidVararg.withToken(getCurrentToken()));
+            return fun;
         }
 
         auto lastToken = getCurrentToken();
         if (lastToken.isKeyThis())
         {
             // Check if using reference type
-            Type *type = implType;
-            if (getNextToken().isOperatorAnd())
-            {
-                type = Type::getReferenceType(implType);
-                getNextToken(); // eat '&'
-            }
+            // Type *type = implType;
+            // if (getNextToken().isOperatorAnd())
+            // {
+            //     type = Type::getReferenceType(implType);
+            //     getNextToken(); // eat '&'
+            // }
 
-            types.push_back(ArgumentType::create(lastToken.getValue(), type));
-            isStatic = false;
+            // types.push_back(ArgumentType::create(lastToken.getValue(), type));
+            // isStatic = false;
         }
         else
         {
             if (!lastToken.isIdentifier())
             {
-                return ErrorTable::addError(getCurrentToken(), "Expected identifier in function argument");
+                fun->setError(Errors::getInstance().expectedIdentifier.withToken(getCurrentToken()));
+                return fun;
             }
 
-            auto identifier = lastToken.getValue();
             if (getNextToken().isKind(TokenKind::TokenPuncDotThree))
             {
                 isVararg = true;
@@ -121,14 +99,11 @@ weasel::Function *weasel::Parser::parseDeclareFunction(StructType *implType)
             }
 
             auto type = parseDataType();
-            if (type == nullptr)
-            {
-                return ErrorTable::addError(getCurrentToken(), "Expected type in function argument");
-            }
+            auto argumentType = make_shared<ArgumentExpression>();
+            argumentType->setType(type);
+            argumentType->setIdentifier(lastToken.getValue());
 
-            auto argumentType = ArgumentType::create(identifier, type);
-
-            types.push_back(argumentType);
+            fun->getArguments().push_back(argumentType);
         }
 
         if (!getCurrentToken().isKind(TokenKind::TokenPuncComma))
@@ -141,39 +116,44 @@ weasel::Function *weasel::Parser::parseDeclareFunction(StructType *implType)
 
     if (!getCurrentToken().isCloseParen())
     {
-        return ErrorTable::addError(getCurrentToken(), "Expected ) in function argument");
+        fun->setError(Errors::getInstance().expectedCloseParen.withToken(getCurrentToken()));
+        return fun;
     }
 
-    getNextToken(); // eat )
+    getNextToken(); // eat ')'
 
-    auto returnType = parseDataType();
-    if (returnType == nullptr)
+    auto returnType = Type::getVoidType();
+    if (getCurrentToken().isDataType() || getCurrentToken().isIdentifier())
     {
-        returnType = Type::getVoidType();
+        returnType = parseDataType();
     }
 
-    returnType->setSpread(isVararg);
+    if (isVararg)
+    {
+        returnType->setSpread(true);
+    }
 
-    auto newFunction = new Function(identifier, returnType, types);
-    newFunction->setIsStatic(isStatic);
-    return newFunction;
+    fun->setType(returnType);
+    return fun;
 }
 
 void weasel::Parser::parseImplFunctions()
 {
-    auto structName = getNextToken().getValue();
-    auto structType = _module->findStructType(structName);
+    LOG(INFO) << "Parse Impl Functions...";
 
-    getNextToken();     // eat StructName
-    getNextToken(true); // eat '{'
+    // auto structName = getNextToken().getValue();
+    // auto structType = _module->findStructType(structName);
 
-    while (!getCurrentToken().isCloseCurly())
-    {
-        addFunction(parseFunction(structType));
+    // getNextToken();     // eat StructName
+    // getNextToken(true); // eat '{'
 
-        if (getCurrentToken().isNewline())
-        {
-            getNextToken(true);
-        }
-    }
+    // while (!getCurrentToken().isCloseCurly())
+    // {
+    //     addFunction(parseFunction(structType));
+
+    //     if (getCurrentToken().isNewline())
+    //     {
+    //         getNextToken(true);
+    //     }
+    // }
 }

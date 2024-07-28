@@ -1,11 +1,12 @@
 #include <iostream>
 
 #include <fmt/core.h>
+#include <weasel/Type/Type.h>
 
-#include "weasel/IR/Codegen.h"
-#include "weasel/Type/Type.h"
+using namespace std;
+using namespace weasel;
 
-std::string weasel::Type::getManglingName()
+string Type::getManglingName()
 {
     switch (getTypeID())
     {
@@ -80,78 +81,49 @@ std::string weasel::Type::getManglingName()
     }
 }
 
-bool weasel::Type::isPossibleStructType() const
+bool Type::isPossibleStructType()
 {
-    if (this->isStructType())
+    if (isStructType())
     {
         return true;
     }
 
-    if (this->isPointerType())
+    if (isPointerType())
     {
-        return this->getContainedType()->isStructType();
+        return getContainedType()->isStructType();
     }
 
-    if (this->isReferenceType())
+    if (isReferenceType())
     {
-        return this->getContainedType()->isStructType();
+        return getContainedType()->isStructType();
     }
 
     return false;
 }
 
-int weasel::StructType::findTypeName(const std::string &typeName)
+tuple<int, optional<StructTypeField>> StructType::findTypeName(const string &typeName)
 {
-    auto exist = std::find(_typeNames.begin(), _typeNames.end(), typeName);
-    if (exist == _typeNames.end())
+    for (size_t i = 0; i < _fields.size(); i++)
     {
-        return -1;
-    }
-
-    return exist - _typeNames.begin();
-}
-
-void weasel::StructType::addField(const std::string &fieldName, Type *type)
-{
-    _typeNames.push_back(fieldName);
-
-    addContainedType(type);
-}
-
-bool weasel::StructType::isPreferConstant()
-{
-    for (auto &item : getContainedTypes())
-    {
-        if (item->isArrayType())
+        if (_fields[i].getIdentifier() == typeName)
         {
-            return false;
+            return {i, _fields[i]};
         }
     }
 
-    return true;
+    return {-1, {}};
 }
 
-void weasel::Type::replaceContainedTypes(const std::vector<Type *> &containedTypes)
-{
-    for (auto item : _containedTypes)
-    {
-        delete item;
-        item = nullptr;
-    }
-
-    _containedTypes.clear();
-
-    _containedTypes = containedTypes;
-}
-
-int weasel::Type::getTypeWidth()
+int Type::getTypeWidth()
 {
     if (isStructType())
     {
         auto val = 0;
-        for (auto item : getContainedTypes())
+        auto structType = static_cast<StructType *>(this);
+
+        for (auto item : structType->getFields())
         {
-            val += item->getTypeWidth();
+            val += item.getType()->getTypeWidth();
         }
 
         return val;
@@ -165,51 +137,45 @@ int weasel::Type::getTypeWidth()
     return _width;
 }
 
-weasel::Type::~Type()
+bool Type::isEqual(TypeHandle type)
 {
-    getContainedTypes().clear();
-}
-
-llvm::Type *weasel::StructType::codegen(weasel::WeaselCodegen *context)
-{
-    return context->codegen(this);
-}
-
-llvm::Type *weasel::Type::codegen(weasel::WeaselCodegen *context)
-{
-    return context->codegen(this);
-}
-
-bool weasel::Type::isEqual(weasel::Type *type)
-{
-    if (type == nullptr)
+    if (!type)
     {
         return false;
     }
 
-    auto val = this->getTypeID() == type->getTypeID();
-    if (!val)
+    if (!(getTypeID() == type->getTypeID()))
     {
+        if (getTypeID() == TypeID::PointerType && type->getTypeID() == TypeID::ReferenceType)
+        {
+            return getContainedType()->isEqual(type->getContainedType());
+        }
+
         return false;
     }
 
-    if (this->isPrimitiveType())
+    if (isPrimitiveType())
     {
         return true;
     }
 
-    if (this->isDerivedType())
+    if (isStructType())
     {
-        return this->getContainedType()->isEqual(type->getContainedType());
+        return this == type.get();
+    }
+
+    if (isDerivedType())
+    {
+        return getContainedType()->isEqual(type->getContainedType());
     }
 
     // User Type Check
     // There is just one or single instance for user type
     // Used for struct type
-    return this == type;
+    return this == type.get();
 }
 
-weasel::Type *weasel::Type::create(Token token)
+TypeHandle Type::create(Token token)
 {
     switch (token.getTokenKind())
     {
@@ -254,18 +220,18 @@ weasel::Type *weasel::Type::create(Token token)
         return Type::getVoidType();
 
     default:
-        return nullptr;
+        return Type::getUnknownType(token);
     }
 }
 
-std::string weasel::Type::getTypeName()
+string Type::getTypeName()
 {
     switch (getTypeID())
     {
     case TypeID::IntegerType:
     {
         auto prefix = "";
-        std::string type;
+        string type;
         if (!_isSigned)
         {
             prefix = "u";

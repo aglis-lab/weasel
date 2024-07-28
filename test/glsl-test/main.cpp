@@ -6,7 +6,6 @@
 #include "weasel/Parser/Parser.h"
 #include "weasel/IR/Codegen.h"
 #include "weasel/AST/AST.h"
-#include "weasel/Symbol/Symbol.h"
 #include "weasel/Basic/FileManager.h"
 #include "weasel/Driver/Driver.h"
 #include "weasel/Analysis/AnalysisSemantic.h"

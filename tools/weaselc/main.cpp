@@ -13,7 +13,6 @@
 #include <weasel/Printer/Printer.h>
 #include <weasel/Parser/Parser.h>
 #include <weasel/IR/Codegen.h>
-#include <weasel/Symbol/Symbol.h>
 #include <weasel/Basic/FileManager.h>
 #include <weasel/Driver/Driver.h>
 #include <weasel/Analysis/AnalysisSemantic.h>
@@ -26,6 +25,7 @@
 #include <filesystem>
 
 namespace fs = std::__fs::filesystem;
+using namespace std;
 
 int main(int argc, char *argv[])
 {
@@ -38,10 +38,12 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    auto outputExecutable = "temp/main";
+    // auto outputExecutable = "temp/main";
     auto filePath = std::string(argv[1]);
     auto filename = splitString(filePath, "/").back();
-    auto outputPath = (std::string)fs::temp_directory_path() + filename + ".o";
+    // auto outputPath = (std::string)fs::temp_directory_path() + filename + ".o";
+    auto outputPath = filePath + ".o";
+    auto outputExecutable = filePath + ".out";
     auto fileManager = weasel::FileManager(filePath);
     if (!fileManager.isValid())
     {
@@ -52,12 +54,47 @@ int main(int argc, char *argv[])
     // Prepare Lexer and Parser
     LOG(INFO) << "Initializing Parser...\n";
     auto weaselModule = weasel::Module();
-    auto lexer = weasel::Lexer(&fileManager);
-    auto parser = weasel::Parser(&lexer, &weaselModule);
+    auto lexer = weasel::Lexer(fileManager);
+    auto parser = weasel::Parser(lexer, &weaselModule);
 
     // Parse into AST
     LOG(INFO) << "Parsing...\n";
     parser.parse();
+
+    // Analysis Semantic
+    LOG(INFO) << "Semantic Analysis...\n";
+    auto analysis = weasel::AnalysisSemantic(&weaselModule);
+    analysis.semanticCheck();
+
+    if (!analysis.getTypeErrors().empty())
+    {
+        for (auto item : analysis.getTypeErrors())
+        {
+            LOG(ERROR)
+                << item->getError()->getMessage()
+                << " but got '" << item->getError()->getToken().getEscapeValue() << "'"
+                << " type of " << item->getError()->getToken().getTokenKindToInt()
+                << " " << item->getError()->getToken().getLocation().toString()
+                << " from " << item->getToken().getValue();
+        }
+
+        return 0;
+    }
+
+    if (!analysis.getErrors().empty())
+    {
+        for (auto item : analysis.getErrors())
+        {
+            LOG(ERROR)
+                << item->getError()->getMessage()
+                << " but got '" << item->getError()->getToken().getEscapeValue() << "'"
+                << " type of " << item->getError()->getToken().getTokenKindToInt()
+                << " " << item->getError()->getToken().getLocation().toString()
+                << " from " << item->getToken().getValue();
+        }
+
+        return 0;
+    }
 
     // Debugging AST
     LOG(INFO) << "Write Weasel AST " << filename << "...\n";
@@ -70,9 +107,9 @@ int main(int argc, char *argv[])
     llvm::InitializeNativeTargetAsmPrinter();
 
     // Prepare for codegen
-    auto llvmContext = new llvm::LLVMContext();
-    auto codegen = weasel::WeaselCodegen(llvmContext, "CoreModule");
-    auto driver = weasel::Driver(&codegen, &parser);
+    auto llvmContext = llvm::LLVMContext();
+    auto codegen = weasel::WeaselCodegen(&llvmContext, "CoreModule");
+    auto driver = weasel::Driver(&codegen, &weaselModule);
 
     LOG(INFO) << "Compiling...\n";
     auto isCompileSuccess = driver.compile();
@@ -82,20 +119,6 @@ int main(int argc, char *argv[])
         {
             std::cerr << "Driver Compile : " << driver.getError() << "\n";
         }
-        return 1;
-    }
-
-    LOG(INFO) << "Semantic Analysis...\n";
-    auto analysis = weasel::AnalysisSemantic(&weaselModule);
-    // analysis.semanticCheck();
-    // analysis.typeChecking();
-
-    LOG(INFO) << "Check for Error...\n";
-    if (!weasel::ErrorTable::getErrors().empty())
-    {
-        std::cerr << "\n=> Error Information\n";
-        weasel::ErrorTable::showErrors();
-
         return 1;
     }
 

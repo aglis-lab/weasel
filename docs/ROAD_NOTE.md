@@ -4,8 +4,24 @@
 - [x] Change struct field
 - [x] Use Mangling name
 - [x] Add Parameter Reference Type
-- [ ] Remove Error message from Expression
-- [ ] Add Error to Token
+- [x] Remove ErrorTable from any source code
+  - [ ] Check Nil Literal Expression
+  - [x] Create Error List
+  - [x] Find Best strategy for creating syntax error (not continuing the code or parser)
+- [x] Migrate System Install into vcpkg
+- [ ] Add Token into Type
+- [ ] Make Parser can't detect semantic error
+- [ ] LLVM 17 Pointer Type System
+- [ ] Change ArgumentType into Expression
+- [ ] Create Semantic Analysis
+  - [ ] Check Variable Exist
+  - [ ] Check Type Valid
+  - [ ] Check Field Expression Type
+  - [ ] Implementation Scope System
+  - [ ] Improve Return Type System
+- [ ] Remove File Buffer
+- [ ] Add Error into Expression as AST Error or Semantic Error
+- [ ] Add Error to Token as Token Error
 - [ ] Integrate Error into the Parser
 - [ ] Create LSP Example
 - [ ] Create standalone Analysis System

@@ -8,18 +8,18 @@
 #include <llvm/Transforms/Scalar/GVN.h>
 #include <llvm/Transforms/InstCombine/InstCombine.h>
 #include <llvm/Transforms/Scalar.h>
-#include <llvm/Transforms/IPO/PassManagerBuilder.h>
 #include <llvm/Transforms/Utils.h>
 #include <llvm/Analysis/TargetLibraryInfo.h>
 #include <llvm/Analysis/TargetTransformInfo.h>
-#include <llvm/Transforms/IPO/PassManagerBuilder.h>
+
+using namespace std;
 
 namespace weasel
 {
     class Passes
     {
     private:
-        llvm::legacy::FunctionPassManager *_fpm;
+        unique_ptr<llvm::legacy::FunctionPassManager> _fpm;
 
     public:
         Passes(llvm::Module *module);

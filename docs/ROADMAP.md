@@ -146,43 +146,100 @@
 
 Memory management solution
 
+Special Symbol and keyword
+Result -> !
+Optional -> ?
+raw pointer -> \*
+arc -> ref
+weak -> weak
+
 ### Unsafe Pointer Memory
 
 ```
-fun createPointer() *Point {
-  let p = Memory.Heap(Point) // unsafe pointer with save heap manager
-  return p // Pass unsafe pointer
+// Using Arena for creating safe pointer
+fun main() {
+  let arena = memory.NewArena()
+  let point = NewPoint(arena)
+
+  // Do Something with point
+}
+
+// New Point
+fun NewPoint(arena memory.Arena) *Point {
+  // unsafe pointer with safe heap manager
+  let p = arena.New[Point]() {
+    X: 10.2
+    Y: 11
+  }
+
+  p.DoSomething()            // Call some method just for example
+  return p                   // Pass unsafe pointer
 }
 ```
 
-### Strong Pointer Memory
+### Strong or Shared Pointer Memory
 
 ```
-fun createPointer() own<Point> {
-  let p = own(Point{}) // strong pointer
-  return p // automaticly move pointer
+// Strong or Shared Pointer
+fun main() {
+  let point = NewPoint()
+
+  // Do Something with point
+  p.DoSomething()
 }
-```
 
-### Shared Pointer Memory
-
-```
-fun createPointer() shared<Point> {
-  let p = make(Point) // shared pointer
-  return p // automaticly shared pointer and increase counting pointer
+fun NewPointer() ref Point {
+  let p = ref(Point{})   // shared pointer
+  return p             // automaticly shared pointer and increase counting pointer
 }
 ```
 
 ### Weak Pointer Memory
 
 ```
-fun createPointer() weak<Point> {
-  let p = weak(Point{}) // weak pointer
-  return p // automaticly weak pointer and not increase counting pointer
+fun main() {
+  // Strong or Shared Pointer
+  let point = NewPoint()
+
+  // Do Something with point
+  Flaying(weak(point))
+}
+
+fun Flaying(point weak Point) {
+  // actualPoint is a shared pointer
+  // get actual ref and ok boolean
+  if let actualPoint, ok = point.Ref(); ok {
+    // Do something if ok
+  }
 }
 ```
 
 ### Optional Data
+
+```
+fun main() {
+  let point = GetPoint()
+
+  // Another Convention
+  if let point, ok = point.Ref(); ok {
+    // Do something with point
+  }
+
+  // Another convention
+  let point, ok = GetPoint().Ref()
+  if ok {
+    // Do something with point
+  }
+}
+
+fun GetPoint() optional[Point] {
+  if let ok = CheckCurrentPoint(); ok {
+    return Point{X: 1}
+  }
+
+  return ()
+}
+```
 
 ## Analysis
 

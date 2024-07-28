@@ -1,8 +1,9 @@
 #include "weasel/Parser/Parser.h"
-#include "weasel/Symbol/Symbol.h"
 
-weasel::Expression *weasel::Parser::parseStatement()
+ExpressionHandle Parser::parseStatement()
 {
+    LOG(INFO) << "Parse Statement...";
+
     // Compound Statement Expression
     if (getCurrentToken().isOpenCurly())
     {
@@ -46,67 +47,73 @@ weasel::Expression *weasel::Parser::parseStatement()
     }
 
     auto expr = parseExpression();
-    if (expr == nullptr)
+    if (expr->isError())
     {
-        auto errToken = getCurrentToken();
-
-        getNextTokenUntil(TokenKind::TokenSpaceNewline);
-        return ErrorTable::addError(errToken, "Invalid expression statement");
+        skipUntilNewLine();
     }
 
     return expr;
 }
 
-weasel::StructType *weasel::Parser::parseStruct()
+StructTypeHandle Parser::parseStruct()
 {
-    if (!getNextToken().isIdentifier() && !getCurrentToken().isKeyParallel())
+    LOG(INFO) << "Parse Struct...";
+
+    auto structType = make_shared<StructType>();
+    if (!getNextToken().isIdentifier())
     {
-        return ErrorTable::addError(getCurrentToken(), "Invalid Struct expression");
+        structType->setError(Errors::getInstance().expectedIdentifier.withToken(getCurrentToken()));
+        return structType;
     }
 
     auto tokenIndentifier = getCurrentToken();
-    if (!getNextToken(true).isOpenCurly())
+    if (!getNextToken().isOpenCurly())
     {
-        return ErrorTable::addError(getCurrentToken(), "Invalid Struct expression");
+        structType->setError(Errors::getInstance().expectedOpenCurly.withToken(getCurrentToken()));
+        return structType;
     }
 
-    // Parse Struct Properties
-    auto structName = tokenIndentifier.getValue();
-    auto structType = StructType::get(structName);
+    getNextToken(true); // eat '{' and '\n'
 
-    while (true)
+    structType->setIdentifier(tokenIndentifier.getValue());
+    while (!getCurrentToken().isCloseCurly())
     {
-        if (getNextToken(true).isCloseCurly())
-        {
-            getNextToken(); // eat '}'
-            break;
-        }
-
         if (!getCurrentToken().isIdentifier())
         {
-            return ErrorTable::addError(getCurrentToken(), "Invalid Struct expression");
+            structType->setError(Errors::getInstance().expectedIdentifier.withToken(getCurrentToken()));
+            return structType;
         }
 
-        auto propName = getCurrentToken();
+        auto identToken = getCurrentToken();
         getNextToken(); // eat 'identifier'
+        if (!(getCurrentToken().isDataType() || getCurrentToken().isIdentifier()))
+        {
+            structType->setError(Errors::getInstance().expectedDataType.withToken(getCurrentToken()));
+            return structType;
+        }
 
         auto propType = parseDataType();
-        if (propType == nullptr)
+        structType->getFields().push_back(StructTypeField(identToken, identToken.getValue(), propType));
+        if (!getCurrentToken().isNewline())
         {
-            return ErrorTable::addError(getCurrentToken(), "Invalid Struct expression");
+            structType->setError(Errors::getInstance().expectedNewLine.withToken(getCurrentToken()));
+            return structType;
         }
 
-        structType->addField(propName.getValue(), propType);
+        getNextToken(); // eat '\n'
     }
+
+    getNextToken(); // eat '}'
 
     return structType;
 }
 
-weasel::Expression *weasel::Parser::parseLoopingStatement()
+ExpressionHandle Parser::parseLoopingStatement()
 {
-    auto token = getCurrentToken();
-    auto isInfinity = getNextToken(true).isOpenCurly();
-    auto conditions = std::vector<Expression *>();
+    LOG(INFO) << "Looping Statement...";
+
+    auto expr = make_shared<LoopingStatement>(getCurrentToken());
+    auto isInfinity = getNextToken().isOpenCurly();
 
     // Check if Infinity Looping
     if (!isInfinity)
@@ -114,7 +121,7 @@ weasel::Expression *weasel::Parser::parseLoopingStatement()
         // Initial or Definition
         if (!getCurrentToken().isSemiColon())
         {
-            Expression *decl;
+            ExpressionHandle decl;
             if (getCurrentToken().isKeyDeclaration())
             {
                 decl = parseDeclarationExpression();
@@ -124,7 +131,7 @@ weasel::Expression *weasel::Parser::parseLoopingStatement()
                 decl = parseExpression();
             }
 
-            conditions.push_back(decl);
+            expr->getConditions().push_back(decl);
         }
 
         // Break if looping is Loop Condition
@@ -133,37 +140,41 @@ weasel::Expression *weasel::Parser::parseLoopingStatement()
             // Condition
             if (!getCurrentToken().isSemiColon())
             {
-                return ErrorTable::addError(getCurrentToken(), "Invalid Loop condition expression");
+                expr->setError(Errors::getInstance().expectedSemicolon.withToken(getCurrentToken()));
+                return expr;
             }
 
             if (getNextToken().isSemiColon())
             {
-                conditions.push_back(nullptr);
+                expr->getConditions().push_back(nullptr);
             }
             else
             {
-                conditions.push_back(parseExpression());
+                expr->getConditions().push_back(parseExpression());
             }
 
             // Increment
             if (!getCurrentToken().isSemiColon())
             {
-                return ErrorTable::addError(getCurrentToken(), "Invalid Loop counting expression");
+                expr->setError(Errors::getInstance().expectedSemicolon.withToken(getCurrentToken()));
+                return expr;
             }
+
             if (getNextToken().isOpenCurly())
             {
-                conditions.push_back(nullptr);
+                expr->getConditions().push_back(nullptr);
             }
             else
             {
-                conditions.push_back(parseExpression());
+                expr->getConditions().push_back(parseExpression());
             }
         }
     }
 
     if (!getCurrentToken().isOpenCurly())
     {
-        return ErrorTable::addError(getCurrentToken(), "Invalid Loop body statement");
+        expr->setError(Errors::getInstance().expectedOpenCurly.withToken(getCurrentToken()));
+        return expr;
     }
 
     // Check if All Conditions is empty
@@ -171,7 +182,7 @@ weasel::Expression *weasel::Parser::parseLoopingStatement()
     {
         isInfinity = true;
 
-        for (auto &item : conditions)
+        for (auto item : expr->getConditions())
         {
             if (item != nullptr)
             {
@@ -182,21 +193,19 @@ weasel::Expression *weasel::Parser::parseLoopingStatement()
 
         if (isInfinity)
         {
-            conditions.clear();
+            expr->getConditions().clear();
         }
     }
 
     auto body = parseCompoundStatement();
+    expr->setBody(body);
 
-    return new LoopingStatement(token, conditions, body);
+    return expr;
 }
 
-weasel::Expression *weasel::Parser::parseConditionStatement()
+ExpressionHandle Parser::parseConditionStatement()
 {
-    auto conditions = std::vector<Expression *>();
-    auto stmts = std::vector<CompoundStatement *>();
-    auto token = getCurrentToken();
-
+    auto stmt = make_shared<ConditionStatement>();
     while (true)
     {
         auto isElseCondition = true;
@@ -210,27 +219,25 @@ weasel::Expression *weasel::Parser::parseConditionStatement()
         if (!isElseCondition)
         {
             auto expr = parseExpression();
-            if (expr == nullptr)
+            stmt->getConditions().push_back(expr);
+            if (expr->isError())
             {
-                auto errToken = getCurrentToken();
-
-                getNextTokenUntil(TokenKind::TokenSpaceNewline);
-                return ErrorTable::addError(errToken, "Invalid condition expression");
+                return expr;
             }
+        }
 
-            conditions.push_back(expr);
+        if (!getCurrentToken().isOpenCurly())
+        {
+            stmt->setError(Errors::getInstance().expectedOpenCurly.withToken(getCurrentToken()));
+            return stmt;
         }
 
         auto body = parseCompoundStatement();
-        if (body == nullptr)
+        stmt->getStatements().push_back(body);
+        if (body->isError())
         {
-            auto errToken = getCurrentToken();
-
-            getNextTokenUntil(TokenKind::TokenSpaceNewline);
-            return ErrorTable::addError(errToken, "Invalid if body statement expression");
+            return stmt;
         }
-
-        stmts.push_back(body);
 
         if (isElseCondition)
         {
@@ -253,36 +260,34 @@ weasel::Expression *weasel::Parser::parseConditionStatement()
         break;
     }
 
-    return new ConditionStatement(token, conditions, stmts);
+    return stmt;
 }
 
-weasel::CompoundStatement *weasel::Parser::parseCompoundStatement()
+CompoundStatementHandle Parser::parseCompoundStatement()
 {
+    LOG(INFO) << "Parse Compound Statement...";
+
+    auto stmt = make_shared<CompoundStatement>();
     if (!getCurrentToken().isKind(TokenKind::TokenDelimOpenCurlyBracket))
     {
-        return nullptr;
-    }
-
-    auto stmt = new CompoundStatement();
-    if (getNextToken(true).isKind(TokenKind::TokenDelimCloseCurlyBracket))
-    {
-        getNextToken();
+        stmt->setError(Errors::getInstance().expectedOpenCurly.withToken(getCurrentToken()));
         return stmt;
     }
 
-    // Enter statement scope
-    enterScope();
+    if (getNextToken(true).isKind(TokenKind::TokenDelimCloseCurlyBracket))
+    {
+        getNextToken(); // eat '}'
+        return stmt;
+    }
 
     do
     {
         auto expr = parseStatement();
-        if (expr != nullptr)
+        stmt->getBody().push_back(expr);
+
+        if (expr->isError())
         {
-            stmt->addBody(expr);
-        }
-        else
-        {
-            ErrorTable::addError(getCurrentToken(), "Expected statement");
+            skipUntilNewLine();
         }
 
         if (getCurrentToken().isKind(TokenKind::TokenDelimCloseCurlyBracket))
@@ -297,7 +302,7 @@ weasel::CompoundStatement *weasel::Parser::parseCompoundStatement()
 
         if (!getCurrentToken().isNewline())
         {
-            ErrorTable::addError(getCurrentToken(), "Expected New Line");
+            return stmt;
         }
 
         getNextToken(true);
@@ -305,107 +310,66 @@ weasel::CompoundStatement *weasel::Parser::parseCompoundStatement()
 
     getNextToken(); // eat '}'
 
-    // Exit statement scope
-    exitScope();
-
     return stmt;
 }
 
-weasel::Expression *weasel::Parser::parseDeclarationExpression()
+ExpressionHandle Parser::parseDeclarationExpression()
 {
     auto qualifier = getQualifier();
-    auto qualToken = getCurrentToken();
+    auto stmt = make_shared<DeclarationStatement>();
 
     // eat qualifier(let, final, const)
     if (!getNextToken().isIdentifier())
     {
-        auto errToken = getCurrentToken();
-
-        getNextTokenUntil(TokenKind::TokenSpaceNewline);
-        return ErrorTable::addError(errToken, "Expected an identifier");
+        stmt->setError(Errors::getInstance().expectedIdentifier.withToken(getCurrentToken()));
+        return stmt;
     }
 
-    auto identifier = getCurrentToken().getValue();
+    stmt->setQualifier(qualifier);
+    stmt->setToken(getCurrentToken());
+    stmt->setIdentifier(getCurrentToken().getValue());
 
-    getNextToken(); // eat 'identifier' and get next token
+    getNextToken(); // eat 'identifier'
+    if (isDataType() || getCurrentToken().isIdentifier())
+    {
+        stmt->setType(parseDataType());
+    }
 
-    auto type = parseDataType();
     if (getCurrentToken().isNewline())
     {
-        if (type == nullptr)
+        if (!stmt->getType())
         {
-            return ErrorTable::addError(getCurrentToken(), "Data Type Expected for default value declaration");
+            stmt->setError(Errors::getInstance().expectedDefaultValue.withToken(getCurrentToken()));
         }
 
-        if (qualifier != Qualifier::QualVolatile)
-        {
-            return ErrorTable::addError(getCurrentToken(), "No Default Value for Non Volatile variable");
-        }
-
-        // Insert Symbol Table
-        addAttribute(ParserAttribute::get(identifier, type, AttributeKind::Variable));
-
-        // Create Variable with Default Value
-        return new DeclarationStatement(qualToken, identifier, qualifier, type);
+        return stmt;
     }
 
     // Equal
     if (!getCurrentToken().isOperatorEqual())
     {
-        auto errToken = getCurrentToken();
-
-        getNextTokenUntil(TokenKind::TokenSpaceNewline);
-        return ErrorTable::addError(errToken, "Expected equal sign");
+        stmt->setError(Errors::getInstance().expectedEqualSign.withToken(getCurrentToken()));
+        return stmt;
     }
 
     // Get Next Value
     if (getNextToken().isNewline())
     {
-        return ErrorTable::addError(getCurrentToken(), "Expected RHS Value Expression but got 'New line'");
+        stmt->setError(Errors::getInstance().expectedRHSValue.withToken(getCurrentToken()));
+        return stmt;
     }
 
     auto val = parseExpression();
-    if (!val)
-    {
-        auto errToken = getCurrentToken();
+    stmt->setValue(val);
 
-        getNextTokenUntil(TokenKind::TokenSpaceNewline);
-        return ErrorTable::addError(errToken, "Expected RHS Value Expression but got not valid expression");
-    }
-
-    if (type == nullptr)
-    {
-        if (val->getType() == nullptr)
-        {
-            return ErrorTable::addError(val->getToken(), "Cannot detect declaration and value type");
-        }
-
-        type = val->getType();
-    }
-
-    auto declExpr = new DeclarationStatement(qualToken, identifier, qualifier, type, val);
     if (getCurrentToken().isOpenCurly())
     {
-        enterScope();
-
-        // Insert Symbol Table
-        addAttribute(ParserAttribute::get(identifier, type, AttributeKind::Variable));
-
         // Insert Symbol Table
         auto compound = parseCompoundStatement();
+        compound->getBody().insert(compound->getBody().begin(), stmt);
 
-        exitScope();
-
-        if (compound != nullptr)
-        {
-            compound->insertBody(0, declExpr);
-
-            return compound;
-        }
+        return compound;
     }
 
-    // Insert Symbol Table
-    addAttribute(ParserAttribute::get(identifier, type, AttributeKind::Variable));
-
-    return declExpr;
+    return stmt;
 }

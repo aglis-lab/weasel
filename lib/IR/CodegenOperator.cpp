@@ -5,7 +5,6 @@
 #include <llvm/IR/Module.h>
 
 #include "weasel/IR/Codegen.h"
-#include "weasel/Symbol/Symbol.h"
 
 // Unimplemented
 llvm::Value *weasel::WeaselCodegen::codegen(TypeCastExpression *expr)
@@ -47,7 +46,9 @@ llvm::Value *weasel::WeaselCodegen::codegen(TypeCastExpression *expr)
         }
     }
 
-    return ErrorTable::addError(expr->getToken(), "Type Casting not supported");
+    assert(false && "Type Casting not supported");
+
+    return nullptr;
 }
 
 llvm::Value *weasel::WeaselCodegen::codegen(ArithmeticExpression *expr)
@@ -59,13 +60,7 @@ llvm::Value *weasel::WeaselCodegen::codegen(ArithmeticExpression *expr)
     auto rhsType = rhs->getType();
     auto exprType = expr->getType();
 
-    // TODO: Migrate to Analysis Check
-    if (!lhsType->isEqual(rhsType))
-    {
-        ErrorTable::addError(expr->getLHS()->getToken(), "Data type look different");
-
-        return lhs->codegen(this);
-    }
+    assert(lhsType->isEqual(rhsType) && "Data type look different");
 
     auto lhsVal = lhs->codegen(this);
     auto rhsVal = rhs->codegen(this);
@@ -97,8 +92,8 @@ llvm::Value *weasel::WeaselCodegen::codegen(ArithmeticExpression *expr)
         case TokenKind::TokenOperatorAnd:
         case TokenKind::TokenOperatorCaret:
         default:
-            ErrorTable::addError(expr->getToken(), "Invalid operator for arithmetic expression");
-            return lhsVal;
+            LOG(INFO) << expr->getToken().getValue();
+            assert(false && "Invalid operator for arithmetic expression");
         }
     }
 
@@ -166,8 +161,8 @@ llvm::Value *weasel::WeaselCodegen::codegen(ArithmeticExpression *expr)
         return getBuilder()->CreateShl(lhsVal, rhsVal);
     }
     default:
-        ErrorTable::addError(expr->getToken(), "Invalid operator for arithmetic expression");
-        return lhsVal;
+        LOG(INFO) << expr->getToken().getValue();
+        assert(false && "Invalid operator for arithmetic expression");
     }
 }
 
@@ -181,13 +176,7 @@ llvm::Value *weasel::WeaselCodegen::codegen(LogicalExpression *expr)
     auto rhsType = rhs->getType();
     auto exprType = expr->getType();
 
-    // TODO: Migrate to Analysis Check
-    if (!lhsType->isEqual(rhsType))
-    {
-        ErrorTable::addError(expr->getLHS()->getToken(), "Data type look different");
-
-        return lhs->codegen(this);
-    }
+    assert(lhsType->isEqual(rhsType) && "Data type look different");
 
     auto rhsVal = rhs->codegen(this);
     auto isSigned = exprType->isSigned();
@@ -209,43 +198,40 @@ llvm::Value *weasel::WeaselCodegen::codegen(AssignmentExpression *expr)
     auto lhsType = lhs->getType();
     auto rhsType = rhs->getType();
 
-    // TODO: Migrate to Analysis Check
-    // if (!lhsType->isEqual(rhsType))
-    // {
-    //     ErrorTable::addError(expr->getLHS()->getToken(), "Data type look different");
-
-    //     return lhs->codegen(this);
-    // }
-
-    // TODO: Migrate to Analysis Check
-    if (dynamic_cast<NilLiteralExpression *>(rhs) != nullptr)
-    {
-        rhs->setType(lhsType);
-    }
+    assert(lhsType->isEqual(rhsType) && "Data type look different");
 
     // Codegen RHS First
     // Because RHS may depend on LHS because some reason
     rhs->setAccess(AccessID::Load);
     lhs->setAccess(AccessID::Allocation);
 
-    auto rhsVal = rhs->codegen(this);
     auto lhsVal = lhs->codegen(this);
-
-    // TODO: Casting Integer
-    // if (rhsType->isIntegerType())
-    // {
-    //     auto lhsTypeV = lhsType->codegen(this);
-    //     rhsVal = castInteger(rhsVal, lhsTypeV, lhsType->isSigned());
-    // }
-
-    if (rhsType->isStructType())
+    // Check if Struct Expression
+    if (rhs->isStructExpression())
     {
-        auto rhsTypeStruct = dynamic_cast<StructType *>(rhsType);
-        getBuilder()->CreateMemCpy(lhsVal, llvm::MaybeAlign(4), rhsVal, llvm::MaybeAlign(4), rhsTypeStruct->getTypeWidthByte());
+        static_cast<StructExpression *>(rhs.get())->setAlloc(llvm::dyn_cast<llvm::AllocaInst, llvm::Value>(lhsVal));
+        rhs->codegen(this);
     }
     else
     {
-        getBuilder()->CreateStore(rhsVal, lhsVal);
+        auto rhsVal = rhs->codegen(this);
+
+        // Casting Integer
+        if (rhsType->isIntegerType())
+        {
+            auto lhsTypeV = lhsType->codegen(this);
+            rhsVal = castInteger(rhsVal, lhsTypeV, lhsType->isSigned());
+        }
+
+        if (rhsType->isStructType())
+        {
+            auto rhsTypeStruct = dynamic_cast<StructType *>(rhsType.get());
+            getBuilder()->CreateMemCpy(lhsVal, llvm::MaybeAlign(4), rhsVal, llvm::MaybeAlign(4), rhsTypeStruct->getTypeWidthByte());
+        }
+        else
+        {
+            getBuilder()->CreateStore(rhsVal, lhsVal);
+        }
     }
 
     if (expr->isAccessAllocation())
@@ -266,20 +252,7 @@ llvm::Value *weasel::WeaselCodegen::codegen(ComparisonExpression *expr)
     auto rhsType = rhs->getType();
     auto exprType = expr->getType();
 
-    // TODO: Migrate to Analysis Check
-    // Checking Type
-    if (!lhsType->isEqual(rhsType))
-    {
-        ErrorTable::addError(expr->getLHS()->getToken(), "Data type look different");
-
-        return lhs->codegen(this);
-    }
-
-    // TODO: Migrate to Analysis Check
-    if (dynamic_cast<NilLiteralExpression *>(rhs) != nullptr)
-    {
-        rhs->setType(lhsType);
-    }
+    assert(lhsType->isEqual(rhsType) && "Data type look different");
 
     lhs->setAccess(AccessID::Load);
     rhs->setAccess(AccessID::Load);
@@ -369,7 +342,8 @@ llvm::Value *weasel::WeaselCodegen::codegen(ComparisonExpression *expr)
     }
     default:
     {
-        return ErrorTable::addError(opToken, "Unimplemented operator " + opToken.getValue());
+        LOG(ERROR) << "Unimplemented operator " + opToken.getValue();
+        assert(false && "Unimplemented operator");
     }
     }
 }
@@ -448,10 +422,7 @@ llvm::Value *weasel::WeaselCodegen::codegen(UnaryExpression *expr)
             val = getBuilder()->CreateFCmpUNE(rhsVal, llvm::ConstantFP::get(rhsTypeVal, 0));
         }
 
-        if (val == nullptr)
-        {
-            return ErrorTable::addError(expr->getToken(), "Unary Expression NOT is not valid");
-        }
+        assert(val && "Unary Expression NOT is not valid");
 
         return getBuilder()->CreateXor(val, 1);
     }
@@ -466,5 +437,9 @@ llvm::Value *weasel::WeaselCodegen::codegen(UnaryExpression *expr)
         return getBuilder()->CreateXor(rhsVal, -1);
     }
 
-    return ErrorTable::addError(expr->getToken(), "Unary Expression is not valid");
+    LOG(ERROR) << "Unary Expression is not valid " << expr->getToken().getValue();
+
+    assert(false && "Unary Expression is not valid");
+
+    return nullptr;
 }

@@ -17,7 +17,6 @@
 #include "weasel/Parser/Parser.h"
 #include "weasel/IR/Context.h"
 #include "weasel/AST/AST.h"
-#include "weasel/Symbol/Symbol.h"
 #include "weasel/Basic/FileManager.h"
 #include "weasel/Codegen/Codegen.h"
 #include "weasel/Analysis/AnalysisSemantic.h"
@@ -97,14 +96,6 @@ int main(int argc, char *argv[])
     {
         llvm::errs() << "Failed to translate SPIR-V: " << errMsg << '\n';
         return -1;
-    }
-
-    if (!weasel::ErrorTable::getErrors().empty())
-    {
-        std::cerr << "\n=> Error Information\n";
-        weasel::ErrorTable::showErrors();
-
-        return 0;
     }
 
     std::ofstream outFile(std::string(outputPath) + ".spv");

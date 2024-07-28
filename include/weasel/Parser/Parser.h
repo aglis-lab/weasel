@@ -8,101 +8,91 @@
 #include <weasel/Table/ParserTable.h>
 #include <weasel/IR/Module.h>
 
+using namespace std;
+using namespace weasel;
+
 namespace weasel
 {
     class ParserAttribute;
 
-    class Parser : ParserTable
+    class Parser
     {
     public:
-        Parser(Lexer *lexer, Module *module) : _lexer(lexer), _module(module) {}
-
-        // Gets Parser Value
-        std::vector<GlobalVariable *> getGlobalVariables() const { return _module->getGlobalVariables(); }
-        std::vector<StructType *> getUserTypes() const { return _module->getUserTypes(); }
-        std::vector<Function *> getFunctions() const { return _module->getFunctions(); }
+        Parser(const Lexer &lexer, Module *module) : _lexer(lexer), _module(module) {}
 
         // Helper
-        Type *parseDataType();
+        TypeHandle parseDataType();
         void ignoreNewline();
 
         // Lexer
-        Lexer *getLexer() const { return _lexer; }
+        Lexer getLexer() const { return _lexer; }
 
-    public:
+        // Parse
         void parse();
+
+        // Module
+        Module *getModule() const { return _module; }
 
     private:
         // Simple Class for accessing token
-        Lexer *_lexer;
+        Lexer _lexer;
 
         // Simple Class for handling and storing global value
         Module *_module;
 
-    private:
-        void addFunction(Function *fun) { _module->addFunction(fun); }
-        unsigned functionCount() const { return getFunctions().size(); }
-        Function *lastFunction() const { return getFunctions().back(); }
-        Function *findFunction(const std::string &identifier, StructType *structType = nullptr, bool isStatic = false);
-
-        void addUserType(StructType *type) { _module->addUserType(type); }
-        unsigned userTypeCount() const { return getUserTypes().size(); }
-        StructType *getLastUserType() const { return getUserTypes().back(); }
-        StructType *findUserType(const std::string &typeName);
-
-        void addGlobalVariable(GlobalVariable *globalVar) { _module->addGlobalVariable(globalVar); }
-        // GlobalVariable *findGlobalVariable(const std::string &globalName);
-
-    private:
-        bool expectToken(TokenKind kind) { return _lexer->expect(kind); }
+        Token expectToken() { return _lexer.expect(); }
+        bool expectToken(TokenKind kind) { return _lexer.expect(kind); }
         bool isExpectElse() { return expectToken(TokenKind::TokenKeyElse); }
 
         // Parser Helper
         Qualifier getQualifier() const { return getCurrentToken().getQualifier(); }
-        Token getCurrentToken() const { return _lexer->getCurrentToken(); }
+        Token getCurrentToken() const { return _lexer.getCurrentToken(); }
         Token getNextToken(bool skipSpace = false);
         Token getNextTokenUntil(TokenKind kind);
+        Token skipUntilNewLine() { return getNextTokenUntil(TokenKind::TokenSpaceNewline); }
+        bool isDataType();
 
-        Expression *createOperatorExpression(Token op, Expression *lhs, Expression *rhs);
+        // Operator Expression
+        ExpressionHandle createOperatorExpression(Token op, ExpressionHandle lhs, ExpressionHandle rhs);
 
         // Impl Functions
         void parseImplFunctions();
 
         // Global Variable
-        GlobalVariable *parseGlobalVariable();
+        GlobalVariableHandle parseGlobalVariable();
 
         // Function
-        Function *parseDeclareFunction(StructType *type);
-        Function *parseFunction(StructType *type = nullptr);
-        Function *parseExternFunction();
+        FunctionHandle parseDeclareFunction();
+        FunctionHandle parseFunction();
 
         // Parse Global Type
-        StructType *parseStruct();
+        StructTypeHandle parseStruct();
 
         // Statement
-        Expression *parseStatement();
-        CompoundStatement *parseCompoundStatement();
-        Expression *parseConditionStatement();
-        Expression *parseLoopingStatement();
-        Expression *parseStaticMethodCallExpression(StructType *structType);
-        Expression *parseMethodCallExpression(Expression *);
+        ExpressionHandle parseStatement();
+        CompoundStatementHandle parseCompoundStatement();
+        ExpressionHandle parseConditionStatement();
+        ExpressionHandle parseLoopingStatement();
+        ExpressionHandle parseStaticMethodCallExpression();
+        // Expression *parseMethodCallExpression(Expression *);
 
         // Expression
-        Expression *parseExpression();
-        Expression *parsePrimaryExpression();
-        Expression *parseDeclarationExpression();
-        Expression *parseCallExpression(Function *fun);
-        Expression *parseParenExpression();
-        Expression *parseReturnExpression();
-        Expression *parseBreakExpression();
-        Expression *parseContinueExpression();
-        Expression *parseStructExpression();
-        Expression *parseFieldExpression(Expression *lhs);
+        ExpressionHandle parseExpression();
+        ExpressionHandle parsePrimaryExpression();
+        ExpressionHandle parseDeclarationExpression();
+        ExpressionHandle parseCallExpression();
+        ExpressionHandle parseParenExpression();
+        ExpressionHandle parseUnaryExpression();
+        ExpressionHandle parseReturnExpression();
+        ExpressionHandle parseBreakExpression();
+        ExpressionHandle parseContinueExpression();
+        ExpressionHandle parseStructExpression();
+        ExpressionHandle parseFieldExpression(ExpressionHandle lhs);
 
         // Expression Literal
-        Expression *parseLiteralExpression();
-        Expression *parseIdentifierExpression();
-        Expression *parseExpressionOperator(unsigned prec, Expression *lhs);
-        Expression *parseArrayExpression();
+        ExpressionHandle parseLiteralExpression();
+        ExpressionHandle parseIdentifierExpression();
+        ExpressionHandle parseExpressionOperator(unsigned prec, ExpressionHandle lhs);
+        // Expression *parseArrayExpression();
     };
 } // namespace weasel

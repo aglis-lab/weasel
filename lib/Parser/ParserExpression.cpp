@@ -1,124 +1,180 @@
 #include <iostream>
 
 #include "weasel/Parser/Parser.h"
-#include "weasel/Symbol/Symbol.h"
+#include <weasel/Basic/Error.h>
 
-weasel::GlobalVariable *weasel::Parser::parseGlobalVariable()
+GlobalVariableHandle Parser::parseGlobalVariable()
 {
-    auto declToken = getCurrentToken();
-    auto idenToken = getNextToken();
+    LOG(INFO) << "Parse Global Variable...";
 
-    getNextToken(); // eat '=' sign
+    return nullptr;
+    // auto stmt = static_pointer_cast<DeclarationStatement>(parseDeclarationExpression());
+    // if (!stmt->isError() && stmt->getQualifier() != Qualifier::QualConst)
+    // {
+    //     return stmt;
+    // }
 
-    auto valueExpr = parseLiteralExpression();
-
-    return new GlobalVariable(declToken, idenToken.getValue(), valueExpr);
+    // return stmt;
 }
 
-weasel::Expression *weasel::Parser::parseMethodCallExpression(Expression *implExpression)
+// weasel::Expression *weasel::Parser::parseMethodCallExpression(Expression *implExpression)
+// {
+//     return nullptr;
+
+//     // auto callToken = getCurrentToken();
+//     // auto expr = new MethodCallExpression(callToken);
+
+//     // if (!getNextToken().isOpenParen())
+//     // {
+//     //     expr->setError(Errors::getInstance().expectedOpenParen);
+
+//     //     return expr;
+//     // }
+
+//     // if (!getNextToken().isCloseParen())
+//     // {
+//     //     while (true)
+//     //     {
+//     //         auto arg = parseExpression();
+//     //         expr->getArguments().push_back(arg);
+
+//     //         if (getCurrentToken().isCloseParen())
+//     //         {
+//     //             break;
+//     //         }
+
+//     //         if (!getCurrentToken().isComma())
+//     //         {
+//     //             expr->setError(Errors::getInstance().expectedCloseParen);
+//     //             return expr;
+//     //         }
+
+//     //         getNextToken();
+//     //     }
+//     // }
+
+//     // getNextToken(); // eat ')'
+
+//     // StructType *structType;
+//     // if (implExpression->getType()->isStructType())
+//     // {
+//     //     structType = dynamic_cast<StructType *>(implExpression->getType());
+//     // }
+//     // else
+//     // {
+//     //     structType = dynamic_cast<StructType *>(implExpression->getType()->getContainedType());
+//     // }
+//     // auto fun = findFunction(callToken.getValue(), structType);
+
+//     // expr->setType(fun->getType());
+//     // expr->setImplExpression(implExpression);
+//     // expr->setFunction(fun);
+
+//     // return expr;
+// }
+
+ExpressionHandle Parser::parseStaticMethodCallExpression()
 {
-    auto callToken = getCurrentToken();
-    if (!getNextToken().isOpenParen())
-    {
-        return ErrorTable::addError(getCurrentToken(), "Expected ( for function call");
-    }
+    LOG(INFO) << "Parse Static Method Call Expression...";
 
-    std::vector<Expression *> args;
-    if (!getNextToken().isCloseParen())
-    {
-        while (true)
-        {
-            if (auto arg = parseExpression())
-            {
-                args.push_back(arg);
-            }
-            else
-            {
-                return ErrorTable::addError(getCurrentToken(), "Expected argument expression");
-            }
+    return nullptr;
 
-            if (getCurrentToken().isCloseParen())
-            {
-                break;
-            }
+    // getNextToken(); // eat last Struct or identifier
 
-            if (!getCurrentToken().isComma())
-            {
-                return ErrorTable::addError(getCurrentToken(), "Expected ) or , in argument list");
-            }
+    // // eat '.' and check next token
+    // if (!getNextToken().isDot())
+    // {
+    //     return new ErrorExpression(getCurrentToken(), Errors::getInstance().expectedDot);
+    // }
 
-            getNextToken();
-        }
-    }
-
-    getNextToken(); // eat ')'
-
-    StructType *structType;
-    if (implExpression->getType()->isStructType())
-    {
-        structType = dynamic_cast<StructType *>(implExpression->getType());
-    }
-    else
-    {
-        structType = dynamic_cast<StructType *>(implExpression->getType()->getContainedType());
-    }
-    auto fun = findFunction(callToken.getValue(), structType);
-
-    return new MethodCallExpression(callToken, implExpression, fun, args);
+    // // Call Expression
+    // return parseCallExpression();
 }
 
-weasel::Expression *weasel::Parser::parseStaticMethodCallExpression(StructType *structType)
+ExpressionHandle Parser::parseUnaryExpression()
 {
-    getNextToken(); // eat last Struct
+    LOG(INFO) << "Parse Unary Expression...";
 
-    // eat '.' and check next token
-    auto callToken = getNextToken();
-
-    // Find Functin Within Struct
-    auto fun = findFunction(callToken.getValue(), structType, true);
-    return parseCallExpression(fun);
-}
-
-weasel::Expression *weasel::Parser::parseLiteralExpression()
-{
     auto token = getCurrentToken();
 
+    getNextToken(); // eat ' & | * | - | ! | ~ '
+
+    auto expr = parsePrimaryExpression();
+    if (expr->isError())
+    {
+        skipUntilNewLine();
+        return expr;
+    }
+
+    UnaryExpression::Operator op;
+    switch (token.getTokenKind())
+    {
+    case TokenKind::TokenOperatorStar:
+        op = UnaryExpression::Dereference;
+        break;
+    case TokenKind::TokenOperatorNegative:
+        op = UnaryExpression::Negative;
+        break;
+    case TokenKind::TokenOperatorPlus:
+        op = UnaryExpression::Positive;
+        break;
+    case TokenKind::TokenOperatorNot:
+        op = UnaryExpression::Not;
+        break;
+    case TokenKind::TokenOperatorNegation:
+        op = UnaryExpression::Negation;
+        break;
+    case TokenKind::TokenOperatorAnd:
+        op = UnaryExpression::Borrow;
+        break;
+    default:
+        op = UnaryExpression::Positive;
+    }
+
+    return make_shared<UnaryExpression>(token, op, expr);
+}
+
+ExpressionHandle Parser::parseLiteralExpression()
+{
+    LOG(INFO) << "Parse Literal Expression...";
+
+    auto token = getCurrentToken();
     getNextToken(); // eat 'literal'
 
     if (token.isKind(TokenKind::TokenLitBool))
     {
-        return new BoolLiteralExpression(token, token.getValue() == "true");
+        return make_shared<BoolLiteralExpression>(token, token.getValue() == "true");
     }
 
     if (token.isKind(TokenKind::TokenLitChar))
     {
         auto val = token.getValue()[0];
-        return new CharLiteralExpression(token, val);
+        return make_shared<CharLiteralExpression>(token, val);
     }
 
     if (token.isKind(TokenKind::TokenLitInteger))
     {
         auto value = strtoll(token.getValue().c_str(), nullptr, 10);
-        return new NumberLiteralExpression(token, value);
+        return make_shared<NumberLiteralExpression>(token, value);
     }
 
     if (token.isKind(TokenKind::TokenLitFloat))
     {
         auto value = std::stof(token.getValue());
-        return new FloatLiteralExpression(token, value);
+        return make_shared<FloatLiteralExpression>(token, value);
     }
 
     if (token.isKind(TokenKind::TokenLitDouble))
     {
         auto value = std::stod(token.getValue());
-        return new DoubleLiteralExpression(token, value);
+        return make_shared<DoubleLiteralExpression>(token, value);
     }
 
     if (token.isKind(TokenKind::TokenLitString))
     {
         auto *currentBuffer = token.getStartBuffer();
         auto *endBuffer = token.getEndBuffer();
-        std::string value = "";
+        string value = "";
 
         while (endBuffer - currentBuffer > 0)
         {
@@ -137,32 +193,34 @@ weasel::Expression *weasel::Parser::parseLiteralExpression()
             }
         }
 
-        return new StringLiteralExpression(token, value);
+        return make_shared<StringLiteralExpression>(token, value);
     }
 
-    return new NilLiteralExpression(getCurrentToken());
+    return make_shared<NilLiteralExpression>(getCurrentToken());
 }
 
-weasel::Expression *weasel::Parser::parseCallExpression(Function *fun)
+ExpressionHandle Parser::parseCallExpression()
 {
+    LOG(INFO) << "Parse Call Expression...";
+
     auto callToken = getCurrentToken();
+    auto expr = make_shared<CallExpression>(callToken, callToken.getValue());
     if (!getNextToken().isOpenParen())
     {
-        return ErrorTable::addError(getCurrentToken(), "Expected ( for function call");
+        expr->setError(Errors::getInstance().expectedOpenParen.withToken(getCurrentToken()));
+        return expr;
     }
 
-    std::vector<Expression *> args;
     if (!getNextToken().isCloseParen())
     {
         while (true)
         {
-            if (auto arg = parseExpression())
+            auto arg = parseExpression();
+            expr->getArguments().push_back(arg);
+            if (arg->isError())
             {
-                args.push_back(arg);
-            }
-            else
-            {
-                return ErrorTable::addError(getCurrentToken(), "Expected argument expression");
+                skipUntilNewLine();
+                return expr;
             }
 
             if (getCurrentToken().isCloseParen())
@@ -172,78 +230,12 @@ weasel::Expression *weasel::Parser::parseCallExpression(Function *fun)
 
             if (!getCurrentToken().isComma())
             {
-                return ErrorTable::addError(getCurrentToken(), "Expected ) or , in argument list");
+                expr->setError(Errors::getInstance().expectedCloseParen.withToken(getCurrentToken()));
+                return expr;
             }
 
-            getNextToken();
+            getNextToken(); // eat ','
         }
-    }
-
-    getNextToken(); // eat ')'
-
-    return new CallExpression(callToken, fun, args);
-}
-
-weasel::Expression *weasel::Parser::parseIdentifierExpression()
-{
-    // Check Available Function
-    auto identToken = getCurrentToken();
-    auto identifier = identToken.getValue();
-    auto funExist = findFunction(identifier);
-    if (funExist != nullptr)
-    {
-        return parseCallExpression(funExist);
-    }
-
-    // Check Variable
-    auto attr = findAttribute(identifier);
-    if (attr.isEmpty())
-    {
-        return ErrorTable::addError(getCurrentToken(), "Variable not yet declared");
-    }
-
-    getNextToken(); // eat identifier
-
-    // Check if Array Variable
-    if (attr.getValue()->isArrayType())
-    {
-        if (getCurrentToken().isOpenSquare())
-        {
-            getNextToken(); // eat [
-            auto indexExpr = parseExpression();
-            if (!getCurrentToken().isCloseSquare())
-            {
-                return ErrorTable::addError(getCurrentToken(), "Expected ']'");
-            }
-
-            getNextToken(); // eat ]
-            return new ArrayExpression(indexExpr->getToken(), identifier, indexExpr, attr.getValue()->getContainedType());
-        }
-    }
-
-    auto type = attr.getValue();
-    return new VariableExpression(identToken, identifier, type);
-    // auto newVariable = new VariableExpression(identToken, identifier, type);
-    // if (!type->isReferenceType())
-    // {
-    //     return newVariable;
-    // }
-
-    // return new UnaryExpression(identToken, UnaryExpression::Dereference, newVariable);
-}
-
-weasel::Expression *weasel::Parser::parseParenExpression()
-{
-    getNextToken(); // eat (
-    auto expr = parseExpression();
-    if (!expr)
-    {
-        return ErrorTable::addError(getCurrentToken(), "Expected expression inside after (..");
-    }
-
-    if (!getCurrentToken().isCloseParen())
-    {
-        return ErrorTable::addError(getCurrentToken(), "Expected )");
     }
 
     getNextToken(); // eat ')'
@@ -251,66 +243,109 @@ weasel::Expression *weasel::Parser::parseParenExpression()
     return expr;
 }
 
-// Default Type
-weasel::Expression *weasel::Parser::parseArrayExpression()
+ExpressionHandle Parser::parseIdentifierExpression()
 {
-    LOG(INFO) << "Parsing Array\n";
+    LOG(INFO) << "Parse Identifier Expression...";
 
-    std::vector<weasel::Expression *> items;
-
-    getNextToken(); // eat [
-    while (!getCurrentToken().isKind(TokenKind::TokenDelimCloseSquareBracket))
+    // Check Available Function
+    if (expectToken(TokenKind::TokenDelimOpenParen))
     {
-        items.push_back(parseLiteralExpression());
-        if (getCurrentToken().isKind(TokenKind::TokenPuncComma))
-        {
-            getNextToken(); // eat ,
-        }
+        return parseCallExpression();
     }
 
-    getNextToken(); // eat ]
-    return new ArrayLiteralExpression(items);
+    // TODO: Access Array Expression
+    // if (getCurrentToken().isOpenSquare())
+    // {
+    //     getNextToken(); // eat [
+    //     auto indexExpr = parseExpression();
+    //     if (!getCurrentToken().isCloseSquare())
+    //     {
+    //         return new ErrorExpression(indexExpr->getToken(), Errors::getInstance().expectedCloseSquare);
+    //     }
+
+    //     getNextToken(); // eat ]
+    //     return new ArrayExpression(indexExpr->getToken(), identifier, indexExpr);
+    // }
+
+    auto identToken = getCurrentToken();
+    getNextToken(); // eat 'identifier'
+
+    return make_shared<VariableExpression>(identToken, identToken.getValue());
 }
 
-weasel::Expression *weasel::Parser::parseStructExpression()
+ExpressionHandle Parser::parseParenExpression()
 {
-    auto token = getCurrentToken();
-    auto userType = findUserType(token.getValue());
-    if (!getNextToken(true).isOpenCurly())
+    LOG(INFO) << "Parse paren Expression...";
+
+    getNextToken(); // eat '('
+    auto expr = parseExpression();
+    if (!getCurrentToken().isCloseParen())
     {
-        auto token = getCurrentToken();
-        getNextTokenUntil(TokenKind::TokenSpaceNewline);
-        return ErrorTable::addError(token, "Expected { after struct");
+        expr->setError(Errors::getInstance().expectedOpenParen.withToken(getCurrentToken()));
+        return expr;
+    }
+
+    getNextToken(); // eat ')'
+    return expr;
+}
+
+// Default Type
+// weasel::Expression *weasel::Parser::parseArrayExpression()
+// {
+//     LOG(INFO) << "Parsing Array\n";
+
+//     std::vector<weasel::Expression *> items;
+
+//     getNextToken(); // eat [
+//     while (!getCurrentToken().isKind(TokenKind::TokenDelimCloseSquareBracket))
+//     {
+//         items.push_back(parseLiteralExpression());
+//         if (getCurrentToken().isKind(TokenKind::TokenPuncComma))
+//         {
+//             getNextToken(); // eat ,
+//         }
+//     }
+
+//     getNextToken(); // eat ]
+//     return new ArrayLiteralExpression(items);
+// }
+
+ExpressionHandle Parser::parseStructExpression()
+{
+    LOG(INFO) << "Parse struct Expression...";
+
+    auto expr = make_shared<StructExpression>(getCurrentToken(), getCurrentToken().getValue());
+
+    // Eat Identifier and next to '{'
+    if (!getNextToken().isOpenCurly())
+    {
+        expr->setError(Errors::getInstance().expectedOpenCurly.withToken(getCurrentToken()));
+        return expr;
     }
 
     getNextToken(true); // eat '{'
-    std::vector<StructExpression::StructField *> fields;
     while (!getCurrentToken().isCloseCurly())
     {
         auto idenToken = getCurrentToken();
         if (!idenToken.isIdentifier())
         {
-            return ErrorTable::addError(idenToken, "Expected Identifier");
+            expr->setError(Errors::getInstance().expectedIdentifier.withToken(idenToken));
+            return expr;
         }
 
-        auto colonToken = getNextToken(true);
+        auto colonToken = getNextToken();
         if (!colonToken.isColon())
         {
-            return ErrorTable::addError(colonToken, "Expected Colon");
+            expr->setError(Errors::getInstance().expectedColon.withToken(colonToken));
+            return expr;
         }
 
-        auto exprToken = getNextToken(true); // eat ':'
-        auto expr = parseExpression();
-        if (expr == nullptr)
-        {
-            return ErrorTable::addError(exprToken, "Expected Expression");
-        }
-
-        auto field = new StructExpression::StructField(idenToken.getValue(), expr);
-        fields.push_back(field);
+        auto exprToken = getNextToken(); // eat ':'
+        auto valueExpr = parseExpression();
+        auto field = make_shared<StructExpression::StructField>(idenToken.getValue(), valueExpr);
+        expr->getFields().push_back(field);
 
         ignoreNewline();
-
         if (getCurrentToken().isCloseCurly())
         {
             break;
@@ -318,7 +353,8 @@ weasel::Expression *weasel::Parser::parseStructExpression()
 
         if (!getCurrentToken().isComma())
         {
-            return ErrorTable::addError(exprToken, "Expected Comma");
+            expr->setError(Errors::getInstance().expectedComma.withToken(getCurrentToken()));
+            return expr;
         }
 
         getNextToken(true); // eat ','
@@ -326,11 +362,13 @@ weasel::Expression *weasel::Parser::parseStructExpression()
 
     getNextToken(); // eat '}'
 
-    return new StructExpression(token, userType, fields);
+    return expr;
 }
 
-weasel::Expression *weasel::Parser::parsePrimaryExpression()
+ExpressionHandle Parser::parsePrimaryExpression()
 {
+    LOG(INFO) << "Parse Primary Expression...";
+
     auto possibleHaveField = getCurrentToken().isKeyThis() ||
                              getCurrentToken().isIdentifier() ||
                              getCurrentToken().isOpenParen() ||
@@ -338,28 +376,33 @@ weasel::Expression *weasel::Parser::parsePrimaryExpression()
 
     if (possibleHaveField)
     {
-        weasel::Expression *expr = nullptr;
+        ExpressionHandle expr = nullptr;
 
         // Identifier
         // Call or Variable Expression or Struct Expression
         if (getCurrentToken().isIdentifier() || getCurrentToken().isKeyThis())
         {
-            auto userType = findUserType(getCurrentToken().getValue());
-            if (userType != nullptr)
+            if (expectToken(TokenKind::TokenDelimOpenCurlyBracket))
             {
-                if (this->expectToken(TokenKind::TokenPuncDot))
-                {
-                    expr = parseStaticMethodCallExpression(userType);
-                }
-                else
-                {
-                    expr = parseStructExpression();
-                }
+                expr = parseStructExpression();
             }
             else
             {
                 expr = parseIdentifierExpression();
             }
+
+            // if (expectToken(TokenKind::TokenPuncDot))
+            // {
+            //     expr = parseStaticMethodCallExpression();
+            // }
+            // else if (expectToken(TokenKind::TokenDelimOpenCurlyBracket))
+            // {
+            //     expr = parseStructExpression();
+            // }
+            // else
+            // {
+            //     expr = parseIdentifierExpression();
+            // }
         }
 
         // Parentise Expression
@@ -368,16 +411,16 @@ weasel::Expression *weasel::Parser::parsePrimaryExpression()
             expr = parseParenExpression();
         }
 
-        // Array Expression
-        else if (getCurrentToken().isOpenSquare())
-        {
-            expr = parseArrayExpression();
-        }
+        //     // Array Expression
+        //     else if (getCurrentToken().isOpenSquare())
+        //     {
+        //         expr = parseArrayExpression();
+        //     }
 
         // Check for possible Field Expression
         if (expr != nullptr && getCurrentToken().isDot())
         {
-            return parseFieldExpression(expr);
+            expr = parseFieldExpression(expr);
         }
 
         return expr;
@@ -392,64 +435,34 @@ weasel::Expression *weasel::Parser::parsePrimaryExpression()
     // Unary Expression
     if (getCurrentToken().isOperatorUnary())
     {
-        auto token = getCurrentToken();
-
-        getNextToken(); // eat ' & | * | - | ! | ~ '
-
-        auto expr = parsePrimaryExpression();
-        if (expr == nullptr)
-        {
-            return ErrorTable::addError(getCurrentToken(), "Expected expression after unary operator");
-        }
-
-        UnaryExpression::Operator op;
-        switch (token.getTokenKind())
-        {
-        case TokenKind::TokenOperatorStar:
-            op = UnaryExpression::Dereference;
-            break;
-        case TokenKind::TokenOperatorNegative:
-            op = UnaryExpression::Negative;
-            break;
-        case TokenKind::TokenOperatorPlus:
-            op = UnaryExpression::Positive;
-            break;
-        case TokenKind::TokenOperatorNot:
-            op = UnaryExpression::Not;
-            break;
-        case TokenKind::TokenOperatorNegation:
-            op = UnaryExpression::Negation;
-            break;
-        case TokenKind::TokenOperatorAnd:
-            op = UnaryExpression::Borrow;
-            break;
-        default:
-            op = UnaryExpression::Positive;
-        }
-
-        return new UnaryExpression(token, op, expr);
+        return parseUnaryExpression();
     }
 
-    return ErrorTable::addError(getCurrentToken(), "Expected expression");
+    return make_shared<ErrorExpression>(getCurrentToken(), Errors::getInstance().expectedExpression.withToken(getCurrentToken()));
 }
 
-weasel::Expression *weasel::Parser::parseExpression()
+ExpressionHandle Parser::parseExpression()
 {
+    LOG(INFO) << "Parse Expression...";
+
     auto lhs = parsePrimaryExpression();
-    if (lhs == nullptr)
+    if (lhs->isError())
     {
-        return ErrorTable::addError(getCurrentToken(), "Expected RHS");
+        skipUntilNewLine();
+        return lhs;
     }
 
     return parseExpressionOperator(__defaultPrecOrder, lhs);
 }
 
-weasel::Expression *weasel::Parser::parseExpressionOperator(unsigned precOrder, Expression *lhs)
+ExpressionHandle Parser::parseExpressionOperator(unsigned precOrder, ExpressionHandle lhs)
 {
+    LOG(INFO) << "Parse Expression Operator...";
+
     while (true)
     {
         auto binOp = getCurrentToken();
-        if (!binOp.isOperator() || binOp.isNewline())
+        if (!binOp.isOperator())
         {
             return lhs;
         }
@@ -461,112 +474,102 @@ weasel::Expression *weasel::Parser::parseExpressionOperator(unsigned precOrder, 
         }
 
         getNextToken(); // eat 'operator'
+
         if (binOp.isOperatorCast())
         {
             auto castType = parseDataType();
-            if (!castType)
-            {
-                return ErrorTable::addError(getCurrentToken(), "Expected RHS Expression 1");
-            }
-
-            lhs = new TypeCastExpression(binOp, castType, lhs);
+            lhs = make_shared<TypeCastExpression>(binOp, castType, lhs);
 
             continue;
         }
 
         auto rhs = parsePrimaryExpression();
-        if (!rhs)
+        if (rhs->isError())
         {
-            return ErrorTable::addError(getCurrentToken(), "Expected RHS Expression 1");
+            // Skip Expression till newline
+            skipUntilNewLine();
         }
-
-        rhs = parseExpressionOperator(prec.order, rhs);
-        if (!rhs)
+        else
         {
-            return ErrorTable::addError(getCurrentToken(), "Expected RHS Expression 2");
+            rhs = parseExpressionOperator(prec.order, rhs);
         }
 
         lhs = createOperatorExpression(binOp, lhs, rhs);
+        if (rhs->isError())
+        {
+            return lhs;
+        }
     }
+
+    return make_shared<ErrorExpression>(getCurrentToken(), Errors::getInstance().unimplementedSyntax.withToken(getCurrentToken()));
 }
 
-weasel::Expression *weasel::Parser::parseFieldExpression(Expression *lhs)
+ExpressionHandle Parser::parseFieldExpression(ExpressionHandle lhs)
 {
     LOG(INFO) << "Parse Field Expression of " << lhs->getToken().getValue();
 
-    auto type = lhs->getType();
     auto token = getCurrentToken();
     auto identToken = getNextToken();
+    auto expr = make_shared<FieldExpression>(identToken, identToken.getValue());
     if (!identToken.isIdentifier())
     {
-        getNextTokenUntil(TokenKind::TokenSpaceNewline);
+        skipUntilNewLine();
 
-        return ErrorTable::addError(getCurrentToken(), "Expected Identifier for Field Expression");
+        expr->setError(Errors::getInstance().expectedIdentifier);
+
+        return expr;
     }
 
-    if (!type->isPossibleStructType())
-    {
-        return ErrorTable::addError(lhs->getToken(), "Field " + identToken.getValue() + " isn't a struct");
-    }
+    // if (expectToken(TokenKind::TokenDelimOpenParen))
+    // {
+    //     return parseMethodCallExpression(lhs);
+    // }
 
-    if (expectToken(TokenKind::TokenDelimOpenParen))
-    {
-        return parseMethodCallExpression(lhs);
-    }
+    expr->setIdentifier(getCurrentToken().getValue());
+    expr->setParentField(lhs);
 
     getNextToken(); // eat 'identifier'
 
-    // TODO: Check on Analysis Semantic
-    // Checking type field
-    StructType *structType;
-    if (type->isStructType())
-    {
-        structType = dynamic_cast<StructType *>(type);
-    }
-    else
-    {
-        structType = dynamic_cast<StructType *>(type->getContainedType());
-    }
-    auto idx = structType->findTypeName(identToken.getValue());
-    if (idx == -1)
-    {
-        return ErrorTable::addError(getCurrentToken(), "Field " + identToken.getValue() + " not found");
-    }
-
-    auto typeField = structType->getContainedTypes()[idx];
-    return new FieldExpression(token, identToken.getValue(), lhs, typeField);
+    return expr;
 }
 
-weasel::Expression *weasel::Parser::parseReturnExpression()
+ExpressionHandle Parser::parseReturnExpression()
 {
-    auto retToken = getCurrentToken();
+    LOG(INFO) << "Parse Return Expression...";
 
+    auto retToken = getCurrentToken();
     if (getNextToken().isNewline())
     {
-        return new ReturnExpression(retToken, nullptr, weasel::Type::getVoidType());
+        return make_shared<ReturnExpression>(retToken, weasel::Type::getVoidType());
     }
 
-    return new ReturnExpression(retToken, parseExpression());
+    auto exprValue = parseExpression();
+    return make_shared<ReturnExpression>(retToken, exprValue);
 }
 
-weasel::Expression *weasel::Parser::parseBreakExpression()
+ExpressionHandle Parser::parseBreakExpression()
 {
+    LOG(INFO) << "Parse Break Expression...";
+
+    auto token = getCurrentToken();
+    auto expr = make_shared<BreakExpression>(token, nullptr);
+    if (getNextToken().isOpenParen())
+    {
+        expr->setValue(parseExpression());
+    }
+
+    return expr;
+}
+
+ExpressionHandle Parser::parseContinueExpression()
+{
+    LOG(INFO) << "Parse Continue Expression...";
+
     auto token = getCurrentToken();
     if (getNextToken().isOpenParen())
     {
-        return new BreakExpression(token, parseExpression());
+        return make_shared<ContinueExpression>(token, parseExpression());
     }
 
-    return new BreakExpression(token, nullptr);
-}
-
-weasel::Expression *weasel::Parser::parseContinueExpression()
-{
-    auto token = getCurrentToken();
-    if (getNextToken().isOpenParen())
-    {
-        return new ContinueExpression(token, parseExpression());
-    }
-
-    return new ContinueExpression(token, nullptr);
+    return make_shared<ContinueExpression>(token, nullptr);
 }
