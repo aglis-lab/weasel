@@ -10,7 +10,7 @@
 llvm::Value *weasel::WeaselCodegen::codegen(TypeCastExpression *expr)
 {
     auto type = expr->getType();
-    auto rhs = expr->getExpression();
+    auto rhs = expr->getValue();
     auto rhsType = rhs->getType();
     auto rhsVal = rhs->codegen(this);
     auto typeVal = type->codegen(this);

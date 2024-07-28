@@ -67,8 +67,6 @@ namespace weasel
         int getTypeWidthByte() { return getTypeWidth() / 8; }
 
         bool isSigned() const { return _isSigned; }
-        bool isSpread() const { return _isSpread; }
-        void setSpread(bool val) { _isSpread = val; }
 
         bool isBoolType() const { return isIntegerType() && _width == 1; }
         bool isFloatType() const { return _typeId == TypeID::FloatType; }
@@ -129,7 +127,6 @@ namespace weasel
         void setError(Error error) { _error = error; }
 
     protected:
-        bool _isSpread = false;
         bool _isSigned = true;
         int _width = 32; // width in bit
 

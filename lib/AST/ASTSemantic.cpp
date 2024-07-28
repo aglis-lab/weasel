@@ -3,11 +3,11 @@
 
 using namespace weasel;
 
-#define UNIMPLEMENTED LOG(INFO) << "Unimplemented Codegen";
+#define UNIMPLEMENTED LOG(INFO) << "Unimplemented Analysis Semantic";
 
 void ArgumentExpression::semantic(AnalysisSemantic *analysis)
 {
-    UNIMPLEMENTED;
+    analysis->semantic(this);
 }
 
 void GlobalVariable::semantic(AnalysisSemantic *analysis)

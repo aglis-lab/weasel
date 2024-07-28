@@ -24,7 +24,7 @@ llvm::Value *weasel::WeaselCodegen::codegen(weasel::Function *funAST)
 
     auto funName = funAST->getManglingName();
     auto funType = funAST->getType();
-    auto isVararg = funType->isSpread();
+    auto isVararg = funAST->isVararg();
     auto funArgs = funAST->getArguments();
     auto argsLength = (int)funArgs.size() - (isVararg ? 1 : 0);
     auto args = std::vector<llvm::Type *>(argsLength);
@@ -185,7 +185,7 @@ llvm::Value *weasel::WeaselCodegen::codegen(MethodCallExpression *expr)
 
 llvm::Value *weasel::WeaselCodegen::codegen(CallExpression *expr)
 {
-    LOG(INFO) << "Codegen Call Function\n";
+    LOG(INFO) << "Codegen Call Function";
 
     auto mangleName = expr->getFunction()->getManglingName();
     auto args = expr->getArguments();
@@ -381,37 +381,42 @@ llvm::Value *weasel::WeaselCodegen::codegen(FieldExpression *expr)
 {
     LOG(INFO) << "Codegen Field Expression";
 
-    auto parent = static_pointer_cast<VariableExpression>(expr->getParentField());
+    shared_ptr<VariableExpression> parent;
+    if (expr->getParentField()->isFieldExpression())
+    {
+        parent = static_pointer_cast<FieldExpression>(expr->getParentField());
+    }
+    else
+    {
+        parent = static_pointer_cast<VariableExpression>(expr->getParentField());
+    }
 
-    // StructTypeHandle type;
-    // if (parent->getType()->isPointerType())
-    // {
-    //     type =
-    // }
+    assert(parent && "parent field should be between variable expression or field expression");
 
-    auto type = static_pointer_cast<StructType>(parent->getType());
+    llvm::Value *alloc;
+    if (parent->isFieldExpression())
+    {
+        parent->setAccess(AccessID::Allocation);
+        alloc = parent->codegen(this);
+    }
+    else
+    {
+        auto attr = findAttribute(parent->getIdentifier());
+        alloc = attr.getValue();
+    }
 
-    // TODO: Check if pointer to struct
-    // if (parent->getType()->isStructType())
-    // {
-    //     type = dynamic_cast<StructType *>(parent->getType().get());
-    // }
-    // else
-    // {
-    //     type = dynamic_cast<StructType *>(parent->getType()->getContainedType().get());
-    // }
-
-    auto typeV = type->codegen(this);
-    auto attr = findAttribute(parent->getIdentifier());
-    auto alloc = attr.getValue();
     if (parent->getType()->isReferenceType())
     {
         auto pointerType = llvm::PointerType::get(*getContext(), 0);
         alloc = getBuilder()->CreateLoad(pointerType, alloc);
     }
 
+    auto type = static_pointer_cast<StructType>(parent->getType());
+    auto typeV = type->codegen(this);
+
     auto fieldName = expr->getIdentifier();
     auto [idx, field] = type->findTypeName(fieldName);
+
     auto range = getBuilder()->getInt32(0);
     auto idxVal = getBuilder()->getInt32(idx);
     auto inbound = getBuilder()->CreateInBoundsGEP(typeV, alloc, {range, idxVal});

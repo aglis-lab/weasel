@@ -35,6 +35,8 @@ namespace weasel
         void semantic(UnaryExpression *expr);
         void semantic(StructExpression *expr);
         void semantic(FieldExpression *expr);
+        void semantic(TypeCastExpression *expr);
+        void semantic(ArgumentExpression *expr);
 
         void semantic(StructType *expr);
         void semantic(Type *expr);

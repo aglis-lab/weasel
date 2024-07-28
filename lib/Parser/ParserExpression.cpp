@@ -369,62 +369,92 @@ ExpressionHandle Parser::parsePrimaryExpression()
 {
     LOG(INFO) << "Parse Primary Expression...";
 
-    auto possibleHaveField = getCurrentToken().isKeyThis() ||
-                             getCurrentToken().isIdentifier() ||
-                             getCurrentToken().isOpenParen() ||
-                             getCurrentToken().isOpenSquare();
-
-    if (possibleHaveField)
+    if (getCurrentToken().isIdentifier() && expectToken().isOpenCurly())
     {
-        ExpressionHandle expr = nullptr;
+        return parseStructExpression();
+    }
 
-        // Identifier
-        // Call or Variable Expression or Struct Expression
-        if (getCurrentToken().isIdentifier() || getCurrentToken().isKeyThis())
+    if (getCurrentToken().isIdentifier())
+    {
+        auto expr = parseIdentifierExpression();
+        if (expr->isError())
         {
-            if (expectToken(TokenKind::TokenDelimOpenCurlyBracket))
-            {
-                expr = parseStructExpression();
-            }
-            else
-            {
-                expr = parseIdentifierExpression();
-            }
-
-            // if (expectToken(TokenKind::TokenPuncDot))
-            // {
-            //     expr = parseStaticMethodCallExpression();
-            // }
-            // else if (expectToken(TokenKind::TokenDelimOpenCurlyBracket))
-            // {
-            //     expr = parseStructExpression();
-            // }
-            // else
-            // {
-            //     expr = parseIdentifierExpression();
-            // }
+            return expr;
         }
 
-        // Parentise Expression
-        else if (getCurrentToken().isOpenParen())
-        {
-            expr = parseParenExpression();
-        }
-
-        //     // Array Expression
-        //     else if (getCurrentToken().isOpenSquare())
-        //     {
-        //         expr = parseArrayExpression();
-        //     }
-
-        // Check for possible Field Expression
-        if (expr != nullptr && getCurrentToken().isDot())
+        while (getCurrentToken().isDot())
         {
             expr = parseFieldExpression(expr);
+            if (expr->isError())
+            {
+                break;
+            }
         }
 
         return expr;
     }
+
+    if (getCurrentToken().isOpenParen())
+    {
+        return parseParenExpression();
+    }
+
+    // if (getCurrentToken().isOpenSquare())
+    // {
+    //     return parseArrayExpression();
+    // }
+
+    // if (possibleHaveField)
+    // {
+    //     ExpressionHandle expr = nullptr;
+
+    //     // Identifier
+    //     // Call or Variable Expression or Struct Expression
+    //     if (getCurrentToken().isIdentifier() || getCurrentToken().isKeyThis())
+    //     {
+    //         if (expectToken(TokenKind::TokenDelimOpenCurlyBracket))
+    //         {
+    //             expr = parseStructExpression();
+    //         }
+    //         else
+    //         {
+    //             expr = parseIdentifierExpression();
+    //         }
+
+    //         // if (expectToken(TokenKind::TokenPuncDot))
+    //         // {
+    //         //     expr = parseStaticMethodCallExpression();
+    //         // }
+    //         // else if (expectToken(TokenKind::TokenDelimOpenCurlyBracket))
+    //         // {
+    //         //     expr = parseStructExpression();
+    //         // }
+    //         // else
+    //         // {
+    //         //     expr = parseIdentifierExpression();
+    //         // }
+    //     }
+
+    //     // Parentise Expression
+    //     else if (getCurrentToken().isOpenParen())
+    //     {
+    //         expr = parseParenExpression();
+    //     }
+
+    //     //     // Array Expression
+    //     //     else if (getCurrentToken().isOpenSquare())
+    //     //     {
+    //     //         expr = parseArrayExpression();
+    //     //     }
+
+    //     // Check for possible Field Expression
+    //     if (expr != nullptr && getCurrentToken().isDot())
+    //     {
+    //         expr = parseFieldExpression(expr);
+    //     }
+
+    //     return expr;
+    // }
 
     // Literal Expression
     if (getCurrentToken().isLiteral())
@@ -474,7 +504,6 @@ ExpressionHandle Parser::parseExpressionOperator(unsigned precOrder, ExpressionH
         }
 
         getNextToken(); // eat 'operator'
-
         if (binOp.isOperatorCast())
         {
             auto castType = parseDataType();
@@ -508,7 +537,6 @@ ExpressionHandle Parser::parseFieldExpression(ExpressionHandle lhs)
 {
     LOG(INFO) << "Parse Field Expression of " << lhs->getToken().getValue();
 
-    auto token = getCurrentToken();
     auto identToken = getNextToken();
     auto expr = make_shared<FieldExpression>(identToken, identToken.getValue());
     if (!identToken.isIdentifier())

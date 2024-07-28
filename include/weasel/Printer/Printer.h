@@ -66,6 +66,7 @@ namespace weasel
         void printAsOperand(GlobalVariable *expr);
         void printAsOperand(BreakExpression *expr);
         void printAsOperand(FloatLiteralExpression *expr);
+        void printAsOperand(TypeCastExpression *expr);
 
     private:
         std::FILE *_out;

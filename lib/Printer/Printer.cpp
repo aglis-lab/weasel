@@ -3,20 +3,21 @@
 
 using namespace weasel;
 
+#define PRINT_OPERAND(X) LOG(INFO) << "Print As Operantd " << X
+#define PRINT(X) LOG(INFO) << "Print Expression " << X
+
 void Printer::print(GlobalVariable *expr)
 {
+    PRINT("GlobalVariable");
+
     printAsOperand(expr);
     fmt::println("");
 }
 
-void Printer::printAsOperand(GlobalVariable *expr)
-{
-    fmt::print(_out, "@define {} {} = ", expr->getToken().getValue(), expr->getIdentifier());
-    expr->getValue()->printAsOperand(this);
-}
-
 void Printer::print(Module *module)
 {
+    PRINT("Module");
+
     // Print user types or struct
     for (auto item : module->getUserTypes())
     {
@@ -44,34 +45,24 @@ void Printer::print(Module *module)
 
 void Printer::print(BreakExpression *expr)
 {
+    PRINT("BreakExpression");
+
     printAsOperand(expr);
     fmt::println(_out, "");
 }
 
-void Printer::printAsOperand(BreakExpression *expr)
-{
-    fmt::print(_out, "{: >{}}break", "", getCurrentShift());
-    if (expr->getValue())
-    {
-        fmt::print(_out, "(");
-        expr->getValue()->printAsOperand(this);
-        fmt::print(_out, ")");
-    }
-}
-
 void Printer::print(MethodCallExpression *expr)
 {
+    PRINT("MethodCallExpression");
+
     printAsOperand(expr);
     fmt::println("");
 }
 
-void Printer::printAsOperand(MethodCallExpression *expr)
-{
-    fmt::print("no implemented yet");
-}
-
 void Printer::print(Function *expr)
 {
+    PRINT("Function");
+
     std::string prefix = "@declare";
     auto newlineOp = "";
     if (expr->getBody() && expr->getBody()->getBody().size() > 0)
@@ -112,6 +103,8 @@ void Printer::print(Function *expr)
 
 void Printer::print(ArrayLiteralExpression *expr)
 {
+    PRINT("ArrayLiteralExpression");
+
     fmt::print(_out, "{: >{}}", "", getCurrentShift());
     printAsOperand(expr);
     fmt::println(_out, "");
@@ -119,6 +112,8 @@ void Printer::print(ArrayLiteralExpression *expr)
 
 void Printer::print(ArithmeticExpression *expr)
 {
+    PRINT("ArithmeticExpression");
+
     fmt::print(_out, "{: >{}}", "", getCurrentShift());
     printAsOperand(expr);
     fmt::println(_out, "");
@@ -126,6 +121,8 @@ void Printer::print(ArithmeticExpression *expr)
 
 void Printer::print(DeclarationStatement *expr)
 {
+    PRINT("DeclarationStatement");
+
     fmt::print(_out, "{: >{}}", "", getCurrentShift());
     printAsOperand(expr);
     fmt::println(_out, "");
@@ -133,6 +130,8 @@ void Printer::print(DeclarationStatement *expr)
 
 void Printer::print(LoopingStatement *expr)
 {
+    PRINT("LoopingStatement");
+
     auto conditions = expr->getConditions();
 
     fmt::print(_out, "{: >{}}for ", "", getCurrentShift());
@@ -167,6 +166,8 @@ void Printer::print(LoopingStatement *expr)
 
 void Printer::print(CompoundStatement *expr)
 {
+    PRINT("CompoundStatement");
+
     for (auto item : expr->getBody())
     {
         item->print(this);
@@ -175,6 +176,8 @@ void Printer::print(CompoundStatement *expr)
 
 void Printer::print(ConditionStatement *expr)
 {
+    PRINT("ConditionStatement");
+
     int length = expr->getStatements().size();
     for (int i = 0; i < length; i++)
     {
@@ -208,18 +211,25 @@ void Printer::print(ConditionStatement *expr)
 
 void Printer::print(FieldExpression *expr)
 {
+    PRINT("FieldExpression");
+
     printAsOperand(expr);
+
     fmt::println(_out, "");
 }
 
 void Printer::print(ArrayExpression *expr)
 {
+    PRINT("ArrayExpression");
+
     printAsOperand(expr);
     fmt::println(_out, "");
 }
 
 void Printer::print(AssignmentExpression *expr)
 {
+    PRINT("AssignmentExpression");
+
     fmt::print(_out, "{: >{}}", "", getCurrentShift());
     expr->getLHS()->printAsOperand(this);
     fmt::print(_out, " = ");
@@ -229,6 +239,8 @@ void Printer::print(AssignmentExpression *expr)
 
 void Printer::print(CallExpression *expr)
 {
+    PRINT("CallExpression");
+
     fmt::print(_out, "{: >{}}", "", getCurrentShift());
     printAsOperand(expr);
     fmt::println(_out, "");
@@ -236,6 +248,8 @@ void Printer::print(CallExpression *expr)
 
 void Printer::print(ReturnExpression *expr)
 {
+    PRINT("ReturnExpression");
+
     fmt::print(_out, "{: >{}}", "", getCurrentShift());
     printAsOperand(expr);
     fmt::println(_out, "");
@@ -243,22 +257,30 @@ void Printer::print(ReturnExpression *expr)
 
 void Printer::print(UnaryExpression *expr)
 {
+    PRINT("UnaryExpression");
+
     printAsOperand(expr);
     fmt::println(_out, "");
 }
 
 void Printer::print(BoolLiteralExpression *expr)
 {
+    PRINT("BoolLiteralExpression");
+
     fmt::print(_out, "{} {}", expr->getValue(), expr->getType()->getTypeName());
 }
 
 void Printer::print(NumberLiteralExpression *expr)
 {
+    PRINT("NumberLiteralExpression");
+
     fmt::println(_out, "{} {}", expr->getValue(), expr->getType()->getTypeName());
 }
 
 void Printer::print(StringLiteralExpression *expr)
 {
+    PRINT("StringLiteralExpression");
+
     auto val = expr->getValue();
     util::replaceInPlace(val, std::string("\n"), std::string("\\n"));
     fmt::print(_out, "\"{}\"", val);
@@ -266,17 +288,24 @@ void Printer::print(StringLiteralExpression *expr)
 
 void Printer::print(VariableExpression *expr)
 {
+    PRINT("VariableExpression");
+    assert(expr->getType());
+
     fmt::print(_out, "{} {}", expr->getIdentifier(), expr->getType()->getTypeName());
 }
 
 void Printer::print(ComparisonExpression *expr)
 {
+    PRINT("ComparisonExpression");
+
     printAsOperand(expr);
     fmt::println(_out, "");
 }
 
 void Printer::print(StructExpression *expr)
 {
+    PRINT("StructExpression");
+
     printAsOperand(expr);
     fmt::println(_out, "");
 }
@@ -285,8 +314,57 @@ void Printer::print(StructExpression *expr)
 // PRINT AS OPERAND //
 // SIMPLE OPERAND WITHPUT NEWLINE INSTRUCTION //
 //
+
+void Printer::printAsOperand(MethodCallExpression *expr)
+{
+    PRINT_OPERAND("MethodCallExpression");
+
+    fmt::print("no implemented yet");
+}
+
+void Printer::printAsOperand(FieldExpression *expr)
+{
+    PRINT_OPERAND("FieldExpression");
+
+    if (typeid(FieldExpression) == typeid(*expr->getParentField().get()))
+    {
+        fmt::print(_out, "(");
+        static_pointer_cast<FieldExpression>(expr->getParentField())->printAsOperand(this);
+        fmt::print(_out, ")");
+    }
+    else if (typeid(VariableExpression) == typeid(*expr->getParentField().get()))
+    {
+        fmt::print(_out, "{}", static_pointer_cast<VariableExpression>(expr->getParentField())->getIdentifier());
+    }
+
+    fmt::print(_out, ".{} {}", expr->getIdentifier(), expr->getType()->getTypeName());
+}
+
+void Printer::printAsOperand(BreakExpression *expr)
+{
+    PRINT_OPERAND("BreakExpression");
+
+    fmt::print(_out, "{: >{}}break", "", getCurrentShift());
+    if (expr->getValue())
+    {
+        fmt::print(_out, "(");
+        expr->getValue()->printAsOperand(this);
+        fmt::print(_out, ")");
+    }
+}
+
+void Printer::printAsOperand(GlobalVariable *expr)
+{
+    PRINT_OPERAND("GlobalVariable");
+
+    fmt::print(_out, "@define {} {} = ", expr->getToken().getValue(), expr->getIdentifier());
+    expr->getValue()->printAsOperand(this);
+}
+
 void Printer::printAsOperand(StructExpression *expr)
 {
+    PRINT_OPERAND("StructExpression");
+
     fmt::print(_out, "{} {{", expr->getIdentifier());
     for (auto &item : expr->getFields())
     {
@@ -301,26 +379,36 @@ void Printer::printAsOperand(StructExpression *expr)
 
 void Printer::printAsOperand(NumberLiteralExpression *expr)
 {
+    PRINT_OPERAND("NumberLiteralExpression");
+
     fmt::print(_out, "{} {}", expr->getValue(), expr->getType()->getTypeName());
 }
 
 void Printer::printAsOperand(DoubleLiteralExpression *expr)
 {
+    PRINT_OPERAND("DoubleLiteralExpression");
+
     fmt::print(_out, "{} {}", expr->getValue(), expr->getType()->getTypeName());
 }
 
 void Printer::printAsOperand(BoolLiteralExpression *expr)
 {
+    PRINT_OPERAND("BoolLiteralExpression");
+
     fmt::print(_out, "{} {}", expr->getValue(), expr->getType()->getTypeName());
 }
 
 void Printer::printAsOperand(VariableExpression *expr)
 {
+    PRINT_OPERAND("VariableExpression");
+
     fmt::print(_out, "{} {}", expr->getIdentifier(), expr->getType()->getTypeName());
 }
 
 void Printer::printAsOperand(AssignmentExpression *expr)
 {
+    PRINT_OPERAND("AssignmentExpression");
+
     expr->getLHS()->printAsOperand(this);
     fmt::print(_out, " = ");
     expr->getRHS()->printAsOperand(this);
@@ -328,6 +416,8 @@ void Printer::printAsOperand(AssignmentExpression *expr)
 
 void Printer::printAsOperand(ComparisonExpression *expr)
 {
+    PRINT_OPERAND("ComparisonExpression");
+
     expr->getLHS()->printAsOperand(this);
     fmt::print(_out, " {} ", expr->getOperator().getValue());
     expr->getRHS()->printAsOperand(this);
@@ -335,6 +425,8 @@ void Printer::printAsOperand(ComparisonExpression *expr)
 
 void Printer::printAsOperand(CallExpression *expr)
 {
+    PRINT_OPERAND("CallExpression");
+
     fmt::print(_out, "@call {}(", expr->getFunction()->getIdentifier());
     for (auto arg : expr->getArguments())
     {
@@ -349,14 +441,10 @@ void Printer::printAsOperand(CallExpression *expr)
     fmt::print(_out, ") {}", expr->getType()->getTypeName());
 }
 
-void Printer::printAsOperand(FieldExpression *expr)
-{
-    auto varExpr = static_pointer_cast<VariableExpression>(expr->getParentField());
-    fmt::print(_out, "{}.{} {}", varExpr->getIdentifier(), expr->getIdentifier(), expr->getType()->getTypeName());
-}
-
 void Printer::printAsOperand(ArrayExpression *expr)
 {
+    PRINT_OPERAND("ArrayExpression");
+
     fmt::print(_out, "{}[", expr->getIdentifier());
     expr->getIndex()->printAsOperand(this);
     fmt::print(_out, "]");
@@ -364,6 +452,8 @@ void Printer::printAsOperand(ArrayExpression *expr)
 
 void Printer::printAsOperand(ReturnExpression *expr)
 {
+    PRINT_OPERAND("ReturnExpression");
+
     fmt::print(_out, "return");
     if (!expr->getType()->isVoidType())
     {
@@ -374,6 +464,8 @@ void Printer::printAsOperand(ReturnExpression *expr)
 
 void Printer::printAsOperand(UnaryExpression *expr)
 {
+    PRINT_OPERAND("UnaryExpression");
+
     std::string op = "not-op";
     switch (expr->getOperator())
     {
@@ -402,6 +494,8 @@ void Printer::printAsOperand(UnaryExpression *expr)
 
 void Printer::printAsOperand(DeclarationStatement *expr)
 {
+    PRINT_OPERAND("DeclarationStatement");
+
     auto prefix = "@declare";
     if (expr->getValue())
     {
@@ -419,6 +513,8 @@ void Printer::printAsOperand(DeclarationStatement *expr)
 
 void Printer::printAsOperand(ArithmeticExpression *expr)
 {
+    PRINT_OPERAND("ArithmeticExpression");
+
     expr->getLHS()->printAsOperand(this);
     fmt::print(_out, " {} ", expr->getOperator().getValue());
     expr->getRHS()->printAsOperand(this);
@@ -426,23 +522,31 @@ void Printer::printAsOperand(ArithmeticExpression *expr)
 
 void Printer::printAsOperand(StringLiteralExpression *expr)
 {
+    PRINT_OPERAND("StringLiteralExpression");
+
     auto val = util::normalizeStringLiteral(expr->getValue());
     fmt::print(_out, "\"{}\"", val);
 }
 
 void Printer::printAsOperand(CharLiteralExpression *expr)
 {
+    PRINT_OPERAND("CharLiteralExpression");
+
     auto val = util::normalizeStringLiteral(std::string(1, expr->getValue()));
     fmt::print(_out, "\'{}\'", val);
 }
 
 void Printer::printAsOperand(FloatLiteralExpression *expr)
 {
-    fmt::print(_out, "{}", expr->getValue());
+    PRINT_OPERAND("FloatLiteralExpression");
+
+    fmt::print(_out, "{} {}", expr->getValue(), expr->getType()->getTypeName());
 }
 
 void Printer::printAsOperand(ArrayLiteralExpression *expr)
 {
+    PRINT_OPERAND("ArrayLiteralExpression");
+
     auto items = expr->getItems();
     auto count = (int)items.size();
 
@@ -457,4 +561,12 @@ void Printer::printAsOperand(ArrayLiteralExpression *expr)
         }
     }
     fmt::print("]");
+}
+
+void Printer::printAsOperand(TypeCastExpression *expr)
+{
+    PRINT_OPERAND("TypeCastExpression");
+
+    expr->getValue()->printAsOperand(this);
+    fmt::print(_out, " as {}", expr->getType()->getTypeName());
 }

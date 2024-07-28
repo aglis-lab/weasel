@@ -59,6 +59,7 @@ namespace weasel
         // like an expression that need last allocation
         bool isCompoundExpression() const;
         bool isStructExpression() const;
+        bool isFieldExpression() const;
 
         bool isConstant() const { return _isConstant; }
 
@@ -409,7 +410,7 @@ namespace weasel
     public:
         TypeCastExpression(Token op, TypeHandle type, ExpressionHandle rhs) : Expression(op, type), _rhs(rhs) {}
 
-        ExpressionHandle getExpression() { return _rhs; }
+        ExpressionHandle getValue() { return _rhs; }
 
     private:
         ExpressionHandle _rhs;
@@ -601,7 +602,7 @@ namespace weasel
     };
 
     // Argument Expression
-    class ArgumentExpression : public VariableExpression
+    class ArgumentExpression : public DeclarationStatement
     {
         OVERRIDE_CODEGEN_EXPRESSION
 
@@ -652,6 +653,9 @@ namespace weasel
         void setIsStatic(bool val) { _isStatic = val; }
         bool getIsStatic() const { return _isStatic; }
 
+        void setVararg(bool vararg) { _isVararg = vararg; }
+        bool isVararg() const { return _isVararg; }
+
     private:
         CompoundStatementHandle _body;
         vector<ArgumentExpressionHandle> _arguments;
@@ -662,5 +666,6 @@ namespace weasel
         bool _isInline = false;
         bool _isExtern = false;
         bool _isStatic = false;
+        bool _isVararg = false;
     };
 } // namespace weasel

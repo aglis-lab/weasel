@@ -26,6 +26,11 @@ void AnalysisSemantic::semanticCheck()
             break;
         }
 
+        for (auto &item : item->getArguments())
+        {
+            item->semantic(this);
+        }
+
         semantic(item.get());
     }
 }
@@ -61,16 +66,26 @@ void AnalysisSemantic::semantic(StructType *expr)
     }
 }
 
+void AnalysisSemantic::semantic(ArgumentExpression *expr)
+{
+    expr->getType()->semantic(this);
+}
+
 void AnalysisSemantic::semantic(Type *expr)
 {
 }
 
 void AnalysisSemantic::semantic(Function *fun)
 {
-    // TODO: Check Function Return Type
+    auto lastDeclaration = getDeclarations().size();
+    fun->getType()->semantic(this);
+
+    // Check Arguments
     for (auto arg : fun->getArguments())
     {
-        // TODO: Check for argument user type
+        arg->semantic(this);
+
+        getDeclarations().push_back(arg.get());
     }
 
     // Check Compound Statement
@@ -78,6 +93,8 @@ void AnalysisSemantic::semantic(Function *fun)
     {
         semantic(fun->getBody().get());
     }
+
+    getDeclarations().resize(lastDeclaration);
 }
 
 void AnalysisSemantic::semantic(CompoundStatement *expr)
@@ -141,6 +158,21 @@ void AnalysisSemantic::semantic(CallExpression *expr)
     {
         item->semantic(this);
     }
+
+    // auto count = fun->isVararg() ? fun->getArguments().size() - 1 : fun->getArguments().size();
+    // for (size_t i = 0; i < count; i++)
+    // {
+    //     auto exprArg = expr->getArguments()[i];
+    //     auto funArg = fun->getArguments()[i];
+
+    //     exprArg->semantic(this);
+    //     // TODO: Check Argument Type
+    //     // if (!exprArg->getType()->isEqual(funArg->getType()))
+    //     // {
+    //     //     expr->setError(Errors::getInstance().datatypeDifferent.withToken(exprArg->getToken()));
+    //     //     return onError(expr);
+    //     // }
+    // }
 }
 
 void AnalysisSemantic::semantic(DeclarationStatement *expr)
@@ -162,8 +194,6 @@ void AnalysisSemantic::semantic(DeclarationStatement *expr)
     if (!expr->getValue())
     {
         getDeclarations().push_back(expr);
-
-        // TODO: Check User Type
         return;
     }
 
@@ -384,4 +414,12 @@ void AnalysisSemantic::semantic(FieldExpression *expr)
     }
 
     expr->setType(field->getType());
+}
+
+void AnalysisSemantic::semantic(TypeCastExpression *expr)
+{
+    LOG(INFO) << "Type Cast Expression Check";
+
+    expr->getValue()->semantic(this);
+    expr->getType()->semantic(this);
 }

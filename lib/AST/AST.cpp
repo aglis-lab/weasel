@@ -11,6 +11,11 @@ bool weasel::Expression::isStructExpression() const
     return typeid(StructExpression) == typeid(*this);
 }
 
+bool weasel::Expression::isFieldExpression() const
+{
+    return typeid(FieldExpression) == typeid(*this);
+}
+
 // Function
 std::string weasel::Function::getManglingName()
 {

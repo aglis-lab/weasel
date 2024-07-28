@@ -356,5 +356,5 @@ void UnaryExpression::printAsOperand(Printer *printer)
 // TypeCastExpression
 void TypeCastExpression::printAsOperand(Printer *printer)
 {
-    fmt::print("Unimplemented type cast printer");
+    printer->printAsOperand(this);
 }

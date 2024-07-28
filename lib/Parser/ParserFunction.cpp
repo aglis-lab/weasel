@@ -100,6 +100,7 @@ FunctionHandle Parser::parseDeclareFunction()
 
             auto type = parseDataType();
             auto argumentType = make_shared<ArgumentExpression>();
+
             argumentType->setType(type);
             argumentType->setIdentifier(lastToken.getValue());
 
@@ -130,7 +131,7 @@ FunctionHandle Parser::parseDeclareFunction()
 
     if (isVararg)
     {
-        returnType->setSpread(true);
+        fun->setVararg(true);
     }
 
     fun->setType(returnType);
