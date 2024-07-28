@@ -44,6 +44,7 @@ namespace weasel
         void print(BreakExpression *expr);
 
         // Without Newline Operand
+        void printAsOperand(Function *expr);
         void printAsOperand(NumberLiteralExpression *expr);
         void printAsOperand(DoubleLiteralExpression *expr);
         void printAsOperand(BoolLiteralExpression *expr);
@@ -64,6 +65,7 @@ namespace weasel
         void printAsOperand(MethodCallExpression *expr);
         void printAsOperand(GlobalVariable *expr);
         void printAsOperand(BreakExpression *expr);
+        void printAsOperand(FloatLiteralExpression *expr);
 
     private:
         std::FILE *_out;

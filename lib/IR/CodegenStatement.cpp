@@ -45,7 +45,6 @@ llvm::Value *weasel::WeaselCodegen::codegen(weasel::Function *funAST)
     {
         LOG(INFO) << "Codegen Function\n";
 
-        // TODO: Init Block
         // Create Entry Point
         _allocaBlock = llvm::BasicBlock::Create(*getContext(), "", funLLVM);
         auto entryBlock = llvm::BasicBlock::Create(*getContext(), "entry", funLLVM);
@@ -197,8 +196,7 @@ llvm::Value *weasel::WeaselCodegen::codegen(CallExpression *expr)
     for (size_t i = 0; i < args.size(); i++)
     {
         auto arg = args[i];
-
-        if (auto funArg = funArgs[i]; funArg->getType()->isReferenceType())
+        if (arg->getType()->isReferenceType())
         {
             arg->setAccess(AccessID::Allocation);
         }
@@ -322,12 +320,8 @@ llvm::Value *weasel::WeaselCodegen::codegen(VariableExpression *expr)
 
     if (expr->isAccessAllocation())
     {
-        LOG(INFO) << "Access for allocation " << expr->getIdentifier();
-
         return alloc;
     }
-
-    LOG(INFO) << "Access for Load " << expr->getIdentifier();
 
     return getBuilder()->CreateLoad(type->codegen(this), alloc);
 }
@@ -336,7 +330,7 @@ llvm::Value *weasel::WeaselCodegen::codegen(VariableExpression *expr)
 // TODO: String as array of byte
 llvm::Value *weasel::WeaselCodegen::codegen(ArrayExpression *expr)
 {
-    LOG(INFO) << "Codege Array Expression";
+    LOG(INFO) << "Codegen Array Expression";
 
     return nullptr;
 
@@ -387,16 +381,25 @@ llvm::Value *weasel::WeaselCodegen::codegen(FieldExpression *expr)
 {
     LOG(INFO) << "Codegen Field Expression";
 
-    auto parent = dynamic_cast<VariableExpression *>(expr->getParentField());
-    StructType *type;
-    if (parent->getType()->isStructType())
-    {
-        type = dynamic_cast<StructType *>(parent->getType().get());
-    }
-    else
-    {
-        type = dynamic_cast<StructType *>(parent->getType()->getContainedType().get());
-    }
+    auto parent = static_pointer_cast<VariableExpression>(expr->getParentField());
+
+    // StructTypeHandle type;
+    // if (parent->getType()->isPointerType())
+    // {
+    //     type =
+    // }
+
+    auto type = static_pointer_cast<StructType>(parent->getType());
+
+    // TODO: Check if pointer to struct
+    // if (parent->getType()->isStructType())
+    // {
+    //     type = dynamic_cast<StructType *>(parent->getType().get());
+    // }
+    // else
+    // {
+    //     type = dynamic_cast<StructType *>(parent->getType()->getContainedType().get());
+    // }
 
     auto typeV = type->codegen(this);
     auto attr = findAttribute(parent->getIdentifier());
@@ -407,8 +410,8 @@ llvm::Value *weasel::WeaselCodegen::codegen(FieldExpression *expr)
         alloc = getBuilder()->CreateLoad(pointerType, alloc);
     }
 
-    auto field = expr->getIdentifier();
-    auto idx = type->findTypeName(field);
+    auto fieldName = expr->getIdentifier();
+    auto [idx, field] = type->findTypeName(fieldName);
     auto range = getBuilder()->getInt32(0);
     auto idxVal = getBuilder()->getInt32(idx);
     auto inbound = getBuilder()->CreateInBoundsGEP(typeV, alloc, {range, idxVal});
@@ -417,109 +420,127 @@ llvm::Value *weasel::WeaselCodegen::codegen(FieldExpression *expr)
         return inbound;
     }
 
-    auto idxValueType = type->getContainedTypes()[idx];
-    auto idxValueTypeV = idxValueType->codegen(this);
-    return getBuilder()->CreateLoad(idxValueTypeV, inbound);
+    auto fieldV = field->getType()->codegen(this);
+    return getBuilder()->CreateLoad(fieldV, inbound);
 }
 
-// TODO: Remove alloca from StructExpression
 llvm::Value *weasel::WeaselCodegen::codegen(StructExpression *expr)
 {
+    LOG(INFO) << "Codegen Struct Expression...";
     if (expr->getFields().empty())
     {
         return getBuilder()->getInt8(0);
     }
 
-    // Remove PreferConstant Check
-    // Just check directly onto the fields
-    auto type = dynamic_cast<StructType *>(expr->getType().get());
-    auto isConstant = expr->getIsPreferConstant() && type->isPreferConstant();
-    auto fields = expr->getFields();
-    if (isConstant)
-    {
-        for (auto item : fields)
-        {
-            if (!dynamic_cast<LiteralExpression *>(item->getExpression()))
-            {
-                isConstant = false;
-                break;
-            }
-        }
-    }
-
-    auto typeFields = type->getContainedTypes();
-    auto fieldSize = (int)typeFields.size();
-    if (isConstant)
-    {
-        std::vector<llvm::Constant *> arr(fieldSize, nullptr);
-        for (auto &item : fields)
-        {
-            auto idx = type->findTypeName(item->getIdentifier());
-            if (idx == -1)
-            {
-                continue;
-            }
-
-            arr[idx] = llvm::dyn_cast<llvm::Constant>(item->getExpression()->codegen(this));
-        }
-
-        for (int i = 0; i < fieldSize; i++)
-        {
-            if (arr[i] != nullptr)
-            {
-                continue;
-            }
-
-            auto typeField = typeFields[i];
-            auto typeFieldV = typeField->codegen(this);
-            if (typeField->isPrimitiveType())
-            {
-                if (typeField->isFloatType() || typeField->isDoubleType())
-                {
-                    arr[i] = llvm::ConstantFP::get(typeFieldV, 0);
-                }
-                else
-                {
-                    arr[i] = llvm::ConstantInt::get(typeFieldV, 0);
-                }
-            }
-            else
-            {
-                arr[i] = llvm::ConstantStruct::get(llvm::dyn_cast<llvm::StructType>(typeFieldV), {});
-            }
-        }
-
-        auto typeV = llvm::dyn_cast<llvm::StructType>(type->codegen(this));
-        auto constantV = llvm::ConstantStruct::get(typeV, arr);
-        auto val = new llvm::GlobalVariable(*getModule(), typeV, true, llvm::GlobalValue::LinkageTypes::PrivateLinkage, constantV);
-
-        val->setUnnamedAddr(llvm::GlobalValue::UnnamedAddr::Global);
-
-        return val;
-    }
-
-    LOG(INFO) << "Create Allocation on StructExpression";
-
+    auto type = static_pointer_cast<StructType>(expr->getType());
     auto typeV = type->codegen(this);
-    auto alloc = getBuilder()->CreateAlloca(typeV);
-
-    getBuilder()->CreateMemSet(alloc, getBuilder()->getInt8(0), type->getTypeWidthByte(), llvm::MaybeAlign(4));
-
-    for (auto item : fields)
+    auto alloc = expr->getAlloc();
+    auto fields = type->getFields();
+    for (auto exprField : expr->getFields())
     {
-        auto idx = type->findTypeName(item->getIdentifier());
-        if (idx == -1)
-        {
-            continue;
-        }
+        auto [idx, exprFieldType] = type->findTypeName(exprField->getIdentifier());
+
+        assert(idx >= 0 && "expression field should be exist");
 
         auto idxStruct = getBuilder()->getInt32(0);
         auto idxVal = getBuilder()->getInt32(idx);
         auto inbound = getBuilder()->CreateInBoundsGEP(typeV, alloc, {idxStruct, idxVal});
-        auto val = item->getExpression()->codegen(this);
+        auto val = exprField->getValue()->codegen(this);
 
         getBuilder()->CreateStore(val, inbound);
     }
+
+    // Remove PreferConstant Check
+    // Just check directly onto the fields
+    // auto type = static_pointer_cast<StructType>(expr->getType());
+    // auto isConstant = expr->getIsPreferConstant() && type->isPreferConstant();
+    // auto fields = expr->getFields();
+    // LOG(INFO) << "Codegen Struct Expression 2...";
+    // if (isConstant)
+    // {
+    //     for (auto item : fields)
+    //     {
+    //         if (typeid(LiteralExpression) != typeid(*item->getValue()))
+    //         {
+    //             isConstant = false;
+    //             break;
+    //         }
+    //     }
+    // }
+
+    // auto typeFields = expr->getFields();
+    // auto fieldSize = (int)typeFields.size();
+    // if (isConstant)
+    // {
+    //     std::vector<llvm::Constant *> arr(fieldSize, nullptr);
+    //     for (auto &item : fields)
+    //     {
+    //         auto [idx, _] = type->findTypeName(item->getIdentifier());
+    //         if (idx == -1)
+    //         {
+    //             continue;
+    //         }
+
+    //         arr[idx] = llvm::dyn_cast<llvm::Constant>(item->getValue()->codegen(this));
+    //     }
+
+    //     for (int i = 0; i < fieldSize; i++)
+    //     {
+    //         if (arr[i] != nullptr)
+    //         {
+    //             continue;
+    //         }
+
+    //         auto typeField = typeFields[i]->getValue();
+    //         auto typeFieldV = typeField->getType()->codegen(this);
+    //         if (typeField->getType()->isPrimitiveType())
+    //         {
+    //             if (typeField->getType()->isFloatType() || typeField->getType()->isDoubleType())
+    //             {
+    //                 arr[i] = llvm::ConstantFP::get(typeFieldV, 0);
+    //             }
+    //             else
+    //             {
+    //                 arr[i] = llvm::ConstantInt::get(typeFieldV, 0);
+    //             }
+    //         }
+    //         else
+    //         {
+    //             arr[i] = llvm::ConstantStruct::get(llvm::dyn_cast<llvm::StructType>(typeFieldV), {});
+    //         }
+    //     }
+
+    //     auto typeV = llvm::dyn_cast<llvm::StructType>(type->codegen(this));
+    //     auto constantV = llvm::ConstantStruct::get(typeV, arr);
+    //     auto val = new llvm::GlobalVariable(*getModule(), typeV, true, llvm::GlobalValue::LinkageTypes::PrivateLinkage, constantV);
+
+    //     val->setUnnamedAddr(llvm::GlobalValue::UnnamedAddr::Global);
+
+    //     return val;
+    // }
+
+    // LOG(INFO) << "Create Allocation on StructExpression";
+
+    // auto typeV = type->codegen(this);
+    // auto alloc = getBuilder()->CreateAlloca(typeV);
+
+    // getBuilder()->CreateMemSet(alloc, getBuilder()->getInt8(0), type->getTypeWidthByte(), llvm::MaybeAlign(4));
+
+    // for (auto item : fields)
+    // {
+    //     auto [idx, _] = type->findTypeName(item->getIdentifier());
+    //     if (idx == -1)
+    //     {
+    //         continue;
+    //     }
+
+    //     auto idxStruct = getBuilder()->getInt32(0);
+    //     auto idxVal = getBuilder()->getInt32(idx);
+    //     auto inbound = getBuilder()->CreateInBoundsGEP(typeV, alloc, {idxStruct, idxVal});
+    //     auto val = item->getValue()->codegen(this);
+
+    //     getBuilder()->CreateStore(val, inbound);
+    // }
 
     return alloc;
 }
@@ -565,7 +586,7 @@ llvm::Value *weasel::WeaselCodegen::codegen(DeclarationStatement *expr)
         // Add Variable Declaration to symbol table
         addAttribute(ContextAttribute::get(varName, alloc, AttributeKind::Variable));
 
-        return nullptr;
+        return alloc;
     }
 
     // Check if type isn't void
@@ -576,48 +597,24 @@ llvm::Value *weasel::WeaselCodegen::codegen(DeclarationStatement *expr)
     assert(valueType->isEqual(declType) && "Cannot assign to different type");
 
     // Check if StructExpression
-    if (auto temp = dynamic_pointer_cast<StructExpression>(valueExpr); temp != nullptr)
+    if (valueExpr->isStructExpression())
     {
-        temp->setPreferConstant(true);
+        auto temp = static_pointer_cast<StructExpression>(valueExpr);
+        temp->setAlloc(alloc);
+        temp->codegen(this);
+
+        // Add Variable Declaration to symbol table
+        addAttribute(ContextAttribute::get(varName, alloc, AttributeKind::Variable));
+
+        return alloc;
     }
 
     // Codegen Value Expression
     auto valueV = valueExpr->codegen(this);
     assert(valueV && "Cannot codegen value expression");
 
-    // TODO: LLVM Declare Struct Metadata
-    // call void @llvm.dbg.declare(metadata %struct.Person* %3, metadata !20, metadata !DIExpression()), !dbg !28
-    if (declType->isStructType())
-    {
-        auto widthVal = declType->getTypeWidthByte();
-
-        if (llvm::dyn_cast<llvm::GlobalVariable>(valueV))
-        {
-            getBuilder()->CreateMemCpy(alloc, llvm::MaybeAlign(4), valueV, llvm::MaybeAlign(4), widthVal);
-        }
-        else if (llvm::dyn_cast<llvm::ConstantInt>(valueV))
-        {
-            getBuilder()->CreateMemSet(alloc, valueV, widthVal, llvm::MaybeAlign(0));
-        }
-        else
-        {
-            getBuilder()->CreateStore(valueV, alloc);
-        }
-
-        // Add Variable Declaration to symbol table
-        addAttribute(ContextAttribute::get(varName, alloc, AttributeKind::Variable));
-
-        return nullptr;
-    }
-
-    // TODO: Add metadata for auto type casting
-    if (declType->isPrimitiveType() && declType->getTypeWidth() != valueType->getTypeWidth())
-    {
-        valueV = getBuilder()->CreateSExtOrTrunc(valueV, declTypeV);
-    }
-
     // Check if Array Literal
-    if (typeid(*valueExpr) == typeid(ArrayLiteralExpression))
+    if (typeid(*valueExpr.get()) == typeid(ArrayLiteralExpression))
     {
         auto arrayPtr = getBuilder()->CreateBitCast(alloc, getBuilder()->getInt8PtrTy());
         auto align = declType->getContainedType()->getTypeWidthByte();
@@ -633,7 +630,7 @@ llvm::Value *weasel::WeaselCodegen::codegen(DeclarationStatement *expr)
     // Add Variable Declaration to symbol table
     addAttribute(ContextAttribute::get(varName, alloc, AttributeKind::Variable));
 
-    return nullptr;
+    return alloc;
 }
 
 llvm::Value *weasel::WeaselCodegen::codegen(CompoundStatement *expr)

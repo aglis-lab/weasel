@@ -3,6 +3,10 @@
 cmake_minimum_required(VERSION 3.15)
 project(weasel VERSION 0.0.1)
 
+# Set Compiler
+set(CMAKE_C_COMPILER clang)
+set(CMAKE_CXX_COMPILER clang++)
+
 # Set LLVM Version
 set(LLVM_VERSION 17)
 

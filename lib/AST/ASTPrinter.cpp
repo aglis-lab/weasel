@@ -6,340 +6,355 @@
 
 using namespace weasel;
 
-// GlobalVariable
-void weasel::GlobalVariable::print(Printer *printer)
+#define UNIMPLEMENTED LOG(INFO) << "Unimplemented Printer";
+
+void Function::printAsOperand(Printer *printer)
+{
+    UNIMPLEMENTED;
+}
+
+void ArgumentExpression::print(Printer *printer)
+{
+    UNIMPLEMENTED;
+}
+
+void ArgumentExpression::printAsOperand(Printer *printer)
 {
     printer->print(this);
 }
 
-void weasel::GlobalVariable::printAsOperand(Printer *printer)
+// GlobalVariable
+void GlobalVariable::print(Printer *printer)
+{
+    printer->print(this);
+}
+
+void GlobalVariable::printAsOperand(Printer *printer)
 {
     printer->printAsOperand(this);
 }
 
 // MethodCallExpression
-void weasel::MethodCallExpression::print(Printer *printer)
+void MethodCallExpression::print(Printer *printer)
 {
     printer->print(this);
 }
 
-void weasel::MethodCallExpression::printAsOperand(Printer *printer)
+void MethodCallExpression::printAsOperand(Printer *printer)
 {
     printer->printAsOperand(this);
 }
 
 // Literal
-void weasel::NumberLiteralExpression::print(Printer *printer)
+void NumberLiteralExpression::print(Printer *printer)
 {
     printer->print(this);
 }
 
 // DoubleLiteralExpression
-void weasel::DoubleLiteralExpression::print(Printer *printer)
+void DoubleLiteralExpression::print(Printer *printer)
 {
     fmt::print("Unimplemented double literal printer");
 }
 
 // FloatLiteralExpression
-void weasel::FloatLiteralExpression::print(Printer *printer)
+void FloatLiteralExpression::print(Printer *printer)
 {
     fmt::print("Unimplemented float literal printer");
 }
 
+void FloatLiteralExpression::printAsOperand(Printer *printer)
+{
+    printer->printAsOperand(this);
+}
+
 // BoolLiteralExpression
-void weasel::BoolLiteralExpression::print(Printer *printer)
+void BoolLiteralExpression::print(Printer *printer)
 {
     printer->print(this);
 }
 
 // CharLiteralExpression
-void weasel::CharLiteralExpression::print(Printer *printer)
+void CharLiteralExpression::print(Printer *printer)
 {
     fmt::print("Unimplemented char printer");
 }
 
 // ArrayLiteralExpression
-void weasel::ArrayLiteralExpression::print(Printer *printer)
+void ArrayLiteralExpression::print(Printer *printer)
 {
     printer->print(this);
 }
 
 // StringLiteralExpression
-void weasel::StringLiteralExpression::print(Printer *printer)
+void StringLiteralExpression::print(Printer *printer)
 {
     printer->print(this);
 }
 
 // NilLiteralExpression
-void weasel::NilLiteralExpression::print(Printer *printer)
+void NilLiteralExpression::print(Printer *printer)
 {
     fmt::print("Unimplemented nil literal printer");
 }
 
 // Statement
-void weasel::DeclarationStatement::print(Printer *printer)
+void DeclarationStatement::print(Printer *printer)
 {
     printer->print(this);
 }
 
 // Expression
-void weasel::VariableExpression::print(Printer *printer)
+void VariableExpression::print(Printer *printer)
 {
     printer->print(this);
 }
 
 // FieldExpression
-void weasel::FieldExpression::print(Printer *printer)
+void FieldExpression::print(Printer *printer)
 {
     printer->print(this);
 }
 
 // ArrayExpression
-void weasel::ArrayExpression::print(Printer *printer)
+void ArrayExpression::print(Printer *printer)
 {
     printer->print(this);
 }
 
 // LogicalExpression
-void weasel::LogicalExpression::print(Printer *printer)
+void LogicalExpression::print(Printer *printer)
 {
     fmt::print("Unimplemented logical printer");
 }
 
 // ArithmeticExpression
-void weasel::ArithmeticExpression::print(Printer *printer)
+void ArithmeticExpression::print(Printer *printer)
 {
     printer->print(this);
 }
 
 // AssignmentExpression
-void weasel::AssignmentExpression::print(Printer *printer)
+void AssignmentExpression::print(Printer *printer)
 {
     printer->print(this);
 }
 
 // ComparisonExpression
-void weasel::ComparisonExpression::print(Printer *printer)
+void ComparisonExpression::print(Printer *printer)
 {
     printer->print(this);
 }
 
 // CallExpression
-void weasel::CallExpression::print(Printer *printer)
+void CallExpression::print(Printer *printer)
 {
     printer->print(this);
 }
 
+void CallExpression::printAsOperand(Printer *printer)
+{
+    printer->printAsOperand(this);
+}
+
 // ReturnExpression
-void weasel::ReturnExpression::print(Printer *printer)
+void ReturnExpression::print(Printer *printer)
 {
     printer->print(this);
 }
 
 // StructExpression
-void weasel::StructExpression::print(Printer *printer)
+void StructExpression::print(Printer *printer)
 {
     printer->print(this);
 }
 
-void weasel::StructExpression::printAsOperand(Printer *printer)
+void StructExpression::printAsOperand(Printer *printer)
 {
     printer->printAsOperand(this);
 }
 
 // BreakExpression
-void weasel::BreakExpression::print(Printer *printer)
+void BreakExpression::print(Printer *printer)
 {
     printer->print(this);
 }
 
-void weasel::BreakExpression::printAsOperand(Printer *printer)
+void BreakExpression::printAsOperand(Printer *printer)
 {
     printer->printAsOperand(this);
 }
 
 // ContinueExpression
-void weasel::ContinueExpression::print(Printer *printer)
+void ContinueExpression::print(Printer *printer)
 {
     fmt::print("Unimplemented continue printer");
 }
 
 // CompoundStatement
-void weasel::CompoundStatement::print(Printer *printer)
+void CompoundStatement::print(Printer *printer)
 {
     printer->print(this);
 }
 
 // ConditionStatement
-void weasel::ConditionStatement::print(Printer *printer)
+void ConditionStatement::print(Printer *printer)
 {
     printer->print(this);
 }
 
 // LoopingStatement
-void weasel::LoopingStatement::print(Printer *printer)
+void LoopingStatement::print(Printer *printer)
 {
     printer->print(this);
 }
 
 // Operator Expression
-void weasel::UnaryExpression::print(Printer *printer)
+void UnaryExpression::print(Printer *printer)
 {
     printer->print(this);
 }
 
 // TypeCastExpression
-void weasel::TypeCastExpression::print(Printer *printer)
+void TypeCastExpression::print(Printer *printer)
 {
-    fmt::print("Unimplemented type cast printer");
+    UNIMPLEMENTED;
 }
 
 // Funtion
-void weasel::Function::print(Printer *printer)
+void Function::print(Printer *printer)
 {
     printer->print(this);
 }
 
 // Literal
-void weasel::NumberLiteralExpression::printAsOperand(Printer *printer)
+void NumberLiteralExpression::printAsOperand(Printer *printer)
 {
     printer->printAsOperand(this);
 }
 
 // DoubleLiteralExpression
-void weasel::DoubleLiteralExpression::printAsOperand(Printer *printer)
+void DoubleLiteralExpression::printAsOperand(Printer *printer)
 {
     printer->printAsOperand(this);
 }
 
-// FloatLiteralExpression
-void weasel::FloatLiteralExpression::printAsOperand(Printer *printer)
-{
-    fmt::print("Unimplemented float literal printer");
-}
-
 // BoolLiteralExpression
-void weasel::BoolLiteralExpression::printAsOperand(Printer *printer)
+void BoolLiteralExpression::printAsOperand(Printer *printer)
 {
     printer->print(this);
 }
 
 // CharLiteralExpression
-void weasel::CharLiteralExpression::printAsOperand(Printer *printer)
+void CharLiteralExpression::printAsOperand(Printer *printer)
 {
     printer->printAsOperand(this);
 }
 
 // ArrayLiteralExpression
-void weasel::ArrayLiteralExpression::printAsOperand(Printer *printer)
+void ArrayLiteralExpression::printAsOperand(Printer *printer)
 {
     printer->printAsOperand(this);
 }
 
 // StringLiteralExpression
-void weasel::StringLiteralExpression::printAsOperand(Printer *printer)
+void StringLiteralExpression::printAsOperand(Printer *printer)
 {
     printer->printAsOperand(this);
 }
 
 // NilLiteralExpression
-void weasel::NilLiteralExpression::printAsOperand(Printer *printer)
+void NilLiteralExpression::printAsOperand(Printer *printer)
 {
     fmt::print("Unimplemented nil literal printer");
 }
 
 // Statement
-void weasel::DeclarationStatement::printAsOperand(Printer *printer)
+void DeclarationStatement::printAsOperand(Printer *printer)
 {
     printer->printAsOperand(this);
 }
 
 // Expression
-void weasel::VariableExpression::printAsOperand(Printer *printer)
+void VariableExpression::printAsOperand(Printer *printer)
 {
     printer->print(this);
 }
 
 // FieldExpression
-void weasel::FieldExpression::printAsOperand(Printer *printer)
+void FieldExpression::printAsOperand(Printer *printer)
 {
     printer->printAsOperand(this);
 }
 
 // ArrayExpression
-void weasel::ArrayExpression::printAsOperand(Printer *printer)
+void ArrayExpression::printAsOperand(Printer *printer)
 {
     printer->printAsOperand(this);
 }
 
 // LogicalExpression
-void weasel::LogicalExpression::printAsOperand(Printer *printer)
+void LogicalExpression::printAsOperand(Printer *printer)
 {
     fmt::print("Unimplemented logical printer");
 }
 
 // ArithmeticExpression
-void weasel::ArithmeticExpression::printAsOperand(Printer *printer)
+void ArithmeticExpression::printAsOperand(Printer *printer)
 {
     printer->printAsOperand(this);
 }
 
 // AssignmentExpression
-void weasel::AssignmentExpression::printAsOperand(Printer *printer)
+void AssignmentExpression::printAsOperand(Printer *printer)
 {
     printer->printAsOperand(this);
 }
 
 // ComparisonExpression
-void weasel::ComparisonExpression::printAsOperand(Printer *printer)
-{
-    printer->printAsOperand(this);
-}
-
-// CallExpression
-void weasel::CallExpression::printAsOperand(Printer *printer)
+void ComparisonExpression::printAsOperand(Printer *printer)
 {
     printer->printAsOperand(this);
 }
 
 // ReturnExpression
-void weasel::ReturnExpression::printAsOperand(Printer *printer)
+void ReturnExpression::printAsOperand(Printer *printer)
 {
     printer->printAsOperand(this);
 }
 
 // ContinueExpression
-void weasel::ContinueExpression::printAsOperand(Printer *printer)
+void ContinueExpression::printAsOperand(Printer *printer)
 {
     fmt::print("Unimplemented continue printer");
 }
 
 // CompoundStatement
-void weasel::CompoundStatement::printAsOperand(Printer *printer)
+void CompoundStatement::printAsOperand(Printer *printer)
 {
     fmt::print("Unimplemented compound printer");
 }
 
 // ConditionStatement
-void weasel::ConditionStatement::printAsOperand(Printer *printer)
+void ConditionStatement::printAsOperand(Printer *printer)
 {
     fmt::print("Unimplemented condition printer");
 }
 
 // LoopingStatement
-void weasel::LoopingStatement::printAsOperand(Printer *printer)
+void LoopingStatement::printAsOperand(Printer *printer)
 {
     fmt::print("Unimplemented looping printer");
 }
 
 // Operator Expression
-void weasel::UnaryExpression::printAsOperand(Printer *printer)
+void UnaryExpression::printAsOperand(Printer *printer)
 {
     printer->printAsOperand(this);
 }
 
 // TypeCastExpression
-void weasel::TypeCastExpression::printAsOperand(Printer *printer)
+void TypeCastExpression::printAsOperand(Printer *printer)
 {
     fmt::print("Unimplemented type cast printer");
 }

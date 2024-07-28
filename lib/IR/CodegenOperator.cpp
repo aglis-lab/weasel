@@ -205,24 +205,33 @@ llvm::Value *weasel::WeaselCodegen::codegen(AssignmentExpression *expr)
     rhs->setAccess(AccessID::Load);
     lhs->setAccess(AccessID::Allocation);
 
-    auto rhsVal = rhs->codegen(this);
     auto lhsVal = lhs->codegen(this);
-
-    // Casting Integer
-    if (rhsType->isIntegerType())
+    // Check if Struct Expression
+    if (rhs->isStructExpression())
     {
-        auto lhsTypeV = lhsType->codegen(this);
-        rhsVal = castInteger(rhsVal, lhsTypeV, lhsType->isSigned());
-    }
-
-    if (rhsType->isStructType())
-    {
-        auto rhsTypeStruct = dynamic_cast<StructType *>(rhsType.get());
-        getBuilder()->CreateMemCpy(lhsVal, llvm::MaybeAlign(4), rhsVal, llvm::MaybeAlign(4), rhsTypeStruct->getTypeWidthByte());
+        static_cast<StructExpression *>(rhs.get())->setAlloc(llvm::dyn_cast<llvm::AllocaInst, llvm::Value>(lhsVal));
+        rhs->codegen(this);
     }
     else
     {
-        getBuilder()->CreateStore(rhsVal, lhsVal);
+        auto rhsVal = rhs->codegen(this);
+
+        // Casting Integer
+        if (rhsType->isIntegerType())
+        {
+            auto lhsTypeV = lhsType->codegen(this);
+            rhsVal = castInteger(rhsVal, lhsTypeV, lhsType->isSigned());
+        }
+
+        if (rhsType->isStructType())
+        {
+            auto rhsTypeStruct = dynamic_cast<StructType *>(rhsType.get());
+            getBuilder()->CreateMemCpy(lhsVal, llvm::MaybeAlign(4), rhsVal, llvm::MaybeAlign(4), rhsTypeStruct->getTypeWidthByte());
+        }
+        else
+        {
+            getBuilder()->CreateStore(rhsVal, lhsVal);
+        }
     }
 
     if (expr->isAccessAllocation())

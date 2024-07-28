@@ -5,6 +5,7 @@
 
 #include <weasel/Lexer/Token.h>
 #include <weasel/Basic/Error.h>
+#include <weasel/Basic/Codegen.h>
 
 namespace llvm
 {
@@ -13,9 +14,7 @@ namespace llvm
 
 namespace weasel
 {
-    class WeaselCodegen;
     class StructType;
-    class Printer;
     class Type;
     class GlobalVariable;
 
@@ -47,22 +46,21 @@ namespace weasel
     // Data Type
     class Type
     {
+        CODEGEN_TYPE
+
     public:
         // Create Type From Token
         static TypeHandle create(Token token);
 
-        Type() : _typeId(TypeID::UnknownType), _width(0), _isSigned(true) {}
+        Type(Token token) : _typeId(TypeID::UnknownType), _token(token), _width(0), _isSigned(true) {}
 
         Type(TypeID typeId, uint width = 0, bool isSign = true) : _typeId(typeId), _width(width), _isSigned(isSign) {}
 
         Type(TypeID typeId, TypeHandle containedType, unsigned width = 0, bool isSign = true) : _typeId(typeId), _width(width), _isSigned(isSign)
         {
-            _containedTypes.push_back(containedType);
+            _innerType = containedType;
         }
 
-        virtual ~Type();
-
-    public:
         TypeID getTypeID() const { return _typeId; }
         int getTypeWidth();
 
@@ -101,11 +99,8 @@ namespace weasel
         // Check possible struct type
         bool isPossibleStructType();
 
-        unsigned getContainedWidth() const { return _containedTypes[0]->getTypeWidth(); }
-        TypeHandle getContainedType() { return _containedTypes[0]; }
-        unsigned getContainedNums() const { return _containedTypes.size(); }
-        vector<TypeHandle> getContainedTypes() const { return _containedTypes; }
-        void addContainedType(TypeHandle containedType) { _containedTypes.push_back(move(containedType)); }
+        unsigned getContainedWidth() const { return _innerType->getTypeWidth(); }
+        TypeHandle getContainedType() { return _innerType; }
 
         // Generator
         static TypeHandle getVoidType() { return make_shared<Type>(TypeID::VoidType, 0, false); }
@@ -118,19 +113,20 @@ namespace weasel
         static TypeHandle getReferenceType(TypeHandle containedType) { return make_shared<Type>(TypeID::ReferenceType, move(containedType)); }
         static TypeHandle getReferenceType() { return make_shared<Type>(TypeID::ReferenceType); }
         static TypeHandle getStructType() { return make_shared<Type>(TypeID::StructType, -1); }
-        static TypeHandle getUnknownType() { return make_shared<Type>(TypeID::UnknownType); }
+        static TypeHandle getUnknownType(Token token) { return make_shared<Type>(token); }
 
         // Check Type
         bool isEqual(TypeHandle type);
 
-    public:
         string getTypeName();
         string getManglingName();
+        int getTypeIdToInt() const { return enumToInt(_typeId); }
 
         void setToken(Token token) { _token = token; }
         Token getToken() const { return _token; }
 
-        virtual llvm::Type *codegen(WeaselCodegen *codegen);
+        optional<Error> getError() const { return _error; }
+        void setError(Error error) { _error = error; }
 
     protected:
         bool _isSpread = false;
@@ -138,8 +134,9 @@ namespace weasel
         int _width = 32; // width in bit
 
         TypeID _typeId = TypeID::VoidType;
-        vector<TypeHandle> _containedTypes;
+        TypeHandle _innerType;
         Token _token = Token::create();
+        optional<Error> _error;
     };
 
     class StructTypeField
@@ -155,27 +152,29 @@ namespace weasel
 
         string getIdentifier() const { return _identifier; }
         TypeHandle getType() const { return _type; }
+        Token getToken() const { return _token; }
+
+        void setType(TypeHandle type) { _type = type; }
+        void setIdentifier(string identifier) { _identifier = identifier; }
     };
 
     // Struct Value
     class StructType : public Type
     {
+        CODEGEN_TYPE
+
     private:
         vector<StructTypeField> _fields;
         string _identifier;
-        optional<Error> _error;
 
     public:
         StructType() : Type(TypeID::StructType, 0, false) {}
         StructType(string structName) : Type(TypeID::StructType, 0, false), _identifier(structName) {}
 
-        optional<Error> getError() const { return _error; }
-        void setError(Error error) { _error = error; }
-
         string getIdentifier() const { return _identifier; }
         void setIdentifier(string identifier) { _identifier = identifier; }
 
-        int findTypeName(const string &typeName);
+        tuple<int, optional<StructTypeField>> findTypeName(const string &typeName);
 
         vector<StructTypeField> &getFields() { return _fields; }
         void addField(const StructTypeField &field)
@@ -184,20 +183,9 @@ namespace weasel
         }
         bool isPreferConstant() const
         {
-            for (auto &item : getContainedTypes())
-            {
-                if (item->isArrayType())
-                {
-                    return false;
-                }
-            }
-
-            return true;
+            return !_innerType->isArrayType();
         }
 
         bool isError() const { return _error.has_value(); }
-
-    public:
-        llvm::Type *codegen(WeaselCodegen *codegen) override;
     };
 } // namespace weasel

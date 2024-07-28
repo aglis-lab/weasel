@@ -343,7 +343,7 @@ void Printer::printAsOperand(CallExpression *expr)
 
 void Printer::printAsOperand(FieldExpression *expr)
 {
-    auto varExpr = dynamic_cast<VariableExpression *>(expr->getParentField());
+    auto varExpr = static_pointer_cast<VariableExpression>(expr->getParentField());
     fmt::print(_out, "{}.{} {}", varExpr->getIdentifier(), expr->getIdentifier(), expr->getType()->getTypeName());
 }
 
@@ -426,6 +426,11 @@ void Printer::printAsOperand(CharLiteralExpression *expr)
 {
     auto val = util::normalizeStringLiteral(std::string(1, expr->getValue()));
     fmt::print(_out, "\'{}\'", val);
+}
+
+void Printer::printAsOperand(FloatLiteralExpression *expr)
+{
+    fmt::print(_out, "{}", expr->getValue());
 }
 
 void Printer::printAsOperand(ArrayLiteralExpression *expr)

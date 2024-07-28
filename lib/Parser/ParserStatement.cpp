@@ -330,7 +330,7 @@ ExpressionHandle Parser::parseDeclarationExpression()
     stmt->setIdentifier(getCurrentToken().getValue());
 
     getNextToken(); // eat 'identifier'
-    if (getCurrentToken().isDataType() || getCurrentToken().isIdentifier())
+    if (isDataType() || getCurrentToken().isIdentifier())
     {
         stmt->setType(parseDataType());
     }

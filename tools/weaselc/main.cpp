@@ -38,10 +38,12 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    auto outputExecutable = "temp/main";
+    // auto outputExecutable = "temp/main";
     auto filePath = std::string(argv[1]);
     auto filename = splitString(filePath, "/").back();
-    auto outputPath = (std::string)fs::temp_directory_path() + filename + ".o";
+    // auto outputPath = (std::string)fs::temp_directory_path() + filename + ".o";
+    auto outputPath = filePath + ".o";
+    auto outputExecutable = filePath + ".out";
     auto fileManager = weasel::FileManager(filePath);
     if (!fileManager.isValid())
     {

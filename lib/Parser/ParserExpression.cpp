@@ -73,19 +73,23 @@ GlobalVariableHandle Parser::parseGlobalVariable()
 //     // return expr;
 // }
 
-// ExpressionHandle Parser::parseStaticMethodCallExpression()
-// {
-//     getNextToken(); // eat last Struct or identifier
+ExpressionHandle Parser::parseStaticMethodCallExpression()
+{
+    LOG(INFO) << "Parse Static Method Call Expression...";
 
-//     // eat '.' and check next token
-//     if (!getNextToken().isDot())
-//     {
-//         return new ErrorExpression(getCurrentToken(), Errors::getInstance().expectedDot);
-//     }
+    return nullptr;
 
-//     // Call Expression
-//     return parseCallExpression();
-// }
+    // getNextToken(); // eat last Struct or identifier
+
+    // // eat '.' and check next token
+    // if (!getNextToken().isDot())
+    // {
+    //     return new ErrorExpression(getCurrentToken(), Errors::getInstance().expectedDot);
+    // }
+
+    // // Call Expression
+    // return parseCallExpression();
+}
 
 ExpressionHandle Parser::parseUnaryExpression()
 {
@@ -306,55 +310,60 @@ ExpressionHandle Parser::parseParenExpression()
 //     return new ArrayLiteralExpression(items);
 // }
 
-// weasel::Expression *weasel::Parser::parseStructExpression()
-// {
-//     return nullptr;
+ExpressionHandle Parser::parseStructExpression()
+{
+    LOG(INFO) << "Parse struct Expression...";
 
-//     // auto token = getCurrentToken(); // Identifier
-//     // getNextToken();                 // Eat Identifier and next to '{'
-//     // getNextToken(true);             // eat '{'
+    auto expr = make_shared<StructExpression>(getCurrentToken(), getCurrentToken().getValue());
 
-//     // auto expr = new StructExpression(token);
-//     // while (!getCurrentToken().isCloseCurly())
-//     // {
-//     //     auto idenToken = getCurrentToken();
-//     //     if (!idenToken.isIdentifier())
-//     //     {
-//     //         expr->setError(Errors::getInstance().expectedIdentifier.withToken(idenToken));
-//     //         return expr;
-//     //     }
+    // Eat Identifier and next to '{'
+    if (!getNextToken().isOpenCurly())
+    {
+        expr->setError(Errors::getInstance().expectedOpenCurly.withToken(getCurrentToken()));
+        return expr;
+    }
 
-//     //     auto colonToken = getNextToken();
-//     //     if (!colonToken.isColon())
-//     //     {
-//     //         expr->setError(Errors::getInstance().expectedColon.withToken(colonToken));
-//     //         return expr;
-//     //     }
+    getNextToken(true); // eat '{'
+    while (!getCurrentToken().isCloseCurly())
+    {
+        auto idenToken = getCurrentToken();
+        if (!idenToken.isIdentifier())
+        {
+            expr->setError(Errors::getInstance().expectedIdentifier.withToken(idenToken));
+            return expr;
+        }
 
-//     //     auto exprToken = getNextToken(); // eat ':'
-//     //     auto valueExpr = parseExpression();
-//     //     auto field = new StructExpression::StructField(idenToken.getValue(), valueExpr);
-//     //     expr->getFields().push_back(field);
+        auto colonToken = getNextToken();
+        if (!colonToken.isColon())
+        {
+            expr->setError(Errors::getInstance().expectedColon.withToken(colonToken));
+            return expr;
+        }
 
-//     //     ignoreNewline();
-//     //     if (getCurrentToken().isCloseCurly())
-//     //     {
-//     //         break;
-//     //     }
+        auto exprToken = getNextToken(); // eat ':'
+        auto valueExpr = parseExpression();
+        auto field = make_shared<StructExpression::StructField>(idenToken.getValue(), valueExpr);
+        expr->getFields().push_back(field);
 
-//     //     if (!getCurrentToken().isComma())
-//     //     {
-//     //         expr->setError(Errors::getInstance().expectedComma.withToken(getCurrentToken()));
-//     //         return expr;
-//     //     }
+        ignoreNewline();
+        if (getCurrentToken().isCloseCurly())
+        {
+            break;
+        }
 
-//     //     getNextToken(true); // eat ','
-//     // }
+        if (!getCurrentToken().isComma())
+        {
+            expr->setError(Errors::getInstance().expectedComma.withToken(getCurrentToken()));
+            return expr;
+        }
 
-//     // getNextToken(); // eat '}'
+        getNextToken(true); // eat ','
+    }
 
-//     // return expr;
-// }
+    getNextToken(); // eat '}'
+
+    return expr;
+}
 
 ExpressionHandle Parser::parsePrimaryExpression()
 {
@@ -373,18 +382,27 @@ ExpressionHandle Parser::parsePrimaryExpression()
         // Call or Variable Expression or Struct Expression
         if (getCurrentToken().isIdentifier() || getCurrentToken().isKeyThis())
         {
-            if (expectToken(TokenKind::TokenPuncDot))
+            if (expectToken(TokenKind::TokenDelimOpenCurlyBracket))
             {
-                // expr = parseStaticMethodCallExpression();
-            }
-            else if (expectToken(TokenKind::TokenDelimOpenCurlyBracket))
-            {
-                // expr = parseStructExpression();
+                expr = parseStructExpression();
             }
             else
             {
                 expr = parseIdentifierExpression();
             }
+
+            // if (expectToken(TokenKind::TokenPuncDot))
+            // {
+            //     expr = parseStaticMethodCallExpression();
+            // }
+            // else if (expectToken(TokenKind::TokenDelimOpenCurlyBracket))
+            // {
+            //     expr = parseStructExpression();
+            // }
+            // else
+            // {
+            //     expr = parseIdentifierExpression();
+            // }
         }
 
         // Parentise Expression
@@ -399,11 +417,11 @@ ExpressionHandle Parser::parsePrimaryExpression()
         //         expr = parseArrayExpression();
         //     }
 
-        //     // Check for possible Field Expression
-        //     if (expr != nullptr && getCurrentToken().isDot())
-        //     {
-        //         expr = parseFieldExpression(expr);
-        //     }
+        // Check for possible Field Expression
+        if (expr != nullptr && getCurrentToken().isDot())
+        {
+            expr = parseFieldExpression(expr);
+        }
 
         return expr;
     }
@@ -486,34 +504,34 @@ ExpressionHandle Parser::parseExpressionOperator(unsigned precOrder, ExpressionH
     return make_shared<ErrorExpression>(getCurrentToken(), Errors::getInstance().unimplementedSyntax.withToken(getCurrentToken()));
 }
 
-// weasel::Expression *weasel::Parser::parseFieldExpression(Expression *lhs)
-// {
-//     LOG(INFO) << "Parse Field Expression of " << lhs->getToken().getValue();
+ExpressionHandle Parser::parseFieldExpression(ExpressionHandle lhs)
+{
+    LOG(INFO) << "Parse Field Expression of " << lhs->getToken().getValue();
 
-//     auto token = getCurrentToken();
-//     auto identToken = getNextToken();
-//     auto expr = new FieldExpression(token);
-//     if (!identToken.isIdentifier())
-//     {
-//         skipUntilNewLine();
+    auto token = getCurrentToken();
+    auto identToken = getNextToken();
+    auto expr = make_shared<FieldExpression>(identToken, identToken.getValue());
+    if (!identToken.isIdentifier())
+    {
+        skipUntilNewLine();
 
-//         expr->setError(Errors::getInstance().expectedIdentifier);
+        expr->setError(Errors::getInstance().expectedIdentifier);
 
-//         return expr;
-//     }
+        return expr;
+    }
 
-//     if (expectToken(TokenKind::TokenDelimOpenParen))
-//     {
-//         return parseMethodCallExpression(lhs);
-//     }
+    // if (expectToken(TokenKind::TokenDelimOpenParen))
+    // {
+    //     return parseMethodCallExpression(lhs);
+    // }
 
-//     expr->setIdentifier(getCurrentToken().getValue());
-//     expr->setParentField(lhs);
+    expr->setIdentifier(getCurrentToken().getValue());
+    expr->setParentField(lhs);
 
-//     getNextToken(); // eat 'identifier'
+    getNextToken(); // eat 'identifier'
 
-//     return expr;
-// }
+    return expr;
+}
 
 ExpressionHandle Parser::parseReturnExpression()
 {

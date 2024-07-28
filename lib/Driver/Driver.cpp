@@ -114,7 +114,7 @@ void weasel::Driver::createIR(std::string outputFile) const
         exit(1);
     }
 
-    dest << getModule();
+    dest << *getModule();
     dest.flush();
 }
 

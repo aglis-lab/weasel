@@ -9,7 +9,7 @@
 // Weasel User Type System to llvm Type System
 llvm::Type *weasel::WeaselCodegen::codegen(weasel::StructType *structExpr)
 {
-    auto types = structExpr->getContainedTypes();
+    auto types = structExpr->getFields();
     auto typesVal = std::vector<llvm::Type *>();
     auto identifier = structExpr->getIdentifier();
 
@@ -24,15 +24,15 @@ llvm::Type *weasel::WeaselCodegen::codegen(weasel::StructType *structExpr)
     for (auto item : types)
     {
         // TODO: Create more proper check for circular type
-        if (item->isStructType())
+        if (item.getType()->isStructType())
         {
-            if (auto itemStructType = dynamic_cast<StructType *>(item.get()); itemStructType)
+            if (auto itemStructType = dynamic_pointer_cast<StructType>(item.getType()); itemStructType)
             {
                 assert(itemStructType->getIdentifier() != identifier && "Cannot create circular struct");
             }
         }
 
-        typesVal.push_back(item->codegen(this));
+        typesVal.push_back(item.getType()->codegen(this));
     }
 
     structType->setBody(typesVal);

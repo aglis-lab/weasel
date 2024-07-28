@@ -40,6 +40,7 @@ namespace weasel
         // Simple Class for handling and storing global value
         Module *_module;
 
+        Token expectToken() { return _lexer.expect(); }
         bool expectToken(TokenKind kind) { return _lexer.expect(kind); }
         bool isExpectElse() { return expectToken(TokenKind::TokenKeyElse); }
 
@@ -49,6 +50,7 @@ namespace weasel
         Token getNextToken(bool skipSpace = false);
         Token getNextTokenUntil(TokenKind kind);
         Token skipUntilNewLine() { return getNextTokenUntil(TokenKind::TokenSpaceNewline); }
+        bool isDataType();
 
         // Operator Expression
         ExpressionHandle createOperatorExpression(Token op, ExpressionHandle lhs, ExpressionHandle rhs);
@@ -71,7 +73,7 @@ namespace weasel
         CompoundStatementHandle parseCompoundStatement();
         ExpressionHandle parseConditionStatement();
         ExpressionHandle parseLoopingStatement();
-        // ExpressionHandle parseStaticMethodCallExpression();
+        ExpressionHandle parseStaticMethodCallExpression();
         // Expression *parseMethodCallExpression(Expression *);
 
         // Expression
@@ -84,8 +86,8 @@ namespace weasel
         ExpressionHandle parseReturnExpression();
         ExpressionHandle parseBreakExpression();
         ExpressionHandle parseContinueExpression();
-        // Expression *parseStructExpression();
-        // Expression *parseFieldExpression(Expression *lhs);
+        ExpressionHandle parseStructExpression();
+        ExpressionHandle parseFieldExpression(ExpressionHandle lhs);
 
         // Expression Literal
         ExpressionHandle parseLiteralExpression();

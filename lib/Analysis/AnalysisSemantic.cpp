@@ -1,6 +1,7 @@
 #include <cassert>
+#include <unordered_set>
 
-#include "weasel/Analysis/AnalysisSemantic.h"
+#include <weasel/Analysis/AnalysisSemantic.h>
 
 void AnalysisSemantic::semanticCheck()
 {
@@ -9,11 +10,12 @@ void AnalysisSemantic::semanticCheck()
     {
         if (item->isError())
         {
-            onStructError(item);
+            onStructError(item.get());
             break;
         }
 
         // TODO: Semantic for User Type
+        semantic(item.get());
     }
 
     // Functions
@@ -21,119 +23,52 @@ void AnalysisSemantic::semanticCheck()
     {
         if (item->isError())
         {
-            onError(item);
+            onError(item.get());
             break;
         }
 
-        for (auto arg : item->getArguments())
-        {
-            // TODO: Check for argument user type
-        }
-
-        // TODO: Check Function Return Type
-
-        // Check Compound Statement
-        if (item->getBody())
-        {
-            expressionCheck(item->getBody());
-        }
+        semantic(item.get());
     }
 }
 
-void AnalysisSemantic::userTypeCheck(StructTypeHandle expr)
+void AnalysisSemantic::semantic(StructType *expr)
+{
+    // Check Duplicate Field
+    unordered_set<string> checkName;
+
+    for (auto item : expr->getFields())
+    {
+        if (checkName.count(item.getIdentifier()) > 0)
+        {
+            expr->setError(Errors::getInstance().duplicateField.withToken(item.getToken()));
+            return onStructError(expr);
+        }
+
+        checkName.insert(item.getIdentifier());
+        item.getType()->semantic(this);
+    }
+}
+
+void AnalysisSemantic::semantic(Type *expr)
 {
 }
 
-void AnalysisSemantic::expressionCheck(ExpressionHandle expr)
+void AnalysisSemantic::semantic(Function *fun)
 {
-    if (!expr)
+    // TODO: Check Function Return Type
+    for (auto arg : fun->getArguments())
     {
-        LOG(ERROR) << Errors::getInstance().missingImplementation.getMessage();
-        exit(1);
+        // TODO: Check for argument user type
     }
 
-    if (expr->isError())
+    // Check Compound Statement
+    if (fun->getBody())
     {
-        return onError(expr);
+        semantic(fun->getBody().get());
     }
-
-    auto exprName = typeid(*expr).name();
-    if (typeid(CompoundStatement).name() == exprName)
-    {
-        return compoundStatementCheck(static_pointer_cast<CompoundStatement>(expr));
-    }
-
-    if (typeid(CallExpression).name() == exprName)
-    {
-        return callExpressionCheck(static_pointer_cast<CallExpression>(expr));
-    }
-
-    if (typeid(ConditionStatement).name() == exprName)
-    {
-        return conditionStatementChech(static_pointer_cast<ConditionStatement>(expr));
-    }
-
-    if (typeid(DeclarationStatement).name() == exprName)
-    {
-        return declarationStatementCheck(static_pointer_cast<DeclarationStatement>(expr));
-    }
-
-    if (typeid(VariableExpression).name() == exprName)
-    {
-        return variableExpressionCheck(static_pointer_cast<VariableExpression>(expr));
-    }
-
-    if (typeid(AssignmentExpression).name() == exprName)
-    {
-        return assignmentExpressionCheck(static_pointer_cast<AssignmentExpression>(expr));
-    }
-
-    if (typeid(ComparisonExpression).name() == exprName)
-    {
-        return comparisonExpressionCheck(static_pointer_cast<ComparisonExpression>(expr));
-    }
-
-    if (typeid(ReturnExpression).name() == exprName)
-    {
-        return returnExpressionCheck(static_pointer_cast<ReturnExpression>(expr));
-    }
-
-    if (typeid(LoopingStatement).name() == exprName)
-    {
-        return loopingStatementCheck(static_pointer_cast<LoopingStatement>(expr));
-    }
-
-    if (typeid(ArithmeticExpression).name() == exprName)
-    {
-        return arithmeticExpressionCheck(static_pointer_cast<ArithmeticExpression>(expr));
-    }
-
-    if (typeid(BreakExpression).name() == exprName)
-    {
-        return breakExpressionCheck(static_pointer_cast<BreakExpression>(expr));
-    }
-
-    if (typeid(ContinueExpression).name() == exprName)
-    {
-        return continueExpressionCheck(static_pointer_cast<ContinueExpression>(expr));
-    }
-
-    if (typeid(UnaryExpression).name() == exprName)
-    {
-        return unaryExpressionCheck(static_pointer_cast<UnaryExpression>(expr));
-    }
-
-    if (dynamic_pointer_cast<LiteralExpression>(expr))
-    {
-        LOG(INFO) << "Literal Expression Check";
-        return;
-    }
-
-    LOG(ERROR) << expr->getToken().getEscapeValue() << " " << Errors::getInstance().missingImplementation.getMessage();
-    exit(1);
 }
 
-void AnalysisSemantic::compoundStatementCheck(CompoundStatementHandle expr)
+void AnalysisSemantic::semantic(CompoundStatement *expr)
 {
     LOG(INFO) << "Compound Statement Check";
 
@@ -145,7 +80,7 @@ void AnalysisSemantic::compoundStatementCheck(CompoundStatementHandle expr)
     auto lastDeclaration = getDeclarations().size();
     for (auto item : expr->getBody())
     {
-        expressionCheck(item);
+        item->semantic(this);
         if (item->isError())
         {
             break;
@@ -155,13 +90,13 @@ void AnalysisSemantic::compoundStatementCheck(CompoundStatementHandle expr)
     getDeclarations().resize(lastDeclaration);
 }
 
-void AnalysisSemantic::conditionStatementChech(ConditionStatementHandle expr)
+void AnalysisSemantic::semantic(ConditionStatement *expr)
 {
     LOG(INFO) << "Condition Statement Check";
 
     for (auto item : expr->getConditions())
     {
-        expressionCheck(item);
+        item->semantic(this);
         if (item->isError())
         {
             break;
@@ -170,11 +105,11 @@ void AnalysisSemantic::conditionStatementChech(ConditionStatementHandle expr)
 
     for (auto item : expr->getStatements())
     {
-        expressionCheck(item);
+        item->semantic(this);
     }
 }
 
-void AnalysisSemantic::callExpressionCheck(CallExpressionHandle expr)
+void AnalysisSemantic::semantic(CallExpression *expr)
 {
     LOG(INFO) << "Call Expression Check";
 
@@ -192,13 +127,25 @@ void AnalysisSemantic::callExpressionCheck(CallExpressionHandle expr)
     // Check Argument
     for (auto item : expr->getArguments())
     {
-        expressionCheck(item);
+        item->semantic(this);
     }
 }
 
-void AnalysisSemantic::declarationStatementCheck(DeclarationStatementHandle expr)
+void AnalysisSemantic::semantic(DeclarationStatement *expr)
 {
     LOG(INFO) << "Declaration Statement Check";
+
+    if (expr->getType() && expr->getType()->isUnknownType())
+    {
+        auto newType = getModule()->findStructType(expr->getType()->getToken().getValue());
+        if (!newType)
+        {
+            expr->setError(Errors::getInstance().userTypeNotDefined.withToken(expr->getType()->getToken()));
+            return onError(expr);
+        }
+
+        expr->setType(newType);
+    }
 
     if (!expr->getValue())
     {
@@ -208,7 +155,7 @@ void AnalysisSemantic::declarationStatementCheck(DeclarationStatementHandle expr
         return;
     }
 
-    expressionCheck(expr->getValue());
+    expr->getValue()->semantic(this);
     if (expr->getValue()->isError())
     {
         return;
@@ -221,14 +168,14 @@ void AnalysisSemantic::declarationStatementCheck(DeclarationStatementHandle expr
 
     if (!expr->getType()->isEqual(expr->getValue()->getType()))
     {
-        expr->setError(Errors::getInstance().datatypeDifferent);
+        expr->setError(Errors::getInstance().datatypeDifferent.withToken(expr->getValue()->getToken()));
         return onError(expr);
     }
 
     getDeclarations().push_back(expr);
 }
 
-void AnalysisSemantic::variableExpressionCheck(VariableExpressionHandle expr)
+void AnalysisSemantic::semantic(VariableExpression *expr)
 {
     LOG(INFO) << "Variable Expression Check";
 
@@ -242,15 +189,15 @@ void AnalysisSemantic::variableExpressionCheck(VariableExpressionHandle expr)
     expr->setType(decl->getType());
 }
 
-void AnalysisSemantic::assignmentExpressionCheck(AssignmentExpressionHandle expr)
+void AnalysisSemantic::semantic(AssignmentExpression *expr)
 {
     LOG(INFO) << "Assignment Expression Check";
 
     auto lhs = expr->getLHS();
     auto rhs = expr->getRHS();
 
-    expressionCheck(lhs);
-    expressionCheck(rhs);
+    lhs->semantic(this);
+    rhs->semantic(this);
 
     if (!lhs->getType()->isEqual(rhs->getType()))
     {
@@ -267,24 +214,24 @@ void AnalysisSemantic::assignmentExpressionCheck(AssignmentExpressionHandle expr
     rhs->setAccess(AccessID::Allocation);
 }
 
-void AnalysisSemantic::comparisonExpressionCheck(ComparisonExpressionHandle expr)
+void AnalysisSemantic::semantic(ComparisonExpression *expr)
 {
     LOG(INFO) << "Comparison Expression Check";
 
-    expressionCheck(expr->getLHS());
-    expressionCheck(expr->getRHS());
+    expr->getLHS()->semantic(this);
+    expr->getRHS()->semantic(this);
 
     expr->setAccess(AccessID::Load);
     expr->setAccess(AccessID::Load);
 }
 
-void AnalysisSemantic::returnExpressionCheck(ReturnExpressionHandle expr)
+void AnalysisSemantic::semantic(ReturnExpression *expr)
 {
     LOG(INFO) << "Return Expression Check";
 
     if (expr->getValue() && !expr->getValue()->isError())
     {
-        expressionCheck(expr->getValue());
+        expr->getValue()->semantic(this);
 
         if (expr->getValue()->isError())
         {
@@ -295,14 +242,14 @@ void AnalysisSemantic::returnExpressionCheck(ReturnExpressionHandle expr)
     }
 }
 
-void AnalysisSemantic::breakExpressionCheck(BreakExpressionHandle expr)
+void AnalysisSemantic::semantic(BreakExpression *expr)
 {
     LOG(INFO) << "Break Expression Check";
 
     auto val = expr->getValue();
     if (val)
     {
-        expressionCheck(val);
+        val->semantic(this);
         if (val->isError())
         {
             return;
@@ -318,37 +265,37 @@ void AnalysisSemantic::breakExpressionCheck(BreakExpressionHandle expr)
     }
 }
 
-void AnalysisSemantic::loopingStatementCheck(LoopingStatementHandle expr)
+void AnalysisSemantic::semantic(LoopingStatement *expr)
 {
     LOG(INFO) << "Looping Statement Check";
 
     for (auto item : expr->getConditions())
     {
-        expressionCheck(item);
+        item->semantic(this);
     }
 
-    expressionCheck(expr->getBody());
+    expr->getBody()->semantic(this);
 }
 
-void AnalysisSemantic::continueExpressionCheck(ContinueExpressionHandle expr)
+void AnalysisSemantic::semantic(ContinueExpression *expr)
 {
     LOG(INFO) << "Continue Expression Check";
 
     if (expr->getValue())
     {
-        expressionCheck(expr->getValue());
+        expr->getValue()->semantic(this);
     }
 }
 
-void AnalysisSemantic::arithmeticExpressionCheck(ArithmeticExpressionHandle expr)
+void AnalysisSemantic::semantic(ArithmeticExpression *expr)
 {
     LOG(INFO) << "Arithmetic Expression Check";
 
     auto lhs = expr->getLHS();
     auto rhs = expr->getRHS();
 
-    expressionCheck(lhs);
-    expressionCheck(rhs);
+    lhs->semantic(this);
+    rhs->semantic(this);
 
     if (lhs->isError() || rhs->isError())
     {
@@ -364,9 +311,65 @@ void AnalysisSemantic::arithmeticExpressionCheck(ArithmeticExpressionHandle expr
     expr->setType(lhs->getType());
 }
 
-void AnalysisSemantic::unaryExpressionCheck(UnaryExpressionHandle expr)
+void AnalysisSemantic::semantic(UnaryExpression *expr)
 {
     LOG(INFO) << "Unary Expression Check";
 
-    expressionCheck(expr->getExpression());
+    expr->getExpression()->semantic(this);
+    if (expr->getOperator() == UnaryExpression::Borrow)
+    {
+        expr->setType(Type::getReferenceType(expr->getExpression()->getType()));
+    }
+    else if (expr->getOperator() == UnaryExpression::Dereference)
+    {
+        expr->setType(expr->getExpression()->getType());
+    }
+}
+
+void AnalysisSemantic::semantic(StructExpression *expr)
+{
+    LOG(INFO) << "Struct Expression Check";
+
+    auto newType = getModule()->findStructType(expr->getIdentifier());
+    if (!newType)
+    {
+        expr->setError(Errors::getInstance().userTypeNotDefined.withToken(expr->getToken()));
+        return onError(expr);
+    }
+
+    expr->setType(newType);
+    for (auto item : expr->getFields())
+    {
+        item->getValue()->semantic(this);
+    }
+}
+
+void AnalysisSemantic::semantic(FieldExpression *expr)
+{
+    LOG(INFO) << "Field Expression Check";
+
+    expr->getParentField()->semantic(this);
+    if (expr->getParentField()->isError())
+    {
+        return;
+    }
+
+    auto parentType = expr->getParentField()->getType();
+    if (!parentType->isStructType())
+    {
+        expr->setError(Errors::getInstance().shouldStructType.withToken(expr->getParentField()->getToken()));
+        return onError(expr);
+    }
+
+    assert(typeid(StructType) == typeid(*parentType) && "failed to cast type into struct type");
+
+    auto structType = static_pointer_cast<StructType>(parentType);
+    auto [idx, field] = structType->findTypeName(expr->getIdentifier());
+    if (idx == -1)
+    {
+        expr->setError(Errors::getInstance().fieldNotExist.withToken(expr->getToken()));
+        return onError(expr);
+    }
+
+    expr->setType(field->getType());
 }

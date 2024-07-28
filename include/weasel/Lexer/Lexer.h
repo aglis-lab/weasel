@@ -17,6 +17,7 @@ namespace weasel
         Token getNextToken(bool skipSpace = false);
         Token getCurrentToken() const { return _currentToken; }
         bool expect(TokenKind kind);
+        Token expect();
 
     private: // Private variable for creating currrent token and buffer
         char *_currentBuffer;

@@ -48,6 +48,20 @@ char *weasel::Lexer::getNextBuffer(size_t slide)
     return getCurrentBuffer();
 }
 
+Token weasel::Lexer::expect()
+{
+    auto lastBuffer = getCurrentBuffer();
+    auto ok = true;
+    auto token = getToken();
+    while (token.isKind(TokenKind::TokenSpaceNewline))
+    {
+        token = getToken();
+    }
+
+    setCurrentBuffer(lastBuffer);
+    return token;
+}
+
 bool weasel::Lexer::expect(weasel::TokenKind kind)
 {
     auto lastBuffer = getCurrentBuffer();

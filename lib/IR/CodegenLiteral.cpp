@@ -4,34 +4,46 @@
 
 llvm::Value *weasel::WeaselCodegen::codegen(BoolLiteralExpression *expr)
 {
+    LOG(INFO) << "Codegen Boolean Literal Expression";
+
     return getBuilder()->getInt1(expr->getValue());
 }
 
 llvm::Value *weasel::WeaselCodegen::codegen(CharLiteralExpression *expr)
 {
+    LOG(INFO) << "Codegen Char Literal Expression";
+
     return getBuilder()->getInt8(expr->getValue());
 }
 
 llvm::Value *weasel::WeaselCodegen::codegen(NumberLiteralExpression *expr)
 {
+    LOG(INFO) << "Codegen Number Literal Expression";
+
     auto typeVal = expr->getType()->codegen(this);
     return llvm::ConstantInt::get(typeVal, expr->getValue());
 }
 
 llvm::Value *weasel::WeaselCodegen::codegen(FloatLiteralExpression *expr)
 {
+    LOG(INFO) << "Codegen Float Literal Expression";
+
     auto floatTy = getBuilder()->getFloatTy();
     return llvm::ConstantFP::get(floatTy, expr->getValue());
 }
 
 llvm::Value *weasel::WeaselCodegen::codegen(DoubleLiteralExpression *expr)
 {
+    LOG(INFO) << "Codegen Double Literal Expression";
+
     auto doubleTy = getBuilder()->getDoubleTy();
     return llvm::ConstantFP::get(doubleTy, expr->getValue());
 }
 
 llvm::Value *weasel::WeaselCodegen::codegen(StringLiteralExpression *expr)
 {
+    LOG(INFO) << "Codegen String Literal Expression";
+
     auto *globalStringVariable = getBuilder()->CreateGlobalString(expr->getValue());
     std::vector<llvm::Value *> idxList = {
         this->getBuilder()->getInt64(0),
@@ -81,6 +93,8 @@ llvm::Value *weasel::WeaselCodegen::codegen(ArrayLiteralExpression *expr)
 
 llvm::Value *weasel::WeaselCodegen::codegen(NilLiteralExpression *expr)
 {
+    LOG(INFO) << "Codegen Nil Literal Expression";
+
     auto typeV = expr->getType()->codegen(this);
     return llvm::ConstantPointerNull::getNullValue(typeV);
 }

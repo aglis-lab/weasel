@@ -66,6 +66,10 @@ namespace weasel
         Error variableNotDefined = Error(102, ErrorKind::SemanticError, "variable isn't defined");
         Error lhsNotAssignable = Error(103, ErrorKind::SemanticError, "left expression isn't assignable");
         Error breakExpressionInvalid = Error(104, ErrorKind::SemanticError, "break expression should be return boolean type");
+        Error duplicateField = Error(105, ErrorKind::SemanticError, "duplicate field");
+        Error userTypeNotDefined = Error(106, ErrorKind::SemanticError, "user type not defined");
+        Error shouldStructType = Error(107, ErrorKind::SemanticError, "expression must have struct type");
+        Error fieldNotExist = Error(108, ErrorKind::SemanticError, "field isn't exist");
 
         // Internal Error
         Error missingImplementation = Error(200, ErrorKind::SemanticError, "internal error, missing expression implementation");

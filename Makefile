@@ -2,7 +2,7 @@
 rm.build:
 	rm -rf build
 
-preset: rm.build
+preset:
 	cmake --preset=default
 
 preset.release: rm.build
@@ -31,7 +31,7 @@ spirv.cross:
 spirv.clspv:
 	./config/spirv-clspv.sh
 
-# TEST
+##### TEST #####
 test.cross-test:
 	./build/test/cross-test/cross-test
 
@@ -49,3 +49,7 @@ test.spirv-test:
 
 test.glsl-test:
 	./build/test/glsl-test/glsl-test temp/test.we
+
+##### File Count #####
+count:
+	python3 file_count.py
