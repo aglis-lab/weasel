@@ -17,8 +17,7 @@ void weasel::Parser::parse()
 
         if (getCurrentToken().isKeyStruct())
         {
-            auto structType = parseStruct();
-            getModule()->addUserType(structType);
+            getModule()->addUserType(parseStruct());
         }
 
         if (getCurrentToken().isKeyFunction() || getCurrentToken().isKeyExtern())

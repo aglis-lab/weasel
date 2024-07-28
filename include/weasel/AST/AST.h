@@ -247,14 +247,14 @@ namespace weasel
         void setPreferConstant(bool v) { _isPreferConstant = v; }
         bool getIsPreferConstant() const { return _isPreferConstant; }
 
-        void setAlloc(llvm::AllocaInst *alloc) { _alloc = alloc; }
-        llvm::AllocaInst *getAlloc() const { return _alloc; }
+        void setAlloc(llvm::Value *alloc) { _alloc = alloc; }
+        llvm::Value *getAlloc() const { return _alloc; }
 
     private:
         vector<StructFieldHandle> _fields;
         bool _isPreferConstant = false;
 
-        llvm::AllocaInst *_alloc;
+        llvm::Value *_alloc;
     };
 
     // FieldExpression

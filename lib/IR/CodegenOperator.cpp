@@ -209,7 +209,7 @@ llvm::Value *weasel::WeaselCodegen::codegen(AssignmentExpression *expr)
     // Check if Struct Expression
     if (rhs->isStructExpression())
     {
-        static_cast<StructExpression *>(rhs.get())->setAlloc(llvm::dyn_cast<llvm::AllocaInst, llvm::Value>(lhsVal));
+        static_cast<StructExpression *>(rhs.get())->setAlloc(lhsVal);
         rhs->codegen(this);
     }
     else

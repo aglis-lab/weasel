@@ -445,9 +445,17 @@ llvm::Value *weasel::WeaselCodegen::codegen(StructExpression *expr)
         auto idxStruct = getBuilder()->getInt32(0);
         auto idxVal = getBuilder()->getInt32(idx);
         auto inbound = getBuilder()->CreateInBoundsGEP(typeV, alloc, {idxStruct, idxVal});
-        auto val = exprField->getValue()->codegen(this);
-
-        getBuilder()->CreateStore(val, inbound);
+        if (exprField->getValue()->isStructExpression())
+        {
+            auto temp = static_pointer_cast<StructExpression>(exprField->getValue());
+            temp->setAlloc(inbound);
+            temp->codegen(this);
+        }
+        else
+        {
+            auto val = exprField->getValue()->codegen(this);
+            getBuilder()->CreateStore(val, inbound);
+        }
     }
 
     // Remove PreferConstant Check

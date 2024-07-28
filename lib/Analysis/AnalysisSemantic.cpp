@@ -14,7 +14,6 @@ void AnalysisSemantic::semanticCheck()
             break;
         }
 
-        // TODO: Semantic for User Type
         semantic(item.get());
     }
 
@@ -36,7 +35,7 @@ void AnalysisSemantic::semantic(StructType *expr)
     // Check Duplicate Field
     unordered_set<string> checkName;
 
-    for (auto item : expr->getFields())
+    for (auto &item : expr->getFields())
     {
         if (checkName.count(item.getIdentifier()) > 0)
         {
@@ -45,6 +44,19 @@ void AnalysisSemantic::semantic(StructType *expr)
         }
 
         checkName.insert(item.getIdentifier());
+
+        if (item.getType()->isUnknownType())
+        {
+            auto structType = getModule()->findStructType(item.getIdentifier());
+            if (!structType)
+            {
+                expr->setError(Errors::getInstance().userTypeNotDefined.withToken(item.getType()->getToken()));
+                return onStructError(expr);
+            }
+
+            item.setType(structType);
+        }
+
         item.getType()->semantic(this);
     }
 }

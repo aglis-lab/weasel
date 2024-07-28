@@ -287,8 +287,16 @@ void Printer::print(StructExpression *expr)
 //
 void Printer::printAsOperand(StructExpression *expr)
 {
-    // fmt::print(_out, "{} {}", expr->getValue(), expr->getType()->getTypeName());
-    fmt::print(_out, "StructExpression : Not Implemented Yet");
+    fmt::print(_out, "{} {{", expr->getIdentifier());
+    for (auto &item : expr->getFields())
+    {
+        fmt::print(_out, "{}: ", item->getIdentifier());
+
+        item->getValue()->printAsOperand(this);
+        fmt::print(_out, ",");
+    }
+
+    fmt::print(_out, "}}");
 }
 
 void Printer::printAsOperand(NumberLiteralExpression *expr)

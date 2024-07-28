@@ -27,6 +27,17 @@
 namespace fs = std::__fs::filesystem;
 using namespace std;
 
+bool justEmitIr()
+{
+    auto val = getenv("emit_ir");
+    if (val == NULL)
+    {
+        return false;
+    }
+
+    return string_view(val) == "true";
+}
+
 int main(int argc, char *argv[])
 {
     // Init Loging
@@ -99,6 +110,11 @@ int main(int argc, char *argv[])
     // Debugging AST
     LOG(INFO) << "Write Weasel AST " << filename << "...\n";
     weasel::Printer(filePath + ".ir").print(&weaselModule);
+
+    if (justEmitIr())
+    {
+        return 0;
+    }
 
     // Initialize LLVM
     // llvm::InitializeAllTargetInfos();
