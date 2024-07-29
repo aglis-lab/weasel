@@ -3,7 +3,7 @@
 
 #include <cassert>
 
-void weasel::Parser::ignoreNewline()
+void Parser::ignoreNewline()
 {
     if (getCurrentToken().isNewline())
     {
@@ -41,7 +41,7 @@ TypeHandle Parser::parseDataType()
         {
             auto numStr = getCurrentToken().getValue();
 
-            assert(weasel::Number::isInteger(numStr) && "Number is not a valid integer");
+            assert(Number::isInteger(numStr) && "Number is not a valid integer");
 
             arraySize = (int)Number::toInteger(numStr);
 

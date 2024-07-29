@@ -3,12 +3,12 @@
 
 #include "weasel/IR/Codegen.h"
 
-llvm::Value *weasel::WeaselCodegen::codegen(weasel::GlobalVariable *expr)
+llvm::Value *WeaselCodegen::codegen(GlobalVariable *expr)
 {
     return nullptr;
 }
 
-llvm::Value *weasel::WeaselCodegen::castInteger(llvm::Value *val, llvm::Type *type, bool isSign)
+llvm::Value *WeaselCodegen::castInteger(llvm::Value *val, llvm::Type *type, bool isSign)
 {
     if (isSign)
     {
@@ -18,7 +18,7 @@ llvm::Value *weasel::WeaselCodegen::castInteger(llvm::Value *val, llvm::Type *ty
     return getBuilder()->CreateZExtOrTrunc(val, type);
 }
 
-llvm::Value *weasel::WeaselCodegen::codegen(weasel::Function *funAST)
+llvm::Value *WeaselCodegen::codegen(Function *funAST)
 {
     LOG(INFO) << "Codegen Function " << funAST->getIdentifier();
 
@@ -150,7 +150,7 @@ llvm::Value *weasel::WeaselCodegen::codegen(weasel::Function *funAST)
     return funLLVM;
 }
 
-llvm::Value *weasel::WeaselCodegen::codegen(MethodCallExpression *expr)
+llvm::Value *WeaselCodegen::codegen(MethodCallExpression *expr)
 {
     LOG(INFO) << "Codegen Method Call Function\n";
 
@@ -183,7 +183,7 @@ llvm::Value *weasel::WeaselCodegen::codegen(MethodCallExpression *expr)
     return getBuilder()->CreateCall(fun, argsV);
 }
 
-llvm::Value *weasel::WeaselCodegen::codegen(CallExpression *expr)
+llvm::Value *WeaselCodegen::codegen(CallExpression *expr)
 {
     LOG(INFO) << "Codegen Call Function";
 
@@ -214,7 +214,7 @@ llvm::Value *weasel::WeaselCodegen::codegen(CallExpression *expr)
     return getBuilder()->CreateCall(fun, argsV);
 }
 
-llvm::Value *weasel::WeaselCodegen::codegen(BreakExpression *expr)
+llvm::Value *WeaselCodegen::codegen(BreakExpression *expr)
 {
     assert(isBreakBlockExist() && "No looping found");
 
@@ -239,7 +239,7 @@ llvm::Value *weasel::WeaselCodegen::codegen(BreakExpression *expr)
     return brIns;
 }
 
-llvm::Value *weasel::WeaselCodegen::codegen(ContinueExpression *expr)
+llvm::Value *WeaselCodegen::codegen(ContinueExpression *expr)
 {
     assert(isContinueBlockExist() && "No looping found");
 
@@ -264,7 +264,7 @@ llvm::Value *weasel::WeaselCodegen::codegen(ContinueExpression *expr)
     return brIns;
 }
 
-llvm::Value *weasel::WeaselCodegen::codegen(ReturnExpression *expr)
+llvm::Value *WeaselCodegen::codegen(ReturnExpression *expr)
 {
     LOG(INFO) << "Codegen Return Function\n";
 
@@ -291,7 +291,7 @@ llvm::Value *weasel::WeaselCodegen::codegen(ReturnExpression *expr)
     return getBuilder()->CreateBr(_returnBlock);
 }
 
-llvm::Value *weasel::WeaselCodegen::codegen(VariableExpression *expr)
+llvm::Value *WeaselCodegen::codegen(VariableExpression *expr)
 {
     LOG(INFO) << "Codegen Variable";
 
@@ -328,7 +328,7 @@ llvm::Value *weasel::WeaselCodegen::codegen(VariableExpression *expr)
 
 // TODO: Pointer should be opaque type
 // TODO: String as array of byte
-llvm::Value *weasel::WeaselCodegen::codegen(ArrayExpression *expr)
+llvm::Value *WeaselCodegen::codegen(ArrayExpression *expr)
 {
     LOG(INFO) << "Codegen Array Expression";
 
@@ -377,41 +377,16 @@ llvm::Value *weasel::WeaselCodegen::codegen(ArrayExpression *expr)
     // return getBuilder()->CreateLoad(typeV, elemIndex);
 }
 
-llvm::Value *weasel::WeaselCodegen::codegen(FieldExpression *expr)
+llvm::Value *WeaselCodegen::codegen(FieldExpression *expr)
 {
     LOG(INFO) << "Codegen Field Expression";
 
-    shared_ptr<VariableExpression> parent;
-    if (expr->getParentField()->isFieldExpression())
-    {
-        parent = static_pointer_cast<FieldExpression>(expr->getParentField());
-    }
-    else
-    {
-        parent = static_pointer_cast<VariableExpression>(expr->getParentField());
-    }
+    expr->getParentField()->setAccess(AccessID::Allocation);
+    auto alloc = expr->getParentField()->codegen(this);
 
-    assert(parent && "parent field should be between variable expression or field expression");
+    assert(alloc && "allocation should be exist");
 
-    llvm::Value *alloc;
-    if (parent->isFieldExpression())
-    {
-        parent->setAccess(AccessID::Allocation);
-        alloc = parent->codegen(this);
-    }
-    else
-    {
-        auto attr = findAttribute(parent->getIdentifier());
-        alloc = attr.getValue();
-    }
-
-    if (parent->getType()->isReferenceType())
-    {
-        auto pointerType = llvm::PointerType::get(*getContext(), 0);
-        alloc = getBuilder()->CreateLoad(pointerType, alloc);
-    }
-
-    auto type = static_pointer_cast<StructType>(parent->getType());
+    auto type = static_pointer_cast<StructType>(expr->getParentField()->getType());
     auto typeV = type->codegen(this);
 
     auto fieldName = expr->getIdentifier();
@@ -429,7 +404,7 @@ llvm::Value *weasel::WeaselCodegen::codegen(FieldExpression *expr)
     return getBuilder()->CreateLoad(fieldV, inbound);
 }
 
-llvm::Value *weasel::WeaselCodegen::codegen(StructExpression *expr)
+llvm::Value *WeaselCodegen::codegen(StructExpression *expr)
 {
     LOG(INFO) << "Codegen Struct Expression...";
     if (expr->getFields().empty())
@@ -558,7 +533,7 @@ llvm::Value *weasel::WeaselCodegen::codegen(StructExpression *expr)
     return alloc;
 }
 
-llvm::Value *weasel::WeaselCodegen::codegen(DeclarationStatement *expr)
+llvm::Value *WeaselCodegen::codegen(DeclarationStatement *expr)
 {
     LOG(INFO) << "Codegen Declaration Statement";
 
@@ -576,26 +551,6 @@ llvm::Value *weasel::WeaselCodegen::codegen(DeclarationStatement *expr)
     // Set Default Value if no value expression
     if (valueExpr == nullptr)
     {
-        llvm::Constant *constantVal = nullptr;
-
-        // Default Value for integer
-        if (declType->isIntegerType())
-        {
-            constantVal = llvm::ConstantInt::get(declTypeV, 0, declType->isSigned());
-        }
-
-        // Default Value for Float
-        if (declType->isFloatType())
-        {
-            constantVal = llvm::ConstantFP::get(declTypeV, 0);
-        }
-
-        // Store Default Value
-        if (constantVal != nullptr)
-        {
-            getBuilder()->CreateStore(constantVal, alloc);
-        }
-
         // Add Variable Declaration to symbol table
         addAttribute(ContextAttribute::get(varName, alloc, AttributeKind::Variable));
 
@@ -646,7 +601,7 @@ llvm::Value *weasel::WeaselCodegen::codegen(DeclarationStatement *expr)
     return alloc;
 }
 
-llvm::Value *weasel::WeaselCodegen::codegen(CompoundStatement *expr)
+llvm::Value *WeaselCodegen::codegen(CompoundStatement *expr)
 {
     LOG(INFO) << "Codegen Compound Statement";
 
@@ -665,7 +620,7 @@ llvm::Value *weasel::WeaselCodegen::codegen(CompoundStatement *expr)
     return nullptr;
 }
 
-llvm::Value *weasel::WeaselCodegen::codegen(ConditionStatement *expr)
+llvm::Value *WeaselCodegen::codegen(ConditionStatement *expr)
 {
     auto conditions = expr->getConditions();
     auto statements = expr->getStatements();
@@ -732,7 +687,7 @@ llvm::Value *weasel::WeaselCodegen::codegen(ConditionStatement *expr)
     return nullptr;
 }
 
-llvm::Value *weasel::WeaselCodegen::codegen(LoopingStatement *expr)
+llvm::Value *WeaselCodegen::codegen(LoopingStatement *expr)
 {
     LOG(INFO) << "Codegen For Loop Statement";
 

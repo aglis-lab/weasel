@@ -7,7 +7,7 @@
 #include "weasel/IR/Codegen.h"
 
 // Unimplemented
-llvm::Value *weasel::WeaselCodegen::codegen(TypeCastExpression *expr)
+llvm::Value *WeaselCodegen::codegen(TypeCastExpression *expr)
 {
     auto type = expr->getType();
     auto rhs = expr->getValue();
@@ -46,12 +46,17 @@ llvm::Value *weasel::WeaselCodegen::codegen(TypeCastExpression *expr)
         }
     }
 
+    if (type->isIntegerType() && rhsType->isIntegerType())
+    {
+        return castInteger(rhsVal, typeVal, type->isSigned());
+    }
+
     assert(false && "Type Casting not supported");
 
     return nullptr;
 }
 
-llvm::Value *weasel::WeaselCodegen::codegen(ArithmeticExpression *expr)
+llvm::Value *WeaselCodegen::codegen(ArithmeticExpression *expr)
 {
     auto opToken = expr->getOperator();
     auto lhs = expr->getLHS();
@@ -168,7 +173,7 @@ llvm::Value *weasel::WeaselCodegen::codegen(ArithmeticExpression *expr)
 
 // TODO: Understanding Logical Operator
 // && ||
-llvm::Value *weasel::WeaselCodegen::codegen(LogicalExpression *expr)
+llvm::Value *WeaselCodegen::codegen(LogicalExpression *expr)
 {
     auto lhs = expr->getLHS();
     auto rhs = expr->getRHS();
@@ -191,7 +196,7 @@ llvm::Value *weasel::WeaselCodegen::codegen(LogicalExpression *expr)
     return nullptr;
 }
 
-llvm::Value *weasel::WeaselCodegen::codegen(AssignmentExpression *expr)
+llvm::Value *WeaselCodegen::codegen(AssignmentExpression *expr)
 {
     auto lhs = expr->getLHS();
     auto rhs = expr->getRHS();
@@ -243,7 +248,7 @@ llvm::Value *weasel::WeaselCodegen::codegen(AssignmentExpression *expr)
     return getBuilder()->CreateLoad(lhsTypeV, lhsVal);
 }
 
-llvm::Value *weasel::WeaselCodegen::codegen(ComparisonExpression *expr)
+llvm::Value *WeaselCodegen::codegen(ComparisonExpression *expr)
 {
     auto opToken = expr->getOperator();
     auto lhs = expr->getLHS();
@@ -251,8 +256,6 @@ llvm::Value *weasel::WeaselCodegen::codegen(ComparisonExpression *expr)
     auto lhsType = lhs->getType();
     auto rhsType = rhs->getType();
     auto exprType = expr->getType();
-
-    assert(lhsType->isEqual(rhsType) && "Data type look different");
 
     lhs->setAccess(AccessID::Load);
     rhs->setAccess(AccessID::Load);
@@ -348,10 +351,10 @@ llvm::Value *weasel::WeaselCodegen::codegen(ComparisonExpression *expr)
     }
 }
 
-llvm::Value *weasel::WeaselCodegen::codegen(UnaryExpression *expr)
+llvm::Value *WeaselCodegen::codegen(UnaryExpression *expr)
 {
     auto op = expr->getOperator();
-    auto rhs = expr->getExpression();
+    auto rhs = expr->getValue();
     auto rhsType = rhs->getType();
     auto rhsTypeVal = rhsType->codegen(this);
 

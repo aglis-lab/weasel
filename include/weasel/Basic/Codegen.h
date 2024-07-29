@@ -20,6 +20,8 @@ public:                                                      \
     virtual void printAsOperand(Printer *printer) XX;        \
     virtual void semantic(AnalysisSemantic *semantic) XX;
 
+// virtual bool isError() XX;
+
 #define CODEGEN_TYPE                                     \
 public:                                                  \
     virtual llvm::Type *codegen(WeaselCodegen *codegen); \

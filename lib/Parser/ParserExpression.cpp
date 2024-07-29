@@ -17,7 +17,7 @@ GlobalVariableHandle Parser::parseGlobalVariable()
     // return stmt;
 }
 
-// weasel::Expression *weasel::Parser::parseMethodCallExpression(Expression *implExpression)
+// Expression *Parser::parseMethodCallExpression(Expression *implExpression)
 // {
 //     return nullptr;
 
@@ -247,6 +247,12 @@ ExpressionHandle Parser::parseIdentifierExpression()
 {
     LOG(INFO) << "Parse Identifier Expression...";
 
+    // Open Paren Expression
+    if (getCurrentToken().isOpenParen())
+    {
+        return parseParenExpression();
+    }
+
     // Check Available Function
     if (expectToken(TokenKind::TokenDelimOpenParen))
     {
@@ -290,11 +296,11 @@ ExpressionHandle Parser::parseParenExpression()
 }
 
 // Default Type
-// weasel::Expression *weasel::Parser::parseArrayExpression()
+// Expression *Parser::parseArrayExpression()
 // {
 //     LOG(INFO) << "Parsing Array\n";
 
-//     std::vector<weasel::Expression *> items;
+//     std::vector<Expression *> items;
 
 //     getNextToken(); // eat [
 //     while (!getCurrentToken().isKind(TokenKind::TokenDelimCloseSquareBracket))
@@ -374,7 +380,7 @@ ExpressionHandle Parser::parsePrimaryExpression()
         return parseStructExpression();
     }
 
-    if (getCurrentToken().isIdentifier())
+    if (getCurrentToken().isIdentifier() || getCurrentToken().isOpenParen())
     {
         auto expr = parseIdentifierExpression();
         if (expr->isError())
@@ -392,11 +398,6 @@ ExpressionHandle Parser::parsePrimaryExpression()
         }
 
         return expr;
-    }
-
-    if (getCurrentToken().isOpenParen())
-    {
-        return parseParenExpression();
     }
 
     // if (getCurrentToken().isOpenSquare())
@@ -487,11 +488,12 @@ ExpressionHandle Parser::parseExpression()
 
 ExpressionHandle Parser::parseExpressionOperator(unsigned precOrder, ExpressionHandle lhs)
 {
-    LOG(INFO) << "Parse Expression Operator...";
+    LOG(INFO) << "Parse Expression Operator";
 
     while (true)
     {
         auto binOp = getCurrentToken();
+
         if (!binOp.isOperator())
         {
             return lhs;
@@ -568,7 +570,7 @@ ExpressionHandle Parser::parseReturnExpression()
     auto retToken = getCurrentToken();
     if (getNextToken().isNewline())
     {
-        return make_shared<ReturnExpression>(retToken, weasel::Type::getVoidType());
+        return make_shared<ReturnExpression>(retToken, Type::getVoidType());
     }
 
     auto exprValue = parseExpression();

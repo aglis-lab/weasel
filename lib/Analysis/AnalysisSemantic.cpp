@@ -3,6 +3,8 @@
 
 #include <weasel/Analysis/AnalysisSemantic.h>
 
+#define SEMANTIC(X) LOG(INFO) << "Semantic Check " << X
+
 void AnalysisSemantic::semanticCheck()
 {
     // Struct Type
@@ -73,6 +75,15 @@ void AnalysisSemantic::semantic(ArgumentExpression *expr)
 
 void AnalysisSemantic::semantic(Type *expr)
 {
+    if (expr->isPointerType() && expr->getContainedType()->isUnknownType())
+    {
+        auto structType = getModule()->findStructType(expr->getContainedType()->getToken().getValue());
+
+        // TODO: Create Better Error Handling with more generic and understanable error
+        assert(structType && "underlying type should be exist");
+
+        expr->setContainedType(structType);
+    }
 }
 
 void AnalysisSemantic::semantic(Function *fun)
@@ -179,20 +190,40 @@ void AnalysisSemantic::semantic(DeclarationStatement *expr)
 {
     LOG(INFO) << "Declaration Statement Check";
 
-    if (expr->getType() && expr->getType()->isUnknownType())
-    {
-        auto newType = getModule()->findStructType(expr->getType()->getToken().getValue());
-        if (!newType)
-        {
-            expr->setError(Errors::getInstance().userTypeNotDefined.withToken(expr->getType()->getToken()));
-            return onError(expr);
-        }
+    assert((expr->getType() || expr->getValue()->getType()) && "one of type should be not empty");
 
-        expr->setType(newType);
+    if (expr->getType())
+    {
+        expr->getType()->semantic(this);
     }
 
     if (!expr->getValue())
     {
+        // Default value for pointer
+        if (expr->getType()->isPointerType())
+        {
+            expr->setValue(make_shared<NilLiteralExpression>(Token::create()));
+            expr->getValue()->getType()->setContainedType(expr->getType()->getContainedType());
+        }
+
+        // Default value for Integer
+        if (expr->getType()->isIntegerType())
+        {
+            expr->setValue(make_shared<NumberLiteralExpression>(Token::create(), 0, expr->getType()->getTypeWidth()));
+        }
+
+        // Default Value for float
+        if (expr->getType()->isFloatType())
+        {
+            expr->setValue(make_shared<FloatLiteralExpression>(Token::create(), 0));
+        }
+
+        // Default Value for Double
+        if (expr->getType()->isDoubleType())
+        {
+            expr->setValue(make_shared<DoubleLiteralExpression>(Token::create(), 0));
+        }
+
         getDeclarations().push_back(expr);
         return;
     }
@@ -239,7 +270,16 @@ void AnalysisSemantic::semantic(AssignmentExpression *expr)
     auto rhs = expr->getRHS();
 
     lhs->semantic(this);
+    if (lhs->isError())
+    {
+        return;
+    }
+
     rhs->semantic(this);
+    if (rhs->isError())
+    {
+        return;
+    }
 
     if (!lhs->getType()->isEqual(rhs->getType()))
     {
@@ -357,14 +397,21 @@ void AnalysisSemantic::semantic(UnaryExpression *expr)
 {
     LOG(INFO) << "Unary Expression Check";
 
-    expr->getExpression()->semantic(this);
+    expr->setAccess(expr->getValue()->getAccess());
+    expr->getValue()->semantic(this);
     if (expr->getOperator() == UnaryExpression::Borrow)
     {
-        expr->setType(Type::getReferenceType(expr->getExpression()->getType()));
+        expr->setType(Type::getReferenceType(expr->getValue()->getType()));
     }
     else if (expr->getOperator() == UnaryExpression::Dereference)
     {
-        expr->setType(expr->getExpression()->getType());
+        if (!expr->getValue()->getType()->isPointerType())
+        {
+            expr->setError(Errors::getInstance().failedDereference.withToken(expr->getValue()->getToken()));
+            return onError(expr);
+        }
+
+        expr->setType(expr->getValue()->getType()->getContainedType());
     }
 }
 
@@ -396,6 +443,16 @@ void AnalysisSemantic::semantic(FieldExpression *expr)
         return;
     }
 
+    // Check if parent field is a pointer
+    // Let just dereference it
+    if (expr->getParentField()->getType()->isPointerType())
+    {
+        expr->setParentField(make_shared<UnaryExpression>(Token::create(), UnaryExpression::Dereference, expr->getParentField()));
+        expr->getParentField()->semantic(this);
+    }
+
+    assert(!expr->isError() && "expression should be valid code");
+
     auto parentType = expr->getParentField()->getType();
     if (!parentType->isStructType())
     {
@@ -421,5 +478,13 @@ void AnalysisSemantic::semantic(TypeCastExpression *expr)
     LOG(INFO) << "Type Cast Expression Check";
 
     expr->getValue()->semantic(this);
+    expr->getValue()->getType()->semantic(this);
+    expr->getType()->semantic(this);
+}
+
+void AnalysisSemantic::semantic(NilLiteralExpression *expr)
+{
+    SEMANTIC("NilLiteralExpression");
+
     expr->getType()->semantic(this);
 }

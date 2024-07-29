@@ -70,6 +70,7 @@ namespace weasel
         Error userTypeNotDefined = Error(106, ErrorKind::SemanticError, "user type not defined");
         Error shouldStructType = Error(107, ErrorKind::SemanticError, "expression must have struct type");
         Error fieldNotExist = Error(108, ErrorKind::SemanticError, "field isn't exist");
+        Error failedDereference = Error(109, ErrorKind::SemanticError, "can't make dereference operation");
 
         // Internal Error
         Error missingImplementation = Error(200, ErrorKind::SemanticError, "internal error, missing expression implementation");

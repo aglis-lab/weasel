@@ -266,7 +266,7 @@ void StringLiteralExpression::printAsOperand(Printer *printer)
 // NilLiteralExpression
 void NilLiteralExpression::printAsOperand(Printer *printer)
 {
-    fmt::print("Unimplemented nil literal printer");
+    printer->printAsOperand(this);
 }
 
 // Statement

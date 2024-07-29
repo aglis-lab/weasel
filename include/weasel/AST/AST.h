@@ -13,6 +13,7 @@
 #include <weasel/AST/LInkage.h>
 
 using namespace std;
+using namespace weasel;
 
 // Expression Base Type
 namespace weasel
@@ -60,8 +61,12 @@ namespace weasel
         bool isCompoundExpression() const;
         bool isStructExpression() const;
         bool isFieldExpression() const;
+        bool isNilExpression() const;
 
-        bool isConstant() const { return _isConstant; }
+        bool isConstant() const
+        {
+            return _isConstant;
+        }
 
         void setAccess(AccessID accessID) { _accessID = accessID; }
         AccessID getAccess() const { return _accessID; }
@@ -385,7 +390,7 @@ namespace weasel
         OVERRIDE_CODEGEN_EXPRESSION
 
     public:
-        NilLiteralExpression(Token token) : LiteralExpression(token, Type::getPointerType(Type::getIntegerType(8, false))) {}
+        NilLiteralExpression(Token token) : LiteralExpression(token, Type::getPointerType(Type::getVoidType())) {}
     };
 
     // Array Expression
@@ -517,16 +522,16 @@ namespace weasel
         };
 
     public:
-        UnaryExpression(Token token, Operator op, ExpressionHandle rhs) : Expression(token), _rhs(rhs), _op(op) {}
+        UnaryExpression(Token token, Operator op, ExpressionHandle value) : Expression(token), _value(value), _op(op) {}
         UnaryExpression(Token token, Operator op) : Expression(token), _op(op) {}
 
-        void setRHS(ExpressionHandle rhs) { _rhs = rhs; }
+        void setValue(ExpressionHandle value) { _value = value; }
+        ExpressionHandle getValue() { return _value; }
 
-        ExpressionHandle getExpression() { return _rhs; }
         Operator getOperator() const { return _op; }
 
     private:
-        ExpressionHandle _rhs;
+        ExpressionHandle _value;
         Operator _op;
     };
 

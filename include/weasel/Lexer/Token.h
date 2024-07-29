@@ -23,29 +23,39 @@ namespace weasel
         TokenIdentifier,
 
         // Keyword
-        TokenKeyImpl,             // impl // user type or block struct traits
-        TokenKeyThis,             // referencing impl struct
-        TokenKeyParallel,         // parallel // heterogeneous support
-        TokenKeyKernel,           // kernel // heterogeneous kernel type
-        TokenKeyStruct,           // struct
-        TokenKeyInline,           // For Always attribute
-        TokenKeyFun,              // function
-        TokenKeyExtern,           // extern
-        TokenKeyReturn,           // return
-        TokenKeyIf,               // if // Condition
-        TokenKeyElse,             // else // Condition
-        TokenKeyFor,              // for // Looping
-        TokenKeyBreak,            // break // looping
-        TokenKeyContinue,         // continue //looping
+        TokenKeyParallel, // parallel // heterogeneous support
+        TokenKeyKernel,   // kernel // heterogeneous kernel type
+
+        TokenKeyImpl, // impl // user type or block struct traits
+        TokenKeyThis, // referencing impl struct
+
+        TokenKeyStruct, // struct
+        TokenKeyInline, // For Always attribute
+
+        TokenKeyFun,    // function
+        TokenKeyExtern, // extern
+        TokenKeyReturn, // return
+
+        TokenKeyIf,   // if // Condition
+        TokenKeyElse, // else // Condition
+
+        TokenKeyFor,      // for // Looping
+        TokenKeyBreak,    // break // looping
+        TokenKeyContinue, // continue //looping
+
         TokenKeyStartDeclaration, // START DECLARATION
         TokenKeyLet,              // let
         TokenKeyFinal,            // final
         TokenKeyConst,            // const
         TokenKeyEndDeclaration,   // END DECLARATION
-        TokenKeyAssert,           // assert // debugging
-        TokenKeyDefer,            // defer
-        TokenKeyReadOnly,         // readonly
-        TokenKeyWriteOnly,        // writeonly
+
+        TokenKeyAssert,    // assert // debugging
+        TokenKeyDefer,     // defer
+        TokenKeyReadOnly,  // readonly
+        TokenKeyWriteOnly, // writeonly
+
+        // Compiler Keyword Information
+        TokenKeySizeof, // _sizeof value or _sizeof(value)
 
         // Data Literal -> Value of data type
         TokenLitNil,

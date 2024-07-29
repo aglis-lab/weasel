@@ -3,7 +3,7 @@
 
 using namespace weasel;
 
-#define UNIMPLEMENTED LOG(INFO) << "Unimplemented Analysis Semantic";
+#define UNIMPLEMENTED(XX) LOG(INFO) << "Unimplemented Analysis Semantic " << XX;
 
 void ArgumentExpression::semantic(AnalysisSemantic *analysis)
 {
@@ -12,52 +12,52 @@ void ArgumentExpression::semantic(AnalysisSemantic *analysis)
 
 void GlobalVariable::semantic(AnalysisSemantic *analysis)
 {
-    UNIMPLEMENTED;
+    UNIMPLEMENTED("GlobalVariable");
 }
 
 void MethodCallExpression::semantic(AnalysisSemantic *analysis)
 {
-    UNIMPLEMENTED;
+    UNIMPLEMENTED("MethodCallExpression");
 }
 
 void NumberLiteralExpression::semantic(AnalysisSemantic *analysis)
 {
-    UNIMPLEMENTED;
+    UNIMPLEMENTED("NumberLiteralExpression");
 }
 
 void DoubleLiteralExpression::semantic(AnalysisSemantic *analysis)
 {
-    UNIMPLEMENTED;
+    UNIMPLEMENTED("DoubleLiteralExpression");
 }
 
 void FloatLiteralExpression::semantic(AnalysisSemantic *analysis)
 {
-    UNIMPLEMENTED;
+    UNIMPLEMENTED("FloatLiteralExpression");
 }
 
 void BoolLiteralExpression::semantic(AnalysisSemantic *analysis)
 {
-    UNIMPLEMENTED;
+    UNIMPLEMENTED("BoolLiteralExpression");
 }
 
 void CharLiteralExpression::semantic(AnalysisSemantic *analysis)
 {
-    UNIMPLEMENTED;
+    UNIMPLEMENTED("CharLiteralExpression");
 }
 
 void ArrayLiteralExpression::semantic(AnalysisSemantic *analysis)
 {
-    UNIMPLEMENTED;
+    UNIMPLEMENTED("ArrayLiteralExpression");
 }
 
 void StringLiteralExpression::semantic(AnalysisSemantic *analysis)
 {
-    UNIMPLEMENTED;
+    UNIMPLEMENTED("StringLiteralExpression");
 }
 
 void NilLiteralExpression::semantic(AnalysisSemantic *analysis)
 {
-    UNIMPLEMENTED;
+    analysis->semantic(this);
 }
 
 void DeclarationStatement::semantic(AnalysisSemantic *analysis)
@@ -77,7 +77,7 @@ void FieldExpression::semantic(AnalysisSemantic *analysis)
 
 void ArrayExpression::semantic(AnalysisSemantic *analysis)
 {
-    UNIMPLEMENTED;
+    UNIMPLEMENTED("ArrayExpression");
 }
 
 void ArithmeticExpression::semantic(AnalysisSemantic *analysis)
@@ -87,7 +87,7 @@ void ArithmeticExpression::semantic(AnalysisSemantic *analysis)
 
 void LogicalExpression::semantic(AnalysisSemantic *analysis)
 {
-    UNIMPLEMENTED;
+    UNIMPLEMENTED("LogicalExpression");
 }
 
 void AssignmentExpression::semantic(AnalysisSemantic *analysis)
@@ -127,7 +127,7 @@ void StructExpression::semantic(AnalysisSemantic *analysis)
 
 void Function::semantic(AnalysisSemantic *analysis)
 {
-    UNIMPLEMENTED;
+    UNIMPLEMENTED("Function");
 }
 
 void UnaryExpression::semantic(AnalysisSemantic *analysis)
@@ -137,7 +137,7 @@ void UnaryExpression::semantic(AnalysisSemantic *analysis)
 
 void TypeCastExpression::semantic(AnalysisSemantic *analysis)
 {
-    UNIMPLEMENTED;
+    analysis->semantic(this);
 }
 
 void CompoundStatement::semantic(AnalysisSemantic *analysis)

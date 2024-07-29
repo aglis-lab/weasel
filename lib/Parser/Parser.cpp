@@ -1,7 +1,7 @@
 #include "weasel/Parser/Parser.h"
 
 // parse
-void weasel::Parser::parse()
+void Parser::parse()
 {
     while (!getNextToken().isEnd())
     {
@@ -42,7 +42,7 @@ void weasel::Parser::parse()
 }
 
 // Get Next Token Until
-weasel::Token weasel::Parser::getNextTokenUntil(weasel::TokenKind kind)
+Token Parser::getNextTokenUntil(TokenKind kind)
 {
     if (getCurrentToken().isKind(kind))
     {

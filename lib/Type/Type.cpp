@@ -116,6 +116,11 @@ tuple<int, optional<StructTypeField>> StructType::findTypeName(const string &typ
 
 int Type::getTypeWidth()
 {
+    if (isPointerType())
+    {
+        return 64;
+    }
+
     if (isStructType())
     {
         auto val = 0;
@@ -129,11 +134,6 @@ int Type::getTypeWidth()
         return val;
     }
 
-    if (isPointerType())
-    {
-        return 64;
-    }
-
     return _width;
 }
 
@@ -141,16 +141,6 @@ bool Type::isEqual(TypeHandle type)
 {
     if (!type)
     {
-        return false;
-    }
-
-    if (!(getTypeID() == type->getTypeID()))
-    {
-        if (getTypeID() == TypeID::PointerType && type->getTypeID() == TypeID::ReferenceType)
-        {
-            return getContainedType()->isEqual(type->getContainedType());
-        }
-
         return false;
     }
 

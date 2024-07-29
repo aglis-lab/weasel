@@ -5,13 +5,15 @@
 
 #define WEASEL_FULL_VERSION "weasel version 0.1.0-experimental"
 
-llvm::Metadata *weasel::Metadata::getFlagsMetadata()
+using namespace weasel;
+
+llvm::Metadata *Metadata::getFlagsMetadata()
 {
     // TODO: return getBuilder()->createConstant(llvm::ConstantInt::get(llvm::Type::getInt32Ty(*getContext()), 4));
     return getMDBuilder()->createConstant(llvm::Constant::getIntegerValue(llvm::Type::getInt32Ty(*getContext()), llvm::APInt(32, 4, false)));
 }
 
-llvm::IntrinsicInst *weasel::Metadata::createDbgDeclare(llvm::IRBuilder<> *builder, llvm::Module *module, llvm::Value *value, llvm::Metadata *variableMeta, llvm::Metadata *locationMeta)
+llvm::IntrinsicInst *Metadata::createDbgDeclare(llvm::IRBuilder<> *builder, llvm::Module *module, llvm::Value *value, llvm::Metadata *variableMeta, llvm::Metadata *locationMeta)
 {
     // DILocalVariable* iVar = DILocalVariable::Create(GetGlobalContext(), "i", nullptr, nullptr, 0, false, true, 4);
     // llvm::DILocalVariable* iVar = llvm::DILocalVariable::get(GetGlobalContext(), "i", nullptr, nullptr, 0, false, true, 4);
@@ -49,12 +51,12 @@ llvm::IntrinsicInst *weasel::Metadata::createDbgDeclare(llvm::IRBuilder<> *build
     // return llvm::dyn_cast<llvm::IntrinsicInst>(dgbDeclare);
 }
 
-llvm::Metadata *weasel::Metadata::getVersionMetadata()
+llvm::Metadata *Metadata::getVersionMetadata()
 {
     return getMDBuilder()->createString(WEASEL_FULL_VERSION);
 }
 
-llvm::MDNode *weasel::Metadata::getCLVersionMetadata()
+llvm::MDNode *Metadata::getCLVersionMetadata()
 {
     auto metas = std::vector<llvm::Metadata *>{
         // getBuilder()->createConstant(llvm::ConstantInt::get(llvm::Type::getInt32Ty(*getContext()), 2)),

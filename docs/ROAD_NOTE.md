@@ -12,7 +12,7 @@
 
 - [x] Migrate System Install into vcpkg
 - [x] Add Token into Type (partially done)
-- [ ] Optimize Type Codegen
+- [ ] Optimize Type Codegen (Save data type codegen - single type for all related expressions)
 - [x] Make Parser can't detect semantic error
 - [x] LLVM 17 Pointer Type System
 - [x] Change ArgumentType into Expression
@@ -26,10 +26,12 @@
 
 - [ ] Remove File Buffer
 - [x] Nested Struct Expression
-- [ ] Nested Field Expression
+- [x] Nested Field Expression
 - [ ] Improve Environment Variable (More stylish setup for env variable)
+- [ ] Circular Struct Depedencies
 - [x] Add Error into Expression as AST Error or Semantic Error
 - [ ] Add Error to Token as Token Error
+- [ ] Add token into every Type
 - [x] Integrate Error into the Parser
 - [x] Create LSP Example
 - [x] Create standalone Analysis System

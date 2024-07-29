@@ -21,13 +21,13 @@
 #include <weasel/Passes/Passes.h>
 #include <weasel/Metadata/Metadata.h>
 
-weasel::Driver::Driver(weasel::WeaselCodegen *codegen, Module *module)
+Driver::Driver(WeaselCodegen *codegen, Module *module)
 {
     _codegen = codegen;
     _module = module;
 }
 
-bool weasel::Driver::compile(std::string defTargetTriple)
+bool Driver::compile(std::string defTargetTriple)
 {
     LOG(INFO) << "Try Codegen...\n";
 
@@ -104,7 +104,7 @@ bool weasel::Driver::compile(std::string defTargetTriple)
     return true;
 }
 
-void weasel::Driver::createIR(std::string outputFile) const
+void Driver::createIR(std::string outputFile) const
 {
     std::error_code errCode;
     llvm::raw_fd_ostream dest(outputFile + ".ir", errCode, llvm::sys::fs::OF_None);
@@ -118,7 +118,7 @@ void weasel::Driver::createIR(std::string outputFile) const
     dest.flush();
 }
 
-void weasel::Driver::createObject(std::string outputFile) const
+void Driver::createObject(std::string outputFile) const
 {
     std::string err;
     std::error_code errCode;

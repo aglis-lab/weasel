@@ -1,6 +1,6 @@
 #include "weasel/Lexer/Lexer.h"
 
-weasel::Token weasel::Lexer::getType(char *startBuffer, char *endBuffer)
+Token Lexer::getType(char *startBuffer, char *endBuffer)
 {
     TokenKind kind;
     if (compareBuffer(startBuffer, endBuffer, "rune"))

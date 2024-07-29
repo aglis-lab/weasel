@@ -324,17 +324,17 @@ void Printer::printAsOperand(MethodCallExpression *expr)
 
 void Printer::printAsOperand(FieldExpression *expr)
 {
-    PRINT_OPERAND("FieldExpression");
+    PRINT_OPERAND("FieldExpression") << " " << typeid(*expr->getParentField().get()).name();
 
-    if (typeid(FieldExpression) == typeid(*expr->getParentField().get()))
-    {
-        fmt::print(_out, "(");
-        static_pointer_cast<FieldExpression>(expr->getParentField())->printAsOperand(this);
-        fmt::print(_out, ")");
-    }
-    else if (typeid(VariableExpression) == typeid(*expr->getParentField().get()))
+    if (typeid(VariableExpression) == typeid(*expr->getParentField().get()))
     {
         fmt::print(_out, "{}", static_pointer_cast<VariableExpression>(expr->getParentField())->getIdentifier());
+    }
+    else
+    {
+        fmt::print(_out, "(");
+        expr->getParentField()->printAsOperand(this);
+        fmt::print(_out, ")");
     }
 
     fmt::print(_out, ".{} {}", expr->getIdentifier(), expr->getType()->getTypeName());
@@ -488,8 +488,9 @@ void Printer::printAsOperand(UnaryExpression *expr)
         op = "&";
     }
 
-    fmt::print(_out, "{}", op);
-    expr->getExpression()->printAsOperand(this);
+    fmt::print(_out, "{}(", op);
+    expr->getValue()->printAsOperand(this);
+    fmt::print(_out, ") {}", expr->getType()->getTypeName());
 }
 
 void Printer::printAsOperand(DeclarationStatement *expr)
@@ -569,4 +570,11 @@ void Printer::printAsOperand(TypeCastExpression *expr)
 
     expr->getValue()->printAsOperand(this);
     fmt::print(_out, " as {}", expr->getType()->getTypeName());
+}
+
+void Printer::printAsOperand(NilLiteralExpression *expr)
+{
+    PRINT_OPERAND("NilLiteralExpression");
+
+    fmt::print(_out, "nil");
 }

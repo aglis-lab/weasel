@@ -29,7 +29,7 @@ namespace weasel
     {
         // Weasel Package
     private:
-        weasel::Metadata _metaData;
+        Metadata _metaData;
 
     public:
         WeaselCodegen(llvm::LLVMContext *context, const std::string &moduleName);

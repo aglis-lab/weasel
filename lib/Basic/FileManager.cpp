@@ -13,14 +13,16 @@
 #include <iostream>
 #include "weasel/Basic/FileManager.h"
 
+using namespace weasel;
+
 // instead of using ifstream
-weasel::FileManager::FileManager(const std::string &filePath)
+FileManager::FileManager(const std::string &filePath)
 {
     _startBuffer = mapFile(filePath.c_str(), &_size);
     _endBuffer = _startBuffer + _size;
 }
 
-char *weasel::FileManager::mapFile(const char *path, size_t *length)
+char *FileManager::mapFile(const char *path, size_t *length)
 {
     char *data = NULL;
     size_t size = 0;

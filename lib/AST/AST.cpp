@@ -1,23 +1,28 @@
 #include <weasel/AST/AST.h>
 #include <weasel/IR/Codegen.h>
 
-bool weasel::Expression::isCompoundExpression() const
+bool Expression::isCompoundExpression() const
 {
     return typeid(CompoundStatement) == typeid(*this);
 }
 
-bool weasel::Expression::isStructExpression() const
+bool Expression::isStructExpression() const
 {
     return typeid(StructExpression) == typeid(*this);
 }
 
-bool weasel::Expression::isFieldExpression() const
+bool Expression::isFieldExpression() const
 {
     return typeid(FieldExpression) == typeid(*this);
 }
 
+bool Expression::isNilExpression() const
+{
+    return typeid(NilLiteralExpression) == typeid(*this);
+}
+
 // Function
-std::string weasel::Function::getManglingName()
+std::string Function::getManglingName()
 {
     if (this->isExtern() || this->isMain())
     {

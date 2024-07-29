@@ -7,7 +7,7 @@
 #include "weasel/IR/Codegen.h"
 
 // Weasel User Type System to llvm Type System
-llvm::Type *weasel::WeaselCodegen::codegen(weasel::StructType *structExpr)
+llvm::Type *WeaselCodegen::codegen(StructType *structExpr)
 {
     auto types = structExpr->getFields();
     auto typesVal = std::vector<llvm::Type *>();
@@ -40,7 +40,7 @@ llvm::Type *weasel::WeaselCodegen::codegen(weasel::StructType *structExpr)
 }
 
 // Weasel Type System to llvm Type System
-llvm::Type *weasel::WeaselCodegen::codegen(weasel::Type *type)
+llvm::Type *WeaselCodegen::codegen(Type *type)
 {
     if (type->isVoidType())
     {

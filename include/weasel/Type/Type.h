@@ -98,6 +98,7 @@ namespace weasel
         bool isPossibleStructType();
 
         unsigned getContainedWidth() const { return _innerType->getTypeWidth(); }
+        void setContainedType(TypeHandle newType) { _innerType = newType; }
         TypeHandle getContainedType() { return _innerType; }
 
         // Generator

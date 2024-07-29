@@ -138,7 +138,7 @@ FunctionHandle Parser::parseDeclareFunction()
     return fun;
 }
 
-void weasel::Parser::parseImplFunctions()
+void Parser::parseImplFunctions()
 {
     LOG(INFO) << "Parse Impl Functions...";
 
