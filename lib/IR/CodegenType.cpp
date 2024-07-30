@@ -32,7 +32,7 @@ llvm::Type *WeaselCodegen::codegen(StructType *structExpr)
             }
         }
 
-        typesVal.push_back(item.getType()->codegen(this));
+        typesVal.push_back(item.getType()->accept(this));
     }
 
     structType->setBody(typesVal);
@@ -67,7 +67,7 @@ llvm::Type *WeaselCodegen::codegen(Type *type)
         auto containedType = type->getContainedType();
         assert(containedType != nullptr);
 
-        auto containedTypeV = containedType->codegen(this);
+        auto containedTypeV = containedType->accept(this);
         assert(containedTypeV != nullptr);
 
         if (type->getTypeWidth() == -1)
@@ -81,7 +81,7 @@ llvm::Type *WeaselCodegen::codegen(Type *type)
     if (type->isPointerType() || type->isReferenceType())
     {
         auto containedType = type->getContainedType();
-        auto containedTypeV = containedType->codegen(this);
+        auto containedTypeV = containedType->accept(this);
 
         return llvm::PointerType::get(containedTypeV, 0);
     }

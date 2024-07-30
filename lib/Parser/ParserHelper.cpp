@@ -23,7 +23,7 @@ TypeHandle Parser::parseDataType()
         return Type::getPointerType(move(containedType));
     }
 
-    // Address of type
+    // Reference of type
     if (getCurrentToken().isKind(TokenKind::TokenOperatorAnd))
     {
         getNextToken(); // eat '&'

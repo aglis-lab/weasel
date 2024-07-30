@@ -42,6 +42,8 @@ namespace weasel
         void semantic(StructType *expr);
         void semantic(Type *expr);
 
+        void unknownType(Expression *expr);
+
         void onError(Expression *expr)
         {
             getErrors().push_back(expr);

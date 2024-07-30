@@ -20,7 +20,7 @@ llvm::Value *WeaselCodegen::codegen(NumberLiteralExpression *expr)
 {
     LOG(INFO) << "Codegen Number Literal Expression";
 
-    auto typeVal = expr->getType()->codegen(this);
+    auto typeVal = expr->getType()->accept(this);
     return llvm::ConstantInt::get(typeVal, expr->getValue());
 }
 
@@ -59,7 +59,7 @@ llvm::Value *WeaselCodegen::codegen(ArrayLiteralExpression *expr)
 
     auto items = expr->getItems();
     auto numItem = items.size();
-    auto itemType = expr->getType()->getContainedType()->codegen(this);
+    auto itemType = expr->getType()->getContainedType()->accept(this);
     auto arrayType = llvm::ArrayType::get(itemType, numItem);
     auto valueNull = llvm::Constant::getNullValue(arrayType);
     auto valueArr = std::vector<llvm::Constant *>(numItem);
@@ -67,7 +67,7 @@ llvm::Value *WeaselCodegen::codegen(ArrayLiteralExpression *expr)
 
     while (auto *c = valueNull->getAggregateElement(i))
     {
-        if (auto *constVal = llvm::dyn_cast<llvm::Constant>(items[i]->codegen(this)))
+        if (auto *constVal = llvm::dyn_cast<llvm::Constant>(items[i]->accept(this)))
         {
             valueArr[i] = constVal;
         }
@@ -95,6 +95,6 @@ llvm::Value *WeaselCodegen::codegen(NilLiteralExpression *expr)
 {
     LOG(INFO) << "Codegen Nil Literal Expression";
 
-    auto typeV = expr->getType()->codegen(this);
+    auto typeV = expr->getType()->accept(this);
     return llvm::ConstantPointerNull::getNullValue(typeV);
 }

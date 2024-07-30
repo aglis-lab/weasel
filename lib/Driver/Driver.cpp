@@ -44,7 +44,7 @@ bool Driver::compile(std::string defTargetTriple)
         }
 
         // Codegen Function
-        auto obj = item->codegen(_codegen);
+        auto obj = item->accept(_codegen);
         assert(obj != nullptr);
 
         // Casting function obj to llvm function

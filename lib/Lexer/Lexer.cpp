@@ -2,21 +2,7 @@
 
 bool Lexer::compareBuffer(char *startBuffer, char *endBuffer, const char *compareBuffer)
 {
-    auto length = endBuffer - startBuffer;
-    if (length != ((long)strlen(compareBuffer)))
-    {
-        return false;
-    }
-
-    for (auto i = 0; i < length; i++)
-    {
-        if (startBuffer[i] != compareBuffer[i])
-        {
-            return false;
-        }
-    }
-
-    return true;
+    return string_view(startBuffer, endBuffer) == compareBuffer;
 }
 
 bool Lexer::isIdentifier(char c, bool num)

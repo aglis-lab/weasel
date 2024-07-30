@@ -376,7 +376,7 @@ namespace weasel
         OVERRIDE_CODEGEN_EXPRESSION
 
     public:
-        StringLiteralExpression(Token token, const string &value) : LiteralExpression(token, Type::getArrayType(Type::getIntegerType(8), value.size())), _value(value) {}
+        StringLiteralExpression(Token token, const string &value) : LiteralExpression(token, Type::getArrayType(Type::getIntegerType(8, false), value.size())), _value(value) {}
 
         string getValue() const { return _value; }
 

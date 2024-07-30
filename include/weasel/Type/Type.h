@@ -25,22 +25,23 @@ namespace weasel
     enum class TypeID
     {
         // Primitive Types
+        VoidType,
         FloatType,
         DoubleType,
-        VoidType,
         IntegerType,
+        AnyType,
 
         // Derived Types
-        PointerType,
-        ArrayType,
-        ReferenceType,
+        PointerType,   // *type     -> all time lifetime
+        ArrayType,     // []type    -> fixed array -> scope lifetime; dynamic array -> all time lifetime
+        ReferenceType, // &type     -> scope lifetime
 
         // User Type
         FunctionType,
         StructType,
 
         // Unknown Type
-        UnknownType
+        UnknownType // @notype      -> need to check it's real type
     };
 
     // Data Type
@@ -52,7 +53,7 @@ namespace weasel
         // Create Type From Token
         static TypeHandle create(Token token);
 
-        Type(Token token) : _typeId(TypeID::UnknownType), _token(token), _width(0), _isSigned(true) {}
+        Type(Token token, TypeID typeId = TypeID::UnknownType) : _typeId(typeId), _token(token), _width(0), _isSigned(true) {}
 
         Type(TypeID typeId, uint width = 0, bool isSign = true) : _typeId(typeId), _width(width), _isSigned(isSign) {}
 
@@ -91,6 +92,7 @@ namespace weasel
         {
             return isPointerType() ||
                    isArrayType() ||
+                   isReferenceType() ||
                    isStructType();
         }
 
@@ -103,6 +105,7 @@ namespace weasel
 
         // Generator
         static TypeHandle getVoidType() { return make_shared<Type>(TypeID::VoidType, 0, false); }
+        static TypeHandle getAnyType(Token token) { return make_shared<Type>(token, TypeID::AnyType); }
         static TypeHandle getBoolType() { return getIntegerType(1, false); }
         static TypeHandle getIntegerType(unsigned width = 32, bool isSign = true) { return make_shared<Type>(TypeID::IntegerType, width, isSign); }
         static TypeHandle getFloatType() { return make_shared<Type>(TypeID::FloatType, 32); }
@@ -110,7 +113,7 @@ namespace weasel
         static TypeHandle getArrayType(TypeHandle containedType, unsigned width) { return make_shared<Type>(TypeID::ArrayType, move(containedType), width); }
         static TypeHandle getPointerType(TypeHandle containedType) { return make_shared<Type>(TypeID::PointerType, move(containedType)); }
         static TypeHandle getReferenceType(TypeHandle containedType) { return make_shared<Type>(TypeID::ReferenceType, move(containedType)); }
-        static TypeHandle getReferenceType() { return make_shared<Type>(TypeID::ReferenceType); }
+        // static TypeHandle getReferenceType() { return make_shared<Type>(TypeID::ReferenceType); }
         static TypeHandle getStructType() { return make_shared<Type>(TypeID::StructType, -1); }
         static TypeHandle getUnknownType(Token token) { return make_shared<Type>(token); }
 

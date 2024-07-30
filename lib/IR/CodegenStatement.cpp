@@ -30,10 +30,10 @@ llvm::Value *WeaselCodegen::codegen(Function *funAST)
     auto args = std::vector<llvm::Type *>(argsLength);
     for (int index = 0; index < argsLength; index++)
     {
-        args[index] = funArgs[index]->getType()->codegen(this);
+        args[index] = funArgs[index]->getType()->accept(this);
     }
 
-    auto returnType = funType->codegen(this);
+    auto returnType = funType->accept(this);
     auto linkage = llvm::GlobalValue::LinkageTypes::ExternalLinkage;
     auto funTyLLVM = llvm::FunctionType::get(returnType, args, isVararg);
     auto funLLVM = llvm::Function::Create(funTyLLVM, linkage, funName, getModule());
@@ -73,7 +73,7 @@ llvm::Value *WeaselCodegen::codegen(Function *funAST)
 
             // Allocate Argument
             llvm::Value *value;
-            if (argExpr->getType()->isPointerType())
+            if (argExpr->getType()->isPointerType() || argExpr->getType()->isReferenceType())
             {
                 value = item;
             }
@@ -108,7 +108,7 @@ llvm::Value *WeaselCodegen::codegen(Function *funAST)
         }
 
         // Codegen Function Body
-        funAST->getBody()->codegen(this);
+        funAST->getBody()->accept(this);
 
         // Create Default Return Block
         if (llvm::dyn_cast<llvm::BranchInst>(&getBuilder()->GetInsertBlock()->back()) == nullptr)
@@ -173,7 +173,7 @@ llvm::Value *WeaselCodegen::codegen(MethodCallExpression *expr)
             argCall->setAccess(AccessID::Load);
         }
 
-        auto argVal = argCall->codegen(this);
+        auto argVal = argCall->accept(this);
         assert(!argVal && "failed codegen argument");
 
         argsV.push_back(argVal);
@@ -205,7 +205,7 @@ llvm::Value *WeaselCodegen::codegen(CallExpression *expr)
             arg->setAccess(AccessID::Load);
         }
 
-        auto argVal = arg->codegen(this);
+        auto argVal = arg->accept(this);
         assert(argVal && "failed codegen argument");
 
         argsV.push_back(argVal);
@@ -230,7 +230,7 @@ llvm::Value *WeaselCodegen::codegen(BreakExpression *expr)
 
     auto newBlock = llvm::BasicBlock::Create(*getContext(), "", getBuilder()->GetInsertBlock()->getParent());
     auto breakBlock = getBreakBlock();
-    auto condVal = condExpr->codegen(this);
+    auto condVal = condExpr->accept(this);
     auto brIns = getBuilder()->CreateCondBr(condVal, breakBlock, newBlock);
 
     // Create New Insert Point
@@ -255,7 +255,7 @@ llvm::Value *WeaselCodegen::codegen(ContinueExpression *expr)
 
     auto newBlock = llvm::BasicBlock::Create(*getContext(), "", getBuilder()->GetInsertBlock()->getParent());
     auto continueBlock = getContinueBlock();
-    auto condVal = condExpr->codegen(this);
+    auto condVal = condExpr->accept(this);
     auto brIns = getBuilder()->CreateCondBr(condVal, continueBlock, newBlock);
 
     // // Create New Insert Point
@@ -270,7 +270,7 @@ llvm::Value *WeaselCodegen::codegen(ReturnExpression *expr)
 
     if (!expr->getType()->isVoidType())
     {
-        auto val = expr->getValue()->codegen(this);
+        auto val = expr->getValue()->accept(this);
         if (expr->getType()->isIntegerType())
         {
             auto returnTyV = getBuilder()->GetInsertBlock()->getParent()->getReturnType();
@@ -303,11 +303,6 @@ llvm::Value *WeaselCodegen::codegen(VariableExpression *expr)
     assert(!attr.isEmpty() && "variable isn't declare yet");
 
     auto alloc = attr.getValue();
-    if (type->isReferenceType())
-    {
-        alloc = getBuilder()->CreateLoad(type->codegen(this), alloc);
-    }
-
     if (llvm::dyn_cast<llvm::Argument>(alloc))
     {
         return alloc;
@@ -315,7 +310,7 @@ llvm::Value *WeaselCodegen::codegen(VariableExpression *expr)
 
     if (type->isArrayType())
     {
-        return getBuilder()->CreateInBoundsGEP(type->codegen(this), alloc, {getBuilder()->getInt64(0), getBuilder()->getInt64(0)});
+        return getBuilder()->CreateInBoundsGEP(type->accept(this), alloc, {getBuilder()->getInt64(0), getBuilder()->getInt64(0)});
     }
 
     if (expr->isAccessAllocation())
@@ -323,7 +318,7 @@ llvm::Value *WeaselCodegen::codegen(VariableExpression *expr)
         return alloc;
     }
 
-    return getBuilder()->CreateLoad(type->codegen(this), alloc);
+    return getBuilder()->CreateLoad(type->accept(this), alloc);
 }
 
 // TODO: Pointer should be opaque type
@@ -336,7 +331,7 @@ llvm::Value *WeaselCodegen::codegen(ArrayExpression *expr)
 
     // // Get Index
     // auto indexExpr = expr->getIndex();
-    // auto indexV = indexExpr->codegen(this);
+    // auto indexV = indexExpr->accept(this);
 
     // assert(indexV);
     // assert(indexExpr);
@@ -382,12 +377,12 @@ llvm::Value *WeaselCodegen::codegen(FieldExpression *expr)
     LOG(INFO) << "Codegen Field Expression";
 
     expr->getParentField()->setAccess(AccessID::Allocation);
-    auto alloc = expr->getParentField()->codegen(this);
+    auto alloc = expr->getParentField()->accept(this);
 
     assert(alloc && "allocation should be exist");
 
     auto type = static_pointer_cast<StructType>(expr->getParentField()->getType());
-    auto typeV = type->codegen(this);
+    auto typeV = type->accept(this);
 
     auto fieldName = expr->getIdentifier();
     auto [idx, field] = type->findTypeName(fieldName);
@@ -400,7 +395,7 @@ llvm::Value *WeaselCodegen::codegen(FieldExpression *expr)
         return inbound;
     }
 
-    auto fieldV = field->getType()->codegen(this);
+    auto fieldV = field->getType()->accept(this);
     return getBuilder()->CreateLoad(fieldV, inbound);
 }
 
@@ -413,7 +408,7 @@ llvm::Value *WeaselCodegen::codegen(StructExpression *expr)
     }
 
     auto type = static_pointer_cast<StructType>(expr->getType());
-    auto typeV = type->codegen(this);
+    auto typeV = type->accept(this);
     auto alloc = expr->getAlloc();
     auto fields = type->getFields();
     for (auto exprField : expr->getFields())
@@ -429,11 +424,11 @@ llvm::Value *WeaselCodegen::codegen(StructExpression *expr)
         {
             auto temp = static_pointer_cast<StructExpression>(exprField->getValue());
             temp->setAlloc(inbound);
-            temp->codegen(this);
+            temp->accept(this);
         }
         else
         {
-            auto val = exprField->getValue()->codegen(this);
+            auto val = exprField->getValue()->accept(this);
             getBuilder()->CreateStore(val, inbound);
         }
     }
@@ -469,7 +464,7 @@ llvm::Value *WeaselCodegen::codegen(StructExpression *expr)
     //             continue;
     //         }
 
-    //         arr[idx] = llvm::dyn_cast<llvm::Constant>(item->getValue()->codegen(this));
+    //         arr[idx] = llvm::dyn_cast<llvm::Constant>(item->getValue()->accept(this));
     //     }
 
     //     for (int i = 0; i < fieldSize; i++)
@@ -480,7 +475,7 @@ llvm::Value *WeaselCodegen::codegen(StructExpression *expr)
     //         }
 
     //         auto typeField = typeFields[i]->getValue();
-    //         auto typeFieldV = typeField->getType()->codegen(this);
+    //         auto typeFieldV = typeField->getType()->accept(this);
     //         if (typeField->getType()->isPrimitiveType())
     //         {
     //             if (typeField->getType()->isFloatType() || typeField->getType()->isDoubleType())
@@ -498,7 +493,7 @@ llvm::Value *WeaselCodegen::codegen(StructExpression *expr)
     //         }
     //     }
 
-    //     auto typeV = llvm::dyn_cast<llvm::StructType>(type->codegen(this));
+    //     auto typeV = llvm::dyn_cast<llvm::StructType>(type->accept(this));
     //     auto constantV = llvm::ConstantStruct::get(typeV, arr);
     //     auto val = new llvm::GlobalVariable(*getModule(), typeV, true, llvm::GlobalValue::LinkageTypes::PrivateLinkage, constantV);
 
@@ -509,7 +504,7 @@ llvm::Value *WeaselCodegen::codegen(StructExpression *expr)
 
     // LOG(INFO) << "Create Allocation on StructExpression";
 
-    // auto typeV = type->codegen(this);
+    // auto typeV = type->accept(this);
     // auto alloc = getBuilder()->CreateAlloca(typeV);
 
     // getBuilder()->CreateMemSet(alloc, getBuilder()->getInt8(0), type->getTypeWidthByte(), llvm::MaybeAlign(4));
@@ -525,7 +520,7 @@ llvm::Value *WeaselCodegen::codegen(StructExpression *expr)
     //     auto idxStruct = getBuilder()->getInt32(0);
     //     auto idxVal = getBuilder()->getInt32(idx);
     //     auto inbound = getBuilder()->CreateInBoundsGEP(typeV, alloc, {idxStruct, idxVal});
-    //     auto val = item->getValue()->codegen(this);
+    //     auto val = item->getValue()->accept(this);
 
     //     getBuilder()->CreateStore(val, inbound);
     // }
@@ -543,7 +538,7 @@ llvm::Value *WeaselCodegen::codegen(DeclarationStatement *expr)
 
     // Allocating Address for declaration
     auto varName = expr->getIdentifier();
-    auto declTypeV = declType->codegen(this);
+    auto declTypeV = declType->accept(this);
 
     // Create Alloca
     auto alloc = createAlloca(declTypeV);
@@ -569,7 +564,7 @@ llvm::Value *WeaselCodegen::codegen(DeclarationStatement *expr)
     {
         auto temp = static_pointer_cast<StructExpression>(valueExpr);
         temp->setAlloc(alloc);
-        temp->codegen(this);
+        temp->accept(this);
 
         // Add Variable Declaration to symbol table
         addAttribute(ContextAttribute::get(varName, alloc, AttributeKind::Variable));
@@ -578,7 +573,7 @@ llvm::Value *WeaselCodegen::codegen(DeclarationStatement *expr)
     }
 
     // Codegen Value Expression
-    auto valueV = valueExpr->codegen(this);
+    auto valueV = valueExpr->accept(this);
     assert(valueV && "Cannot codegen value expression");
 
     // Check if Array Literal
@@ -611,7 +606,7 @@ llvm::Value *WeaselCodegen::codegen(CompoundStatement *expr)
     for (auto &item : expr->getBody())
     {
         item->setAccess(AccessID::Allocation);
-        item->codegen(this);
+        item->accept(this);
     }
 
     // Exit from statement
@@ -640,13 +635,13 @@ llvm::Value *WeaselCodegen::codegen(ConditionStatement *expr)
         auto nextBlock = llvm::BasicBlock::Create(*getContext());
 
         // Create Condition Branch
-        getBuilder()->CreateCondBr(condition->codegen(this), bodyBlock, nextBlock);
+        getBuilder()->CreateCondBr(condition->accept(this), bodyBlock, nextBlock);
 
         // Set Insert Point
         getBuilder()->SetInsertPoint(bodyBlock);
 
         // Driver Body
-        statement->codegen(this);
+        statement->accept(this);
 
         // Jump to Next Block
         if (!getBuilder()->GetInsertBlock()->back().isTerminator())
@@ -669,7 +664,7 @@ llvm::Value *WeaselCodegen::codegen(ConditionStatement *expr)
         getBuilder()->CreateBr(elseBlock);
         getBuilder()->SetInsertPoint(elseBlock);
 
-        statement->codegen(this);
+        statement->accept(this);
     }
 
     // Jump to Next Block
@@ -721,7 +716,7 @@ llvm::Value *WeaselCodegen::codegen(LoopingStatement *expr)
     if (!isInfinity && !isSingleCondition)
     {
         auto initialExpr = conditions[0];
-        initialExpr->codegen(this);
+        initialExpr->accept(this);
     }
 
     // Condition //
@@ -737,7 +732,7 @@ llvm::Value *WeaselCodegen::codegen(LoopingStatement *expr)
 
         assert(conditionExpr->getType()->isBoolType() && "Expected Boolean Type for Looping Condition");
 
-        getBuilder()->CreateCondBr(conditionExpr->codegen(this), bodyBlock, endBlock);
+        getBuilder()->CreateCondBr(conditionExpr->accept(this), bodyBlock, endBlock);
     }
     else
     {
@@ -751,7 +746,7 @@ llvm::Value *WeaselCodegen::codegen(LoopingStatement *expr)
     getBuilder()->SetInsertPoint(bodyBlock);
 
     // Driver Body
-    expr->getBody()->codegen(this);
+    expr->getBody()->accept(this);
 
     // Counting //
     // Jump to Counting
@@ -766,7 +761,7 @@ llvm::Value *WeaselCodegen::codegen(LoopingStatement *expr)
     {
         auto countExpr = conditions[2];
 
-        countExpr->codegen(this);
+        countExpr->accept(this);
     }
 
     // Jump back to Condition

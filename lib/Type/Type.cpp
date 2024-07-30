@@ -144,9 +144,14 @@ bool Type::isEqual(TypeHandle type)
         return false;
     }
 
-    if (isPrimitiveType())
+    if (_typeId == TypeID::AnyType || type->getTypeID() == TypeID::AnyType)
     {
         return true;
+    }
+
+    if (isPrimitiveType())
+    {
+        return _typeId == type->getTypeID();
     }
 
     if (isStructType())
@@ -208,6 +213,10 @@ TypeHandle Type::create(Token token)
     // VOID //
     case TokenKind::TokenTyVoid:
         return Type::getVoidType();
+
+    // ANY //
+    case TokenKind::TokenTyAny:
+        return Type::getAnyType(token);
 
     default:
         return Type::getUnknownType(token);
@@ -271,6 +280,10 @@ string Type::getTypeName()
     case TypeID::VoidType:
     {
         return "@void";
+    }
+    case TypeID::AnyType:
+    {
+        return "@any";
     }
     case TypeID::PointerType:
     {

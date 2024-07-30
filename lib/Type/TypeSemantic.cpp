@@ -3,12 +3,12 @@
 
 using namespace weasel;
 
-void StructType::semantic(AnalysisSemantic *context)
+void StructType::accept(AnalysisSemantic *context)
 {
     return context->semantic(this);
 }
 
-void Type::semantic(AnalysisSemantic *context)
+void Type::accept(AnalysisSemantic *context)
 {
     return context->semantic(this);
 }

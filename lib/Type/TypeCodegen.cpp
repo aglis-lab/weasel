@@ -3,12 +3,12 @@
 
 using namespace weasel;
 
-llvm::Type *StructType::codegen(WeaselCodegen *context)
+llvm::Type *StructType::accept(WeaselCodegen *context)
 {
     return context->codegen(this);
 }
 
-llvm::Type *Type::codegen(WeaselCodegen *context)
+llvm::Type *Type::accept(WeaselCodegen *context)
 {
     return context->codegen(this);
 }

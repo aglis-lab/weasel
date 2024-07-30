@@ -68,6 +68,7 @@ namespace weasel
 
         /// Data Types -> literally name of the data type
         TokenTyVoid,    // Void No Return Value
+        TokenTyAny,     // 8 byte // Void pointer value
         TokenTyRune,    // 4 byte Unicode // Character 'utf-32'
         TokenTyString,  // Character 'utf-8' with 'utf-32' support
         TokenTyByte,    // 1 byte // Integer Character 'utf-8'
@@ -189,7 +190,7 @@ namespace weasel
         bool isKeyExtern() const { return _kind == TokenKind::TokenKeyExtern; }
 
         // Variable //
-        bool isDataType() const { return (_kind >= TokenKind::TokenTyVoid && _kind <= TokenKind::TokenTyDecimal) || _kind == TokenKind::TokenOperatorStar; }
+        bool isDataType() const { return (_kind >= TokenKind::TokenTyVoid && _kind <= TokenKind::TokenTyDecimal) || _kind == TokenKind::TokenOperatorStar || _kind == TokenKind::TokenOperatorAnd; }
         bool isKeyDefinition() const { return (_kind == TokenKind::TokenKeyLet || _kind == TokenKind::TokenKeyFinal || _kind == TokenKind::TokenKeyConst); }
         bool isLiteral() const { return _kind >= TokenKind::TokenLitNil && _kind <= TokenKind::TokenLitString; }
 
@@ -269,12 +270,18 @@ namespace weasel
         bool isEnd() const { return _kind == TokenKind::TokenEOF; }
 
         // Buffer //
+        bool isValidBuffer() const { return _startBuffer != nullptr && _endBuffer != nullptr; }
         char *getStartBuffer() const { return _startBuffer; }
         char *getEndBuffer() const { return _endBuffer; }
 
-        string getValue() const { return string(getStartBuffer(), getEndBuffer()); }
+        string getValue() const { return isValidBuffer() ? string(getStartBuffer(), getEndBuffer()) : ""; }
         string getEscapeValue() const
         {
+            if (!isValidBuffer())
+            {
+                return "";
+            }
+
             string val = "";
             auto temp = getStartBuffer();
             while (temp != getEndBuffer())
@@ -323,8 +330,8 @@ namespace weasel
         Token(TokenKind kind, SourceLocation location, char *startToken, char *endToken) : _startBuffer(startToken), _endBuffer(endToken), _kind(kind), _location(location) {}
 
     private:
-        char *_startBuffer;
-        char *_endBuffer;
+        char *_startBuffer = nullptr;
+        char *_endBuffer = nullptr;
 
         TokenKind _kind;
         SourceLocation _location;

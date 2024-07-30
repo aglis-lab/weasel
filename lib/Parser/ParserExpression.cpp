@@ -131,6 +131,7 @@ ExpressionHandle Parser::parseUnaryExpression()
         op = UnaryExpression::Positive;
     }
 
+    LOG(ERROR) << "Parse Unary {} {} {}" << token.getValue() << getCurrentToken().getValue() << (expr == nullptr);
     return make_shared<UnaryExpression>(token, op, expr);
 }
 
@@ -254,7 +255,7 @@ ExpressionHandle Parser::parseIdentifierExpression()
     }
 
     // Check Available Function
-    if (expectToken(TokenKind::TokenDelimOpenParen))
+    if (expectToken().isOpenParen())
     {
         return parseCallExpression();
     }
@@ -373,7 +374,7 @@ ExpressionHandle Parser::parseStructExpression()
 
 ExpressionHandle Parser::parsePrimaryExpression()
 {
-    LOG(INFO) << "Parse Primary Expression...";
+    LOG(INFO) << "Parse Primary Expression";
 
     if (getCurrentToken().isIdentifier() && expectToken().isOpenCurly())
     {

@@ -20,25 +20,38 @@ void AnalysisSemantic::semanticCheck()
     }
 
     // Functions
-    for (auto item : getModule()->getFunctions())
+    for (auto fun : getModule()->getFunctions())
     {
-        if (item->isError())
+        if (fun->isError())
         {
-            onError(item.get());
+            onError(fun.get());
             break;
         }
 
-        for (auto &item : item->getArguments())
+        // Check Function Type
+        fun->getType()->accept(this);
+        for (auto &item : fun->getArguments())
         {
-            item->semantic(this);
+            unknownType(item.get());
+            item->accept(this);
         }
 
-        semantic(item.get());
+        // Check Function Body
+        semantic(fun.get());
     }
+}
+
+void AnalysisSemantic::semantic(ArgumentExpression *expr)
+{
+    SEMANTIC("ArgumentExpression");
+
+    expr->getType()->accept(this);
 }
 
 void AnalysisSemantic::semantic(StructType *expr)
 {
+    SEMANTIC("StructType");
+
     // Check Duplicate Field
     unordered_set<string> checkName;
 
@@ -64,18 +77,15 @@ void AnalysisSemantic::semantic(StructType *expr)
             item.setType(structType);
         }
 
-        item.getType()->semantic(this);
+        item.getType()->accept(this);
     }
-}
-
-void AnalysisSemantic::semantic(ArgumentExpression *expr)
-{
-    expr->getType()->semantic(this);
 }
 
 void AnalysisSemantic::semantic(Type *expr)
 {
-    if (expr->isPointerType() && expr->getContainedType()->isUnknownType())
+    SEMANTIC("Type") << " " << expr->getTypeName();
+
+    if ((expr->isPointerType() || expr->isReferenceType()) && expr->getContainedType()->isUnknownType())
     {
         auto structType = getModule()->findStructType(expr->getContainedType()->getToken().getValue());
 
@@ -86,15 +96,34 @@ void AnalysisSemantic::semantic(Type *expr)
     }
 }
 
+void AnalysisSemantic::unknownType(Expression *expr)
+{
+    SEMANTIC("unknownType Expression");
+
+    if (expr->getType()->isUnknownType())
+    {
+        auto structType = getModule()->findStructType(expr->getType()->getToken().getValue());
+        if (!structType)
+        {
+            expr->setError(Errors::getInstance().userTypeNotDefined.withToken(expr->getType()->getToken()));
+            return onError(expr);
+        }
+
+        expr->setType(structType);
+    }
+}
+
 void AnalysisSemantic::semantic(Function *fun)
 {
+    SEMANTIC("Function") << " " << fun->getIdentifier();
+
     auto lastDeclaration = getDeclarations().size();
-    fun->getType()->semantic(this);
+    fun->getType()->accept(this);
 
     // Check Arguments
     for (auto arg : fun->getArguments())
     {
-        arg->semantic(this);
+        arg->accept(this);
 
         getDeclarations().push_back(arg.get());
     }
@@ -120,7 +149,7 @@ void AnalysisSemantic::semantic(CompoundStatement *expr)
     auto lastDeclaration = getDeclarations().size();
     for (auto item : expr->getBody())
     {
-        item->semantic(this);
+        item->accept(this);
         if (item->isError())
         {
             break;
@@ -132,11 +161,11 @@ void AnalysisSemantic::semantic(CompoundStatement *expr)
 
 void AnalysisSemantic::semantic(ConditionStatement *expr)
 {
-    LOG(INFO) << "Condition Statement Check";
+    SEMANTIC("ConditionStatement");
 
     for (auto item : expr->getConditions())
     {
-        item->semantic(this);
+        item->accept(this);
         if (item->isError())
         {
             break;
@@ -145,13 +174,13 @@ void AnalysisSemantic::semantic(ConditionStatement *expr)
 
     for (auto item : expr->getStatements())
     {
-        item->semantic(this);
+        item->accept(this);
     }
 }
 
 void AnalysisSemantic::semantic(CallExpression *expr)
 {
-    LOG(INFO) << "Call Expression Check";
+    SEMANTIC("CallExpression");
 
     // Check Function Call
     auto fun = getModule()->findFunction(expr->getIdentifier());
@@ -164,37 +193,31 @@ void AnalysisSemantic::semantic(CallExpression *expr)
     expr->setType(fun->getType());
     expr->setFunction(fun);
 
+    assert(expr->getType() && "call expression should be have a type");
+
     // Check Argument
-    for (auto item : expr->getArguments())
+    for (size_t i = 0; i < expr->getArguments().size(); i++)
     {
-        item->semantic(this);
+        auto arg = expr->getArguments()[i];
+        auto funArg = fun->getArguments()[min(fun->getArguments().size() - 1, i)];
+
+        arg->accept(this);
+        if (!arg->getType()->isEqual(funArg->getType()))
+        {
+            expr->setError(Errors::getInstance().datatypeDifferent.withToken(arg->getToken()));
+            return onError(expr);
+        }
     }
-
-    // auto count = fun->isVararg() ? fun->getArguments().size() - 1 : fun->getArguments().size();
-    // for (size_t i = 0; i < count; i++)
-    // {
-    //     auto exprArg = expr->getArguments()[i];
-    //     auto funArg = fun->getArguments()[i];
-
-    //     exprArg->semantic(this);
-    //     // TODO: Check Argument Type
-    //     // if (!exprArg->getType()->isEqual(funArg->getType()))
-    //     // {
-    //     //     expr->setError(Errors::getInstance().datatypeDifferent.withToken(exprArg->getToken()));
-    //     //     return onError(expr);
-    //     // }
-    // }
 }
 
 void AnalysisSemantic::semantic(DeclarationStatement *expr)
 {
-    LOG(INFO) << "Declaration Statement Check";
-
-    assert((expr->getType() || expr->getValue()->getType()) && "one of type should be not empty");
+    SEMANTIC("DeclarationStatement");
 
     if (expr->getType())
     {
-        expr->getType()->semantic(this);
+        unknownType(expr);
+        expr->getType()->accept(this);
     }
 
     if (!expr->getValue())
@@ -228,7 +251,7 @@ void AnalysisSemantic::semantic(DeclarationStatement *expr)
         return;
     }
 
-    expr->getValue()->semantic(this);
+    expr->getValue()->accept(this);
     if (expr->getValue()->isError())
     {
         return;
@@ -250,7 +273,7 @@ void AnalysisSemantic::semantic(DeclarationStatement *expr)
 
 void AnalysisSemantic::semantic(VariableExpression *expr)
 {
-    LOG(INFO) << "Variable Expression Check";
+    SEMANTIC("VariableExpression");
 
     auto decl = findDeclaration(expr->getIdentifier());
     if (!decl)
@@ -264,18 +287,18 @@ void AnalysisSemantic::semantic(VariableExpression *expr)
 
 void AnalysisSemantic::semantic(AssignmentExpression *expr)
 {
-    LOG(INFO) << "Assignment Expression Check";
+    SEMANTIC("AssignmentExpression");
 
     auto lhs = expr->getLHS();
     auto rhs = expr->getRHS();
 
-    lhs->semantic(this);
+    lhs->accept(this);
     if (lhs->isError())
     {
         return;
     }
 
-    rhs->semantic(this);
+    rhs->accept(this);
     if (rhs->isError())
     {
         return;
@@ -300,8 +323,8 @@ void AnalysisSemantic::semantic(ComparisonExpression *expr)
 {
     LOG(INFO) << "Comparison Expression Check";
 
-    expr->getLHS()->semantic(this);
-    expr->getRHS()->semantic(this);
+    expr->getLHS()->accept(this);
+    expr->getRHS()->accept(this);
 
     expr->setAccess(AccessID::Load);
     expr->setAccess(AccessID::Load);
@@ -313,7 +336,7 @@ void AnalysisSemantic::semantic(ReturnExpression *expr)
 
     if (expr->getValue() && !expr->getValue()->isError())
     {
-        expr->getValue()->semantic(this);
+        expr->getValue()->accept(this);
 
         if (expr->getValue()->isError())
         {
@@ -331,7 +354,7 @@ void AnalysisSemantic::semantic(BreakExpression *expr)
     auto val = expr->getValue();
     if (val)
     {
-        val->semantic(this);
+        val->accept(this);
         if (val->isError())
         {
             return;
@@ -353,10 +376,10 @@ void AnalysisSemantic::semantic(LoopingStatement *expr)
 
     for (auto item : expr->getConditions())
     {
-        item->semantic(this);
+        item->accept(this);
     }
 
-    expr->getBody()->semantic(this);
+    expr->getBody()->accept(this);
 }
 
 void AnalysisSemantic::semantic(ContinueExpression *expr)
@@ -365,7 +388,7 @@ void AnalysisSemantic::semantic(ContinueExpression *expr)
 
     if (expr->getValue())
     {
-        expr->getValue()->semantic(this);
+        expr->getValue()->accept(this);
     }
 }
 
@@ -376,8 +399,8 @@ void AnalysisSemantic::semantic(ArithmeticExpression *expr)
     auto lhs = expr->getLHS();
     auto rhs = expr->getRHS();
 
-    lhs->semantic(this);
-    rhs->semantic(this);
+    lhs->accept(this);
+    rhs->accept(this);
 
     if (lhs->isError() || rhs->isError())
     {
@@ -398,14 +421,14 @@ void AnalysisSemantic::semantic(UnaryExpression *expr)
     LOG(INFO) << "Unary Expression Check";
 
     expr->setAccess(expr->getValue()->getAccess());
-    expr->getValue()->semantic(this);
+    expr->getValue()->accept(this);
     if (expr->getOperator() == UnaryExpression::Borrow)
     {
         expr->setType(Type::getReferenceType(expr->getValue()->getType()));
     }
     else if (expr->getOperator() == UnaryExpression::Dereference)
     {
-        if (!expr->getValue()->getType()->isPointerType())
+        if (!expr->getValue()->getType()->isPointerType() && !expr->getValue()->getType()->isReferenceType())
         {
             expr->setError(Errors::getInstance().failedDereference.withToken(expr->getValue()->getToken()));
             return onError(expr);
@@ -429,26 +452,26 @@ void AnalysisSemantic::semantic(StructExpression *expr)
     expr->setType(newType);
     for (auto item : expr->getFields())
     {
-        item->getValue()->semantic(this);
+        item->getValue()->accept(this);
     }
 }
 
 void AnalysisSemantic::semantic(FieldExpression *expr)
 {
-    LOG(INFO) << "Field Expression Check";
+    SEMANTIC("FieldExpression");
 
-    expr->getParentField()->semantic(this);
+    expr->getParentField()->accept(this);
     if (expr->getParentField()->isError())
     {
         return;
     }
 
-    // Check if parent field is a pointer
+    // Check if parent field is a pointer or reference
     // Let just dereference it
-    if (expr->getParentField()->getType()->isPointerType())
+    if (expr->getParentField()->getType()->isPointerType() || expr->getParentField()->getType()->isReferenceType())
     {
         expr->setParentField(make_shared<UnaryExpression>(Token::create(), UnaryExpression::Dereference, expr->getParentField()));
-        expr->getParentField()->semantic(this);
+        expr->getParentField()->accept(this);
     }
 
     assert(!expr->isError() && "expression should be valid code");
@@ -477,14 +500,14 @@ void AnalysisSemantic::semantic(TypeCastExpression *expr)
 {
     LOG(INFO) << "Type Cast Expression Check";
 
-    expr->getValue()->semantic(this);
-    expr->getValue()->getType()->semantic(this);
-    expr->getType()->semantic(this);
+    expr->getValue()->accept(this);
+    expr->getValue()->getType()->accept(this);
+    expr->getType()->accept(this);
 }
 
 void AnalysisSemantic::semantic(NilLiteralExpression *expr)
 {
     SEMANTIC("NilLiteralExpression");
 
-    expr->getType()->semantic(this);
+    expr->getType()->accept(this);
 }
