@@ -50,7 +50,6 @@ namespace weasel
         Token getNextToken(bool skipSpace = false);
         Token getNextTokenUntil(TokenKind kind);
         Token skipUntilNewLine() { return getNextTokenUntil(TokenKind::TokenSpaceNewline); }
-        bool isDataType();
 
         // Operator Expression
         ExpressionHandle createOperatorExpression(Token op, ExpressionHandle lhs, ExpressionHandle rhs);
@@ -74,6 +73,7 @@ namespace weasel
         ExpressionHandle parseConditionStatement();
         ExpressionHandle parseLoopingStatement();
         ExpressionHandle parseStaticMethodCallExpression();
+        ExpressionHandle parseLambdaExpression();
         // Expression *parseMethodCallExpression(Expression *);
 
         // Expression

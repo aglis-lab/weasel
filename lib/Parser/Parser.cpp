@@ -71,17 +71,3 @@ Token Parser::getNextToken(bool skipSpace)
 {
     return _lexer.getNextToken(skipSpace);
 }
-
-bool Parser::isDataType()
-{
-    if (getCurrentToken().isDataType())
-    {
-        return true;
-    }
-
-    if ((getCurrentToken().isOperatorStar() || getCurrentToken().isOperatorAnd()) && expectToken().isDataType())
-    {
-        return true;
-    }
-    return false;
-}

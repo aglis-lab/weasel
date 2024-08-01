@@ -34,8 +34,6 @@ namespace weasel
     public:
         WeaselCodegen(llvm::LLVMContext *context, const std::string &moduleName);
 
-        ~WeaselCodegen() {}
-
         llvm::LLVMContext *getContext() const { return _context; }
         llvm::Module *getModule() { return _module; }
         llvm::IRBuilder<> *getBuilder() { return _builder; }
@@ -44,6 +42,7 @@ namespace weasel
         // Type
         llvm::Type *codegen(Type *type);
         llvm::Type *codegen(StructType *type);
+        llvm::Type *codegen(FunctionType *type);
 
         // Integer Fast Casting
         llvm::Value *castInteger(llvm::Value *val, llvm::Type *type, bool isSign = false);

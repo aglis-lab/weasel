@@ -190,7 +190,7 @@ namespace weasel
         bool isKeyExtern() const { return _kind == TokenKind::TokenKeyExtern; }
 
         // Variable //
-        bool isDataType() const { return (_kind >= TokenKind::TokenTyVoid && _kind <= TokenKind::TokenTyDecimal) || _kind == TokenKind::TokenOperatorStar || _kind == TokenKind::TokenOperatorAnd; }
+        bool isDataType() const { return (_kind >= TokenKind::TokenTyVoid && _kind <= TokenKind::TokenTyDecimal) || _kind == TokenKind::TokenOperatorStar || _kind == TokenKind::TokenOperatorAnd || _kind == TokenKind::TokenKeyFun; }
         bool isKeyDefinition() const { return (_kind == TokenKind::TokenKeyLet || _kind == TokenKind::TokenKeyFinal || _kind == TokenKind::TokenKeyConst); }
         bool isLiteral() const { return _kind >= TokenKind::TokenLitNil && _kind <= TokenKind::TokenLitString; }
 

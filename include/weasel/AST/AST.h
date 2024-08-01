@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+#include <cassert>
 
 #include <glog/logging.h>
 
@@ -62,6 +63,8 @@ namespace weasel
         bool isStructExpression() const;
         bool isFieldExpression() const;
         bool isNilExpression() const;
+        bool isFunctionExpression() const;
+        bool isLambdaExpression() const;
 
         bool isConstant() const
         {
@@ -97,24 +100,6 @@ namespace weasel
     public:
         ErrorExpression() = default;
         ErrorExpression(const Token token, Error error) : Expression(token, error) {}
-        ~ErrorExpression() = default;
-    };
-
-    // TODO: Linkage public or private
-    // Global Value
-    class GlobalObject : public Expression
-    {
-    public:
-        GlobalObject(const Token &token, const string &identifier, TypeHandle type) : Expression(token, type), _identifier(identifier) {}
-        GlobalObject() = default;
-
-        string getIdentifier() const { return _identifier; }
-
-        void setIdentifier(string_view identifier) { _identifier = identifier; }
-
-    protected:
-        // Linkage _linkage;
-        string _identifier;
     };
 
     // Literal Expression
@@ -132,7 +117,6 @@ namespace weasel
     public:
         ReturnExpression(const Token &token, ExpressionHandle value) : Expression(token), _value(value) {}
         ReturnExpression(const Token &token, TypeHandle type) : Expression(token, type) {}
-        ~ReturnExpression() = default;
 
         ExpressionHandle &getValue() { return _value; }
 
@@ -147,7 +131,6 @@ namespace weasel
 
     public:
         BreakExpression(Token token, Expression *value) : Expression(token), _value(value) {}
-        ~BreakExpression() = default;
 
         void setValue(ExpressionHandle expr) { _value = expr; }
         ExpressionHandle &getValue() { return _value; }
@@ -163,7 +146,6 @@ namespace weasel
 
     public:
         ContinueExpression(Token token, ExpressionHandle value) : Expression(token), _value(value) {}
-        ~ContinueExpression() = default;
 
         void setValue(ExpressionHandle expr) { _value = expr; }
         ExpressionHandle getValue() const { return _value; }
@@ -195,7 +177,6 @@ namespace weasel
 
     public:
         explicit CallExpression(Token token, string identifier) : VariableExpression(token, identifier) {}
-        ~CallExpression() = default;
 
         vector<ExpressionHandle> &getArguments() { return _args; }
 
@@ -213,7 +194,6 @@ namespace weasel
 
     public:
         ArrayExpression() {}
-        ~ArrayExpression() = default;
 
         void setIndexExpression(ExpressionHandle expr) { _indexExpr = expr; }
         Expression *getIndex() { return _indexExpr.get(); }
@@ -285,7 +265,6 @@ namespace weasel
 
     public:
         MethodCallExpression() = default;
-        ~MethodCallExpression() = default;
 
         void setImplExpression(ExpressionHandle implExpression) { _implExpression = implExpression; }
         void setFunction(Function *fun) { _fun = fun; }
@@ -624,16 +603,53 @@ namespace weasel
         GlobalVariable() = default;
     };
 
-    // Function
-    class Function : public GlobalObject
+    // TODO: Linkage public or private
+    // Global Value
+    class GlobalObject : public Expression
+    {
+    public:
+        GlobalObject(const Token &token, const string &identifier, TypeHandle type) : Expression(token, type), _identifier(identifier) {}
+        GlobalObject() = default;
+
+        void setIdentifier(string_view identifier) { _identifier = identifier; }
+        string getIdentifier() const { return _identifier; }
+
+    protected:
+        // Linkage _linkage;
+        string _identifier;
+    };
+
+    // Lambda Statement
+    class LambdaStatement : public GlobalObject
     {
         OVERRIDE_CODEGEN_EXPRESSION
 
     public:
-        Function() = default;
+        LambdaStatement() {}
 
-        CompoundStatementHandle getBody() { return _body; }
         void setBody(CompoundStatementHandle body) { _body = body; }
+        CompoundStatementHandle getBody() { return _body; }
+
+        void setArguments(const vector<ArgumentExpressionHandle> &arguments) { _arguments = arguments; }
+        vector<ArgumentExpressionHandle> &getArguments() { return _arguments; }
+
+        void setVararg(bool vararg) { _isVararg = vararg; }
+        bool isVararg() const { return _isVararg; }
+
+    protected:
+        CompoundStatementHandle _body;
+        vector<ArgumentExpressionHandle> _arguments;
+
+        bool _isVararg = false;
+    };
+
+    // Function
+    class Function : public LambdaStatement
+    {
+        OVERRIDE_CODEGEN_EXPRESSION
+
+    public:
+        Function() {}
 
         void setIsDefine(bool val) { _isDefine = val; }
         bool isDefine() const { return _isDefine; }
@@ -644,10 +660,7 @@ namespace weasel
         void setIsExtern(bool val) { _isExtern = val; }
         bool isExtern() const { return _isExtern; }
 
-        bool isMain() const { return this->_identifier == "main"; }
-
-        void setArguments(const vector<ArgumentExpressionHandle> &arguments) { _arguments = arguments; }
-        vector<ArgumentExpressionHandle> &getArguments() { return _arguments; }
+        bool isMain() const { return _identifier == "main"; }
 
         string getManglingName();
 
@@ -658,12 +671,15 @@ namespace weasel
         void setIsStatic(bool val) { _isStatic = val; }
         bool getIsStatic() const { return _isStatic; }
 
-        void setVararg(bool vararg) { _isVararg = vararg; }
-        bool isVararg() const { return _isVararg; }
+        TypeHandle getReturnType()
+        {
+            auto type = static_pointer_cast<FunctionType>(_type);
+            assert(type && "type should be a function type");
 
-    private:
-        CompoundStatementHandle _body;
-        vector<ArgumentExpressionHandle> _arguments;
+            return type->getReturnType();
+        }
+
+    protected:
         StructTypeHandle _implStruct;
 
         // TODO: Check if inline, extern, and static function
@@ -671,6 +687,5 @@ namespace weasel
         bool _isInline = false;
         bool _isExtern = false;
         bool _isStatic = false;
-        bool _isVararg = false;
     };
 } // namespace weasel

@@ -5,6 +5,22 @@
 #include <llvm/IR/Module.h>
 
 #include "weasel/IR/Codegen.h"
+#include <functional>
+
+llvm::Type *WeaselCodegen::codegen(FunctionType *expr)
+{
+    // auto isVararg = expr->
+    // auto retType = expr->getReturnType()->accept(this);
+    // auto args = vector<llvm::Type *>();
+    // for (auto &item : expr->getArguments())
+    // {
+    //     args.push_back(item->accept(this));
+    // }
+
+    // return llvm::FunctionType::get(retType, args, false);
+
+    return llvm::PointerType::get(*getContext(), 0);
+}
 
 // Weasel User Type System to llvm Type System
 llvm::Type *WeaselCodegen::codegen(StructType *structExpr)

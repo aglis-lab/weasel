@@ -10,6 +10,11 @@ void ArgumentExpression::accept(AnalysisSemantic *analysis)
     analysis->semantic(this);
 }
 
+void LambdaStatement::accept(AnalysisSemantic *analysis)
+{
+    UNIMPLEMENTED("LambdaStatement");
+}
+
 void GlobalVariable::accept(AnalysisSemantic *analysis)
 {
     UNIMPLEMENTED("GlobalVariable");

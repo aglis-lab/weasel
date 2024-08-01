@@ -85,7 +85,7 @@ void Printer::print(Function *expr)
         }
     }
 
-    auto retStr = expr->getType()->getTypeName();
+    auto retStr = expr->getReturnType()->getTypeName();
     auto identifier = expr->getIdentifier();
 
     fmt::println(_out, "{: >{}}{} {}({}) {}{}", "", getCurrentShift(), prefix, identifier, argStr, retStr, newlineOp);
@@ -324,7 +324,7 @@ void Printer::printAsOperand(MethodCallExpression *expr)
 
 void Printer::printAsOperand(FieldExpression *expr)
 {
-    PRINT_OPERAND("FieldExpression") << " " << typeid(*expr->getParentField().get()).name();
+    PRINT_OPERAND("FieldExpression");
 
     if (typeid(VariableExpression) == typeid(*expr->getParentField().get()))
     {

@@ -3,6 +3,11 @@
 
 using namespace weasel;
 
+void FunctionType::accept(AnalysisSemantic *context)
+{
+    return context->semantic(this);
+}
+
 void StructType::accept(AnalysisSemantic *context)
 {
     return context->semantic(this);

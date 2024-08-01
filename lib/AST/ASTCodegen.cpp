@@ -5,6 +5,11 @@ using namespace weasel;
 
 #define UNIMPLEMENTED LOG(INFO) << "Unimplemented Codegen"
 
+llvm::Value *LambdaStatement::accept(WeaselCodegen *c)
+{
+    UNIMPLEMENTED;
+}
+
 llvm::Value *ArgumentExpression::accept(WeaselCodegen *c)
 {
     UNIMPLEMENTED;

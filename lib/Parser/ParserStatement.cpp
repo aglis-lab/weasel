@@ -46,6 +46,7 @@ ExpressionHandle Parser::parseStatement()
         return parseContinueExpression();
     }
 
+    // Parse Expression
     auto expr = parseExpression();
     if (expr->isError())
     {
@@ -315,6 +316,8 @@ CompoundStatementHandle Parser::parseCompoundStatement()
 
 ExpressionHandle Parser::parseDeclarationExpression()
 {
+    LOG(INFO) << "Parse Declaration Expression";
+
     auto qualifier = getQualifier();
     auto stmt = make_shared<DeclarationStatement>();
 
@@ -330,7 +333,7 @@ ExpressionHandle Parser::parseDeclarationExpression()
     stmt->setIdentifier(getCurrentToken().getValue());
 
     getNextToken(); // eat 'identifier'
-    if (isDataType() || getCurrentToken().isIdentifier())
+    if (getCurrentToken().isDataType() || getCurrentToken().isIdentifier())
     {
         stmt->setType(parseDataType());
     }
@@ -372,4 +375,9 @@ ExpressionHandle Parser::parseDeclarationExpression()
     }
 
     return stmt;
+}
+
+ExpressionHandle Parser::parseLambdaExpression()
+{
+    LOG(INFO) << "Parse Lambda Expression";
 }

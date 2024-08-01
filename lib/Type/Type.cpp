@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cassert>
 
 #include <fmt/core.h>
 #include <weasel/Type/Type.h>
@@ -24,6 +25,17 @@ string Type::getManglingName()
         return "C" + getContainedType()->getManglingName();
     case TypeID::StructType:
         return dynamic_cast<StructType *>(this)->getIdentifier();
+    case TypeID::FunctionType:
+    {
+        auto type = static_cast<FunctionType *>(this);
+        auto args = string("");
+        for (auto &item : type->getArguments())
+        {
+            args += item->getManglingName();
+        }
+
+        return "F" + type->getReturnType()->getManglingName() + args;
+    }
     case TypeID::IntegerType:
     {
         if (_width == 1)
@@ -116,7 +128,7 @@ tuple<int, optional<StructTypeField>> StructType::findTypeName(const string &typ
 
 int Type::getTypeWidth()
 {
-    if (isPointerType())
+    if (isPointerType() || isFunctionType())
     {
         return 64;
     }
@@ -144,19 +156,50 @@ bool Type::isEqual(TypeHandle type)
         return false;
     }
 
-    if (_typeId == TypeID::AnyType || type->getTypeID() == TypeID::AnyType)
+    if (getTypeID() == TypeID::AnyType || type->getTypeID() == TypeID::AnyType)
     {
         return true;
     }
 
     if (isPrimitiveType())
     {
-        return _typeId == type->getTypeID();
+        return getTypeID() == type->getTypeID();
     }
 
     if (isStructType())
     {
         return this == type.get();
+    }
+
+    if (isFunctionType() && type->isFunctionType())
+    {
+        auto lhs = static_cast<FunctionType *>(this);
+        auto rhs = static_cast<FunctionType *>(type.get());
+
+        assert(lhs && rhs && "should be exist as a function type");
+
+        if (!lhs->getReturnType()->isEqual(rhs->getReturnType()))
+        {
+            return false;
+        }
+
+        if (lhs->getArguments().size() != rhs->getArguments().size())
+        {
+            return false;
+        }
+
+        for (size_t i = 0; i < lhs->getArguments().size(); i++)
+        {
+            auto lhsItem = lhs->getArguments()[i];
+            auto rhsItem = rhs->getArguments()[i];
+
+            if (!lhsItem->isEqual(rhsItem))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     if (isDerivedType())
@@ -299,8 +342,25 @@ string Type::getTypeName()
     }
     case TypeID::StructType:
     {
-        auto val = dynamic_cast<StructType *>(this);
+        auto val = static_cast<StructType *>(this);
         return fmt::format("@{}", val->getIdentifier());
+    }
+    case TypeID::FunctionType:
+    {
+        auto val = static_cast<FunctionType *>(this);
+        auto args = string("");
+        for (size_t i = 0; i < val->getArguments().size(); i++)
+        {
+            if (i != 0)
+            {
+                args += ",";
+            }
+
+            auto item = val->getArguments()[i];
+            args += item->getTypeName();
+        }
+
+        return fmt::format("@lambda({}) {}", args, val->getReturnType()->getTypeName());
     }
     default:
     {

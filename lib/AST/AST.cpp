@@ -21,6 +21,16 @@ bool Expression::isNilExpression() const
     return typeid(NilLiteralExpression) == typeid(*this);
 }
 
+bool Expression::isFunctionExpression() const
+{
+    return typeid(Function) == typeid(*this);
+}
+
+bool Expression::isLambdaExpression() const
+{
+    return typeid(LambdaStatement) == typeid(*this);
+}
+
 // Function
 std::string Function::getManglingName()
 {

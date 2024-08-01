@@ -13,6 +13,11 @@ void Function::printAsOperand(Printer *printer)
     UNIMPLEMENTED;
 }
 
+void LambdaStatement::printAsOperand(Printer *printer)
+{
+    UNIMPLEMENTED;
+}
+
 void ArgumentExpression::print(Printer *printer)
 {
     UNIMPLEMENTED;
@@ -155,6 +160,11 @@ void CallExpression::print(Printer *printer)
 void CallExpression::printAsOperand(Printer *printer)
 {
     printer->printAsOperand(this);
+}
+
+void LambdaStatement::print(Printer *printer)
+{
+    UNIMPLEMENTED;
 }
 
 // ReturnExpression

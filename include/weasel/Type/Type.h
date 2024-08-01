@@ -78,7 +78,8 @@ namespace weasel
             return isBoolType() ||
                    isFloatType() ||
                    isDoubleType() ||
-                   isIntegerType();
+                   isIntegerType() ||
+                   isVoidType();
         }
 
         bool isUnknownType() const { return _typeId == TypeID::UnknownType; }
@@ -93,8 +94,10 @@ namespace weasel
             return isPointerType() ||
                    isArrayType() ||
                    isReferenceType() ||
-                   isStructType();
+                   isStructType() ||
+                   isFunctionType();
         }
+        bool isFunctionType() const { return _typeId == TypeID::FunctionType; }
 
         // Check possible struct type
         bool isPossibleStructType();
@@ -129,6 +132,7 @@ namespace weasel
 
         optional<Error> getError() const { return _error; }
         void setError(Error error) { _error = error; }
+        bool isError() const { return _error.has_value(); }
 
     protected:
         bool _isSigned = true;
@@ -186,7 +190,24 @@ namespace weasel
         {
             return !_innerType->isArrayType();
         }
+    };
 
-        bool isError() const { return _error.has_value(); }
+    // Function Type
+    class FunctionType : public Type
+    {
+        CODEGEN_TYPE
+
+    private:
+        vector<TypeHandle> _arguments;
+        TypeHandle _returnType;
+        bool isVararg = false;
+
+    public:
+        FunctionType() : Type(TypeID::FunctionType, 0, false) {}
+
+        vector<TypeHandle> &getArguments() { return _arguments; }
+
+        void setReturnType(TypeHandle type) { _returnType = type; }
+        TypeHandle getReturnType() { return _returnType; }
     };
 } // namespace weasel

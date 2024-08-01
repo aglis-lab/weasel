@@ -18,39 +18,37 @@ llvm::Value *WeaselCodegen::castInteger(llvm::Value *val, llvm::Type *type, bool
     return getBuilder()->CreateZExtOrTrunc(val, type);
 }
 
-llvm::Value *WeaselCodegen::codegen(Function *funAST)
+llvm::Value *WeaselCodegen::codegen(Function *expr)
 {
-    LOG(INFO) << "Codegen Function " << funAST->getIdentifier();
+    LOG(INFO) << "Codegen Function " << expr->getIdentifier();
 
-    auto funName = funAST->getManglingName();
-    auto funType = funAST->getType();
-    auto isVararg = funAST->isVararg();
-    auto funArgs = funAST->getArguments();
-    auto argsLength = (int)funArgs.size() - (isVararg ? 1 : 0);
-    auto args = std::vector<llvm::Type *>(argsLength);
+    auto isVararg = expr->isVararg();
+    auto args = expr->getArguments();
+
+    auto argsLength = (int)args.size() - (isVararg ? 1 : 0);
+    auto argsV = std::vector<llvm::Type *>(argsLength);
     for (int index = 0; index < argsLength; index++)
     {
-        args[index] = funArgs[index]->getType()->accept(this);
+        argsV[index] = args[index]->getType()->accept(this);
     }
 
-    auto returnType = funType->accept(this);
+    auto returnType = expr->getReturnType();
+    auto returnTypeV = returnType->accept(this);
     auto linkage = llvm::GlobalValue::LinkageTypes::ExternalLinkage;
-    auto funTyLLVM = llvm::FunctionType::get(returnType, args, isVararg);
-    auto funLLVM = llvm::Function::Create(funTyLLVM, linkage, funName, getModule());
+    auto funTypeV = llvm::FunctionType::get(returnTypeV, argsV, isVararg);
+    auto funV = llvm::Function::Create(funTypeV, linkage, expr->getManglingName(), getModule());
 
-    funLLVM->addFnAttr(llvm::Attribute::AttrKind::InlineHint);
-    funLLVM->addFnAttr(llvm::Attribute::AttrKind::AlwaysInline);
-    funLLVM->setDSOLocal(true);
-    if (funAST->isDefine())
+    funV->addFnAttr(llvm::Attribute::AttrKind::InlineHint);
+    funV->addFnAttr(llvm::Attribute::AttrKind::AlwaysInline);
+    funV->setDSOLocal(true);
+    if (expr->isDefine())
     {
-        LOG(INFO) << "Codegen Function\n";
+        // Create Alloca Block
+        _allocaBlock = llvm::BasicBlock::Create(*getContext(), "", funV);
 
         // Create Entry Point
-        _allocaBlock = llvm::BasicBlock::Create(*getContext(), "", funLLVM);
-        auto entryBlock = llvm::BasicBlock::Create(*getContext(), "entry", funLLVM);
+        auto entryBlock = llvm::BasicBlock::Create(*getContext(), "entry", funV);
         getBuilder()->SetInsertPoint(entryBlock);
-
-        LOG(INFO) << "Codegen Function Arguments\n";
 
         // Enter to new scope
         enterScope();
@@ -63,11 +61,11 @@ llvm::Value *WeaselCodegen::codegen(Function *funAST)
         };
 
         std::vector<AllocateArgument> argAllocs;
-        for (size_t i = 0; i < funArgs.size(); i++)
+        for (size_t i = 0; i < args.size(); i++)
         {
-            auto argExpr = funArgs[i];
+            auto argExpr = args[i];
             auto argName = argExpr->getIdentifier();
-            auto item = funLLVM->getArg(i);
+            auto item = funV->getArg(i);
 
             item->setName(argName);
 
@@ -90,7 +88,7 @@ llvm::Value *WeaselCodegen::codegen(Function *funAST)
         }
 
         // Create Block
-        LOG(INFO) << "Codegen Function Body\n";
+        LOG(INFO) << "Codegen Function Body";
 
         // Store argument value
         for (auto item : argAllocs)
@@ -102,13 +100,13 @@ llvm::Value *WeaselCodegen::codegen(Function *funAST)
         _returnBlock = llvm::BasicBlock::Create(*getContext());
 
         // Create Return Block and Value
-        if (!funAST->getType()->isVoidType())
+        if (!returnType->isVoidType())
         {
-            _returnAlloca = getBuilder()->CreateAlloca(funTyLLVM->getReturnType());
+            _returnAlloca = getBuilder()->CreateAlloca(funTypeV->getReturnType());
         }
 
         // Codegen Function Body
-        funAST->getBody()->accept(this);
+        expr->getBody()->accept(this);
 
         // Create Default Return Block
         if (llvm::dyn_cast<llvm::BranchInst>(&getBuilder()->GetInsertBlock()->back()) == nullptr)
@@ -116,25 +114,21 @@ llvm::Value *WeaselCodegen::codegen(Function *funAST)
             getBuilder()->CreateBr(_returnBlock);
         }
 
-        // Create Block
-        LOG(INFO) << "Codegen Return Body\n";
         // Evaluate Return
-        // funLLVM->getBasicBlockList().push_back(_returnBlock);
-        funLLVM->insert(funLLVM->end(), _returnBlock);
+        funV->insert(funV->end(), _returnBlock);
         getBuilder()->SetInsertPoint(_returnBlock);
 
-        if (funAST->getType()->isVoidType())
+        if (returnType->isVoidType())
         {
             getBuilder()->CreateRetVoid();
         }
         else
         {
-            auto loadReturnValue = getBuilder()->CreateLoad(funTyLLVM->getReturnType(), _returnAlloca);
+            auto loadReturnValue = getBuilder()->CreateLoad(funTypeV->getReturnType(), _returnAlloca);
             getBuilder()->CreateRet(loadReturnValue);
         }
 
         // Merge entry block into allocablock
-        LOG(INFO) << "Merge Block";
         llvm::BranchInst::Create(entryBlock, _allocaBlock);
         auto mergeEntryBlock = llvm::MergeBlockIntoPredecessor(entryBlock);
         assert(mergeEntryBlock && "Merge Entry Block into alloca block");
@@ -147,7 +141,7 @@ llvm::Value *WeaselCodegen::codegen(Function *funAST)
         exitScope();
     }
 
-    return funLLVM;
+    return funV;
 }
 
 llvm::Value *WeaselCodegen::codegen(MethodCallExpression *expr)
@@ -298,6 +292,12 @@ llvm::Value *WeaselCodegen::codegen(VariableExpression *expr)
     // Get Allocator from Symbol Table
     auto varName = expr->getIdentifier();
     auto type = expr->getType();
+
+    // TODO: FUNCTION TYPE
+    if (type->isFunctionType())
+    {
+    }
+
     auto attr = findAttribute(varName);
 
     assert(!attr.isEmpty() && "variable isn't declare yet");
@@ -433,98 +433,6 @@ llvm::Value *WeaselCodegen::codegen(StructExpression *expr)
         }
     }
 
-    // Remove PreferConstant Check
-    // Just check directly onto the fields
-    // auto type = static_pointer_cast<StructType>(expr->getType());
-    // auto isConstant = expr->getIsPreferConstant() && type->isPreferConstant();
-    // auto fields = expr->getFields();
-    // LOG(INFO) << "Codegen Struct Expression 2...";
-    // if (isConstant)
-    // {
-    //     for (auto item : fields)
-    //     {
-    //         if (typeid(LiteralExpression) != typeid(*item->getValue()))
-    //         {
-    //             isConstant = false;
-    //             break;
-    //         }
-    //     }
-    // }
-
-    // auto typeFields = expr->getFields();
-    // auto fieldSize = (int)typeFields.size();
-    // if (isConstant)
-    // {
-    //     std::vector<llvm::Constant *> arr(fieldSize, nullptr);
-    //     for (auto &item : fields)
-    //     {
-    //         auto [idx, _] = type->findTypeName(item->getIdentifier());
-    //         if (idx == -1)
-    //         {
-    //             continue;
-    //         }
-
-    //         arr[idx] = llvm::dyn_cast<llvm::Constant>(item->getValue()->accept(this));
-    //     }
-
-    //     for (int i = 0; i < fieldSize; i++)
-    //     {
-    //         if (arr[i] != nullptr)
-    //         {
-    //             continue;
-    //         }
-
-    //         auto typeField = typeFields[i]->getValue();
-    //         auto typeFieldV = typeField->getType()->accept(this);
-    //         if (typeField->getType()->isPrimitiveType())
-    //         {
-    //             if (typeField->getType()->isFloatType() || typeField->getType()->isDoubleType())
-    //             {
-    //                 arr[i] = llvm::ConstantFP::get(typeFieldV, 0);
-    //             }
-    //             else
-    //             {
-    //                 arr[i] = llvm::ConstantInt::get(typeFieldV, 0);
-    //             }
-    //         }
-    //         else
-    //         {
-    //             arr[i] = llvm::ConstantStruct::get(llvm::dyn_cast<llvm::StructType>(typeFieldV), {});
-    //         }
-    //     }
-
-    //     auto typeV = llvm::dyn_cast<llvm::StructType>(type->accept(this));
-    //     auto constantV = llvm::ConstantStruct::get(typeV, arr);
-    //     auto val = new llvm::GlobalVariable(*getModule(), typeV, true, llvm::GlobalValue::LinkageTypes::PrivateLinkage, constantV);
-
-    //     val->setUnnamedAddr(llvm::GlobalValue::UnnamedAddr::Global);
-
-    //     return val;
-    // }
-
-    // LOG(INFO) << "Create Allocation on StructExpression";
-
-    // auto typeV = type->accept(this);
-    // auto alloc = getBuilder()->CreateAlloca(typeV);
-
-    // getBuilder()->CreateMemSet(alloc, getBuilder()->getInt8(0), type->getTypeWidthByte(), llvm::MaybeAlign(4));
-
-    // for (auto item : fields)
-    // {
-    //     auto [idx, _] = type->findTypeName(item->getIdentifier());
-    //     if (idx == -1)
-    //     {
-    //         continue;
-    //     }
-
-    //     auto idxStruct = getBuilder()->getInt32(0);
-    //     auto idxVal = getBuilder()->getInt32(idx);
-    //     auto inbound = getBuilder()->CreateInBoundsGEP(typeV, alloc, {idxStruct, idxVal});
-    //     auto val = item->getValue()->accept(this);
-
-    //     getBuilder()->CreateStore(val, inbound);
-    // }
-
     return alloc;
 }
 
@@ -542,7 +450,6 @@ llvm::Value *WeaselCodegen::codegen(DeclarationStatement *expr)
 
     // Create Alloca
     auto alloc = createAlloca(declTypeV);
-
     // Set Default Value if no value expression
     if (valueExpr == nullptr)
     {
@@ -551,6 +458,7 @@ llvm::Value *WeaselCodegen::codegen(DeclarationStatement *expr)
 
         return alloc;
     }
+    LOG(INFO) << "Codegen Declaration Statement 3";
 
     // Check if type isn't void
     auto valueType = valueExpr->getType();

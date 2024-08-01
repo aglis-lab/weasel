@@ -48,6 +48,11 @@ void AnalysisSemantic::semantic(ArgumentExpression *expr)
     expr->getType()->accept(this);
 }
 
+void AnalysisSemantic::semantic(FunctionType *expr)
+{
+    SEMANTIC("FunctionType");
+}
+
 void AnalysisSemantic::semantic(StructType *expr)
 {
     SEMANTIC("StructType");
@@ -118,15 +123,23 @@ void AnalysisSemantic::semantic(Function *fun)
     SEMANTIC("Function") << " " << fun->getIdentifier();
 
     auto lastDeclaration = getDeclarations().size();
+    auto type = make_shared<FunctionType>();
+
     fun->getType()->accept(this);
+    type->setReturnType(fun->getType());
 
     // Check Arguments
     for (auto arg : fun->getArguments())
     {
         arg->accept(this);
 
+        type->getArguments().push_back(arg->getType());
+
         getDeclarations().push_back(arg.get());
     }
+
+    // Function Type
+    fun->setType(type);
 
     // Check Compound Statement
     if (fun->getBody())
@@ -278,8 +291,14 @@ void AnalysisSemantic::semantic(VariableExpression *expr)
     auto decl = findDeclaration(expr->getIdentifier());
     if (!decl)
     {
-        expr->setError(Errors::getInstance().variableNotDefined.withToken(expr->getToken()));
-        return onError(expr);
+        auto fun = getModule()->findFunction(expr->getIdentifier());
+        if (!fun || fun->isError())
+        {
+            expr->setError(Errors::getInstance().variableNotDefined.withToken(expr->getToken()));
+            return onError(expr);
+        }
+
+        return expr->setType(fun->getType());
     }
 
     expr->setType(decl->getType());
