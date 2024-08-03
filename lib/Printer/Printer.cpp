@@ -427,7 +427,7 @@ void Printer::printAsOperand(CallExpression *expr)
 {
     PRINT_OPERAND("CallExpression");
 
-    fmt::print(_out, "@call {}(", expr->getFunction()->getIdentifier());
+    fmt::print(_out, "@call {}(", expr->getIdentifier());
     for (auto arg : expr->getArguments())
     {
         arg->printAsOperand(this);

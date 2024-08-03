@@ -182,12 +182,17 @@ namespace weasel
 
         vector<ExpressionHandle> &getArguments() { return _args; }
 
-        void setFunction(FunctionHandle fun) { _fun = fun; }
-        FunctionHandle getFunction() { return _fun; }
+        // TODO: CALL EXPRESSION
+        // void setFunction(FunctionHandle fun) { _fun = fun; }
+        // FunctionHandle getFunction() { return _fun; }
+
+        void setLambdaCall(bool lambdaCall) { _lambdaCall = lambdaCall; }
+        bool isLambdaCall() const { return _lambdaCall; }
 
     private:
-        FunctionHandle _fun;
+        // FunctionHandle _fun;
         vector<ExpressionHandle> _args;
+        bool _lambdaCall = false;
     };
 
     class ArrayExpression : public VariableExpression

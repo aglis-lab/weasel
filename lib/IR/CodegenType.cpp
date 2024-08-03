@@ -9,17 +9,26 @@
 
 llvm::Type *Codegen::codegen(FunctionType *expr)
 {
+    // TODO: CHECK IF VARARG FUNCTION TYPE
     // auto isVararg = expr->
-    // auto retType = expr->getReturnType()->accept(this);
-    // auto args = vector<llvm::Type *>();
-    // for (auto &item : expr->getArguments())
-    // {
-    //     args.push_back(item->accept(this));
-    // }
+    auto retType = expr->getReturnType()->accept(this);
+    auto args = vector<llvm::Type *>();
+    for (auto &item : expr->getArguments())
+    {
+        args.push_back(item->accept(this));
+    }
 
-    // return llvm::FunctionType::get(retType, args, false);
+    // Bacause vararg is actually a last parameter
+    // We remove the last parameter
+    // The last parameter from the ast mean to be for static type
+    if (expr->isVararg())
+    {
+        args.pop_back();
+    }
 
-    return llvm::PointerType::get(*getContext(), 0);
+    return llvm::FunctionType::get(retType, args, expr->isVararg());
+
+    // return llvm::PointerType::get(*getContext(), 0);
 }
 
 // Weasel User Type System to llvm Type System

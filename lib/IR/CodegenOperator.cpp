@@ -217,15 +217,11 @@ llvm::Value *Codegen::codegen(AssignmentExpression *expr)
     // Check if Struct Expression
     if (rhs->isStructExpression())
     {
-        fmt::println("CHECK ME 2");
-
         static_cast<StructExpression *>(rhs.get())->setAlloc(lhsVal);
         rhs->accept(this);
     }
     else
     {
-        fmt::println("CHECK ME 1");
-
         auto rhsVal = rhs->accept(this);
 
         // Casting Integer
@@ -235,8 +231,6 @@ llvm::Value *Codegen::codegen(AssignmentExpression *expr)
             rhsVal = castInteger(rhsVal, lhsTypeV, lhsType->isSigned());
         }
 
-        fmt::println("CHECK ME");
-
         if (rhsType->isStructType())
         {
             auto rhsTypeStruct = dynamic_cast<StructType *>(rhsType.get());
@@ -244,18 +238,12 @@ llvm::Value *Codegen::codegen(AssignmentExpression *expr)
         }
         else
         {
-            fmt::println("CHECK ME 3");
-
             assert(lhsVal && "LHS Value should exist");
             assert(rhsVal && "RHS Value should exist");
 
             getBuilder()->CreateStore(rhsVal, lhsVal);
-
-            fmt::println("CHECK ME 4");
         }
     }
-
-    fmt::println("CHECK ME");
 
     if (expr->isAccessAllocation())
     {

@@ -201,7 +201,7 @@ namespace weasel
     private:
         vector<TypeHandle> _arguments;
         TypeHandle _returnType;
-        bool isVararg = false;
+        bool _isVararg = false;
 
     public:
         FunctionType() : Type(TypeID::FunctionType, 0, false) {}
@@ -210,5 +210,8 @@ namespace weasel
 
         void setReturnType(TypeHandle type) { _returnType = type; }
         TypeHandle getReturnType() { return _returnType; }
+
+        void setIsVararg(bool isVararg) { _isVararg = isVararg; }
+        bool isVararg() const { return _isVararg; }
     };
 } // namespace weasel

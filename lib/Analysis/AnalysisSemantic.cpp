@@ -127,6 +127,7 @@ void AnalysisSemantic::semantic(Function *fun)
 
     fun->getType()->accept(this);
     type->setReturnType(fun->getType());
+    type->setIsVararg(fun->isVararg());
 
     // Check Arguments
     for (auto arg : fun->getArguments())
@@ -196,23 +197,37 @@ void AnalysisSemantic::semantic(CallExpression *expr)
     SEMANTIC("CallExpression");
 
     // Check Function Call
-    auto fun = getModule()->findFunction(expr->getIdentifier());
-    if (!fun)
+    Expression *decl = getModule()->findFunction(expr->getIdentifier()).get();
+    if (!decl)
     {
-        expr->setError(Errors::getInstance().functionNotDefined.withToken(expr->getToken()));
-        return onError(expr);
+        decl = findDeclaration(expr->getIdentifier());
+        if (!decl || !decl->getType()->isFunctionType())
+        {
+            expr->setError(Errors::getInstance().functionNotDefined.withToken(expr->getToken()));
+            return onError(expr);
+        }
+
+        expr->setLambdaCall(true);
     }
 
-    expr->setType(fun->getType());
+    expr->setType(decl->getType());
+    expr->setDeclarationValue(decl);
+
+    // TODO: CALL EXPRESSION
     // expr->setFunction(fun);
 
     assert(expr->getType() && "call expression should be have a type");
+
+    // Casting Function Type
+    auto funType = static_cast<FunctionType *>(decl->getType().get());
+
+    assert(funType && "Call Expression should be a function type");
 
     // Check Argument
     for (size_t i = 0; i < expr->getArguments().size(); i++)
     {
         auto arg = expr->getArguments()[i];
-        auto funArg = fun->getArguments()[min(fun->getArguments().size() - 1, i)];
+        auto funArg = funType->getArguments()[min(funType->getArguments().size() - 1, i)];
 
         arg->accept(this);
         if (arg->isError())
@@ -220,7 +235,7 @@ void AnalysisSemantic::semantic(CallExpression *expr)
             return;
         }
 
-        if (!arg->getType()->isEqual(funArg->getType()))
+        if (!arg->getType()->isEqual(funArg))
         {
             expr->setError(Errors::getInstance().datatypeDifferent.withToken(arg->getToken()));
             return onError(expr);

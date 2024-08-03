@@ -185,10 +185,16 @@ llvm::Value *Codegen::codegen(CallExpression *expr)
 {
     LOG(INFO) << "Codegen Call Function";
 
-    auto mangleName = expr->getFunction()->getManglingName();
     auto args = expr->getArguments();
-    auto fun = getModule()->getFunction(mangleName);
-    auto funArgs = expr->getFunction()->getArguments();
+    auto fun = expr->getDeclarationValue()->getCodegen();
+    auto funTypeV = llvm::dyn_cast<llvm::FunctionType>(expr->getType()->accept(this));
+
+    assert(funTypeV);
+
+    if (expr->isLambdaCall())
+    {
+        fun = getBuilder()->CreateLoad(llvm::PointerType::get(*getContext(), 0), fun);
+    }
 
     std::vector<llvm::Value *> argsV;
     for (size_t i = 0; i < args.size(); i++)
@@ -209,7 +215,8 @@ llvm::Value *Codegen::codegen(CallExpression *expr)
         argsV.push_back(argVal);
     }
 
-    return getBuilder()->CreateCall(fun, argsV);
+    // return getBuilder()->CreateCall(fun, argsV);
+    return getBuilder()->CreateCall(funTypeV, fun, argsV);
 }
 
 llvm::Value *Codegen::codegen(BreakExpression *expr)
@@ -298,7 +305,6 @@ llvm::Value *Codegen::codegen(VariableExpression *expr)
     auto type = expr->getType();
     auto typeV = type->accept(this);
 
-    fmt::println("TEST {}", expr->getIdentifier());
     llvm::Value *alloc;
     if (type->isFunctionType())
     {
@@ -315,15 +321,10 @@ llvm::Value *Codegen::codegen(VariableExpression *expr)
 
     assert(alloc && "variable isn't declare yet");
 
-    fmt::println("TEST {} {}", expr->getIdentifier(), (alloc == nullptr));
-
     if (llvm::dyn_cast<llvm::Argument>(alloc))
     {
-        fmt::println("TEST {}", expr->getIdentifier());
         return alloc;
     }
-
-    fmt::println("TEST {}", expr->getIdentifier());
 
     if (type->isArrayType())
     {
@@ -332,7 +333,11 @@ llvm::Value *Codegen::codegen(VariableExpression *expr)
 
     if (expr->isAccessAllocation())
     {
-        fmt::println("TEST Alloc {}", expr->getIdentifier());
+        return alloc;
+    }
+
+    if (expr->getType()->isFunctionType())
+    {
         return alloc;
     }
 
@@ -464,13 +469,21 @@ llvm::Value *Codegen::codegen(DeclarationStatement *expr)
 
     // Allocating Address for declaration
     auto varName = expr->getIdentifier();
-    auto declTypeV = declType->accept(this);
+    llvm::Type *declTypeV;
 
     // Create Alloca
+    if (!declType->isFunctionType())
+    {
+        declTypeV = declType->accept(this);
+    }
+    else
+    {
+        declTypeV = llvm::PointerType::get(*getContext(), 0);
+    }
+
     auto alloc = createAlloca(declTypeV);
 
     // Save Allocation
-    fmt::println("ALLOCATE {}", expr->getIdentifier());
     expr->setCodegen(alloc);
 
     // Set Default Value if no value expression
