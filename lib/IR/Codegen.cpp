@@ -1,6 +1,6 @@
 #include "weasel/IR/Codegen.h"
 
-WeaselCodegen::WeaselCodegen(llvm::LLVMContext *context, const std::string &moduleName)
+Codegen::Codegen(llvm::LLVMContext *context, const std::string &moduleName)
 {
     _context = context;
     _module = new llvm::Module(moduleName, *_context);

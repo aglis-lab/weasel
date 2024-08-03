@@ -3,17 +3,17 @@
 
 using namespace weasel;
 
-llvm::Type *FunctionType::accept(WeaselCodegen *context)
+llvm::Type *FunctionType::accept(Codegen *context)
 {
     return context->codegen(this);
 }
 
-llvm::Type *StructType::accept(WeaselCodegen *context)
+llvm::Type *StructType::accept(Codegen *context)
 {
     return context->codegen(this);
 }
 
-llvm::Type *Type::accept(WeaselCodegen *context)
+llvm::Type *Type::accept(Codegen *context)
 {
     return context->codegen(this);
 }

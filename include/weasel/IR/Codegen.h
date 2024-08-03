@@ -25,14 +25,14 @@ namespace weasel
     };
 
     // Analysis Context
-    class WeaselCodegen : public ContextTable
+    class Codegen : public ContextTable
     {
         // Weasel Package
     private:
         Metadata _metaData;
 
     public:
-        WeaselCodegen(llvm::LLVMContext *context, const std::string &moduleName);
+        Codegen(llvm::LLVMContext *context, const string &moduleName);
 
         llvm::LLVMContext *getContext() const { return _context; }
         llvm::Module *getModule() { return _module; }
@@ -94,16 +94,17 @@ namespace weasel
         llvm::IRBuilder<> *_builder;
 
         // Helper Variable for Looping //
-        std::vector<llvm::BasicBlock *> _breakBlocks;
-        std::vector<llvm::BasicBlock *> _continueBlocks;
+        vector<llvm::BasicBlock *> _breakBlocks;
+        vector<llvm::BasicBlock *> _continueBlocks;
 
         // Helper For Return Function //
         llvm::AllocaInst *_returnAlloca;
         llvm::BasicBlock *_returnBlock;
         llvm::BasicBlock *_allocaBlock;
 
-        // Helper Variable for Struct Types //
-        std::map<std::string, llvm::StructType *> _structTypes;
+        // Helper Variable for Struct Types and Functions //
+        map<string, llvm::StructType *> _structTypes;
+        map<string, llvm::Function *> _functions;
 
     private:
         // Create allocation instruction at alloca block
@@ -135,8 +136,8 @@ namespace weasel
         llvm::BasicBlock *getContinueBlock() const { return _continueBlocks.back(); }
 
         // Helper for User Defined Struct //
-        void addStructType(const std::string &name, llvm::StructType *type) { _structTypes[name] = type; }
-        llvm::StructType *findStructType(const std::string &name)
+        void addStructType(const string &name, llvm::StructType *type) { _structTypes[name] = type; }
+        llvm::StructType *findStructType(const string &name)
         {
             if (_structTypes.contains(name))
             {

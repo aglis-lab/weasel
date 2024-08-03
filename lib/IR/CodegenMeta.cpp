@@ -1,36 +1,36 @@
 #include "weasel/IR/Codegen.h"
 
-llvm::MDNode *WeaselCodegen::getTBAARoot()
+llvm::MDNode *Codegen::getTBAARoot()
 {
     return getMDBuilder()->createTBAARoot("Simple C / C++ TBAA");
 }
 
-llvm::MDNode *WeaselCodegen::getTBAAChar()
+llvm::MDNode *Codegen::getTBAAChar()
 {
     return getMDBuilder()->createTBAAScalarTypeNode("omnipotent char", getTBAARoot(), 0);
 }
 
-llvm::MDNode *WeaselCodegen::getTBAAShort()
+llvm::MDNode *Codegen::getTBAAShort()
 {
     return getMDBuilder()->createTBAAScalarTypeNode("short", getTBAAChar(), 0);
 }
 
-llvm::MDNode *WeaselCodegen::getTBAAInt()
+llvm::MDNode *Codegen::getTBAAInt()
 {
     return getMDBuilder()->createTBAAScalarTypeNode("int", getTBAAChar(), 0);
 }
 
-llvm::MDNode *WeaselCodegen::getTBAALong()
+llvm::MDNode *Codegen::getTBAALong()
 {
     return getMDBuilder()->createTBAAScalarTypeNode("long long", getTBAAChar(), 0);
 }
 
-llvm::MDNode *WeaselCodegen::getTBAAPointer()
+llvm::MDNode *Codegen::getTBAAPointer()
 {
     return getMDBuilder()->createTBAAScalarTypeNode("any pointer", getTBAAChar(), 0);
 }
 
-llvm::MDNode *WeaselCodegen::getTBAA(llvm::Type *type)
+llvm::MDNode *Codegen::getTBAA(llvm::Type *type)
 {
     llvm::MDNode *node;
     auto width = type->getIntegerBitWidth();

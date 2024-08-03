@@ -77,6 +77,7 @@ int main(int argc, char *argv[])
     auto analysis = weasel::AnalysisSemantic(&weaselModule);
     analysis.semanticCheck();
 
+    // TODO: Change with better Error Print
     if (!analysis.getTypeErrors().empty())
     {
         for (auto item : analysis.getTypeErrors())
@@ -124,7 +125,7 @@ int main(int argc, char *argv[])
 
     // Prepare for codegen
     auto llvmContext = llvm::LLVMContext();
-    auto codegen = weasel::WeaselCodegen(&llvmContext, "CoreModule");
+    auto codegen = weasel::Codegen(&llvmContext, "CoreModule");
     auto driver = weasel::Driver(&codegen, &weaselModule);
 
     LOG(INFO) << "Compiling...\n";

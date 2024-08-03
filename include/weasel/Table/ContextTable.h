@@ -7,6 +7,8 @@
 
 #include <weasel/Table/Table.h>
 
+using namespace std;
+
 namespace weasel
 {
     class ContextAttribute
@@ -35,13 +37,22 @@ namespace weasel
     class ContextTable
     {
     protected:
-        std::list<ContextAttribute> _attributes;
+        list<ContextAttribute> _attributes;
 
     public:
         inline std::list<ContextAttribute> getAttributes() const { return _attributes; }
-        inline void addAttribute(const ContextAttribute &attr)
+        inline void addAttribute(const ContextAttribute &attr) { _attributes.push_back(attr); }
+        inline ContextAttribute findAttribute(const std::string &identifier)
         {
-            _attributes.push_back(attr);
+            for (auto item = _attributes.rbegin(); item != _attributes.rend(); ++item)
+            {
+                if ((*item).getIdentifier() == identifier)
+                {
+                    return (*item);
+                }
+            }
+
+            return ContextAttribute::getEmpty();
         }
 
         inline void enterScope() { _attributes.push_back(ContextAttribute::getEmpty()); }
@@ -57,18 +68,6 @@ namespace weasel
                     break;
                 }
             }
-        }
-        inline ContextAttribute findAttribute(const std::string &identifier)
-        {
-            for (auto item = _attributes.rbegin(); item != _attributes.rend(); ++item)
-            {
-                if ((*item).getIdentifier() == identifier)
-                {
-                    return (*item);
-                }
-            }
-
-            return ContextAttribute::getEmpty();
         }
     };
 } // namespace weasel

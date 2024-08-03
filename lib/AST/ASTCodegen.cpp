@@ -5,157 +5,157 @@ using namespace weasel;
 
 #define UNIMPLEMENTED LOG(INFO) << "Unimplemented Codegen"
 
-llvm::Value *LambdaStatement::accept(WeaselCodegen *c)
+llvm::Value *LambdaStatement::accept(Codegen *c)
 {
     UNIMPLEMENTED;
 }
 
-llvm::Value *ArgumentExpression::accept(WeaselCodegen *c)
+llvm::Value *ArgumentExpression::accept(Codegen *c)
 {
     UNIMPLEMENTED;
 }
 
-llvm::Value *GlobalVariable::accept(WeaselCodegen *c)
+llvm::Value *GlobalVariable::accept(Codegen *c)
 {
     return c->codegen(this);
 }
 
-llvm::Value *MethodCallExpression::accept(WeaselCodegen *c)
+llvm::Value *MethodCallExpression::accept(Codegen *c)
 {
     return c->codegen(this);
 }
 
-llvm::Value *NumberLiteralExpression::accept(WeaselCodegen *c)
+llvm::Value *NumberLiteralExpression::accept(Codegen *c)
 {
     return c->codegen(this);
 }
 
-llvm::Value *DoubleLiteralExpression::accept(WeaselCodegen *c)
+llvm::Value *DoubleLiteralExpression::accept(Codegen *c)
 {
     return c->codegen(this);
 }
 
-llvm::Value *FloatLiteralExpression::accept(WeaselCodegen *c)
+llvm::Value *FloatLiteralExpression::accept(Codegen *c)
 {
     return c->codegen(this);
 }
 
-llvm::Value *BoolLiteralExpression::accept(WeaselCodegen *c)
+llvm::Value *BoolLiteralExpression::accept(Codegen *c)
 {
     return c->codegen(this);
 }
 
-llvm::Value *CharLiteralExpression::accept(WeaselCodegen *c)
+llvm::Value *CharLiteralExpression::accept(Codegen *c)
 {
     return c->codegen(this);
 }
 
-llvm::Value *ArrayLiteralExpression::accept(WeaselCodegen *c)
+llvm::Value *ArrayLiteralExpression::accept(Codegen *c)
 {
     return c->codegen(this);
 }
 
-llvm::Value *StringLiteralExpression::accept(WeaselCodegen *c)
+llvm::Value *StringLiteralExpression::accept(Codegen *c)
 {
     return c->codegen(this);
 }
 
-llvm::Value *NilLiteralExpression::accept(WeaselCodegen *c)
+llvm::Value *NilLiteralExpression::accept(Codegen *c)
 {
     return c->codegen(this);
 }
 
-llvm::Value *DeclarationStatement::accept(WeaselCodegen *c)
+llvm::Value *DeclarationStatement::accept(Codegen *c)
 {
     return c->codegen(this);
 }
 
-llvm::Value *VariableExpression::accept(WeaselCodegen *c)
+llvm::Value *VariableExpression::accept(Codegen *c)
 {
     return c->codegen(this);
 }
 
-llvm::Value *FieldExpression::accept(WeaselCodegen *c)
+llvm::Value *FieldExpression::accept(Codegen *c)
 {
     return c->codegen(this);
 }
 
-llvm::Value *ArrayExpression::accept(WeaselCodegen *c)
+llvm::Value *ArrayExpression::accept(Codegen *c)
 {
     return c->codegen(this);
 }
 
-llvm::Value *ArithmeticExpression::accept(WeaselCodegen *c)
+llvm::Value *ArithmeticExpression::accept(Codegen *c)
 {
     return c->codegen(this);
 }
 
-llvm::Value *LogicalExpression::accept(WeaselCodegen *c)
+llvm::Value *LogicalExpression::accept(Codegen *c)
 {
     return c->codegen(this);
 }
 
-llvm::Value *AssignmentExpression::accept(WeaselCodegen *c)
+llvm::Value *AssignmentExpression::accept(Codegen *c)
 {
     return c->codegen(this);
 }
 
-llvm::Value *ComparisonExpression::accept(WeaselCodegen *c)
+llvm::Value *ComparisonExpression::accept(Codegen *c)
 {
     return c->codegen(this);
 }
 
-llvm::Value *CallExpression::accept(WeaselCodegen *c)
+llvm::Value *CallExpression::accept(Codegen *c)
 {
     return c->codegen(this);
 }
 
-llvm::Value *ReturnExpression::accept(WeaselCodegen *c)
+llvm::Value *ReturnExpression::accept(Codegen *c)
 {
     return c->codegen(this);
 }
 
-llvm::Value *BreakExpression::accept(WeaselCodegen *c)
+llvm::Value *BreakExpression::accept(Codegen *c)
 {
     return c->codegen(this);
 }
 
-llvm::Value *ContinueExpression::accept(WeaselCodegen *c)
+llvm::Value *ContinueExpression::accept(Codegen *c)
 {
     return c->codegen(this);
 }
 
-llvm::Value *StructExpression::accept(WeaselCodegen *c)
+llvm::Value *StructExpression::accept(Codegen *c)
 {
     return c->codegen(this);
 }
 
-llvm::Value *Function::accept(WeaselCodegen *c)
+llvm::Value *Function::accept(Codegen *c)
 {
     return c->codegen(this);
 }
 
-llvm::Value *UnaryExpression::accept(WeaselCodegen *c)
+llvm::Value *UnaryExpression::accept(Codegen *c)
 {
     return c->codegen(this);
 }
 
-llvm::Value *TypeCastExpression::accept(WeaselCodegen *c)
+llvm::Value *TypeCastExpression::accept(Codegen *c)
 {
     return c->codegen(this);
 }
 
-llvm::Value *CompoundStatement::accept(WeaselCodegen *c)
+llvm::Value *CompoundStatement::accept(Codegen *c)
 {
     return c->codegen(this);
 }
 
-llvm::Value *ConditionStatement::accept(WeaselCodegen *c)
+llvm::Value *ConditionStatement::accept(Codegen *c)
 {
     return c->codegen(this);
 }
 
-llvm::Value *LoopingStatement::accept(WeaselCodegen *c)
+llvm::Value *LoopingStatement::accept(Codegen *c)
 {
     return c->codegen(this);
 }

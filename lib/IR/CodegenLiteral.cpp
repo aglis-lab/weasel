@@ -2,21 +2,21 @@
 
 #include "weasel/IR/Codegen.h"
 
-llvm::Value *WeaselCodegen::codegen(BoolLiteralExpression *expr)
+llvm::Value *Codegen::codegen(BoolLiteralExpression *expr)
 {
     LOG(INFO) << "Codegen Boolean Literal Expression";
 
     return getBuilder()->getInt1(expr->getValue());
 }
 
-llvm::Value *WeaselCodegen::codegen(CharLiteralExpression *expr)
+llvm::Value *Codegen::codegen(CharLiteralExpression *expr)
 {
     LOG(INFO) << "Codegen Char Literal Expression";
 
     return getBuilder()->getInt8(expr->getValue());
 }
 
-llvm::Value *WeaselCodegen::codegen(NumberLiteralExpression *expr)
+llvm::Value *Codegen::codegen(NumberLiteralExpression *expr)
 {
     LOG(INFO) << "Codegen Number Literal Expression";
 
@@ -24,7 +24,7 @@ llvm::Value *WeaselCodegen::codegen(NumberLiteralExpression *expr)
     return llvm::ConstantInt::get(typeVal, expr->getValue());
 }
 
-llvm::Value *WeaselCodegen::codegen(FloatLiteralExpression *expr)
+llvm::Value *Codegen::codegen(FloatLiteralExpression *expr)
 {
     LOG(INFO) << "Codegen Float Literal Expression";
 
@@ -32,7 +32,7 @@ llvm::Value *WeaselCodegen::codegen(FloatLiteralExpression *expr)
     return llvm::ConstantFP::get(floatTy, expr->getValue());
 }
 
-llvm::Value *WeaselCodegen::codegen(DoubleLiteralExpression *expr)
+llvm::Value *Codegen::codegen(DoubleLiteralExpression *expr)
 {
     LOG(INFO) << "Codegen Double Literal Expression";
 
@@ -40,7 +40,7 @@ llvm::Value *WeaselCodegen::codegen(DoubleLiteralExpression *expr)
     return llvm::ConstantFP::get(doubleTy, expr->getValue());
 }
 
-llvm::Value *WeaselCodegen::codegen(StringLiteralExpression *expr)
+llvm::Value *Codegen::codegen(StringLiteralExpression *expr)
 {
     LOG(INFO) << "Codegen String Literal Expression";
 
@@ -53,7 +53,7 @@ llvm::Value *WeaselCodegen::codegen(StringLiteralExpression *expr)
     return llvm::ConstantExpr::getGetElementPtr(globalStringVariable->getValueType(), globalStringVariable, idxList, true);
 }
 
-llvm::Value *WeaselCodegen::codegen(ArrayLiteralExpression *expr)
+llvm::Value *Codegen::codegen(ArrayLiteralExpression *expr)
 {
     LOG(INFO) << "Codegen Array Literal";
 
@@ -91,7 +91,7 @@ llvm::Value *WeaselCodegen::codegen(ArrayLiteralExpression *expr)
     return gv;
 }
 
-llvm::Value *WeaselCodegen::codegen(NilLiteralExpression *expr)
+llvm::Value *Codegen::codegen(NilLiteralExpression *expr)
 {
     LOG(INFO) << "Codegen Nil Literal Expression";
 

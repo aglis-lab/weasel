@@ -2,7 +2,7 @@
 
 namespace weasel
 {
-    class WeaselCodegen;
+    class Codegen;
     class AnalysisSemantic;
     class Printer;
 } // namespace weasel
@@ -13,20 +13,51 @@ namespace llvm
     class AllocaInst;
 } // namespace llvm
 
-#define BASE_CODEGEN_EXPRESSION(XX)                         \
-public:                                                     \
-    virtual llvm::Value *accept(WeaselCodegen *codegen) XX; \
-    virtual void accept(AnalysisSemantic *semantic) XX;     \
-    virtual void print(Printer *printer) XX;                \
+#define VIRTUAL_CODEGEN_VALUE                      \
+    friend class weasel::Codegen;                  \
+                                                   \
+protected:                                         \
+    llvm::Value *_codegen = nullptr;               \
+                                                   \
+    virtual void setCodegen(llvm::Value *val) = 0; \
+    virtual llvm::Value *getCodegen() = 0;
+
+#define OVERRIDE_CODEGEN_VALUE                                             \
+    friend class weasel::Codegen;                                          \
+                                                                           \
+protected:                                                                 \
+    virtual void setCodegen(llvm::Value *val) override { _codegen = val; } \
+    virtual llvm::Value *getCodegen() override { return _codegen; }
+
+#define BASE_CODEGEN_EXPRESSION(XX)                     \
+public:                                                 \
+    virtual llvm::Value *accept(Codegen *codegen) XX;   \
+    virtual void accept(AnalysisSemantic *semantic) XX; \
+    virtual void print(Printer *printer) XX;            \
     virtual void printAsOperand(Printer *printer) XX;
 
-// virtual bool isError() XX;
-
-#define CODEGEN_TYPE                                    \
-public:                                                 \
-    virtual llvm::Type *accept(WeaselCodegen *codegen); \
+#define CODEGEN_TYPE                              \
+public:                                           \
+    virtual llvm::Type *accept(Codegen *codegen); \
     virtual void accept(AnalysisSemantic *semantic);
 
-#define VIRTUAL_CODEGEN_EXPRESSION BASE_CODEGEN_EXPRESSION(= 0)
-#define OVERRIDE_CODEGEN_EXPRESSION BASE_CODEGEN_EXPRESSION(override)
-#define EMPTY_CODEGEN_EXPRESSION BASE_CODEGEN_EXPRESSION(override{})
+#define DECLARATION_EXPRESSION                                                  \
+    friend class weasel::AnalysisSemantic;                                      \
+                                                                                \
+private:                                                                        \
+    Expression *_declValue;                                                     \
+                                                                                \
+    void setDeclarationValue(Expression *declValue) { _declValue = declValue; } \
+    Expression *getDeclarationValue() { return _declValue; }
+
+#define VIRTUAL_CODEGEN_EXPRESSION \
+    BASE_CODEGEN_EXPRESSION(= 0)   \
+    VIRTUAL_CODEGEN_VALUE
+
+#define OVERRIDE_CODEGEN_EXPRESSION   \
+    BASE_CODEGEN_EXPRESSION(override) \
+    OVERRIDE_CODEGEN_VALUE
+
+#define EMPTY_CODEGEN_EXPRESSION        \
+    BASE_CODEGEN_EXPRESSION(override{}) \
+    OVERRIDE_CODEGEN_VALUE

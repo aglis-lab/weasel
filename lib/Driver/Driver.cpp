@@ -21,7 +21,7 @@
 #include <weasel/Passes/Passes.h>
 #include <weasel/Metadata/Metadata.h>
 
-Driver::Driver(WeaselCodegen *codegen, Module *module)
+Driver::Driver(Codegen *codegen, Module *module)
 {
     _codegen = codegen;
     _module = module;

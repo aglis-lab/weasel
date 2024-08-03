@@ -360,7 +360,7 @@ string Type::getTypeName()
             args += item->getTypeName();
         }
 
-        return fmt::format("@lambda({}) {}", args, val->getReturnType()->getTypeName());
+        return fmt::format("@fun({}) {}", args, val->getReturnType()->getTypeName());
     }
     default:
     {

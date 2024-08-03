@@ -7,7 +7,7 @@
 #include "weasel/IR/Codegen.h"
 
 // Unimplemented
-llvm::Value *WeaselCodegen::codegen(TypeCastExpression *expr)
+llvm::Value *Codegen::codegen(TypeCastExpression *expr)
 {
     auto type = expr->getType();
     auto rhs = expr->getValue();
@@ -56,7 +56,7 @@ llvm::Value *WeaselCodegen::codegen(TypeCastExpression *expr)
     return nullptr;
 }
 
-llvm::Value *WeaselCodegen::codegen(ArithmeticExpression *expr)
+llvm::Value *Codegen::codegen(ArithmeticExpression *expr)
 {
     auto opToken = expr->getOperator();
     auto lhs = expr->getLHS();
@@ -173,7 +173,7 @@ llvm::Value *WeaselCodegen::codegen(ArithmeticExpression *expr)
 
 // TODO: Understanding Logical Operator
 // && ||
-llvm::Value *WeaselCodegen::codegen(LogicalExpression *expr)
+llvm::Value *Codegen::codegen(LogicalExpression *expr)
 {
     auto lhs = expr->getLHS();
     auto rhs = expr->getRHS();
@@ -196,8 +196,10 @@ llvm::Value *WeaselCodegen::codegen(LogicalExpression *expr)
     return nullptr;
 }
 
-llvm::Value *WeaselCodegen::codegen(AssignmentExpression *expr)
+llvm::Value *Codegen::codegen(AssignmentExpression *expr)
 {
+    LOG(INFO) << "Codegen Assignment Expression";
+
     auto lhs = expr->getLHS();
     auto rhs = expr->getRHS();
     auto lhsType = lhs->getType();
@@ -211,14 +213,19 @@ llvm::Value *WeaselCodegen::codegen(AssignmentExpression *expr)
     lhs->setAccess(AccessID::Allocation);
 
     auto lhsVal = lhs->accept(this);
+
     // Check if Struct Expression
     if (rhs->isStructExpression())
     {
+        fmt::println("CHECK ME 2");
+
         static_cast<StructExpression *>(rhs.get())->setAlloc(lhsVal);
         rhs->accept(this);
     }
     else
     {
+        fmt::println("CHECK ME 1");
+
         auto rhsVal = rhs->accept(this);
 
         // Casting Integer
@@ -228,6 +235,8 @@ llvm::Value *WeaselCodegen::codegen(AssignmentExpression *expr)
             rhsVal = castInteger(rhsVal, lhsTypeV, lhsType->isSigned());
         }
 
+        fmt::println("CHECK ME");
+
         if (rhsType->isStructType())
         {
             auto rhsTypeStruct = dynamic_cast<StructType *>(rhsType.get());
@@ -235,9 +244,18 @@ llvm::Value *WeaselCodegen::codegen(AssignmentExpression *expr)
         }
         else
         {
+            fmt::println("CHECK ME 3");
+
+            assert(lhsVal && "LHS Value should exist");
+            assert(rhsVal && "RHS Value should exist");
+
             getBuilder()->CreateStore(rhsVal, lhsVal);
+
+            fmt::println("CHECK ME 4");
         }
     }
+
+    fmt::println("CHECK ME");
 
     if (expr->isAccessAllocation())
     {
@@ -248,7 +266,7 @@ llvm::Value *WeaselCodegen::codegen(AssignmentExpression *expr)
     return getBuilder()->CreateLoad(lhsTypeV, lhsVal);
 }
 
-llvm::Value *WeaselCodegen::codegen(ComparisonExpression *expr)
+llvm::Value *Codegen::codegen(ComparisonExpression *expr)
 {
     auto opToken = expr->getOperator();
     auto lhs = expr->getLHS();
@@ -351,7 +369,7 @@ llvm::Value *WeaselCodegen::codegen(ComparisonExpression *expr)
     }
 }
 
-llvm::Value *WeaselCodegen::codegen(UnaryExpression *expr)
+llvm::Value *Codegen::codegen(UnaryExpression *expr)
 {
     auto op = expr->getOperator();
     auto rhs = expr->getValue();

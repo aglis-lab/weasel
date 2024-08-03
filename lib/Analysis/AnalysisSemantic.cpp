@@ -204,7 +204,7 @@ void AnalysisSemantic::semantic(CallExpression *expr)
     }
 
     expr->setType(fun->getType());
-    expr->setFunction(fun);
+    // expr->setFunction(fun);
 
     assert(expr->getType() && "call expression should be have a type");
 
@@ -215,6 +215,11 @@ void AnalysisSemantic::semantic(CallExpression *expr)
         auto funArg = fun->getArguments()[min(fun->getArguments().size() - 1, i)];
 
         arg->accept(this);
+        if (arg->isError())
+        {
+            return;
+        }
+
         if (!arg->getType()->isEqual(funArg->getType()))
         {
             expr->setError(Errors::getInstance().datatypeDifferent.withToken(arg->getToken()));
@@ -288,20 +293,22 @@ void AnalysisSemantic::semantic(VariableExpression *expr)
 {
     SEMANTIC("VariableExpression");
 
-    auto decl = findDeclaration(expr->getIdentifier());
+    Expression *decl = findDeclaration(expr->getIdentifier());
     if (!decl)
     {
         auto fun = getModule()->findFunction(expr->getIdentifier());
-        if (!fun || fun->isError())
+        if (!fun)
         {
             expr->setError(Errors::getInstance().variableNotDefined.withToken(expr->getToken()));
             return onError(expr);
         }
 
-        return expr->setType(fun->getType());
+        decl = fun.get();
     }
 
     expr->setType(decl->getType());
+
+    expr->setDeclarationValue(decl);
 }
 
 void AnalysisSemantic::semantic(AssignmentExpression *expr)

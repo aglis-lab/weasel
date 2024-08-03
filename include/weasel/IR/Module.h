@@ -2,7 +2,7 @@
 
 #include <vector>
 
-#include "weasel/AST/AST.h"
+#include <weasel/AST/AST.h>
 
 namespace weasel
 {

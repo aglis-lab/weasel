@@ -159,6 +159,8 @@ namespace weasel
     {
         OVERRIDE_CODEGEN_EXPRESSION
 
+        DECLARATION_EXPRESSION
+
     public:
         VariableExpression(Token token, string identifier) : Expression(token), _identifier(identifier) {}
         VariableExpression() {}

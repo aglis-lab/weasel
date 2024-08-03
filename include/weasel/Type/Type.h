@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <iostream>
+#include <optional>
 
 #include <weasel/Lexer/Token.h>
 #include <weasel/Basic/Error.h>
