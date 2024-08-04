@@ -30,7 +30,8 @@ FunctionType : Type {
 
 // Lambda Expression
 LamdaExpression {
-  Type FunctionTypes  Body CompoundStatement
+  Type FunctionTypes
+  Body CompoundStatement
 
   Vararg bool
 }

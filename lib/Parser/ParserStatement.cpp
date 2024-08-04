@@ -87,7 +87,7 @@ StructTypeHandle Parser::parseStruct()
 
         auto identToken = getCurrentToken();
         getNextToken(); // eat 'identifier'
-        if (!(getCurrentToken().isDataType() || getCurrentToken().isIdentifier()))
+        if (!(getCurrentToken().isDataType() || getCurrentToken().isIdentifier() || getCurrentToken().isOpenSquare()))
         {
             structType->setError(Errors::getInstance().expectedDataType.withToken(getCurrentToken()));
             return structType;
@@ -251,7 +251,7 @@ ExpressionHandle Parser::parseConditionStatement()
             continue;
         }
 
-        if (isExpectElse())
+        if (expectToken().isKeyElse())
         {
             getNextToken(true); // eat
             getNextToken(true); // eat 'else'

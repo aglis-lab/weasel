@@ -99,6 +99,11 @@ void AnalysisSemantic::semantic(Type *expr)
 
         expr->setContainedType(structType);
     }
+
+    if (expr->isArrayType())
+    {
+        expr->getContainedType()->accept(this);
+    }
 }
 
 void AnalysisSemantic::unknownType(Expression *expr)
@@ -230,9 +235,19 @@ void AnalysisSemantic::semantic(CallExpression *expr)
         auto funArg = funType->getArguments()[min(funType->getArguments().size() - 1, i)];
 
         arg->accept(this);
+
+        assert(arg);
+        assert(arg->getType());
+        assert(funArg);
+
         if (arg->isError())
         {
             return;
+        }
+
+        if (arg->isNilExpression() && funArg->isPointerType())
+        {
+            continue;
         }
 
         if (!arg->getType()->isEqual(funArg))
@@ -306,7 +321,7 @@ void AnalysisSemantic::semantic(DeclarationStatement *expr)
 
 void AnalysisSemantic::semantic(VariableExpression *expr)
 {
-    SEMANTIC("VariableExpression");
+    SEMANTIC("VariableExpression") << " " << expr->getIdentifier();
 
     Expression *decl = findDeclaration(expr->getIdentifier());
     if (!decl)
@@ -321,8 +336,10 @@ void AnalysisSemantic::semantic(VariableExpression *expr)
         decl = fun.get();
     }
 
-    expr->setType(decl->getType());
+    assert(decl);
+    assert(decl->getType());
 
+    expr->setType(decl->getType());
     expr->setDeclarationValue(decl);
 }
 

@@ -9,13 +9,18 @@
 
 llvm::Type *Codegen::codegen(FunctionType *expr)
 {
-    // TODO: CHECK IF VARARG FUNCTION TYPE
-    // auto isVararg = expr->
     auto retType = expr->getReturnType()->accept(this);
     auto args = vector<llvm::Type *>();
     for (auto &item : expr->getArguments())
     {
-        args.push_back(item->accept(this));
+        if (item->isFunctionType())
+        {
+            args.push_back(Type::getOpaqueType()->accept(this));
+        }
+        else
+        {
+            args.push_back(item->accept(this));
+        }
     }
 
     // Bacause vararg is actually a last parameter
@@ -27,8 +32,6 @@ llvm::Type *Codegen::codegen(FunctionType *expr)
     }
 
     return llvm::FunctionType::get(retType, args, expr->isVararg());
-
-    // return llvm::PointerType::get(*getContext(), 0);
 }
 
 // Weasel User Type System to llvm Type System
@@ -105,10 +108,13 @@ llvm::Type *Codegen::codegen(Type *type)
 
     if (type->isPointerType() || type->isReferenceType())
     {
-        auto containedType = type->getContainedType();
-        auto containedTypeV = containedType->accept(this);
+        return llvm::PointerType::get(*getContext(), 0);
 
-        return llvm::PointerType::get(containedTypeV, 0);
+        // TODO: Move to opaque type
+        // auto containedType = type->getContainedType();
+        // auto containedTypeV = containedType->accept(this);
+
+        // return llvm::PointerType::get(containedTypeV, 0);
     }
 
     return nullptr;

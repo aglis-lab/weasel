@@ -29,7 +29,15 @@ llvm::Value *Codegen::codegen(Function *expr)
     auto argsV = std::vector<llvm::Type *>(argsLength);
     for (int index = 0; index < argsLength; index++)
     {
-        argsV[index] = args[index]->getType()->accept(this);
+        auto arg = args[index]->getType();
+        if (arg->asOpaquePointer())
+        {
+            argsV[index] = Type::getOpaqueType()->accept(this);
+        }
+        else
+        {
+            argsV[index] = arg->accept(this);
+        }
     }
 
     auto returnType = expr->getReturnType();
@@ -88,6 +96,9 @@ llvm::Value *Codegen::codegen(Function *expr)
             }
 
             // Add Attribute
+            argExpr->setCodegen(value);
+
+            // Save as an table attribute
             addAttribute(ContextAttribute::get(argName, value, AttributeKind::Parameter));
         }
 
@@ -183,10 +194,11 @@ llvm::Value *Codegen::codegen(MethodCallExpression *expr)
 
 llvm::Value *Codegen::codegen(CallExpression *expr)
 {
-    LOG(INFO) << "Codegen Call Function";
+    LOG(INFO) << "Codegen Call Function " << expr->getIdentifier();
 
     auto args = expr->getArguments();
     auto fun = expr->getDeclarationValue()->getCodegen();
+
     auto funTypeV = llvm::dyn_cast<llvm::FunctionType>(expr->getType()->accept(this));
 
     assert(funTypeV);
@@ -210,12 +222,12 @@ llvm::Value *Codegen::codegen(CallExpression *expr)
         }
 
         auto argVal = arg->accept(this);
+
         assert(argVal && "failed codegen argument");
 
         argsV.push_back(argVal);
     }
 
-    // return getBuilder()->CreateCall(fun, argsV);
     return getBuilder()->CreateCall(funTypeV, fun, argsV);
 }
 

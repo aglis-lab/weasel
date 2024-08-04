@@ -296,25 +296,25 @@ ExpressionHandle Parser::parseParenExpression()
 }
 
 // Default Type
-// Expression *Parser::parseArrayExpression()
-// {
-//     LOG(INFO) << "Parsing Array\n";
+ExpressionHandle Parser::parseArrayExpression()
+{
+    LOG(INFO) << "Parsing Array\n";
 
-//     std::vector<Expression *> items;
+    auto expr = make_shared<ArrayLiteralExpression>();
 
-//     getNextToken(); // eat [
-//     while (!getCurrentToken().isKind(TokenKind::TokenDelimCloseSquareBracket))
-//     {
-//         items.push_back(parseLiteralExpression());
-//         if (getCurrentToken().isKind(TokenKind::TokenPuncComma))
-//         {
-//             getNextToken(); // eat ,
-//         }
-//     }
+    getNextToken(); // eat [
+    while (!getCurrentToken().isKind(TokenKind::TokenDelimCloseSquareBracket))
+    {
+        expr->getItems().push_back(parseLiteralExpression());
+        if (getCurrentToken().isKind(TokenKind::TokenPuncComma))
+        {
+            getNextToken(); // eat ,
+        }
+    }
 
-//     getNextToken(); // eat ]
-//     return new ArrayLiteralExpression(items);
-// }
+    getNextToken(); // eat ]
+    return expr;
+}
 
 ExpressionHandle Parser::parseStructExpression()
 {
@@ -408,62 +408,10 @@ ExpressionHandle Parser::parsePrimaryExpression()
         return expr;
     }
 
-    // if (getCurrentToken().isOpenSquare())
-    // {
-    //     return parseArrayExpression();
-    // }
-
-    // if (possibleHaveField)
-    // {
-    //     ExpressionHandle expr = nullptr;
-
-    //     // Identifier
-    //     // Call or Variable Expression or Struct Expression
-    //     if (getCurrentToken().isIdentifier() || getCurrentToken().isKeyThis())
-    //     {
-    //         if (expectToken(TokenKind::TokenDelimOpenCurlyBracket))
-    //         {
-    //             expr = parseStructExpression();
-    //         }
-    //         else
-    //         {
-    //             expr = parseIdentifierExpression();
-    //         }
-
-    //         // if (expectToken(TokenKind::TokenPuncDot))
-    //         // {
-    //         //     expr = parseStaticMethodCallExpression();
-    //         // }
-    //         // else if (expectToken(TokenKind::TokenDelimOpenCurlyBracket))
-    //         // {
-    //         //     expr = parseStructExpression();
-    //         // }
-    //         // else
-    //         // {
-    //         //     expr = parseIdentifierExpression();
-    //         // }
-    //     }
-
-    //     // Parentise Expression
-    //     else if (getCurrentToken().isOpenParen())
-    //     {
-    //         expr = parseParenExpression();
-    //     }
-
-    //     //     // Array Expression
-    //     //     else if (getCurrentToken().isOpenSquare())
-    //     //     {
-    //     //         expr = parseArrayExpression();
-    //     //     }
-
-    //     // Check for possible Field Expression
-    //     if (expr != nullptr && getCurrentToken().isDot())
-    //     {
-    //         expr = parseFieldExpression(expr);
-    //     }
-
-    //     return expr;
-    // }
+    if (getCurrentToken().isOpenSquare())
+    {
+        return parseArrayExpression();
+    }
 
     // Literal Expression
     if (getCurrentToken().isLiteral())

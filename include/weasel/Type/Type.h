@@ -99,6 +99,10 @@ namespace weasel
                    isFunctionType();
         }
         bool isFunctionType() const { return _typeId == TypeID::FunctionType; }
+        bool asOpaquePointer() const
+        {
+            return isFunctionType();
+        }
 
         // Check possible struct type
         bool isPossibleStructType();
@@ -116,8 +120,8 @@ namespace weasel
         static TypeHandle getDoubleType() { return make_shared<Type>(TypeID::DoubleType, 64); }
         static TypeHandle getArrayType(TypeHandle containedType, unsigned width) { return make_shared<Type>(TypeID::ArrayType, move(containedType), width); }
         static TypeHandle getPointerType(TypeHandle containedType) { return make_shared<Type>(TypeID::PointerType, move(containedType)); }
+        static TypeHandle getOpaqueType() { return make_shared<Type>(TypeID::PointerType); }
         static TypeHandle getReferenceType(TypeHandle containedType) { return make_shared<Type>(TypeID::ReferenceType, move(containedType)); }
-        // static TypeHandle getReferenceType() { return make_shared<Type>(TypeID::ReferenceType); }
         static TypeHandle getStructType() { return make_shared<Type>(TypeID::StructType, -1); }
         static TypeHandle getUnknownType(Token token) { return make_shared<Type>(token); }
 

@@ -42,7 +42,6 @@ namespace weasel
 
         Token expectToken() { return _lexer.expect(); }
         bool expectToken(TokenKind kind) { return _lexer.expect(kind); }
-        bool isExpectElse() { return expectToken(TokenKind::TokenKeyElse); }
 
         // Parser Helper
         Qualifier getQualifier() const { return getCurrentToken().getQualifier(); }
@@ -93,6 +92,6 @@ namespace weasel
         ExpressionHandle parseLiteralExpression();
         ExpressionHandle parseIdentifierExpression();
         ExpressionHandle parseExpressionOperator(unsigned prec, ExpressionHandle lhs);
-        // Expression *parseArrayExpression();
+        ExpressionHandle parseArrayExpression();
     };
 } // namespace weasel

@@ -338,7 +338,13 @@ string Type::getTypeName()
     }
     case TypeID::ArrayType:
     {
-        return fmt::format("[]{}", this->getContainedType()->getTypeName());
+        string size;
+        if (getTypeWidth() > 0)
+        {
+            size = to_string(getTypeWidth());
+        }
+
+        return fmt::format("[{}]{}", size, getContainedType()->getTypeName());
     }
     case TypeID::StructType:
     {

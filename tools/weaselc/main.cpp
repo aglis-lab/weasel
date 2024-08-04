@@ -134,7 +134,7 @@ int main(int argc, char *argv[])
     {
         if (!driver.getError().empty())
         {
-            std::cerr << "Driver Compile : " << driver.getError() << "\n";
+            std::cerr << "\nDriver Compile : " << driver.getError() << "\n";
         }
         return 1;
     }
