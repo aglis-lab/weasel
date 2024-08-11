@@ -1,9 +1,9 @@
 extern fun printf(msg []byte, param ...any) int
 extern fun puts(msg []byte) int
+extern fun putchar(c int) int
 extern fun malloc(size ulong) *void
 extern fun free(ptr *void)
-// extern fun pthread_create(thread *Thread, attr *void, callback fun(*void) *void, args *void)
-extern fun pthread_create(thread *Thread, attr *void, callback *void, args *void) int
+extern fun pthread_create(thread *Thread, attr *void, callback fun(*void) *void, args *void)
 extern fun pthread_join(thread Thread, attr *void)
 
 const PTHREAD_SIZE 8176

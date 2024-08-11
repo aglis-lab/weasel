@@ -13,6 +13,13 @@ namespace llvm
     class AllocaInst;
 } // namespace llvm
 
+#define BASE_CODEGEN_EXPRESSION(XX)                     \
+public:                                                 \
+    virtual llvm::Value *accept(Codegen *codegen) XX;   \
+    virtual void accept(AnalysisSemantic *semantic) XX; \
+    virtual void print(Printer *printer) XX;            \
+    virtual void printAsOperand(Printer *printer) XX;
+
 #define VIRTUAL_CODEGEN_VALUE                      \
     friend class weasel::Codegen;                  \
                                                    \
@@ -29,17 +36,15 @@ protected:                                                                 \
     virtual void setCodegen(llvm::Value *val) override { _codegen = val; } \
     virtual llvm::Value *getCodegen() override { return _codegen; }
 
-#define BASE_CODEGEN_EXPRESSION(XX)                     \
-public:                                                 \
-    virtual llvm::Value *accept(Codegen *codegen) XX;   \
-    virtual void accept(AnalysisSemantic *semantic) XX; \
-    virtual void print(Printer *printer) XX;            \
-    virtual void printAsOperand(Printer *printer) XX;
-
-#define CODEGEN_TYPE                              \
+#define VIRTUAL_CODEGEN_TYPE                      \
 public:                                           \
     virtual llvm::Type *accept(Codegen *codegen); \
     virtual void accept(AnalysisSemantic *semantic);
+
+#define OVERRIDE_CODEGEN_TYPE                      \
+public:                                            \
+    llvm::Type *accept(Codegen *codegen) override; \
+    void accept(AnalysisSemantic *semantic) override;
 
 #define DECLARATION_EXPRESSION                                                  \
     friend class weasel::AnalysisSemantic;                                      \

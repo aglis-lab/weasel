@@ -38,6 +38,11 @@ void Parser::parse()
         {
             getModule()->addGlobalVariable(parseGlobalVariable());
         }
+
+        if (getCurrentToken().isKeyImpl())
+        {
+            parseImplFunctions();
+        }
     }
 }
 

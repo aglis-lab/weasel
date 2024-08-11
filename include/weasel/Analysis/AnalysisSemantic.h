@@ -15,6 +15,8 @@ namespace weasel
 
         vector<DeclarationStatement *> _declarations;
 
+        Function *_currentFunction;
+
     public:
         explicit AnalysisSemantic(Module *module) : _module(module) {}
 
@@ -38,12 +40,14 @@ namespace weasel
         void semantic(TypeCastExpression *expr);
         void semantic(ArgumentExpression *expr);
         void semantic(NilLiteralExpression *expr);
+        void semantic(IndexExpression *expr);
+        void semantic(ArrayExpression *expr);
 
         void semantic(FunctionType *expr);
         void semantic(StructType *expr);
         void semantic(Type *expr);
 
-        void unknownType(Expression *expr);
+        TypeHandle unknownType(TypeHandle expr);
 
         void onError(Expression *expr)
         {
@@ -54,6 +58,9 @@ namespace weasel
         {
             getTypeErrors().push_back(expr);
         }
+
+        void setCurrentFunction(Function *fun) { _currentFunction = fun; }
+        Function *getCurrentFunction() { return _currentFunction; }
 
         Module *getModule() const { return _module; }
         vector<DeclarationStatement *> &getDeclarations() { return _declarations; }

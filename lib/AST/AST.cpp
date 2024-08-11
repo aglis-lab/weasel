@@ -6,6 +6,11 @@ bool Expression::isCompoundExpression() const
     return typeid(CompoundStatement) == typeid(*this);
 }
 
+bool Expression::isVariableExpression() const
+{
+    return typeid(VariableExpression) == typeid(*this);
+}
+
 bool Expression::isStructExpression() const
 {
     return typeid(StructExpression) == typeid(*this);

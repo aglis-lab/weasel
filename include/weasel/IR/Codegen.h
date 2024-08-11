@@ -34,6 +34,7 @@ namespace weasel
     public:
         Codegen(llvm::LLVMContext *context, const string &moduleName);
 
+        // Builder
         llvm::LLVMContext *getContext() const { return _context; }
         llvm::Module *getModule() { return _module; }
         llvm::IRBuilder<> *getBuilder() { return _builder; }
@@ -54,7 +55,7 @@ namespace weasel
         llvm::Value *codegen(FloatLiteralExpression *expr);
         llvm::Value *codegen(DoubleLiteralExpression *expr);
         llvm::Value *codegen(StringLiteralExpression *expr);
-        llvm::Value *codegen(ArrayLiteralExpression *expr);
+        llvm::Value *codegen(ArrayExpression *expr);
         llvm::Value *codegen(GlobalVariable *expr);
 
         // Expression
@@ -64,7 +65,7 @@ namespace weasel
         llvm::Value *codegen(ReturnExpression *expr);
         llvm::Value *codegen(DeclarationStatement *expr);
         llvm::Value *codegen(NilLiteralExpression *expr);
-        llvm::Value *codegen(ArrayExpression *expr);
+        llvm::Value *codegen(IndexExpression *expr);
         llvm::Value *codegen(FieldExpression *expr);
         llvm::Value *codegen(MethodCallExpression *expr);
 

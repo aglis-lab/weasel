@@ -25,7 +25,7 @@ ExpressionHandle Parser::parseStatement()
     // Variable Definition Expression
     if (getCurrentToken().isKeyDefinition())
     {
-        return parseDeclarationExpression();
+        return parseDeclarationStatement();
     }
 
     // Return Expression
@@ -47,13 +47,7 @@ ExpressionHandle Parser::parseStatement()
     }
 
     // Parse Expression
-    auto expr = parseExpression();
-    if (expr->isError())
-    {
-        skipUntilNewLine();
-    }
-
-    return expr;
+    return parseExpressionWithBlock();
 }
 
 StructTypeHandle Parser::parseStruct()
@@ -111,7 +105,7 @@ StructTypeHandle Parser::parseStruct()
 
 ExpressionHandle Parser::parseLoopingStatement()
 {
-    LOG(INFO) << "Looping Statement...";
+    LOG(INFO) << "Parse Looping Statement...";
 
     auto expr = make_shared<LoopingStatement>(getCurrentToken());
     auto isInfinity = getNextToken().isOpenCurly();
@@ -125,11 +119,11 @@ ExpressionHandle Parser::parseLoopingStatement()
             ExpressionHandle decl;
             if (getCurrentToken().isKeyDeclaration())
             {
-                decl = parseDeclarationExpression();
+                decl = parseDeclarationStatement();
             }
             else
             {
-                decl = parseExpression();
+                decl = parseExpressionWithBlock();
             }
 
             expr->getConditions().push_back(decl);
@@ -151,7 +145,7 @@ ExpressionHandle Parser::parseLoopingStatement()
             }
             else
             {
-                expr->getConditions().push_back(parseExpression());
+                expr->getConditions().push_back(parseExpressionWithBlock());
             }
 
             // Increment
@@ -167,7 +161,7 @@ ExpressionHandle Parser::parseLoopingStatement()
             }
             else
             {
-                expr->getConditions().push_back(parseExpression());
+                expr->getConditions().push_back(parseExpressionWithBlock());
             }
         }
     }
@@ -206,6 +200,8 @@ ExpressionHandle Parser::parseLoopingStatement()
 
 ExpressionHandle Parser::parseConditionStatement()
 {
+    LOG(INFO) << "Parse Condition Statement...";
+
     auto stmt = make_shared<ConditionStatement>();
     while (true)
     {
@@ -219,11 +215,11 @@ ExpressionHandle Parser::parseConditionStatement()
 
         if (!isElseCondition)
         {
-            auto expr = parseExpression();
+            auto expr = parseExpressionWithoutBlock();
             stmt->getConditions().push_back(expr);
             if (expr->isError())
             {
-                return expr;
+                return stmt;
             }
         }
 
@@ -247,7 +243,7 @@ ExpressionHandle Parser::parseConditionStatement()
 
         if (getCurrentToken().isKeyElse())
         {
-            getNextToken(true); // eat 'else'
+            getNextToken(); // eat 'else'
             continue;
         }
 
@@ -314,7 +310,7 @@ CompoundStatementHandle Parser::parseCompoundStatement()
     return stmt;
 }
 
-ExpressionHandle Parser::parseDeclarationExpression()
+ExpressionHandle Parser::parseDeclarationStatement()
 {
     LOG(INFO) << "Parse Declaration Expression";
 
@@ -333,7 +329,7 @@ ExpressionHandle Parser::parseDeclarationExpression()
     stmt->setIdentifier(getCurrentToken().getValue());
 
     getNextToken(); // eat 'identifier'
-    if (getCurrentToken().isDataType() || getCurrentToken().isIdentifier())
+    if (isDataType())
     {
         stmt->setType(parseDataType());
     }
@@ -362,10 +358,10 @@ ExpressionHandle Parser::parseDeclarationExpression()
         return stmt;
     }
 
-    auto val = parseExpression();
+    auto val = parseExpressionWithBlock();
     stmt->setValue(val);
 
-    if (getCurrentToken().isOpenCurly())
+    if (getCurrentToken().isSemiColon() && expectToken().isOpenCurly())
     {
         // Insert Symbol Table
         auto compound = parseCompoundStatement();

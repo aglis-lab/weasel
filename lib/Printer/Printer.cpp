@@ -11,12 +11,18 @@ void Printer::print(GlobalVariable *expr)
     PRINT("GlobalVariable");
 
     printAsOperand(expr);
-    fmt::println("");
+    fmt::println(_out, "");
 }
 
 void Printer::print(Module *module)
 {
     PRINT("Module");
+
+    // Print Global Value
+    for (auto &item : module->getGlobalVariables())
+    {
+        item->print(this);
+    }
 
     // Print user types or struct
     for (auto item : module->getUserTypes())
@@ -101,7 +107,7 @@ void Printer::print(Function *expr)
     setCurrentShift(lastShift);
 }
 
-void Printer::print(ArrayLiteralExpression *expr)
+void Printer::print(ArrayExpression *expr)
 {
     PRINT("ArrayLiteralExpression");
 
@@ -218,7 +224,7 @@ void Printer::print(FieldExpression *expr)
     fmt::println(_out, "");
 }
 
-void Printer::print(ArrayExpression *expr)
+void Printer::print(IndexExpression *expr)
 {
     PRINT("ArrayExpression");
 
@@ -326,18 +332,18 @@ void Printer::printAsOperand(FieldExpression *expr)
 {
     PRINT_OPERAND("FieldExpression");
 
-    if (typeid(VariableExpression) == typeid(*expr->getParentField().get()))
+    if (typeid(VariableExpression) == typeid(*expr->getLHS().get()))
     {
-        fmt::print(_out, "{}", static_pointer_cast<VariableExpression>(expr->getParentField())->getIdentifier());
+        fmt::print(_out, "{}", static_pointer_cast<VariableExpression>(expr->getLHS())->getIdentifier());
     }
     else
     {
         fmt::print(_out, "(");
-        expr->getParentField()->printAsOperand(this);
+        expr->getLHS()->printAsOperand(this);
         fmt::print(_out, ")");
     }
 
-    fmt::print(_out, ".{} {}", expr->getIdentifier(), expr->getType()->getTypeName());
+    fmt::print(_out, ".{} {}", expr->getField(), expr->getType()->getTypeName());
 }
 
 void Printer::printAsOperand(BreakExpression *expr)
@@ -357,7 +363,7 @@ void Printer::printAsOperand(GlobalVariable *expr)
 {
     PRINT_OPERAND("GlobalVariable");
 
-    fmt::print(_out, "@define {} {} = ", expr->getToken().getValue(), expr->getIdentifier());
+    fmt::print(_out, "@define {} {} = ", expr->getIdentifier(), expr->getType()->getTypeName());
     expr->getValue()->printAsOperand(this);
 }
 
@@ -427,7 +433,10 @@ void Printer::printAsOperand(CallExpression *expr)
 {
     PRINT_OPERAND("CallExpression");
 
-    fmt::print(_out, "@call {}(", expr->getIdentifier());
+    // TODO: Print a rework call expression
+    fmt::print(_out, "@call (");
+    expr->getLHS()->printAsOperand(this);
+    fmt::print(_out, ") (");
     for (auto arg : expr->getArguments())
     {
         arg->printAsOperand(this);
@@ -441,11 +450,12 @@ void Printer::printAsOperand(CallExpression *expr)
     fmt::print(_out, ") {}", expr->getType()->getTypeName());
 }
 
-void Printer::printAsOperand(ArrayExpression *expr)
+void Printer::printAsOperand(IndexExpression *expr)
 {
     PRINT_OPERAND("ArrayExpression");
 
-    fmt::print(_out, "{}[", expr->getIdentifier());
+    expr->getLHS()->printAsOperand(this);
+    fmt::print(_out, "[");
     expr->getIndex()->printAsOperand(this);
     fmt::print(_out, "]");
 }
@@ -465,6 +475,8 @@ void Printer::printAsOperand(ReturnExpression *expr)
 void Printer::printAsOperand(UnaryExpression *expr)
 {
     PRINT_OPERAND("UnaryExpression");
+
+    assert(expr->getType());
 
     std::string op = "not-op";
     switch (expr->getOperator())
@@ -503,7 +515,7 @@ void Printer::printAsOperand(DeclarationStatement *expr)
         prefix = "@define";
     }
 
-    fmt::print(_out, "{} {} {}", prefix, expr->getIdentifier(), expr->getType()->getTypeName());
+    fmt::print(_out, "{} {} {} {}", prefix, printAsOperand(expr->getQualifier()), expr->getIdentifier(), expr->getType()->getTypeName());
     if (expr->getValue())
     {
         fmt::print(_out, " = ");
@@ -544,7 +556,7 @@ void Printer::printAsOperand(FloatLiteralExpression *expr)
     fmt::print(_out, "{} {}", expr->getValue(), expr->getType()->getTypeName());
 }
 
-void Printer::printAsOperand(ArrayLiteralExpression *expr)
+void Printer::printAsOperand(ArrayExpression *expr)
 {
     PRINT_OPERAND("ArrayLiteralExpression");
 

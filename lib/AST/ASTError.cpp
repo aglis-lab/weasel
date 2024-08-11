@@ -53,7 +53,7 @@ bool CharLiteralExpression::isError()
     return _error.has_value();
 }
 
-bool ArrayLiteralExpression::isError()
+bool ArrayExpression::isError()
 {
     return _error.has_value();
 }
@@ -83,7 +83,7 @@ bool FieldExpression::isError()
     return _error.has_value() || getParentField()->isError();
 }
 
-bool ArrayExpression::isError()
+bool IndexExpression::isError()
 {
     return _error.has_value();
 }

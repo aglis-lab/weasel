@@ -1,3 +1,10 @@
 {
-  "dependencies": ["fmt", "glog"]
+  "dependencies": [
+    "fmt",
+    "glog",
+    {
+      "name": "opentelemetry-cpp",
+      "version>=": "1.16.1"
+    }
+  ]
 }

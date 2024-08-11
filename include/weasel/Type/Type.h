@@ -17,9 +17,11 @@ namespace weasel
 {
     class StructType;
     class Type;
+    class FunctionType;
     class GlobalVariable;
 
     using TypeHandle = shared_ptr<Type>;
+    using FunctionTypeHandle = shared_ptr<FunctionType>;
     using StructTypeHandle = shared_ptr<StructType>;
     using GlobalVariableHandle = shared_ptr<GlobalVariable>;
 
@@ -48,7 +50,7 @@ namespace weasel
     // Data Type
     class Type
     {
-        CODEGEN_TYPE
+        VIRTUAL_CODEGEN_TYPE
 
     public:
         // Create Type From Token
@@ -171,7 +173,7 @@ namespace weasel
     // Struct Value
     class StructType : public Type
     {
-        CODEGEN_TYPE
+        OVERRIDE_CODEGEN_TYPE
 
     private:
         vector<StructTypeField> _fields;
@@ -200,7 +202,7 @@ namespace weasel
     // Function Type
     class FunctionType : public Type
     {
-        CODEGEN_TYPE
+        OVERRIDE_CODEGEN_TYPE
 
     private:
         vector<TypeHandle> _arguments;

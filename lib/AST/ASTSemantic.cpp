@@ -50,9 +50,9 @@ void CharLiteralExpression::accept(AnalysisSemantic *analysis)
     UNIMPLEMENTED("CharLiteralExpression");
 }
 
-void ArrayLiteralExpression::accept(AnalysisSemantic *analysis)
+void ArrayExpression::accept(AnalysisSemantic *analysis)
 {
-    UNIMPLEMENTED("ArrayLiteralExpression");
+    analysis->semantic(this);
 }
 
 void StringLiteralExpression::accept(AnalysisSemantic *analysis)
@@ -80,9 +80,9 @@ void FieldExpression::accept(AnalysisSemantic *analysis)
     analysis->semantic(this);
 }
 
-void ArrayExpression::accept(AnalysisSemantic *analysis)
+void IndexExpression::accept(AnalysisSemantic *analysis)
 {
-    UNIMPLEMENTED("ArrayExpression");
+    analysis->semantic(this);
 }
 
 void ArithmeticExpression::accept(AnalysisSemantic *analysis)

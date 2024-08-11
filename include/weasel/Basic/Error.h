@@ -71,6 +71,8 @@ namespace weasel
         Error shouldStructType = Error(107, ErrorKind::SemanticError, "expression must have struct type");
         Error fieldNotExist = Error(108, ErrorKind::SemanticError, "field isn't exist");
         Error failedDereference = Error(109, ErrorKind::SemanticError, "can't make dereference operation");
+        Error expectedBoolType = Error(110, ErrorKind::SemanticError, "expected bool type");
+        Error invalidArgumentSize = Error(111, ErrorKind::SemanticError, "not enough argument call");
 
         // Internal Error
         Error missingImplementation = Error(200, ErrorKind::SemanticError, "internal error, missing expression implementation");

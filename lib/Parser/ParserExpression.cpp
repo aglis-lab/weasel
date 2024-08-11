@@ -5,77 +5,88 @@
 
 GlobalVariableHandle Parser::parseGlobalVariable()
 {
-    LOG(INFO) << "Parse Global Variable...";
+    LOG(INFO) << "Parse Global Variable";
 
-    return nullptr;
-    // auto stmt = static_pointer_cast<DeclarationStatement>(parseDeclarationExpression());
-    // if (!stmt->isError() && stmt->getQualifier() != Qualifier::QualConst)
-    // {
-    //     return stmt;
-    // }
+    auto stmt = static_pointer_cast<DeclarationStatement>(parseDeclarationStatement());
+    auto expr = make_shared<GlobalVariable>();
 
-    // return stmt;
+    expr->setToken(stmt->getToken());
+    expr->setType(stmt->getType());
+    expr->setIdentifier(stmt->getIdentifier());
+    expr->setQualifier(stmt->getQualifier());
+    expr->setValue(stmt->getValue());
+    if (!stmt->isError() && stmt->getQualifier() != Qualifier::QualConst)
+    {
+        expr->setError(stmt->getError().value());
+        return expr;
+    }
+
+    return expr;
 }
 
-// Expression *Parser::parseMethodCallExpression(Expression *implExpression)
-// {
-//     return nullptr;
+ExpressionHandle Parser::parseMethodCallExpression(ExpressionHandle implExpression)
+{
+    LOG(INFO) << "Parse Method Call Expression";
 
-//     // auto callToken = getCurrentToken();
-//     // auto expr = new MethodCallExpression(callToken);
+    return nullptr;
 
-//     // if (!getNextToken().isOpenParen())
-//     // {
-//     //     expr->setError(Errors::getInstance().expectedOpenParen);
+    // auto callToken = getCurrentToken();
+    // auto expr = new MethodCallExpression(callToken);
 
-//     //     return expr;
-//     // }
+    // if (!getNextToken().isOpenParen())
+    // {
+    //     expr->setError(Errors::getInstance().expectedOpenParen);
 
-//     // if (!getNextToken().isCloseParen())
-//     // {
-//     //     while (true)
-//     //     {
-//     //         auto arg = parseExpression();
-//     //         expr->getArguments().push_back(arg);
+    //     return expr;
+    // }
 
-//     //         if (getCurrentToken().isCloseParen())
-//     //         {
-//     //             break;
-//     //         }
+    // if (!getNextToken().isCloseParen())
+    // {
+    //     while (true)
+    //     {
+    //         auto arg = parseExpressionWithBlock();
+    //         expr->getArguments().push_back(arg);
 
-//     //         if (!getCurrentToken().isComma())
-//     //         {
-//     //             expr->setError(Errors::getInstance().expectedCloseParen);
-//     //             return expr;
-//     //         }
+    //         if (getCurrentToken().isCloseParen())
+    //         {
+    //             break;
+    //         }
 
-//     //         getNextToken();
-//     //     }
-//     // }
+    //         if (!getCurrentToken().isComma())
+    //         {
+    //             expr->setError(Errors::getInstance().expectedCloseParen);
+    //             return expr;
+    //         }
 
-//     // getNextToken(); // eat ')'
+    //         getNextToken();
+    //     }
+    // }
 
-//     // StructType *structType;
-//     // if (implExpression->getType()->isStructType())
-//     // {
-//     //     structType = dynamic_cast<StructType *>(implExpression->getType());
-//     // }
-//     // else
-//     // {
-//     //     structType = dynamic_cast<StructType *>(implExpression->getType()->getContainedType());
-//     // }
-//     // auto fun = findFunction(callToken.getValue(), structType);
+    // getNextToken(); // eat ')'
 
-//     // expr->setType(fun->getType());
-//     // expr->setImplExpression(implExpression);
-//     // expr->setFunction(fun);
+    // StructType *structType;
+    // if (implExpression->getType()->isStructType())
+    // {
+    //     structType = dynamic_cast<StructType *>(implExpression->getType());
+    // }
+    // else
+    // {
+    //     structType = dynamic_cast<StructType *>(implExpression->getType()->getContainedType());
+    // }
+    // auto fun = findFunction(callToken.getValue(), structType);
 
-//     // return expr;
-// }
+    // expr->setType(fun->getType());
+    // expr->setImplExpression(implExpression);
+    // expr->setFunction(fun);
+
+    // return expr;
+}
 
 ExpressionHandle Parser::parseStaticMethodCallExpression()
 {
     LOG(INFO) << "Parse Static Method Call Expression...";
+
+    assert(false && "NOT IMPLEMENTED YET");
 
     return nullptr;
 
@@ -199,23 +210,18 @@ ExpressionHandle Parser::parseLiteralExpression()
     return make_shared<NilLiteralExpression>(getCurrentToken());
 }
 
-ExpressionHandle Parser::parseCallExpression()
+ExpressionHandle Parser::parseCallExpression(ExpressionHandle lhs)
 {
     LOG(INFO) << "Parse Call Expression...";
 
-    auto callToken = getCurrentToken();
-    auto expr = make_shared<CallExpression>(callToken, callToken.getValue());
-    if (!getNextToken().isOpenParen())
-    {
-        expr->setError(Errors::getInstance().expectedOpenParen.withToken(getCurrentToken()));
-        return expr;
-    }
+    auto expr = make_shared<CallExpression>(lhs->getToken());
 
+    expr->setLHS(lhs);
     if (!getNextToken().isCloseParen())
     {
         while (true)
         {
-            auto arg = parseExpression();
+            auto arg = parseExpressionWithBlock();
             expr->getArguments().push_back(arg);
             if (arg->isError())
             {
@@ -238,44 +244,45 @@ ExpressionHandle Parser::parseCallExpression()
         }
     }
 
+    if (!getCurrentToken().isCloseParen())
+    {
+        expr->setError(Errors::getInstance().expectedCloseParen.withToken(getCurrentToken()));
+        return expr;
+    }
+
     getNextToken(); // eat ')'
+
+    return expr;
+}
+
+ExpressionHandle Parser::parseIndexExpression(ExpressionHandle lhs)
+{
+    LOG(INFO) << "Parse Index Expression";
+
+    auto expr = make_shared<IndexExpression>();
+
+    expr->setLHS(lhs);
+
+    getNextToken(); // eat [
+    auto indexExpr = parseExpressionWithBlock();
+    if (!getCurrentToken().isCloseSquare())
+    {
+        return make_shared<ErrorExpression>(indexExpr->getToken(), Errors::getInstance().expectedCloseSquare.withToken(indexExpr->getToken()));
+    }
+
+    getNextToken(); // eat ]
+    expr->setToken(indexExpr->getToken());
+    expr->setIndexExpression(indexExpr);
 
     return expr;
 }
 
 ExpressionHandle Parser::parseIdentifierExpression()
 {
-    LOG(INFO) << "Parse Identifier Expression...";
-
-    // Open Paren Expression
-    if (getCurrentToken().isOpenParen())
-    {
-        return parseParenExpression();
-    }
-
-    // Check Available Function
-    if (expectToken().isOpenParen())
-    {
-        return parseCallExpression();
-    }
-
-    // TODO: Access Array Expression
-    // if (getCurrentToken().isOpenSquare())
-    // {
-    //     getNextToken(); // eat [
-    //     auto indexExpr = parseExpression();
-    //     if (!getCurrentToken().isCloseSquare())
-    //     {
-    //         return new ErrorExpression(indexExpr->getToken(), Errors::getInstance().expectedCloseSquare);
-    //     }
-
-    //     getNextToken(); // eat ]
-    //     return new ArrayExpression(indexExpr->getToken(), identifier, indexExpr);
-    // }
+    LOG(INFO) << "Parse Identifier Expression";
 
     auto identToken = getCurrentToken();
     getNextToken(); // eat 'identifier'
-
     return make_shared<VariableExpression>(identToken, identToken.getValue());
 }
 
@@ -284,7 +291,7 @@ ExpressionHandle Parser::parseParenExpression()
     LOG(INFO) << "Parse paren Expression...";
 
     getNextToken(); // eat '('
-    auto expr = parseExpression();
+    auto expr = parseExpressionWithBlock();
     if (!getCurrentToken().isCloseParen())
     {
         expr->setError(Errors::getInstance().expectedOpenParen.withToken(getCurrentToken()));
@@ -300,7 +307,7 @@ ExpressionHandle Parser::parseArrayExpression()
 {
     LOG(INFO) << "Parsing Array\n";
 
-    auto expr = make_shared<ArrayLiteralExpression>();
+    auto expr = make_shared<ArrayExpression>();
 
     getNextToken(); // eat [
     while (!getCurrentToken().isKind(TokenKind::TokenDelimCloseSquareBracket))
@@ -316,18 +323,13 @@ ExpressionHandle Parser::parseArrayExpression()
     return expr;
 }
 
-ExpressionHandle Parser::parseStructExpression()
+ExpressionHandle Parser::parseStructExpression(VariableExpressionHandle lhs)
 {
-    LOG(INFO) << "Parse struct Expression...";
+    LOG(INFO) << "Parse struct Expression";
 
-    auto expr = make_shared<StructExpression>(getCurrentToken(), getCurrentToken().getValue());
+    assert(getCurrentToken().isOpenCurly());
 
-    // Eat Identifier and next to '{'
-    if (!getNextToken().isOpenCurly())
-    {
-        expr->setError(Errors::getInstance().expectedOpenCurly.withToken(getCurrentToken()));
-        return expr;
-    }
+    auto expr = make_shared<StructExpression>(lhs->getToken(), lhs->getIdentifier());
 
     getNextToken(true); // eat '{'
     while (!getCurrentToken().isCloseCurly())
@@ -347,7 +349,7 @@ ExpressionHandle Parser::parseStructExpression()
         }
 
         auto exprToken = getNextToken(); // eat ':'
-        auto valueExpr = parseExpression();
+        auto valueExpr = parseExpressionWithBlock();
         auto field = make_shared<StructExpression::StructField>(idenToken.getValue(), valueExpr);
         expr->getFields().push_back(field);
 
@@ -375,62 +377,82 @@ ExpressionHandle Parser::parsePrimaryExpression()
 {
     LOG(INFO) << "Parse Primary Expression";
 
-    // Parse Struct Expression
-    if (getCurrentToken().isIdentifier() && expectToken().isOpenCurly())
-    {
-        return parseStructExpression();
-    }
-
-    // Parse Lambda
-    if (getCurrentToken().isKeyFunction())
-    {
-        return parseLambdaExpression();
-    }
-
-    // Parse Indentifier Like Expression
-    if (getCurrentToken().isIdentifier() || getCurrentToken().isOpenParen())
-    {
-        auto expr = parseIdentifierExpression();
-        if (expr->isError())
-        {
-            return expr;
-        }
-
-        while (getCurrentToken().isDot())
-        {
-            expr = parseFieldExpression(expr);
-            if (expr->isError())
-            {
-                break;
-            }
-        }
-
-        return expr;
-    }
-
-    if (getCurrentToken().isOpenSquare())
-    {
-        return parseArrayExpression();
-    }
+    ExpressionHandle lhs;
 
     // Literal Expression
     if (getCurrentToken().isLiteral())
     {
-        return parseLiteralExpression();
+        lhs = parseLiteralExpression();
     }
-
-    // Unary Expression
-    if (getCurrentToken().isOperatorUnary())
+    // Parse Indentifier Like Expression
+    else if (getCurrentToken().isIdentifier())
     {
-        return parseUnaryExpression();
+        lhs = parseIdentifierExpression();
+    }
+    // Array Expression
+    else if (getCurrentToken().isOpenSquare())
+    {
+        lhs = parseArrayExpression();
+    }
+    // Unary Expression
+    else if (getCurrentToken().isOperatorUnary())
+    {
+        lhs = parseUnaryExpression();
+    }
+    // Open Paren Expression
+    else if (getCurrentToken().isOpenParen())
+    {
+        lhs = parseParenExpression();
+    }
+    // Parse Lambda
+    else if (getCurrentToken().isKeyFunction())
+    {
+        lhs = parseLambdaExpression();
     }
 
-    return make_shared<ErrorExpression>(getCurrentToken(), Errors::getInstance().expectedExpression.withToken(getCurrentToken()));
+    if (!lhs)
+    {
+        return make_shared<ErrorExpression>(getCurrentToken(), Errors::getInstance().expectedExpression.withToken(getCurrentToken()));
+    }
+
+    if (lhs->isError())
+    {
+        return lhs;
+    }
+
+    // Parse Multi Expression
+    while (true)
+    {
+        // Call Expression
+        if (getCurrentToken().isOpenParen())
+        {
+            lhs = parseCallExpression(lhs);
+            continue;
+        }
+
+        // Field Expression
+        if (getCurrentToken().isDot())
+        {
+            lhs = parseFieldExpression(lhs);
+            continue;
+        }
+
+        // Index Expression
+        if (getCurrentToken().isOpenSquare())
+        {
+            lhs = parseIndexExpression(lhs);
+            continue;
+        }
+
+        break;
+    }
+
+    return lhs;
 }
 
-ExpressionHandle Parser::parseExpression()
+ExpressionHandle Parser::parseExpressionWithBlock()
 {
-    LOG(INFO) << "Parse Expression...";
+    LOG(INFO) << "Parse Expression";
 
     auto lhs = parsePrimaryExpression();
     if (lhs->isError())
@@ -439,10 +461,34 @@ ExpressionHandle Parser::parseExpression()
         return lhs;
     }
 
-    return parseExpressionOperator(__defaultPrecOrder, lhs);
+    if (lhs->isVariableExpression() && getCurrentToken().isOpenCurly())
+    {
+        lhs = parseStructExpression(static_pointer_cast<VariableExpression>(lhs));
+    }
+    if (lhs->isError())
+    {
+        skipUntilNewLine();
+        return lhs;
+    }
+
+    return parseBinaryExpression(__defaultPrecOrder, lhs);
 }
 
-ExpressionHandle Parser::parseExpressionOperator(unsigned precOrder, ExpressionHandle lhs)
+ExpressionHandle Parser::parseExpressionWithoutBlock()
+{
+    LOG(INFO) << "Parse Condition Expression...";
+
+    auto lhs = parsePrimaryExpression();
+    if (lhs->isError())
+    {
+        skipUntilNewLine();
+        return lhs;
+    }
+
+    return parseBinaryExpression(__defaultPrecOrder, lhs);
+}
+
+ExpressionHandle Parser::parseBinaryExpression(unsigned precOrder, ExpressionHandle lhs)
 {
     LOG(INFO) << "Parse Expression Operator";
 
@@ -478,7 +524,7 @@ ExpressionHandle Parser::parseExpressionOperator(unsigned precOrder, ExpressionH
         }
         else
         {
-            rhs = parseExpressionOperator(prec.order, rhs);
+            rhs = parseBinaryExpression(prec.order, rhs);
         }
 
         lhs = createOperatorExpression(binOp, lhs, rhs);
@@ -495,24 +541,10 @@ ExpressionHandle Parser::parseFieldExpression(ExpressionHandle lhs)
 {
     LOG(INFO) << "Parse Field Expression of " << lhs->getToken().getValue();
 
-    auto identToken = getNextToken();
+    auto identToken = getNextToken(); // eat '.'
     auto expr = make_shared<FieldExpression>(identToken, identToken.getValue());
-    if (!identToken.isIdentifier())
-    {
-        skipUntilNewLine();
 
-        expr->setError(Errors::getInstance().expectedIdentifier);
-
-        return expr;
-    }
-
-    // if (expectToken(TokenKind::TokenDelimOpenParen))
-    // {
-    //     return parseMethodCallExpression(lhs);
-    // }
-
-    expr->setIdentifier(getCurrentToken().getValue());
-    expr->setParentField(lhs);
+    expr->setLHS(lhs);
 
     getNextToken(); // eat 'identifier'
 
@@ -529,7 +561,7 @@ ExpressionHandle Parser::parseReturnExpression()
         return make_shared<ReturnExpression>(retToken, Type::getVoidType());
     }
 
-    auto exprValue = parseExpression();
+    auto exprValue = parseExpressionWithBlock();
     return make_shared<ReturnExpression>(retToken, exprValue);
 }
 
@@ -541,7 +573,7 @@ ExpressionHandle Parser::parseBreakExpression()
     auto expr = make_shared<BreakExpression>(token, nullptr);
     if (getNextToken().isOpenParen())
     {
-        expr->setValue(parseExpression());
+        expr->setValue(parseExpressionWithBlock());
     }
 
     return expr;
@@ -554,7 +586,7 @@ ExpressionHandle Parser::parseContinueExpression()
     auto token = getCurrentToken();
     if (getNextToken().isOpenParen())
     {
-        return make_shared<ContinueExpression>(token, parseExpression());
+        return make_shared<ContinueExpression>(token, parseExpressionWithBlock());
     }
 
     return make_shared<ContinueExpression>(token, nullptr);

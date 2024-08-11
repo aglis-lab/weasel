@@ -138,23 +138,28 @@ FunctionHandle Parser::parseDeclareFunction()
     return fun;
 }
 
+// TODO: Do much better error checking
 void Parser::parseImplFunctions()
 {
-    LOG(INFO) << "Parse Impl Functions...";
+    LOG(INFO) << "Parse Impl Functions";
 
-    // auto structName = getNextToken().getValue();
-    // auto structType = _module->findStructType(structName);
+    assert(getCurrentToken().isKeyImpl());
 
-    // getNextToken();     // eat StructName
-    // getNextToken(true); // eat '{'
+    getNextToken(); // eat 'impl'
+    assert(getCurrentToken().isIdentifier());
 
-    // while (!getCurrentToken().isCloseCurly())
-    // {
-    //     addFunction(parseFunction(structType));
+    auto unknownType = parseDataType();
 
-    //     if (getCurrentToken().isNewline())
-    //     {
-    //         getNextToken(true);
-    //     }
-    // }
+    // eat 'StructName'
+    getNextToken();
+    assert(getCurrentToken().isOpenCurly());
+
+    getNextToken(); // eat '{'
+    while (!getCurrentToken().isCloseCurly())
+    {
+        auto fun = parseFunction();
+
+        fun->setImplStruct(unknownType);
+        getModule()->addFunction(fun);
+    }
 }

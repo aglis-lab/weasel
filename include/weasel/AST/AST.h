@@ -21,6 +21,7 @@ namespace weasel
 {
     class CompoundStatement;
     class Expression;
+    class VariableExpression;
     class CallExpression;
     class Function;
     class ArgumentExpression;
@@ -30,12 +31,25 @@ namespace weasel
     using CompoundStatementHandle = shared_ptr<CompoundStatement>;
     using FunctionHandle = shared_ptr<Function>;
     using ArgumentExpressionHandle = shared_ptr<ArgumentExpression>;
+    using VariableExpressionHandle = shared_ptr<VariableExpression>;
 
     // Access Type
     enum class AccessID
     {
         Load,
         Allocation,
+    };
+
+    class LHSExpression
+    {
+    protected:
+        ExpressionHandle _lhs;
+
+    public:
+        LHSExpression() = default;
+
+        void setLHS(ExpressionHandle lhs) { _lhs = lhs; }
+        ExpressionHandle getLHS() const { return _lhs; }
     };
 
     // Expression
@@ -65,6 +79,7 @@ namespace weasel
         bool isNilExpression() const;
         bool isFunctionExpression() const;
         bool isLambdaExpression() const;
+        bool isVariableExpression() const;
 
         bool isConstant() const
         {
@@ -173,34 +188,25 @@ namespace weasel
     };
 
     // Call Expression
-    class CallExpression : public VariableExpression
+    class CallExpression : public Expression, public LHSExpression
     {
         OVERRIDE_CODEGEN_EXPRESSION
 
     public:
-        explicit CallExpression(Token token, string identifier) : VariableExpression(token, identifier) {}
+        explicit CallExpression(Token token) : Expression(token) {}
 
         vector<ExpressionHandle> &getArguments() { return _args; }
 
-        // TODO: CALL EXPRESSION
-        // void setFunction(FunctionHandle fun) { _fun = fun; }
-        // FunctionHandle getFunction() { return _fun; }
-
-        void setLambdaCall(bool lambdaCall) { _lambdaCall = lambdaCall; }
-        bool isLambdaCall() const { return _lambdaCall; }
-
     private:
-        // FunctionHandle _fun;
         vector<ExpressionHandle> _args;
-        bool _lambdaCall = false;
     };
 
-    class ArrayExpression : public VariableExpression
+    class IndexExpression : public Expression, public LHSExpression
     {
         OVERRIDE_CODEGEN_EXPRESSION
 
     public:
-        ArrayExpression() {}
+        IndexExpression() {}
 
         void setIndexExpression(ExpressionHandle expr) { _indexExpr = expr; }
         Expression *getIndex() { return _indexExpr.get(); }
@@ -251,18 +257,19 @@ namespace weasel
     };
 
     // FieldExpression
-    class FieldExpression : public VariableExpression
+    // (LHS).FieldName
+    class FieldExpression : public Expression, public LHSExpression
     {
         OVERRIDE_CODEGEN_EXPRESSION
 
     public:
-        explicit FieldExpression(Token token, string identifier) : VariableExpression(token, identifier) {}
+        explicit FieldExpression(Token token, string field) : Expression(token), _field(field) {}
 
-        void setParentField(ExpressionHandle expr) { _parentField = expr; }
-        ExpressionHandle getParentField() { return _parentField; }
+        void setField(string field) { _field = field; }
+        string getField() const { return _field; }
 
     private:
-        ExpressionHandle _parentField;
+        string _field;
     };
 
     // Method Call
@@ -380,12 +387,12 @@ namespace weasel
     };
 
     // Array Expression
-    class ArrayLiteralExpression : public Expression
+    class ArrayExpression : public Expression
     {
         OVERRIDE_CODEGEN_EXPRESSION
 
     public:
-        ArrayLiteralExpression() = default;
+        ArrayExpression() = default;
 
         vector<ExpressionHandle> &getItems() { return _items; }
 
@@ -671,23 +678,19 @@ namespace weasel
 
         string getManglingName();
 
-        void setImplStruct(StructTypeHandle structType) { _implStruct = structType; }
+        void setImplStruct(TypeHandle structType) { _implStruct = structType; }
         bool isImplStructExist() const { return _implStruct != nullptr; }
-        StructType *getImplStruct() { return _implStruct.get(); }
+        TypeHandle getImplStruct() { return _implStruct; }
 
         void setIsStatic(bool val) { _isStatic = val; }
         bool getIsStatic() const { return _isStatic; }
 
-        TypeHandle getReturnType()
-        {
-            auto type = static_pointer_cast<FunctionType>(_type);
-            assert(type && "type should be a function type");
+        FunctionTypeHandle getFunctionType() { return static_pointer_cast<FunctionType>(_type); }
 
-            return type->getReturnType();
-        }
+        TypeHandle getReturnType() { return getFunctionType()->getReturnType(); }
 
     protected:
-        StructTypeHandle _implStruct;
+        TypeHandle _implStruct;
 
         // TODO: Check if inline, extern, and static function
         bool _isDefine = false;

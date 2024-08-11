@@ -53,7 +53,7 @@ llvm::Value *Codegen::codegen(StringLiteralExpression *expr)
     return llvm::ConstantExpr::getGetElementPtr(globalStringVariable->getValueType(), globalStringVariable, idxList, true);
 }
 
-llvm::Value *Codegen::codegen(ArrayLiteralExpression *expr)
+llvm::Value *Codegen::codegen(ArrayExpression *expr)
 {
     LOG(INFO) << "Codegen Array Literal";
 

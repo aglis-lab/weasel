@@ -7,6 +7,12 @@
 
 void AnalysisSemantic::semanticCheck()
 {
+    // Global Variable
+    for (auto &item : getModule()->getGlobalVariables())
+    {
+        semantic(item.get());
+    }
+
     // Struct Type
     for (auto item : getModule()->getUserTypes())
     {
@@ -29,11 +35,16 @@ void AnalysisSemantic::semanticCheck()
         }
 
         // Check Function Type
-        fun->getType()->accept(this);
         for (auto &item : fun->getArguments())
         {
-            unknownType(item.get());
-            item->accept(this);
+            if (item->getType()->isUnknownType())
+            {
+                item->setType(unknownType(item->getType()));
+            }
+            else
+            {
+                item->accept(this);
+            }
         }
 
         // Check Function Body
@@ -51,15 +62,19 @@ void AnalysisSemantic::semantic(ArgumentExpression *expr)
 void AnalysisSemantic::semantic(FunctionType *expr)
 {
     SEMANTIC("FunctionType");
+
+    if (expr->getReturnType()->isUnknownType())
+    {
+        expr->setReturnType(unknownType(expr->getReturnType()));
+    }
 }
 
 void AnalysisSemantic::semantic(StructType *expr)
 {
-    SEMANTIC("StructType");
+    SEMANTIC("StructType") << " " << expr->getTypeName();
 
     // Check Duplicate Field
     unordered_set<string> checkName;
-
     for (auto &item : expr->getFields())
     {
         if (checkName.count(item.getIdentifier()) > 0)
@@ -106,21 +121,23 @@ void AnalysisSemantic::semantic(Type *expr)
     }
 }
 
-void AnalysisSemantic::unknownType(Expression *expr)
+TypeHandle AnalysisSemantic::unknownType(TypeHandle expr)
 {
-    SEMANTIC("unknownType Expression");
+    SEMANTIC("UnknownType Expression");
 
-    if (expr->getType()->isUnknownType())
+    if (!expr->isUnknownType())
     {
-        auto structType = getModule()->findStructType(expr->getType()->getToken().getValue());
-        if (!structType)
-        {
-            expr->setError(Errors::getInstance().userTypeNotDefined.withToken(expr->getType()->getToken()));
-            return onError(expr);
-        }
-
-        expr->setType(structType);
+        return expr;
     }
+
+    auto structType = getModule()->findStructType(expr->getToken().getValue());
+    if (!structType)
+    {
+        expr->setError(Errors::getInstance().userTypeNotDefined.withToken(expr->getToken()));
+        return expr;
+    }
+
+    return structType;
 }
 
 void AnalysisSemantic::semantic(Function *fun)
@@ -130,24 +147,23 @@ void AnalysisSemantic::semantic(Function *fun)
     auto lastDeclaration = getDeclarations().size();
     auto type = make_shared<FunctionType>();
 
-    fun->getType()->accept(this);
     type->setReturnType(fun->getType());
     type->setIsVararg(fun->isVararg());
 
     // Check Arguments
     for (auto arg : fun->getArguments())
     {
-        arg->accept(this);
-
         type->getArguments().push_back(arg->getType());
 
         getDeclarations().push_back(arg.get());
     }
 
     // Function Type
+    type->accept(this);
     fun->setType(type);
 
     // Check Compound Statement
+    setCurrentFunction(fun);
     if (fun->getBody())
     {
         semantic(fun->getBody().get());
@@ -197,65 +213,56 @@ void AnalysisSemantic::semantic(ConditionStatement *expr)
     }
 }
 
+// TODO: Add Function Type for lambda and Capture all value needed
 void AnalysisSemantic::semantic(CallExpression *expr)
 {
     SEMANTIC("CallExpression");
 
-    // Check Function Call
-    Expression *decl = getModule()->findFunction(expr->getIdentifier()).get();
-    if (!decl)
+    expr->getLHS()->accept(this);
+    if (expr->getLHS()->isError() || !expr->getLHS()->getType()->isFunctionType())
     {
-        decl = findDeclaration(expr->getIdentifier());
-        if (!decl || !decl->getType()->isFunctionType())
-        {
-            expr->setError(Errors::getInstance().functionNotDefined.withToken(expr->getToken()));
-            return onError(expr);
-        }
-
-        expr->setLambdaCall(true);
+        expr->setError(Errors::getInstance().datatypeDifferent.withToken(expr->getLHS()->getToken()));
+        return onError(expr);
     }
 
-    expr->setType(decl->getType());
-    expr->setDeclarationValue(decl);
+    auto funType = static_pointer_cast<FunctionType>(expr->getLHS()->getType());
+    assert(funType);
 
-    // TODO: CALL EXPRESSION
-    // expr->setFunction(fun);
-
-    assert(expr->getType() && "call expression should be have a type");
-
-    // Casting Function Type
-    auto funType = static_cast<FunctionType *>(decl->getType().get());
-
-    assert(funType && "Call Expression should be a function type");
-
-    // Check Argument
-    for (size_t i = 0; i < expr->getArguments().size(); i++)
+    expr->setType(funType->getReturnType());
+    if ((!funType->isVararg() && expr->getArguments().size() != funType->getArguments().size()) ||
+        (funType->isVararg() && expr->getArguments().size() < funType->getArguments().size() - 1))
     {
-        auto arg = expr->getArguments()[i];
-        auto funArg = funType->getArguments()[min(funType->getArguments().size() - 1, i)];
+        expr->setError(Errors::getInstance().invalidArgumentSize.withToken(expr->getLHS()->getToken()));
+        return onError(expr);
+    }
 
-        arg->accept(this);
+    auto argIndex = 0;
+    for (auto &item : expr->getArguments())
+    {
+        auto argType = funType->getArguments()[argIndex];
 
-        assert(arg);
-        assert(arg->getType());
-        assert(funArg);
-
-        if (arg->isError())
+        item->accept(this);
+        if (item->isError())
         {
             return;
         }
 
-        if (arg->isNilExpression() && funArg->isPointerType())
+        if (item->isNilExpression() && argType->isPointerType())
         {
             continue;
         }
 
-        if (!arg->getType()->isEqual(funArg))
+        assert(item->getType());
+        if (!argType->isEqual(item->getType()))
         {
-            expr->setError(Errors::getInstance().datatypeDifferent.withToken(arg->getToken()));
-            return onError(expr);
+            item->setError(Errors::getInstance().datatypeDifferent.withToken(item->getToken()));
+            return onError(item.get());
         }
+
+        argIndex++;
     }
+
+    assert(expr->getType() && "call expression should be have a type");
 }
 
 void AnalysisSemantic::semantic(DeclarationStatement *expr)
@@ -264,12 +271,18 @@ void AnalysisSemantic::semantic(DeclarationStatement *expr)
 
     if (expr->getType())
     {
-        unknownType(expr);
+        if (expr->getType()->isUnknownType())
+        {
+            expr->setType(unknownType(expr->getType()));
+        }
+
         expr->getType()->accept(this);
     }
 
     if (!expr->getValue())
     {
+        assert(expr->getType());
+
         // Default value for pointer
         if (expr->getType()->isPointerType())
         {
@@ -375,6 +388,7 @@ void AnalysisSemantic::semantic(AssignmentExpression *expr)
     }
 
     rhs->setAccess(AccessID::Allocation);
+    expr->setType(lhs->getType());
 }
 
 void AnalysisSemantic::semantic(ComparisonExpression *expr)
@@ -402,6 +416,17 @@ void AnalysisSemantic::semantic(ReturnExpression *expr)
         }
 
         expr->setType(expr->getValue()->getType());
+    }
+
+    if (!expr->getType())
+    {
+        expr->setType(Type::getVoidType());
+    }
+
+    if (!expr->getType()->isEqual(getCurrentFunction()->getReturnType()))
+    {
+        expr->setError(Errors::getInstance().datatypeDifferent.withToken(expr->getType()->getToken()));
+        return onError(expr);
     }
 }
 
@@ -480,11 +505,15 @@ void AnalysisSemantic::semantic(UnaryExpression *expr)
 
     expr->setAccess(expr->getValue()->getAccess());
     expr->getValue()->accept(this);
-    if (expr->getOperator() == UnaryExpression::Borrow)
+
+    switch (expr->getOperator())
+    {
+    case UnaryExpression::Borrow:
     {
         expr->setType(Type::getReferenceType(expr->getValue()->getType()));
+        break;
     }
-    else if (expr->getOperator() == UnaryExpression::Dereference)
+    case UnaryExpression::Dereference:
     {
         if (!expr->getValue()->getType()->isPointerType() && !expr->getValue()->getType()->isReferenceType())
         {
@@ -493,6 +522,19 @@ void AnalysisSemantic::semantic(UnaryExpression *expr)
         }
 
         expr->setType(expr->getValue()->getType()->getContainedType());
+        break;
+    }
+    case UnaryExpression::Not:
+    {
+        if (!expr->getValue()->getType()->isBoolType())
+        {
+            expr->setError(Errors::getInstance().expectedBoolType.withToken(expr->getValue()->getToken()));
+            return onError(expr);
+        }
+
+        expr->setType(expr->getValue()->getType());
+        break;
+    }
     }
 }
 
@@ -518,33 +560,33 @@ void AnalysisSemantic::semantic(FieldExpression *expr)
 {
     SEMANTIC("FieldExpression");
 
-    expr->getParentField()->accept(this);
-    if (expr->getParentField()->isError())
+    expr->getLHS()->accept(this);
+    if (expr->getLHS()->isError())
     {
         return;
     }
 
     // Check if parent field is a pointer or reference
     // Let just dereference it
-    if (expr->getParentField()->getType()->isPointerType() || expr->getParentField()->getType()->isReferenceType())
+    if (expr->getLHS()->getType()->isPointerType() || expr->getLHS()->getType()->isReferenceType())
     {
-        expr->setParentField(make_shared<UnaryExpression>(Token::create(), UnaryExpression::Dereference, expr->getParentField()));
-        expr->getParentField()->accept(this);
+        expr->setLHS(make_shared<UnaryExpression>(Token::create(), UnaryExpression::Dereference, expr->getLHS()));
+        expr->getLHS()->accept(this);
     }
 
     assert(!expr->isError() && "expression should be valid code");
 
-    auto parentType = expr->getParentField()->getType();
+    auto parentType = expr->getLHS()->getType();
     if (!parentType->isStructType())
     {
-        expr->setError(Errors::getInstance().shouldStructType.withToken(expr->getParentField()->getToken()));
+        expr->setError(Errors::getInstance().shouldStructType.withToken(expr->getLHS()->getToken()));
         return onError(expr);
     }
 
     assert(typeid(StructType) == typeid(*parentType) && "failed to cast type into struct type");
 
     auto structType = static_pointer_cast<StructType>(parentType);
-    auto [idx, field] = structType->findTypeName(expr->getIdentifier());
+    auto [idx, field] = structType->findTypeName(expr->getField());
     if (idx == -1)
     {
         expr->setError(Errors::getInstance().fieldNotExist.withToken(expr->getToken()));
@@ -568,4 +610,23 @@ void AnalysisSemantic::semantic(NilLiteralExpression *expr)
     SEMANTIC("NilLiteralExpression");
 
     expr->getType()->accept(this);
+}
+
+void AnalysisSemantic::semantic(IndexExpression *expr)
+{
+    SEMANTIC("IndexExpression");
+
+    assert(expr->getLHS());
+    expr->getLHS()->accept(this);
+
+    assert(expr->getIndex());
+    expr->getIndex()->accept(this);
+
+    expr->setType(expr->getLHS()->getType()->getContainedType());
+    assert(expr->getType());
+}
+
+void AnalysisSemantic::semantic(ArrayExpression *expr)
+{
+    SEMANTIC("ArrayExpression");
 }

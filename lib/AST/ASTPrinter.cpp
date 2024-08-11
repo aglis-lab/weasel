@@ -86,7 +86,7 @@ void CharLiteralExpression::print(Printer *printer)
 }
 
 // ArrayLiteralExpression
-void ArrayLiteralExpression::print(Printer *printer)
+void ArrayExpression::print(Printer *printer)
 {
     printer->print(this);
 }
@@ -122,7 +122,7 @@ void FieldExpression::print(Printer *printer)
 }
 
 // ArrayExpression
-void ArrayExpression::print(Printer *printer)
+void IndexExpression::print(Printer *printer)
 {
     printer->print(this);
 }
@@ -262,7 +262,7 @@ void CharLiteralExpression::printAsOperand(Printer *printer)
 }
 
 // ArrayLiteralExpression
-void ArrayLiteralExpression::printAsOperand(Printer *printer)
+void ArrayExpression::printAsOperand(Printer *printer)
 {
     printer->printAsOperand(this);
 }
@@ -298,7 +298,7 @@ void FieldExpression::printAsOperand(Printer *printer)
 }
 
 // ArrayExpression
-void ArrayExpression::printAsOperand(Printer *printer)
+void IndexExpression::printAsOperand(Printer *printer)
 {
     printer->printAsOperand(this);
 }

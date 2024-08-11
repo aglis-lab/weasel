@@ -50,7 +50,7 @@ llvm::Value *CharLiteralExpression::accept(Codegen *c)
     return c->codegen(this);
 }
 
-llvm::Value *ArrayLiteralExpression::accept(Codegen *c)
+llvm::Value *ArrayExpression::accept(Codegen *c)
 {
     return c->codegen(this);
 }
@@ -80,7 +80,7 @@ llvm::Value *FieldExpression::accept(Codegen *c)
     return c->codegen(this);
 }
 
-llvm::Value *ArrayExpression::accept(Codegen *c)
+llvm::Value *IndexExpression::accept(Codegen *c)
 {
     return c->codegen(this);
 }

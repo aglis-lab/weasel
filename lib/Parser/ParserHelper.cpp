@@ -63,9 +63,9 @@ TypeHandle Parser::parseDataType()
         getNextToken(); // eat 'fun'
 
         // TODO: Create Better Error for Token
-        if (getCurrentToken().isOpenParen())
+        if (!getCurrentToken().isOpenParen())
         {
-            assert("Lambda should be followed with open paren");
+            assert(false && "Lambda should be followed with open paren");
         }
 
         auto type = make_shared<FunctionType>();
@@ -76,7 +76,7 @@ TypeHandle Parser::parseDataType()
             if (!getNextToken().isDataType())
             {
                 // TODO: Create Better Error for Token
-                assert("Lambda should be followed with open paren");
+                assert(false && "Lambda should be followed with open paren");
             }
 
             if (getCurrentToken().isCloseParen())

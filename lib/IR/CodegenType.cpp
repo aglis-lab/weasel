@@ -15,7 +15,7 @@ llvm::Type *Codegen::codegen(FunctionType *expr)
     {
         if (item->isFunctionType())
         {
-            args.push_back(Type::getOpaqueType()->accept(this));
+            args.push_back(llvm::PointerType::get(*getContext(), 0));
         }
         else
         {
@@ -54,10 +54,10 @@ llvm::Type *Codegen::codegen(StructType *structExpr)
         // TODO: Create more proper check for circular type
         if (item.getType()->isStructType())
         {
-            if (auto itemStructType = dynamic_pointer_cast<StructType>(item.getType()); itemStructType)
-            {
-                assert(itemStructType->getIdentifier() != identifier && "Cannot create circular struct");
-            }
+            auto itemStructType = dynamic_pointer_cast<StructType>(item.getType());
+
+            assert(itemStructType);
+            assert(itemStructType->getIdentifier() != identifier && "Cannot create circular struct");
         }
 
         typesVal.push_back(item.getType()->accept(this));
@@ -95,13 +95,13 @@ llvm::Type *Codegen::codegen(Type *type)
         auto containedType = type->getContainedType();
         assert(containedType != nullptr);
 
-        auto containedTypeV = containedType->accept(this);
-        assert(containedTypeV != nullptr);
-
         if (type->getTypeWidth() == -1)
         {
-            return llvm::PointerType::get(containedTypeV, 0);
+            return llvm::PointerType::get(*getContext(), 0);
         }
+
+        auto containedTypeV = containedType->accept(this);
+        assert(containedTypeV != nullptr);
 
         return llvm::ArrayType::get(containedTypeV, type->getTypeWidth());
     }
@@ -109,12 +109,6 @@ llvm::Type *Codegen::codegen(Type *type)
     if (type->isPointerType() || type->isReferenceType())
     {
         return llvm::PointerType::get(*getContext(), 0);
-
-        // TODO: Move to opaque type
-        // auto containedType = type->getContainedType();
-        // auto containedTypeV = containedType->accept(this);
-
-        // return llvm::PointerType::get(containedTypeV, 0);
     }
 
     return nullptr;

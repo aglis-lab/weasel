@@ -161,7 +161,7 @@ llvm::Value *Codegen::codegen(Function *expr)
 
 llvm::Value *Codegen::codegen(MethodCallExpression *expr)
 {
-    LOG(INFO) << "Codegen Method Call Function\n";
+    LOG(INFO) << "Codegen Method Call Function";
 
     auto argsFun = expr->getFunction()->getArguments();
     auto argsCall = expr->getArguments();
@@ -194,20 +194,15 @@ llvm::Value *Codegen::codegen(MethodCallExpression *expr)
 
 llvm::Value *Codegen::codegen(CallExpression *expr)
 {
-    LOG(INFO) << "Codegen Call Function " << expr->getIdentifier();
+    LOG(INFO) << "Codegen Call Function";
 
-    auto args = expr->getArguments();
-    auto fun = expr->getDeclarationValue()->getCodegen();
+    auto lhsV = expr->getLHS()->accept(this);
+    assert(lhsV);
 
-    auto funTypeV = llvm::dyn_cast<llvm::FunctionType>(expr->getType()->accept(this));
-
+    auto funTypeV = llvm::dyn_cast<llvm::FunctionType>(expr->getLHS()->getType()->accept(this));
     assert(funTypeV);
 
-    if (expr->isLambdaCall())
-    {
-        fun = getBuilder()->CreateLoad(llvm::PointerType::get(*getContext(), 0), fun);
-    }
-
+    auto args = expr->getArguments();
     std::vector<llvm::Value *> argsV;
     for (size_t i = 0; i < args.size(); i++)
     {
@@ -228,7 +223,26 @@ llvm::Value *Codegen::codegen(CallExpression *expr)
         argsV.push_back(argVal);
     }
 
-    return getBuilder()->CreateCall(funTypeV, fun, argsV);
+    if (!llvm::isa<llvm::Function>(lhsV))
+    {
+        lhsV = getBuilder()->CreateLoad(llvm::PointerType::get(*getContext(), 0), lhsV);
+        assert(lhsV);
+    }
+
+    auto callV = getBuilder()->CreateCall(funTypeV, lhsV, argsV);
+    if (expr->isAccessLoad() || expr->getType()->isVoidType())
+    {
+        return callV;
+    }
+
+    // Create Temporary Allocation
+    auto typeV = expr->getType()->accept(this);
+    assert(typeV);
+
+    auto alloc = createAlloca(typeV);
+    getBuilder()->CreateStore(callV, alloc);
+
+    return alloc;
 }
 
 llvm::Value *Codegen::codegen(BreakExpression *expr)
@@ -283,26 +297,21 @@ llvm::Value *Codegen::codegen(ContinueExpression *expr)
 
 llvm::Value *Codegen::codegen(ReturnExpression *expr)
 {
-    LOG(INFO) << "Codegen Return Function\n";
+    LOG(INFO) << "Codegen Return Function";
 
     if (!expr->getType()->isVoidType())
     {
-        auto val = expr->getValue()->accept(this);
-        if (expr->getType()->isIntegerType())
+        if (expr->getValue()->isStructExpression())
         {
-            auto returnTyV = getBuilder()->GetInsertBlock()->getParent()->getReturnType();
-
-            if (expr->getType()->isSigned())
-            {
-                val = getBuilder()->CreateSExtOrTrunc(val, returnTyV);
-            }
-            else
-            {
-                val = getBuilder()->CreateZExtOrTrunc(val, returnTyV);
-            }
+            static_cast<StructExpression *>(expr->getValue().get())->setAlloc(_returnAlloca);
+            expr->getValue()->accept(this);
         }
+        else
+        {
+            auto val = expr->getValue()->accept(this);
 
-        getBuilder()->CreateStore(val, _returnAlloca);
+            getBuilder()->CreateStore(val, _returnAlloca);
+        }
     }
 
     return getBuilder()->CreateBr(_returnBlock);
@@ -317,22 +326,11 @@ llvm::Value *Codegen::codegen(VariableExpression *expr)
     auto type = expr->getType();
     auto typeV = type->accept(this);
 
-    llvm::Value *alloc;
-    if (type->isFunctionType())
-    {
-        alloc = expr->getDeclarationValue()->getCodegen();
-    }
-    else
-    {
-        auto attr = findAttribute(varName);
-
-        assert(!attr.isEmpty() && "value of the variable isn't found");
-
-        alloc = attr.getValue();
-    }
+    auto alloc = expr->getDeclarationValue()->getCodegen();
 
     assert(alloc && "variable isn't declare yet");
 
+    expr->setCodegen(alloc);
     if (llvm::dyn_cast<llvm::Argument>(alloc))
     {
         return alloc;
@@ -356,70 +354,53 @@ llvm::Value *Codegen::codegen(VariableExpression *expr)
     return getBuilder()->CreateLoad(typeV, alloc);
 }
 
-// TODO: Pointer should be opaque type
-// TODO: String as array of byte
-llvm::Value *Codegen::codegen(ArrayExpression *expr)
+llvm::Value *Codegen::codegen(IndexExpression *expr)
 {
-    LOG(INFO) << "Codegen Array Expression";
+    LOG(INFO) << "Codegen Index Expression";
 
-    return nullptr;
+    // Get LHS
+    auto lhs = expr->getLHS();
+    assert(lhs);
 
-    // // Get Index
-    // auto indexExpr = expr->getIndex();
-    // auto indexV = indexExpr->accept(this);
+    lhs->setAccess(AccessID::Allocation);
+    auto lhsV = lhs->accept(this);
+    assert(lhsV);
 
-    // assert(indexV);
-    // assert(indexExpr);
+    // Get Index
+    auto index = expr->getIndex();
+    assert(index);
 
-    // // Get Allocator from Symbol Table
-    // auto varName = expr->getIdentifier();
-    // auto attr = findAttribute(varName);
+    auto indexV = index->accept(this);
+    assert(indexV);
 
-    // assert(!attr.isEmpty() && "Cannot find variable");
+    // Casting to integer 64
+    indexV = getBuilder()->CreateSExtOrTrunc(indexV, getBuilder()->getInt64Ty());
 
-    // auto alloc = attr.getValue();
+    auto type = expr->getType();
+    auto typeV = type->accept(this);
+    auto idxList = {indexV};
+    auto elemIndex = getBuilder()->CreateInBoundsGEP(typeV, lhsV, idxList);
+    if (expr->isAccessAllocation())
+    {
+        return elemIndex;
+    }
 
-    // assert(alloc);
-
-    // // Casting to integer 64
-    // indexV = getBuilder()->CreateSExtOrTrunc(indexV, getBuilder()->getInt64Ty());
-
-    // std::vector<llvm::Value *> idxList = {indexV};
-
-    // // TODO: getPointerElementType deprecated
-    // auto typeV = alloc->getType()->getPointerElementType();
-    // if (typeV->isPointerTy())
-    // {
-    //     alloc = getBuilder()->CreateLoad(typeV, alloc);
-    //     typeV = typeV->getPointerElementType();
-    // }
-    // else
-    // {
-    //     idxList.insert(idxList.begin(), getBuilder()->getInt64(0));
-    // }
-
-    // auto elemIndex = getBuilder()->CreateInBoundsGEP(typeV, alloc, idxList);
-    // if (expr->isAccessAllocation())
-    // {
-    //     return elemIndex;
-    // }
-
-    // return getBuilder()->CreateLoad(typeV, elemIndex);
+    return getBuilder()->CreateLoad(typeV, elemIndex);
 }
 
 llvm::Value *Codegen::codegen(FieldExpression *expr)
 {
     LOG(INFO) << "Codegen Field Expression";
 
-    expr->getParentField()->setAccess(AccessID::Allocation);
-    auto alloc = expr->getParentField()->accept(this);
+    expr->getLHS()->setAccess(AccessID::Allocation);
+    auto alloc = expr->getLHS()->accept(this);
 
     assert(alloc && "allocation should be exist");
 
-    auto type = static_pointer_cast<StructType>(expr->getParentField()->getType());
+    auto type = static_pointer_cast<StructType>(expr->getLHS()->getType());
     auto typeV = type->accept(this);
 
-    auto fieldName = expr->getIdentifier();
+    auto fieldName = expr->getField();
     auto [idx, field] = type->findTypeName(fieldName);
 
     auto range = getBuilder()->getInt32(0);
@@ -436,7 +417,7 @@ llvm::Value *Codegen::codegen(FieldExpression *expr)
 
 llvm::Value *Codegen::codegen(StructExpression *expr)
 {
-    LOG(INFO) << "Codegen Struct Expression...";
+    LOG(INFO) << "Codegen Struct Expression " << expr->getIdentifier();
     if (expr->getFields().empty())
     {
         return getBuilder()->getInt8(0);
@@ -446,6 +427,10 @@ llvm::Value *Codegen::codegen(StructExpression *expr)
     auto typeV = type->accept(this);
     auto alloc = expr->getAlloc();
     auto fields = type->getFields();
+
+    assert(typeV);
+    assert(alloc);
+
     for (auto exprField : expr->getFields())
     {
         auto [idx, exprFieldType] = type->findTypeName(exprField->getIdentifier());
@@ -455,6 +440,7 @@ llvm::Value *Codegen::codegen(StructExpression *expr)
         auto idxStruct = getBuilder()->getInt32(0);
         auto idxVal = getBuilder()->getInt32(idx);
         auto inbound = getBuilder()->CreateInBoundsGEP(typeV, alloc, {idxStruct, idxVal});
+
         if (exprField->getValue()->isStructExpression())
         {
             auto temp = static_pointer_cast<StructExpression>(exprField->getValue());
@@ -532,7 +518,7 @@ llvm::Value *Codegen::codegen(DeclarationStatement *expr)
     assert(valueV && "Cannot codegen value expression");
 
     // Check if Array Literal
-    if (typeid(*valueExpr.get()) == typeid(ArrayLiteralExpression))
+    if (typeid(*valueExpr.get()) == typeid(ArrayExpression))
     {
         auto arrayPtr = getBuilder()->CreateBitCast(alloc, getBuilder()->getInt8PtrTy());
         auto align = declType->getContainedType()->getTypeWidthByte();
@@ -560,7 +546,6 @@ llvm::Value *Codegen::codegen(CompoundStatement *expr)
 
     for (auto &item : expr->getBody())
     {
-        item->setAccess(AccessID::Allocation);
         item->accept(this);
     }
 
