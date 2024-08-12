@@ -208,6 +208,7 @@ namespace weasel
         vector<TypeHandle> _arguments;
         TypeHandle _returnType;
         bool _isVararg = false;
+        bool _isStatic = true;
 
     public:
         FunctionType() : Type(TypeID::FunctionType, 0, false) {}
@@ -219,5 +220,8 @@ namespace weasel
 
         void setIsVararg(bool isVararg) { _isVararg = isVararg; }
         bool isVararg() const { return _isVararg; }
+
+        void setIsStatic(bool val) { _isStatic = val; }
+        bool getIstatic() const { return _isStatic; }
     };
 } // namespace weasel

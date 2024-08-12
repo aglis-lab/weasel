@@ -24,62 +24,18 @@ GlobalVariableHandle Parser::parseGlobalVariable()
     return expr;
 }
 
-ExpressionHandle Parser::parseMethodCallExpression(ExpressionHandle implExpression)
+ExpressionHandle Parser::parseMethodCallExpression(ExpressionHandle lhs)
 {
     LOG(INFO) << "Parse Method Call Expression";
 
-    return nullptr;
+    auto expr = make_shared<MethodCallExpression>();
 
-    // auto callToken = getCurrentToken();
-    // auto expr = new MethodCallExpression(callToken);
+    expr->setIdentifier(getCurrentToken().getValue());
+    expr->setToken(getCurrentToken());
+    expr->setLHS(lhs);
 
-    // if (!getNextToken().isOpenParen())
-    // {
-    //     expr->setError(Errors::getInstance().expectedOpenParen);
-
-    //     return expr;
-    // }
-
-    // if (!getNextToken().isCloseParen())
-    // {
-    //     while (true)
-    //     {
-    //         auto arg = parseExpressionWithBlock();
-    //         expr->getArguments().push_back(arg);
-
-    //         if (getCurrentToken().isCloseParen())
-    //         {
-    //             break;
-    //         }
-
-    //         if (!getCurrentToken().isComma())
-    //         {
-    //             expr->setError(Errors::getInstance().expectedCloseParen);
-    //             return expr;
-    //         }
-
-    //         getNextToken();
-    //     }
-    // }
-
-    // getNextToken(); // eat ')'
-
-    // StructType *structType;
-    // if (implExpression->getType()->isStructType())
-    // {
-    //     structType = dynamic_cast<StructType *>(implExpression->getType());
-    // }
-    // else
-    // {
-    //     structType = dynamic_cast<StructType *>(implExpression->getType()->getContainedType());
-    // }
-    // auto fun = findFunction(callToken.getValue(), structType);
-
-    // expr->setType(fun->getType());
-    // expr->setImplExpression(implExpression);
-    // expr->setFunction(fun);
-
-    // return expr;
+    getNextToken(); // eat 'identifier'
+    return parseCallExpression(expr);
 }
 
 ExpressionHandle Parser::parseStaticMethodCallExpression()
@@ -210,23 +166,20 @@ ExpressionHandle Parser::parseLiteralExpression()
     return make_shared<NilLiteralExpression>(getCurrentToken());
 }
 
-ExpressionHandle Parser::parseCallExpression(ExpressionHandle lhs)
+tuple<vector<ExpressionHandle>, optional<Error>> Parser::parseArguments()
 {
-    LOG(INFO) << "Parse Call Expression...";
+    vector<ExpressionHandle> args;
 
-    auto expr = make_shared<CallExpression>(lhs->getToken());
-
-    expr->setLHS(lhs);
     if (!getNextToken().isCloseParen())
     {
         while (true)
         {
             auto arg = parseExpressionWithBlock();
-            expr->getArguments().push_back(arg);
+            args.push_back(arg);
             if (arg->isError())
             {
                 skipUntilNewLine();
-                return expr;
+                break;
             }
 
             if (getCurrentToken().isCloseParen())
@@ -236,21 +189,31 @@ ExpressionHandle Parser::parseCallExpression(ExpressionHandle lhs)
 
             if (!getCurrentToken().isComma())
             {
-                expr->setError(Errors::getInstance().expectedCloseParen.withToken(getCurrentToken()));
-                return expr;
+                return {args, Errors::getInstance().expectedCloseParen.withToken(getCurrentToken())};
             }
 
             getNextToken(); // eat ','
         }
     }
 
-    if (!getCurrentToken().isCloseParen())
-    {
-        expr->setError(Errors::getInstance().expectedCloseParen.withToken(getCurrentToken()));
-        return expr;
-    }
-
     getNextToken(); // eat ')'
+
+    return {args, {}};
+}
+
+ExpressionHandle Parser::parseCallExpression(ExpressionHandle lhs)
+{
+    LOG(INFO) << "Parse Call Expression...";
+
+    auto expr = make_shared<CallExpression>(lhs->getToken());
+    auto [args, err] = parseArguments();
+
+    expr->setLHS(lhs);
+    expr->setArguments(args);
+    if (err)
+    {
+        expr->setError(err.value());
+    }
 
     return expr;
 }
@@ -541,9 +504,13 @@ ExpressionHandle Parser::parseFieldExpression(ExpressionHandle lhs)
 {
     LOG(INFO) << "Parse Field Expression of " << lhs->getToken().getValue();
 
-    auto identToken = getNextToken(); // eat '.'
-    auto expr = make_shared<FieldExpression>(identToken, identToken.getValue());
+    getNextToken(); // eat '.'
+    if (expectToken().isOpenParen())
+    {
+        return parseMethodCallExpression(lhs);
+    }
 
+    auto expr = make_shared<FieldExpression>(getCurrentToken(), getCurrentToken().getValue());
     expr->setLHS(lhs);
 
     getNextToken(); // eat 'identifier'

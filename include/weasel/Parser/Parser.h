@@ -101,5 +101,7 @@ namespace weasel
         ExpressionHandle parseLiteralExpression();
         ExpressionHandle parseIdentifierExpression();
         ExpressionHandle parseArrayExpression();
+
+        tuple<vector<ExpressionHandle>, optional<Error>> parseArguments();
     };
 } // namespace weasel

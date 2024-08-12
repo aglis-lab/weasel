@@ -53,9 +53,9 @@ std::string Function::getManglingName()
     mangleName += "_W";
 
     // Impl Struct
-    if (this->isImplStructExist())
+    if (this->isImplTypeExist())
     {
-        mangleName += "I" + this->getImplStruct()->getManglingName();
+        mangleName += "I" + this->getImplType()->getManglingName();
     }
 
     // Return Type

@@ -73,6 +73,8 @@ namespace weasel
         Error failedDereference = Error(109, ErrorKind::SemanticError, "can't make dereference operation");
         Error expectedBoolType = Error(110, ErrorKind::SemanticError, "expected bool type");
         Error invalidArgumentSize = Error(111, ErrorKind::SemanticError, "not enough argument call");
+        Error duplicateFunction = Error(112, ErrorKind::SemanticError, "duplicate function");
+        Error unexpectedThisArgument = Error(113, ErrorKind::SemanticError, "unexpected this argument");
 
         // Internal Error
         Error missingImplementation = Error(200, ErrorKind::SemanticError, "internal error, missing expression implementation");

@@ -2,6 +2,7 @@
 #include <unordered_set>
 
 #include <weasel/Analysis/AnalysisSemantic.h>
+#include <weasel/Basic/Defer.h>
 
 #define SEMANTIC(X) LOG(INFO) << "Semantic Check " << X
 
@@ -37,6 +38,18 @@ void AnalysisSemantic::semanticCheck()
         // Check Function Type
         for (auto &item : fun->getArguments())
         {
+            if (item->isImplThis())
+            {
+                if (item->isImplThisReference())
+                {
+                    item->setType(Type::getPointerType(fun->getImplType()));
+                }
+                else
+                {
+                    item->setType(fun->getImplType());
+                }
+            }
+
             if (item->getType()->isUnknownType())
             {
                 item->setType(unknownType(item->getType()));
@@ -123,7 +136,7 @@ void AnalysisSemantic::semantic(Type *expr)
 
 TypeHandle AnalysisSemantic::unknownType(TypeHandle expr)
 {
-    SEMANTIC("UnknownType Expression");
+    SEMANTIC("UnknownType");
 
     if (!expr->isUnknownType())
     {
@@ -144,15 +157,43 @@ void AnalysisSemantic::semantic(Function *fun)
 {
     SEMANTIC("Function") << " " << fun->getIdentifier();
 
-    auto lastDeclaration = getDeclarations().size();
+    saveState();
+    defer { restoreState(); };
+
     auto type = make_shared<FunctionType>();
+    if (fun->isImplTypeExist())
+    {
+        if (fun->getArguments().size() > 0 && fun->getArguments().front()->isImplThis())
+        {
+            fun->setImplType(unknownType(fun->getImplType()));
+            type->setIsStatic(false);
+        }
+    }
 
     type->setReturnType(fun->getType());
     type->setIsVararg(fun->isVararg());
 
+    // Check Impl this
+    auto argSize = fun->getArguments().size();
+    for (size_t i = 1; i < argSize; i++)
+    {
+        auto arg = fun->getArguments()[i];
+
+        if (arg->isImplThis())
+        {
+            arg->setError(Errors::getInstance().unexpectedThisArgument.withToken(arg->getToken()));
+            onError(arg.get());
+        }
+    }
+
     // Check Arguments
     for (auto arg : fun->getArguments())
     {
+        if (arg->isError())
+        {
+            continue;
+        }
+
         type->getArguments().push_back(arg->getType());
 
         getDeclarations().push_back(arg.get());
@@ -164,34 +205,43 @@ void AnalysisSemantic::semantic(Function *fun)
 
     // Check Compound Statement
     setCurrentFunction(fun);
+
     if (fun->getBody())
     {
+        fmt::println("FUNC {} {}", fun->getIdentifier(), fun->getBody()->getBody().size());
         semantic(fun->getBody().get());
     }
 
-    getDeclarations().resize(lastDeclaration);
+    // Find Duplicate Function
+    if (getModule()->findFunctions(fun->getIdentifier(), fun->getImplType(), type->getIstatic()).size() >= 2)
+    {
+        fun->setError(Errors::getInstance().duplicateFunction.withToken(fun->getToken()));
+        return onError(fun);
+    }
 }
 
 void AnalysisSemantic::semantic(CompoundStatement *expr)
 {
     LOG(INFO) << "Compound Statement Check";
 
+    saveState();
+    defer { restoreState(); };
+
     if (!expr || expr->getBody().empty())
     {
         return;
     }
 
-    auto lastDeclaration = getDeclarations().size();
+    auto index = 1;
     for (auto item : expr->getBody())
     {
+        fmt::println("Body {}", index++);
         item->accept(this);
         if (item->isError())
         {
             break;
         }
     }
-
-    getDeclarations().resize(lastDeclaration);
 }
 
 void AnalysisSemantic::semantic(ConditionStatement *expr)
@@ -228,9 +278,35 @@ void AnalysisSemantic::semantic(CallExpression *expr)
     auto funType = static_pointer_cast<FunctionType>(expr->getLHS()->getType());
     assert(funType);
 
+    if (!funType->getIstatic())
+    {
+        auto methodCall = static_pointer_cast<MethodCallExpression>(expr->getLHS());
+        assert(methodCall);
+
+        auto callLHS = methodCall->getLHS();
+        auto lhsType = callLHS->getType();
+        auto thisType = funType->getArguments().front();
+        if (!lhsType->isEqual(thisType))
+        {
+            // LHS is pointer
+            if (lhsType->isPointerType() || lhsType->isReferenceType())
+            {
+                callLHS = make_shared<UnaryExpression>(Token::create(), UnaryExpression::Dereference, callLHS);
+            }
+            else
+            {
+                // LHS is value
+                callLHS = make_shared<UnaryExpression>(Token::create(), UnaryExpression::Borrow, callLHS);
+            }
+        }
+
+        expr->getArguments().insert(expr->getArguments().begin(), callLHS);
+    }
+
     expr->setType(funType->getReturnType());
-    if ((!funType->isVararg() && expr->getArguments().size() != funType->getArguments().size()) ||
-        (funType->isVararg() && expr->getArguments().size() < funType->getArguments().size() - 1))
+    auto argSize = funType->getArguments().size();
+    if ((!funType->isVararg() && expr->getArguments().size() != argSize) ||
+        (funType->isVararg() && expr->getArguments().size() < argSize - 1))
     {
         expr->setError(Errors::getInstance().invalidArgumentSize.withToken(expr->getLHS()->getToken()));
         return onError(expr);
@@ -339,7 +415,7 @@ void AnalysisSemantic::semantic(VariableExpression *expr)
     Expression *decl = findDeclaration(expr->getIdentifier());
     if (!decl)
     {
-        auto fun = getModule()->findFunction(expr->getIdentifier());
+        auto fun = getModule()->getFunction(expr->getIdentifier());
         if (!fun)
         {
             expr->setError(Errors::getInstance().variableNotDefined.withToken(expr->getToken()));
@@ -629,4 +705,31 @@ void AnalysisSemantic::semantic(IndexExpression *expr)
 void AnalysisSemantic::semantic(ArrayExpression *expr)
 {
     SEMANTIC("ArrayExpression");
+
+    for (auto &item : expr->getItems())
+    {
+        item->accept(this);
+    }
+}
+
+void AnalysisSemantic::semantic(MethodCallExpression *expr)
+{
+    SEMANTIC("MethodCallExpression") << " " << expr->getIdentifier();
+
+    expr->getLHS()->accept(this);
+    auto implType = expr->getLHS()->getType();
+    if (implType->isReferenceType() || implType->isPointerType())
+    {
+        implType = implType->getContainedType();
+    }
+
+    auto fun = getModule()->getFunction(expr->getIdentifier(), implType, false);
+    if (!fun)
+    {
+        expr->setError(Errors::getInstance().functionNotDefined.withToken(expr->getToken()));
+        return onError(expr);
+    }
+
+    expr->setType(fun->getType());
+    expr->setDeclarationValue(fun.get());
 }

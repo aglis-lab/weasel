@@ -10,9 +10,12 @@ namespace weasel
     private:
         Module *_module;
 
+        // TODO: Simply Use Polymorphism
         vector<Expression *> _errors;
         vector<StructType *> _typeErrors;
 
+        // TODO: Make better State Class
+        vector<uint32_t> _declarationState;
         vector<DeclarationStatement *> _declarations;
 
         Function *_currentFunction;
@@ -42,6 +45,7 @@ namespace weasel
         void semantic(NilLiteralExpression *expr);
         void semantic(IndexExpression *expr);
         void semantic(ArrayExpression *expr);
+        void semantic(MethodCallExpression *expr);
 
         void semantic(FunctionType *expr);
         void semantic(StructType *expr);
@@ -59,11 +63,26 @@ namespace weasel
             getTypeErrors().push_back(expr);
         }
 
+        Module *getModule() const { return _module; }
+
         void setCurrentFunction(Function *fun) { _currentFunction = fun; }
         Function *getCurrentFunction() { return _currentFunction; }
 
-        Module *getModule() const { return _module; }
-        vector<DeclarationStatement *> &getDeclarations() { return _declarations; }
+        void saveState()
+        {
+            _declarationState.push_back(_declarations.size());
+        }
+
+        void restoreState()
+        {
+            _declarations.resize(_declarationState.back());
+            _declarationState.pop_back();
+        }
+
+        vector<DeclarationStatement *> &getDeclarations()
+        {
+            return _declarations;
+        }
         DeclarationStatement *findDeclaration(string_view variableName)
         {
             for (int i = getDeclarations().size() - 1; i >= 0; i--)

@@ -47,6 +47,7 @@ namespace weasel
 
     public:
         LHSExpression() = default;
+        LHSExpression(ExpressionHandle lhs) : _lhs(lhs) {};
 
         void setLHS(ExpressionHandle lhs) { _lhs = lhs; }
         ExpressionHandle getLHS() const { return _lhs; }
@@ -195,6 +196,7 @@ namespace weasel
     public:
         explicit CallExpression(Token token) : Expression(token) {}
 
+        void setArguments(vector<ExpressionHandle> args) { _args = args; }
         vector<ExpressionHandle> &getArguments() { return _args; }
 
     private:
@@ -273,24 +275,14 @@ namespace weasel
     };
 
     // Method Call
-    class MethodCallExpression : public Expression
+    class MethodCallExpression : public VariableExpression, public LHSExpression
     {
         OVERRIDE_CODEGEN_EXPRESSION
 
+        DECLARATION_EXPRESSION
+
     public:
         MethodCallExpression() = default;
-
-        void setImplExpression(ExpressionHandle implExpression) { _implExpression = implExpression; }
-        void setFunction(Function *fun) { _fun = fun; }
-
-        vector<ExpressionHandle> getArguments() const { return _args; }
-        ExpressionHandle getImplExpression() { return _implExpression; }
-        Function *getFunction() const { return _fun; }
-
-    private:
-        Function *_fun;
-        ExpressionHandle _implExpression;
-        vector<ExpressionHandle> _args;
     };
 
     // Number Literal Expression
@@ -437,23 +429,20 @@ namespace weasel
     };
 
     // Binary Operator Expression
-    class LogicalExpression : public Expression
+    class LogicalExpression : public Expression, public LHSExpression
     {
         OVERRIDE_CODEGEN_EXPRESSION
 
     public:
-        LogicalExpression(Token op, ExpressionHandle lhs, ExpressionHandle rhs) : Expression(op), _lhs(lhs), _rhs(rhs) {}
+        LogicalExpression(Token op, ExpressionHandle lhs, ExpressionHandle rhs) : Expression(op), LHSExpression(lhs), _rhs(rhs) {}
         LogicalExpression(Token op) : Expression(op) {}
 
-        void setLHS(ExpressionHandle lhs) { _lhs = lhs; }
         void setRHS(ExpressionHandle rhs) { _rhs = rhs; }
 
         Token getOperator() const { return getToken(); }
-        Expression *getLHS() { return _lhs.get(); }
-        Expression *getRHS() { return _rhs.get(); }
+        ExpressionHandle getRHS() { return _rhs; }
 
     private:
-        ExpressionHandle _lhs;
         ExpressionHandle _rhs;
     };
 
@@ -600,12 +589,29 @@ namespace weasel
     };
 
     // Argument Expression
+    // Inherit fron Declaration because will be used for scope variable
     class ArgumentExpression : public DeclarationStatement
     {
         OVERRIDE_CODEGEN_EXPRESSION
 
     public:
+        enum ImplThisType
+        {
+            None,
+            Value,
+            Reference,
+        };
+
+    public:
         ArgumentExpression() = default;
+
+        void setImplThis(ImplThisType val) { _implThis = val; }
+        bool isImplThis() const { return _implThis != ImplThisType::None; }
+        bool isImplThisReference() const { return _implThis == Reference; }
+        ImplThisType implThis() const { return _implThis; }
+
+    private:
+        ImplThisType _implThis;
     };
 
     // Global Variable
@@ -678,12 +684,12 @@ namespace weasel
 
         string getManglingName();
 
-        void setImplStruct(TypeHandle structType) { _implStruct = structType; }
-        bool isImplStructExist() const { return _implStruct != nullptr; }
-        TypeHandle getImplStruct() { return _implStruct; }
+        void setImplType(TypeHandle structType) { _implStruct = structType; }
+        bool isImplTypeExist() const { return _implStruct != nullptr; }
+        TypeHandle getImplType() { return _implStruct; }
 
-        void setIsStatic(bool val) { _isStatic = val; }
-        bool getIsStatic() const { return _isStatic; }
+        // void setIsStatic(bool val) { _isStatic = val; }
+        // bool getIsStatic() const { return _isStatic; }
 
         FunctionTypeHandle getFunctionType() { return static_pointer_cast<FunctionType>(_type); }
 
@@ -692,10 +698,10 @@ namespace weasel
     protected:
         TypeHandle _implStruct;
 
-        // TODO: Check if inline, extern, and static function
+        // TODO: Check if inline function
         bool _isDefine = false;
         bool _isInline = false;
         bool _isExtern = false;
-        bool _isStatic = false;
+        // bool _isStatic = true;
     };
 } // namespace weasel

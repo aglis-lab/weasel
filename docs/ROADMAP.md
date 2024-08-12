@@ -5,7 +5,7 @@
 - [x] Use LLVM-13
 - [x] use LLVM-15
 - [x] use LLVM-17
-- [ ] Use std::string as possible then use char\*
+- [ ] Use uint32_t for index value
 - [ ] Use sanitize address
 - [ ] Add LLVM Debugging
   - [x] Location

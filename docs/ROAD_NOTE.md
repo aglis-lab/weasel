@@ -6,7 +6,7 @@
 - [x] Add Parameter Reference Type
 - [x] Remove ErrorTable from any source code
 
-  - [ ] Check Nil Literal Expression
+  - [x] Check Nil Literal Expression
   - [x] Create Error List
   - [x] Find Best strategy for creating syntax error (not continuing the code or parser)
 
@@ -40,6 +40,7 @@
 - [ ] Global Variable or Value
 - [ ] Add Variable Reference Type (Less Used, ignore it for a moment)
 - [ ] Create LSP for Weasel
+- [ ] Print AST as a JSON for debuggind purpose (NOT VERY IMPORTANT)
 
 ## Flow for struct inside function
 

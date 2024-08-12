@@ -182,13 +182,14 @@ namespace weasel
         bool isKind(TokenKind type) const { return type == _kind; }
         bool isKeyFunction() const { return _kind == TokenKind::TokenKeyFun; }
         bool isKeyStruct() const { return _kind == TokenKind::TokenKeyStruct; }
-        bool isIdentifier() const { return _kind == TokenKind::TokenIdentifier; }
+        bool isIdentifier() const { return _kind == TokenKind::TokenIdentifier || _kind == TokenKind::TokenKeyThis; }
         bool isKeyDefer() const { return _kind == TokenKind::TokenKeyDefer; }
         bool isKeyImpl() const { return _kind == TokenKind::TokenKeyImpl; }
         bool isKeyThis() const { return _kind == TokenKind::TokenKeyThis; }
         bool isKeyExtern() const { return _kind == TokenKind::TokenKeyExtern; }
 
         // Variable //
+        bool isDataTypeSingleValue() const { return (_kind >= TokenKind::TokenTyAny && _kind <= TokenKind::TokenTyDecimal) || _kind == TokenKind::TokenIdentifier; }
         bool isDataType() const { return (_kind >= TokenKind::TokenTyVoid && _kind <= TokenKind::TokenTyDecimal) || _kind == TokenKind::TokenOperatorStar || _kind == TokenKind::TokenOperatorAnd || _kind == TokenKind::TokenKeyFun || _kind == TokenKind::TokenDelimOpenSquareBracket; }
         bool isKeyDefinition() const { return (_kind == TokenKind::TokenKeyLet || _kind == TokenKind::TokenKeyFinal || _kind == TokenKind::TokenKeyConst); }
         bool isLiteral() const { return _kind >= TokenKind::TokenLitNil && _kind <= TokenKind::TokenLitString; }

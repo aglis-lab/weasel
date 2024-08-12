@@ -163,33 +163,13 @@ llvm::Value *Codegen::codegen(MethodCallExpression *expr)
 {
     LOG(INFO) << "Codegen Method Call Function";
 
-    auto argsFun = expr->getFunction()->getArguments();
-    auto argsCall = expr->getArguments();
+    auto alloc = expr->getDeclarationValue()->getCodegen();
 
-    argsCall.insert(argsCall.begin(), expr->getImplExpression());
+    assert(alloc && "variable isn't declare yet");
 
-    std::vector<llvm::Value *> argsV;
-    for (size_t i = 0; i < argsCall.size(); i++)
-    {
-        auto argCall = argsCall[i];
+    expr->setCodegen(alloc);
 
-        if (auto argFun = argsFun[i]; argFun->getType()->isReferenceType())
-        {
-            argCall->setAccess(AccessID::Allocation);
-        }
-        else
-        {
-            argCall->setAccess(AccessID::Load);
-        }
-
-        auto argVal = argCall->accept(this);
-        assert(!argVal && "failed codegen argument");
-
-        argsV.push_back(argVal);
-    }
-
-    auto fun = getModule()->getFunction(expr->getFunction()->getManglingName());
-    return getBuilder()->CreateCall(fun, argsV);
+    return alloc;
 }
 
 llvm::Value *Codegen::codegen(CallExpression *expr)
@@ -322,7 +302,6 @@ llvm::Value *Codegen::codegen(VariableExpression *expr)
     LOG(INFO) << "Codegen Variable";
 
     // Get Allocator from Symbol Table
-    auto varName = expr->getIdentifier();
     auto type = expr->getType();
     auto typeV = type->accept(this);
 

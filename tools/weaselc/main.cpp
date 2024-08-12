@@ -1,4 +1,5 @@
 #include <sstream>
+#include <filesystem>
 
 #include <llvm/Support/TargetSelect.h>
 #include <llvm/ADT/STLExtras.h>
@@ -21,8 +22,6 @@
 #include <weasel-c/BuildSystem.h>
 
 #include <glog/logging.h>
-
-#include <filesystem>
 
 namespace fs = std::__fs::filesystem;
 using namespace std;

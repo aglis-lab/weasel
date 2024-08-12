@@ -22,7 +22,7 @@ void GlobalVariable::accept(AnalysisSemantic *analysis)
 
 void MethodCallExpression::accept(AnalysisSemantic *analysis)
 {
-    UNIMPLEMENTED("MethodCallExpression");
+    analysis->semantic(this);
 }
 
 void NumberLiteralExpression::accept(AnalysisSemantic *analysis)

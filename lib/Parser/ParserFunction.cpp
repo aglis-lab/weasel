@@ -61,7 +61,6 @@ FunctionHandle Parser::parseDeclareFunction()
 
     getNextToken(); // eat '('
     auto isVararg = false;
-    // auto isStatic = implType != nullptr;
     while (!getCurrentToken().isCloseParen())
     {
         if (isVararg)
@@ -73,16 +72,21 @@ FunctionHandle Parser::parseDeclareFunction()
         auto lastToken = getCurrentToken();
         if (lastToken.isKeyThis())
         {
-            // Check if using reference type
-            // Type *type = implType;
-            // if (getNextToken().isOperatorAnd())
-            // {
-            //     type = Type::getReferenceType(implType);
-            //     getNextToken(); // eat '&'
-            // }
+            auto argumentType = make_shared<ArgumentExpression>();
 
-            // types.push_back(ArgumentType::create(lastToken.getValue(), type));
-            // isStatic = false;
+            if (getNextToken().isOperatorAnd())
+            {
+                argumentType->setImplThis(ArgumentExpression::Reference);
+                getNextToken(); // eat '&'
+            }
+            else
+            {
+                argumentType->setImplThis(ArgumentExpression::Value);
+            }
+
+            argumentType->setToken(lastToken);
+            argumentType->setIdentifier(lastToken.getValue());
+            fun->getArguments().push_back(argumentType);
         }
         else
         {
@@ -146,20 +150,19 @@ void Parser::parseImplFunctions()
     assert(getCurrentToken().isKeyImpl());
 
     getNextToken(); // eat 'impl'
-    assert(getCurrentToken().isIdentifier());
+    assert(getCurrentToken().isDataTypeSingleValue());
 
-    auto unknownType = parseDataType();
-
-    // eat 'StructName'
-    getNextToken();
+    auto implType = parseDataType();
     assert(getCurrentToken().isOpenCurly());
 
-    getNextToken(); // eat '{'
+    getNextToken(true); // eat '{'
     while (!getCurrentToken().isCloseCurly())
     {
         auto fun = parseFunction();
 
-        fun->setImplStruct(unknownType);
+        fun->setImplType(implType);
         getModule()->addFunction(fun);
+
+        ignoreNewline();
     }
 }

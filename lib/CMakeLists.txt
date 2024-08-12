@@ -4,7 +4,6 @@ set(
     SOURCES
     AST/AST.cpp
     AST/ASTCodegen.cpp
-    # AST/ASTError.cpp
     AST/ASTPrinter.cpp
     AST/ASTSemantic.cpp
     Analysis/AnalysisSemantic.cpp

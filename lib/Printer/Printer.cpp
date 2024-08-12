@@ -69,6 +69,21 @@ void Printer::print(Function *expr)
 {
     PRINT("Function");
 
+    // Attribute
+    string attr;
+    if (expr->getFunctionType()->getIstatic())
+    {
+        attr = "static ";
+    }
+
+    if (attr.size() > 0)
+    {
+        attr.pop_back();
+    }
+
+    fmt::println(_out, "@attr[{}]", attr);
+
+    // Declare and define Function
     std::string prefix = "@declare";
     auto newlineOp = "";
     if (expr->getBody() && expr->getBody()->getBody().size() > 0)
@@ -77,12 +92,22 @@ void Printer::print(Function *expr)
         newlineOp = ":";
     }
 
+    if (expr->isImplTypeExist())
+    {
+        prefix = fmt::format("@impl {}", expr->getImplType()->getTypeName());
+    }
+
     std::string argStr;
     auto argSize = (int)expr->getArguments().size();
     for (int i = 0; i < argSize; i++)
     {
         auto item = expr->getArguments()[i];
         auto identifier = item->getIdentifier();
+        if (item->isImplThis())
+        {
+            identifier = "this";
+        }
+
         argStr += fmt::format("{} {}", identifier, item->getType()->getTypeName());
 
         if (i != argSize - 1)
@@ -294,7 +319,7 @@ void Printer::print(StringLiteralExpression *expr)
 
 void Printer::print(VariableExpression *expr)
 {
-    PRINT("VariableExpression");
+    PRINT("VariableExpression") << " " << expr->getIdentifier();
     assert(expr->getType());
 
     fmt::print(_out, "{} {}", expr->getIdentifier(), expr->getType()->getTypeName());
@@ -325,7 +350,9 @@ void Printer::printAsOperand(MethodCallExpression *expr)
 {
     PRINT_OPERAND("MethodCallExpression");
 
-    fmt::print("no implemented yet");
+    fmt::print(_out, "(");
+    expr->getLHS()->printAsOperand(this);
+    fmt::print(_out, ").{} {}", expr->getIdentifier(), expr->getType()->getTypeName());
 }
 
 void Printer::printAsOperand(FieldExpression *expr)
