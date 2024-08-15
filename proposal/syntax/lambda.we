@@ -1,3 +1,7 @@
+package main
+
+import syntax::vehicle
+
 fun main() {
     // Declaration of lambda
     let a fun()
@@ -8,7 +12,7 @@ fun main() {
     }
 
     // Define of lambda with capture value
-    let z ?Car
+    let z ?vehicle::Car
     let a = fun<weak z>() {
         z.Engine()
 

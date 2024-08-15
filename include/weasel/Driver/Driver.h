@@ -25,6 +25,7 @@ namespace weasel
 
         vector<FunctionHandle> &getFunctions() { return _module->getFunctions(); }
         vector<StructTypeHandle> &getUserTypes() { return _module->getUserTypes(); }
+        vector<GlobalVariableHandle> &getGlobalVariables() { return _module->getGlobalVariables(); }
         FunctionHandle findFunction(string_view funName) { return _module->getFunction(funName); }
 
         llvm::Module *getModule() const { return _codegen->getModule(); }

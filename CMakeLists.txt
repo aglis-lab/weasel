@@ -31,7 +31,7 @@ find_package(glog CONFIG REQUIRED)
 find_package(LLVM REQUIRED CONFIG)
 
 # Find Open Telemetry
-find_package(opentelemetry-cpp CONFIG REQUIRED)
+# find_package(opentelemetry-cpp CONFIG REQUIRED)
 
 # SPIRV
 set(SPIRV_DIR ${CMAKE_SOURCE_DIR}/spirv)

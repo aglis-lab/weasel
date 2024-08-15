@@ -1,3 +1,4 @@
+/// Internal Implementation ///
 // Core or builtin struct for parallel
 struct parallel {
     uint x
@@ -13,6 +14,8 @@ parallel {
         b[x] = a[x] * a[x]
     }
 }
+
+/// Internal Implementation ///
 
 // Single Parallel Function
 parallel // -> impl of struct or parallel

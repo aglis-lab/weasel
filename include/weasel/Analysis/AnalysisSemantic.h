@@ -83,6 +83,12 @@ namespace weasel
         {
             return _declarations;
         }
+
+        void addDeclaration(DeclarationStatement *expr)
+        {
+            _declarations.push_back(expr);
+        }
+
         DeclarationStatement *findDeclaration(string_view variableName)
         {
             for (int i = getDeclarations().size() - 1; i >= 0; i--)

@@ -7,7 +7,13 @@ GlobalVariableHandle Parser::parseGlobalVariable()
 {
     LOG(INFO) << "Parse Global Variable";
 
-    auto stmt = static_pointer_cast<DeclarationStatement>(parseDeclarationStatement());
+    auto declStmt = parseDeclarationStatement();
+    assert(declStmt);
+    assert(!declStmt->isError());
+
+    auto stmt = static_pointer_cast<DeclarationStatement>(declStmt);
+    assert(!stmt->isError());
+
     auto expr = make_shared<GlobalVariable>();
 
     expr->setToken(stmt->getToken());
@@ -15,7 +21,7 @@ GlobalVariableHandle Parser::parseGlobalVariable()
     expr->setIdentifier(stmt->getIdentifier());
     expr->setQualifier(stmt->getQualifier());
     expr->setValue(stmt->getValue());
-    if (!stmt->isError() && stmt->getQualifier() != Qualifier::QualConst)
+    if (stmt->isError())
     {
         expr->setError(stmt->getError().value());
         return expr;

@@ -48,7 +48,7 @@ struct Car {
     distance int = 12
 }
 
-fun assign(car ?Car) {
+fun Assign(car ?Car) {
     let giveme = Car{}  // stack allocation
 
     car = &giveme       // error because struct get destroyed after

@@ -5,7 +5,34 @@
 
 llvm::Value *Codegen::codegen(GlobalVariable *expr)
 {
-    return nullptr;
+    LOG(INFO) << "Codegen GlobalVariable " << expr->getIdentifier();
+
+    assert(expr->getType());
+
+    auto typeV = expr->getType()->accept(this);
+    assert(typeV);
+
+    llvm::Constant *valueV;
+    if (expr->getValue())
+    {
+        valueV = llvm::cast<llvm::Constant>(expr->getValue()->accept(this));
+    }
+    else if (expr->getType()->isIntegerType())
+    {
+        valueV = getBuilder()->getInt(llvm::APInt());
+    }
+    else
+    {
+        valueV = llvm::ConstantAggregateZero::get(typeV);
+    }
+
+    assert(valueV);
+
+    auto globalV = new llvm::GlobalVariable(*getModule(), typeV, false, llvm::GlobalVariable::LinkageTypes::ExternalLinkage, valueV, expr->getIdentifier());
+    globalV->setDSOLocal(true);
+
+    expr->setCodegen(globalV);
+    return globalV;
 }
 
 llvm::Value *Codegen::castInteger(llvm::Value *val, llvm::Type *type, bool isSign)

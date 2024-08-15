@@ -19,8 +19,7 @@ void Parser::parse()
         {
             getModule()->addUserType(parseStruct());
         }
-
-        if (getCurrentToken().isKeyFunction() || getCurrentToken().isKeyExtern())
+        else if (getCurrentToken().isKeyFunction() || getCurrentToken().isKeyExtern())
         {
             auto isExtern = false;
             if (getCurrentToken().isKeyExtern())
@@ -33,13 +32,11 @@ void Parser::parse()
             fun->setIsExtern(isExtern);
             getModule()->addFunction(fun);
         }
-
-        if (getCurrentToken().isKeyDeclaration())
+        else if (getCurrentToken().isKeyDeclaration())
         {
             getModule()->addGlobalVariable(parseGlobalVariable());
         }
-
-        if (getCurrentToken().isKeyImpl())
+        else if (getCurrentToken().isKeyImpl())
         {
             parseImplFunctions();
         }

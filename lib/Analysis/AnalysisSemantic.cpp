@@ -8,12 +8,6 @@
 
 void AnalysisSemantic::semanticCheck()
 {
-    // Global Variable
-    for (auto &item : getModule()->getGlobalVariables())
-    {
-        semantic(item.get());
-    }
-
     // Struct Type
     for (auto item : getModule()->getUserTypes())
     {
@@ -23,6 +17,12 @@ void AnalysisSemantic::semanticCheck()
             break;
         }
 
+        semantic(item.get());
+    }
+
+    // Global Variable
+    for (auto &item : getModule()->getGlobalVariables())
+    {
         semantic(item.get());
     }
 
@@ -196,7 +196,7 @@ void AnalysisSemantic::semantic(Function *fun)
 
         type->getArguments().push_back(arg->getType());
 
-        getDeclarations().push_back(arg.get());
+        addDeclaration(arg.get());
     }
 
     // Function Type
@@ -208,7 +208,6 @@ void AnalysisSemantic::semantic(Function *fun)
 
     if (fun->getBody())
     {
-        fmt::println("FUNC {} {}", fun->getIdentifier(), fun->getBody()->getBody().size());
         semantic(fun->getBody().get());
     }
 
@@ -235,7 +234,6 @@ void AnalysisSemantic::semantic(CompoundStatement *expr)
     auto index = 1;
     for (auto item : expr->getBody())
     {
-        fmt::println("Body {}", index++);
         item->accept(this);
         if (item->isError())
         {
@@ -384,8 +382,7 @@ void AnalysisSemantic::semantic(DeclarationStatement *expr)
             expr->setValue(make_shared<DoubleLiteralExpression>(Token::create(), 0));
         }
 
-        getDeclarations().push_back(expr);
-        return;
+        return addDeclaration(expr);
     }
 
     expr->getValue()->accept(this);
@@ -405,7 +402,7 @@ void AnalysisSemantic::semantic(DeclarationStatement *expr)
         return onError(expr);
     }
 
-    getDeclarations().push_back(expr);
+    addDeclaration(expr);
 }
 
 void AnalysisSemantic::semantic(VariableExpression *expr)

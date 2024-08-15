@@ -391,7 +391,10 @@ void Printer::printAsOperand(GlobalVariable *expr)
     PRINT_OPERAND("GlobalVariable");
 
     fmt::print(_out, "@define {} {} = ", expr->getIdentifier(), expr->getType()->getTypeName());
-    expr->getValue()->printAsOperand(this);
+    if (expr->getValue())
+    {
+        expr->getValue()->printAsOperand(this);
+    }
 }
 
 void Printer::printAsOperand(StructExpression *expr)

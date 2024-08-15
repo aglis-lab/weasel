@@ -1,3 +1,5 @@
+package main
+
 fun main() {
     // We use keyword 'let', 'final', and 'const'
     // Stack Memory Declaration

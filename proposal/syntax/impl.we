@@ -1,5 +1,7 @@
+package vehicle
+
 // Interface or trait
-interface IConstruct {
+interface Construct {
     New()
     Drop()
 }
@@ -31,7 +33,7 @@ impl Car {
     }
 }
 
-impl IConstruct
+impl Construct
 for Car {
     // Car::New()
     // Constructor
@@ -40,6 +42,6 @@ for Car {
     }
 
     // Destructor
-    fun Drop(&this) {
+    fun Drop(this&) {
     }
 }

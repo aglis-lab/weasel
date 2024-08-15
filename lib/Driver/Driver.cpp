@@ -32,6 +32,16 @@ bool Driver::compile(std::string defTargetTriple)
     LOG(INFO) << "Try Codegen...\n";
 
     auto pass = Passes(getModule());
+
+    // Codegen Variable
+    for (auto &item : getGlobalVariables())
+    {
+        fmt::println("GLOBAL {}", item->getIdentifier());
+        item->accept(_codegen);
+        fmt::println("END GLOBAL {}", item->getIdentifier());
+    }
+
+    // Codegen Function
     for (const auto &item : getFunctions())
     {
         // Check function conflict

@@ -1,5 +1,7 @@
+package vehicle
+
 // Interface or trait
-interface IConstruct {
+interface Construct {
     New()
     Drop()
 }
@@ -7,31 +9,31 @@ interface IConstruct {
 // We not support 'class' but struct
 struct Car {
     // How we declare variable similar with go language but lower case for public variable
-    distance int = 12
-    name string
+    Distance int = 12
+    Name string
 
     // we use '_' for private or protected variable
-    _numCrash int
+    numCrash int
 }
 
 // Implement Struct Method
 impl Car {
     // Cannot Call Outside Package
-    fun getNumCrash(&this) {
+    fun getNumCrash(this&) {
         return this._numCrash
     }
 
     // Can Call Outside Package
-    fun Crash(&this) {
+    fun Crash(this&) {
         // We use 'this' keyword to access 'Car' variable or function
-        print("The Car {} was crashed after {}KM", this.name, this.distance)
+        fmt::Printf("The Car {} was crashed after {}KM", this.Name, this.Distance)
 
         // Function by reference can access private or protected variable
-        this._numCrash++
+        this.numCrash++
     }
 }
 
-impl IConstruct
+impl Construct
 for Car {
     // Car::New()
     // Constructor
@@ -40,6 +42,6 @@ for Car {
     }
 
     // Destructor
-    fun Drop(&this) {
+    fun Drop(this&) {
     }
 }

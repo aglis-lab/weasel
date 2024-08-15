@@ -19,11 +19,13 @@ namespace weasel
     class Type;
     class FunctionType;
     class GlobalVariable;
+    class Expression;
 
     using TypeHandle = shared_ptr<Type>;
     using FunctionTypeHandle = shared_ptr<FunctionType>;
     using StructTypeHandle = shared_ptr<StructType>;
     using GlobalVariableHandle = shared_ptr<GlobalVariable>;
+    using ExpressionHandle = shared_ptr<Expression>;
 
     enum class TypeID
     {
@@ -197,6 +199,20 @@ namespace weasel
         {
             return !_innerType->isArrayType();
         }
+    };
+
+    class ArrayType : public Type
+    {
+        OVERRIDE_CODEGEN_TYPE
+
+    public:
+        ArrayType() : Type(TypeID::ArrayType, 0, false) {}
+
+        void setSize(ExpressionHandle size) { _size = size; }
+        ExpressionHandle getSize() { return _size; }
+
+    private:
+        ExpressionHandle _size;
     };
 
     // Function Type
