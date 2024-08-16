@@ -1,11 +1,13 @@
 #include "weasel/Basic/Number.h"
 
-long long weasel::Number::toInteger(std::string val)
+using namespace weasel;
+
+long long Number::toInteger(std::string val)
 {
     return std::stoll(val.c_str(), 0, 10);
 }
 
-bool weasel::Number::isInteger(std::string val)
+bool Number::isInteger(std::string val)
 {
     for (size_t i = 0; i < val.size(); i++)
     {
@@ -16,7 +18,7 @@ bool weasel::Number::isInteger(std::string val)
     return true;
 }
 
-bool weasel::Number::isFloat(std::string val)
+bool Number::isFloat(std::string val)
 {
     auto dot = false;
     for (size_t i = 0; i < val.size(); i++)

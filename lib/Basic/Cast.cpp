@@ -1,7 +1,9 @@
 #include "weasel/Basic/Cast.h"
 
+using namespace weasel;
+
 template <class T>
-bool weasel::isDynCast(Expression *expr)
+bool isDynCast(Expression *expr)
 {
     return dynamic_cast<T>(expr) != nullptr;
 }

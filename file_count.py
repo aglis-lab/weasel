@@ -1,8 +1,9 @@
 import pathlib
 
-ignore_dirs = [".vscode", ".github", "build", "build-llvm",
-               "build-spirv", "llvm-spirv", "llvm-project", ".git"
-               ]
+ignore_dirs = [
+    ".vscode", ".github", "build", "build-llvm",
+    "build-spirv", "llvm-spirv", "llvm-project", ".git"
+]
 
 # Ignore DS Store file
 # Ignore newline character
@@ -13,7 +14,6 @@ def count_line(file):
     return sum(1 if len(x) > 1 else 0 for x in open(file.absolute()))
 
 def iter_path(path_name):
-
     file_count = 0
     line_count = 0
 

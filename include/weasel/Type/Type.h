@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <iostream>
+#include <optional>
 
 #include <weasel/Lexer/Token.h>
 #include <weasel/Basic/Error.h>
@@ -16,43 +17,48 @@ namespace weasel
 {
     class StructType;
     class Type;
+    class FunctionType;
     class GlobalVariable;
+    class Expression;
 
     using TypeHandle = shared_ptr<Type>;
+    using FunctionTypeHandle = shared_ptr<FunctionType>;
     using StructTypeHandle = shared_ptr<StructType>;
     using GlobalVariableHandle = shared_ptr<GlobalVariable>;
+    using ExpressionHandle = shared_ptr<Expression>;
 
     enum class TypeID
     {
         // Primitive Types
+        VoidType,
         FloatType,
         DoubleType,
-        VoidType,
         IntegerType,
+        AnyType,
 
         // Derived Types
-        PointerType,
-        ArrayType,
-        ReferenceType,
+        PointerType,   // *type     -> all time lifetime
+        ArrayType,     // []type    -> fixed array -> scope lifetime; dynamic array -> all time lifetime
+        ReferenceType, // &type     -> scope lifetime
 
         // User Type
         FunctionType,
         StructType,
 
         // Unknown Type
-        UnknownType
+        UnknownType // @notype      -> need to check it's real type
     };
 
     // Data Type
     class Type
     {
-        CODEGEN_TYPE
+        VIRTUAL_CODEGEN_TYPE
 
     public:
         // Create Type From Token
         static TypeHandle create(Token token);
 
-        Type(Token token) : _typeId(TypeID::UnknownType), _token(token), _width(0), _isSigned(true) {}
+        Type(Token token, TypeID typeId = TypeID::UnknownType) : _typeId(typeId), _token(token), _width(0), _isSigned(true) {}
 
         Type(TypeID typeId, uint width = 0, bool isSign = true) : _typeId(typeId), _width(width), _isSigned(isSign) {}
 
@@ -67,8 +73,6 @@ namespace weasel
         int getTypeWidthByte() { return getTypeWidth() / 8; }
 
         bool isSigned() const { return _isSigned; }
-        bool isSpread() const { return _isSpread; }
-        void setSpread(bool val) { _isSpread = val; }
 
         bool isBoolType() const { return isIntegerType() && _width == 1; }
         bool isFloatType() const { return _typeId == TypeID::FloatType; }
@@ -79,7 +83,8 @@ namespace weasel
             return isBoolType() ||
                    isFloatType() ||
                    isDoubleType() ||
-                   isIntegerType();
+                   isIntegerType() ||
+                   isVoidType();
         }
 
         bool isUnknownType() const { return _typeId == TypeID::UnknownType; }
@@ -93,25 +98,34 @@ namespace weasel
         {
             return isPointerType() ||
                    isArrayType() ||
-                   isStructType();
+                   isReferenceType() ||
+                   isStructType() ||
+                   isFunctionType();
+        }
+        bool isFunctionType() const { return _typeId == TypeID::FunctionType; }
+        bool asOpaquePointer() const
+        {
+            return isFunctionType();
         }
 
         // Check possible struct type
         bool isPossibleStructType();
 
         unsigned getContainedWidth() const { return _innerType->getTypeWidth(); }
+        void setContainedType(TypeHandle newType) { _innerType = newType; }
         TypeHandle getContainedType() { return _innerType; }
 
         // Generator
         static TypeHandle getVoidType() { return make_shared<Type>(TypeID::VoidType, 0, false); }
+        static TypeHandle getAnyType(Token token) { return make_shared<Type>(token, TypeID::AnyType); }
         static TypeHandle getBoolType() { return getIntegerType(1, false); }
         static TypeHandle getIntegerType(unsigned width = 32, bool isSign = true) { return make_shared<Type>(TypeID::IntegerType, width, isSign); }
         static TypeHandle getFloatType() { return make_shared<Type>(TypeID::FloatType, 32); }
         static TypeHandle getDoubleType() { return make_shared<Type>(TypeID::DoubleType, 64); }
         static TypeHandle getArrayType(TypeHandle containedType, unsigned width) { return make_shared<Type>(TypeID::ArrayType, move(containedType), width); }
         static TypeHandle getPointerType(TypeHandle containedType) { return make_shared<Type>(TypeID::PointerType, move(containedType)); }
+        static TypeHandle getOpaqueType() { return make_shared<Type>(TypeID::PointerType); }
         static TypeHandle getReferenceType(TypeHandle containedType) { return make_shared<Type>(TypeID::ReferenceType, move(containedType)); }
-        static TypeHandle getReferenceType() { return make_shared<Type>(TypeID::ReferenceType); }
         static TypeHandle getStructType() { return make_shared<Type>(TypeID::StructType, -1); }
         static TypeHandle getUnknownType(Token token) { return make_shared<Type>(token); }
 
@@ -127,9 +141,9 @@ namespace weasel
 
         optional<Error> getError() const { return _error; }
         void setError(Error error) { _error = error; }
+        bool isError() const { return _error.has_value(); }
 
     protected:
-        bool _isSpread = false;
         bool _isSigned = true;
         int _width = 32; // width in bit
 
@@ -161,7 +175,7 @@ namespace weasel
     // Struct Value
     class StructType : public Type
     {
-        CODEGEN_TYPE
+        OVERRIDE_CODEGEN_TYPE
 
     private:
         vector<StructTypeField> _fields;
@@ -185,7 +199,45 @@ namespace weasel
         {
             return !_innerType->isArrayType();
         }
+    };
 
-        bool isError() const { return _error.has_value(); }
+    class ArrayType : public Type
+    {
+        OVERRIDE_CODEGEN_TYPE
+
+    public:
+        ArrayType() : Type(TypeID::ArrayType, 0, false) {}
+
+        void setSize(ExpressionHandle size) { _size = size; }
+        ExpressionHandle getSize() { return _size; }
+
+    private:
+        ExpressionHandle _size;
+    };
+
+    // Function Type
+    class FunctionType : public Type
+    {
+        OVERRIDE_CODEGEN_TYPE
+
+    private:
+        vector<TypeHandle> _arguments;
+        TypeHandle _returnType;
+        bool _isVararg = false;
+        bool _isStatic = true;
+
+    public:
+        FunctionType() : Type(TypeID::FunctionType, 0, false) {}
+
+        vector<TypeHandle> &getArguments() { return _arguments; }
+
+        void setReturnType(TypeHandle type) { _returnType = type; }
+        TypeHandle getReturnType() { return _returnType; }
+
+        void setIsVararg(bool isVararg) { _isVararg = isVararg; }
+        bool isVararg() const { return _isVararg; }
+
+        void setIsStatic(bool val) { _isStatic = val; }
+        bool getIstatic() const { return _isStatic; }
     };
 } // namespace weasel

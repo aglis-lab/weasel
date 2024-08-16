@@ -1,18 +1,43 @@
 #include <weasel/AST/AST.h>
 #include <weasel/IR/Codegen.h>
 
-bool weasel::Expression::isCompoundExpression() const
+bool Expression::isCompoundExpression() const
 {
     return typeid(CompoundStatement) == typeid(*this);
 }
 
-bool weasel::Expression::isStructExpression() const
+bool Expression::isVariableExpression() const
+{
+    return typeid(VariableExpression) == typeid(*this);
+}
+
+bool Expression::isStructExpression() const
 {
     return typeid(StructExpression) == typeid(*this);
 }
 
+bool Expression::isFieldExpression() const
+{
+    return typeid(FieldExpression) == typeid(*this);
+}
+
+bool Expression::isNilExpression() const
+{
+    return typeid(NilLiteralExpression) == typeid(*this);
+}
+
+bool Expression::isFunctionExpression() const
+{
+    return typeid(Function) == typeid(*this);
+}
+
+bool Expression::isLambdaExpression() const
+{
+    return typeid(LambdaStatement) == typeid(*this);
+}
+
 // Function
-std::string weasel::Function::getManglingName()
+std::string Function::getManglingName()
 {
     if (this->isExtern() || this->isMain())
     {
@@ -28,9 +53,9 @@ std::string weasel::Function::getManglingName()
     mangleName += "_W";
 
     // Impl Struct
-    if (this->isImplStructExist())
+    if (this->isImplTypeExist())
     {
-        mangleName += "I" + this->getImplStruct()->getManglingName();
+        mangleName += "I" + this->getImplType()->getManglingName();
     }
 
     // Return Type

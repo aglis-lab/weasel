@@ -11,12 +11,12 @@ namespace weasel
     class Driver
     {
     private:
-        WeaselCodegen *_codegen;
+        Codegen *_codegen;
         Module *_module;
         std::string _err;
 
     public:
-        Driver(WeaselCodegen *codegen, Module *module);
+        Driver(Codegen *codegen, Module *module);
 
         bool compile(std::string targetTriple = "");
 
@@ -25,6 +25,8 @@ namespace weasel
 
         vector<FunctionHandle> &getFunctions() { return _module->getFunctions(); }
         vector<StructTypeHandle> &getUserTypes() { return _module->getUserTypes(); }
+        vector<GlobalVariableHandle> &getGlobalVariables() { return _module->getGlobalVariables(); }
+        FunctionHandle findFunction(string_view funName) { return _module->getFunction(funName); }
 
         llvm::Module *getModule() const { return _codegen->getModule(); }
         llvm::LLVMContext *getContext() const { return _codegen->getContext(); }

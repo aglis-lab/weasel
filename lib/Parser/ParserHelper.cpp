@@ -3,7 +3,7 @@
 
 #include <cassert>
 
-void weasel::Parser::ignoreNewline()
+void Parser::ignoreNewline()
 {
     if (getCurrentToken().isNewline())
     {
@@ -23,7 +23,7 @@ TypeHandle Parser::parseDataType()
         return Type::getPointerType(move(containedType));
     }
 
-    // Address of type
+    // Reference of type
     if (getCurrentToken().isKind(TokenKind::TokenOperatorAnd))
     {
         getNextToken(); // eat '&'
@@ -41,7 +41,7 @@ TypeHandle Parser::parseDataType()
         {
             auto numStr = getCurrentToken().getValue();
 
-            assert(weasel::Number::isInteger(numStr) && "Number is not a valid integer");
+            assert(Number::isInteger(numStr) && "Number is not a valid integer");
 
             arraySize = (int)Number::toInteger(numStr);
 
@@ -54,6 +54,57 @@ TypeHandle Parser::parseDataType()
         auto containedType = parseDataType();
 
         return Type::getArrayType(move(containedType), arraySize);
+    }
+
+    // Lambda Type
+    if (getCurrentToken().isKeyFunction())
+    {
+        auto funToken = getCurrentToken();
+        getNextToken(); // eat 'fun'
+
+        // TODO: Create Better Error for Token
+        if (!getCurrentToken().isOpenParen())
+        {
+            assert(false && "Lambda should be followed with open paren");
+        }
+
+        auto type = make_shared<FunctionType>();
+        type->setToken(funToken);
+        do
+        {
+            // eat ',' or '('
+            if (!getNextToken().isDataType())
+            {
+                // TODO: Create Better Error for Token
+                assert(false && "Lambda should be followed with open paren");
+            }
+
+            if (getCurrentToken().isCloseParen())
+            {
+                break;
+            }
+
+            auto argType = parseDataType();
+
+            type->getArguments().push_back(argType);
+            if (argType->isError())
+            {
+                type->setError(argType->getError().value());
+                return type;
+            }
+        } while (getCurrentToken().isComma());
+
+        // eat ')'
+        if (getNextToken().isDataType())
+        {
+            type->setReturnType(parseDataType());
+        }
+        else
+        {
+            type->setReturnType(Type::getVoidType());
+        }
+
+        return type;
     }
 
     // Normal Data Type or no datatype

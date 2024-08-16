@@ -61,7 +61,6 @@ FunctionHandle Parser::parseDeclareFunction()
 
     getNextToken(); // eat '('
     auto isVararg = false;
-    // auto isStatic = implType != nullptr;
     while (!getCurrentToken().isCloseParen())
     {
         if (isVararg)
@@ -73,16 +72,21 @@ FunctionHandle Parser::parseDeclareFunction()
         auto lastToken = getCurrentToken();
         if (lastToken.isKeyThis())
         {
-            // Check if using reference type
-            // Type *type = implType;
-            // if (getNextToken().isOperatorAnd())
-            // {
-            //     type = Type::getReferenceType(implType);
-            //     getNextToken(); // eat '&'
-            // }
+            auto argumentType = make_shared<ArgumentExpression>();
 
-            // types.push_back(ArgumentType::create(lastToken.getValue(), type));
-            // isStatic = false;
+            if (getNextToken().isOperatorAnd())
+            {
+                argumentType->setImplThis(ArgumentExpression::Reference);
+                getNextToken(); // eat '&'
+            }
+            else
+            {
+                argumentType->setImplThis(ArgumentExpression::Value);
+            }
+
+            argumentType->setToken(lastToken);
+            argumentType->setIdentifier(lastToken.getValue());
+            fun->getArguments().push_back(argumentType);
         }
         else
         {
@@ -100,6 +104,7 @@ FunctionHandle Parser::parseDeclareFunction()
 
             auto type = parseDataType();
             auto argumentType = make_shared<ArgumentExpression>();
+
             argumentType->setType(type);
             argumentType->setIdentifier(lastToken.getValue());
 
@@ -130,30 +135,34 @@ FunctionHandle Parser::parseDeclareFunction()
 
     if (isVararg)
     {
-        returnType->setSpread(true);
+        fun->setVararg(true);
     }
 
     fun->setType(returnType);
     return fun;
 }
 
-void weasel::Parser::parseImplFunctions()
+// TODO: Do much better error checking
+void Parser::parseImplFunctions()
 {
-    LOG(INFO) << "Parse Impl Functions...";
+    LOG(INFO) << "Parse Impl Functions";
 
-    // auto structName = getNextToken().getValue();
-    // auto structType = _module->findStructType(structName);
+    assert(getCurrentToken().isKeyImpl());
 
-    // getNextToken();     // eat StructName
-    // getNextToken(true); // eat '{'
+    getNextToken(); // eat 'impl'
+    assert(getCurrentToken().isDataTypeSingleValue());
 
-    // while (!getCurrentToken().isCloseCurly())
-    // {
-    //     addFunction(parseFunction(structType));
+    auto implType = parseDataType();
+    assert(getCurrentToken().isOpenCurly());
 
-    //     if (getCurrentToken().isNewline())
-    //     {
-    //         getNextToken(true);
-    //     }
-    // }
+    getNextToken(true); // eat '{'
+    while (!getCurrentToken().isCloseCurly())
+    {
+        auto fun = parseFunction();
+
+        fun->setImplType(implType);
+        getModule()->addFunction(fun);
+
+        ignoreNewline();
+    }
 }

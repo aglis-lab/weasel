@@ -1,4 +1,4 @@
-## Standard *std*
+## Standard _std_
 
 - assert
 - io
@@ -8,7 +8,7 @@
 
 - assert
 
-### Standard IO
+### Standard IO (fmt library)
 
 - println
 - print
@@ -16,7 +16,7 @@
 
 ### Standard Math
 
-- *Use llvm libc*
+- _Use llvm libc_
 
 ---
 

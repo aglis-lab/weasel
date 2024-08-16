@@ -3,7 +3,9 @@
 //
 #include "weasel/Passes/Passes.h"
 
-weasel::Passes::Passes(llvm::Module *module)
+using namespace weasel;
+
+Passes::Passes(llvm::Module *module)
 {
     _fpm = make_unique<llvm::legacy::FunctionPassManager>(module);
     // _fpm->add(llvm::createConstraintEliminationPass()); // Propagate constant
@@ -23,7 +25,7 @@ weasel::Passes::Passes(llvm::Module *module)
     _fpm->doInitialization();
 }
 
-bool weasel::Passes::run(llvm::Function &fun)
+bool Passes::run(llvm::Function &fun)
 {
     return _fpm->run(fun);
 }

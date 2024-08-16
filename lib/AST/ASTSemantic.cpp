@@ -3,154 +3,159 @@
 
 using namespace weasel;
 
-#define UNIMPLEMENTED LOG(INFO) << "Unimplemented Codegen";
+#define UNIMPLEMENTED(XX) LOG(INFO) << "Unimplemented Analysis Semantic " << XX;
 
-void ArgumentExpression::semantic(AnalysisSemantic *analysis)
+void ArgumentExpression::accept(AnalysisSemantic *analysis)
 {
-    UNIMPLEMENTED;
+    analysis->accept(this);
 }
 
-void GlobalVariable::semantic(AnalysisSemantic *analysis)
+void LambdaStatement::accept(AnalysisSemantic *analysis)
 {
-    UNIMPLEMENTED;
+    UNIMPLEMENTED("LambdaStatement");
 }
 
-void MethodCallExpression::semantic(AnalysisSemantic *analysis)
+void GlobalVariable::accept(AnalysisSemantic *analysis)
 {
-    UNIMPLEMENTED;
+    UNIMPLEMENTED("GlobalVariable");
 }
 
-void NumberLiteralExpression::semantic(AnalysisSemantic *analysis)
+void MethodCallExpression::accept(AnalysisSemantic *analysis)
 {
-    UNIMPLEMENTED;
+    analysis->accept(this);
 }
 
-void DoubleLiteralExpression::semantic(AnalysisSemantic *analysis)
+void NumberLiteralExpression::accept(AnalysisSemantic *analysis)
 {
-    UNIMPLEMENTED;
+    UNIMPLEMENTED("NumberLiteralExpression");
 }
 
-void FloatLiteralExpression::semantic(AnalysisSemantic *analysis)
+void DoubleLiteralExpression::accept(AnalysisSemantic *analysis)
 {
-    UNIMPLEMENTED;
+    UNIMPLEMENTED("DoubleLiteralExpression");
 }
 
-void BoolLiteralExpression::semantic(AnalysisSemantic *analysis)
+void FloatLiteralExpression::accept(AnalysisSemantic *analysis)
 {
-    UNIMPLEMENTED;
+    UNIMPLEMENTED("FloatLiteralExpression");
 }
 
-void CharLiteralExpression::semantic(AnalysisSemantic *analysis)
+void BoolLiteralExpression::accept(AnalysisSemantic *analysis)
 {
-    UNIMPLEMENTED;
+    UNIMPLEMENTED("BoolLiteralExpression");
 }
 
-void ArrayLiteralExpression::semantic(AnalysisSemantic *analysis)
+void CharLiteralExpression::accept(AnalysisSemantic *analysis)
 {
-    UNIMPLEMENTED;
+    UNIMPLEMENTED("CharLiteralExpression");
 }
 
-void StringLiteralExpression::semantic(AnalysisSemantic *analysis)
+void ArrayExpression::accept(AnalysisSemantic *analysis)
 {
-    UNIMPLEMENTED;
+    analysis->accept(this);
 }
 
-void NilLiteralExpression::semantic(AnalysisSemantic *analysis)
+void StringLiteralExpression::accept(AnalysisSemantic *analysis)
 {
-    UNIMPLEMENTED;
+    UNIMPLEMENTED("StringLiteralExpression");
 }
 
-void DeclarationStatement::semantic(AnalysisSemantic *analysis)
+void NilLiteralExpression::accept(AnalysisSemantic *analysis)
 {
-    analysis->semantic(this);
+    analysis->accept(this);
 }
 
-void VariableExpression::semantic(AnalysisSemantic *analysis)
+void DeclarationStatement::accept(AnalysisSemantic *analysis)
 {
-    analysis->semantic(this);
+    analysis->accept(this);
 }
 
-void FieldExpression::semantic(AnalysisSemantic *analysis)
+void VariableExpression::accept(AnalysisSemantic *analysis)
 {
-    analysis->semantic(this);
+    analysis->accept(this);
 }
 
-void ArrayExpression::semantic(AnalysisSemantic *analysis)
+void FieldExpression::accept(AnalysisSemantic *analysis)
 {
-    UNIMPLEMENTED;
+    analysis->accept(this);
 }
 
-void ArithmeticExpression::semantic(AnalysisSemantic *analysis)
+void IndexExpression::accept(AnalysisSemantic *analysis)
 {
-    analysis->semantic(this);
+    analysis->accept(this);
 }
 
-void LogicalExpression::semantic(AnalysisSemantic *analysis)
+void ArithmeticExpression::accept(AnalysisSemantic *analysis)
 {
-    UNIMPLEMENTED;
+    analysis->accept(this);
 }
 
-void AssignmentExpression::semantic(AnalysisSemantic *analysis)
+void LogicalExpression::accept(AnalysisSemantic *analysis)
 {
-    analysis->semantic(this);
+    UNIMPLEMENTED("LogicalExpression");
 }
 
-void ComparisonExpression::semantic(AnalysisSemantic *analysis)
+void AssignmentExpression::accept(AnalysisSemantic *analysis)
 {
-    analysis->semantic(this);
+    analysis->accept(this);
 }
 
-void CallExpression::semantic(AnalysisSemantic *analysis)
+void ComparisonExpression::accept(AnalysisSemantic *analysis)
 {
-    analysis->semantic(this);
+    analysis->accept(this);
 }
 
-void ReturnExpression::semantic(AnalysisSemantic *analysis)
+void CallExpression::accept(AnalysisSemantic *analysis)
 {
-    analysis->semantic(this);
+    analysis->accept(this);
 }
 
-void BreakExpression::semantic(AnalysisSemantic *analysis)
+void ReturnExpression::accept(AnalysisSemantic *analysis)
 {
-    analysis->semantic(this);
+    analysis->accept(this);
 }
 
-void ContinueExpression::semantic(AnalysisSemantic *analysis)
+void BreakExpression::accept(AnalysisSemantic *analysis)
 {
-    analysis->semantic(this);
+    analysis->accept(this);
 }
 
-void StructExpression::semantic(AnalysisSemantic *analysis)
+void ContinueExpression::accept(AnalysisSemantic *analysis)
 {
-    analysis->semantic(this);
+    analysis->accept(this);
 }
 
-void Function::semantic(AnalysisSemantic *analysis)
+void StructExpression::accept(AnalysisSemantic *analysis)
 {
-    UNIMPLEMENTED;
+    analysis->accept(this);
 }
 
-void UnaryExpression::semantic(AnalysisSemantic *analysis)
+void Function::accept(AnalysisSemantic *analysis)
 {
-    analysis->semantic(this);
+    UNIMPLEMENTED("Function");
 }
 
-void TypeCastExpression::semantic(AnalysisSemantic *analysis)
+void UnaryExpression::accept(AnalysisSemantic *analysis)
 {
-    UNIMPLEMENTED;
+    analysis->accept(this);
 }
 
-void CompoundStatement::semantic(AnalysisSemantic *analysis)
+void TypeCastExpression::accept(AnalysisSemantic *analysis)
 {
-    analysis->semantic(this);
+    analysis->accept(this);
 }
 
-void ConditionStatement::semantic(AnalysisSemantic *analysis)
+void CompoundStatement::accept(AnalysisSemantic *analysis)
 {
-    analysis->semantic(this);
+    analysis->accept(this);
 }
 
-void LoopingStatement::semantic(AnalysisSemantic *analysis)
+void ConditionStatement::accept(AnalysisSemantic *analysis)
 {
-    analysis->semantic(this);
+    analysis->accept(this);
+}
+
+void LoopingStatement::accept(AnalysisSemantic *analysis)
+{
+    analysis->accept(this);
 }

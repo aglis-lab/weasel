@@ -23,29 +23,39 @@ namespace weasel
         TokenIdentifier,
 
         // Keyword
-        TokenKeyImpl,             // impl // user type or block struct traits
-        TokenKeyThis,             // referencing impl struct
-        TokenKeyParallel,         // parallel // heterogeneous support
-        TokenKeyKernel,           // kernel // heterogeneous kernel type
-        TokenKeyStruct,           // struct
-        TokenKeyInline,           // For Always attribute
-        TokenKeyFun,              // function
-        TokenKeyExtern,           // extern
-        TokenKeyReturn,           // return
-        TokenKeyIf,               // if // Condition
-        TokenKeyElse,             // else // Condition
-        TokenKeyFor,              // for // Looping
-        TokenKeyBreak,            // break // looping
-        TokenKeyContinue,         // continue //looping
+        TokenKeyParallel, // parallel // heterogeneous support
+        TokenKeyKernel,   // kernel // heterogeneous kernel type
+
+        TokenKeyImpl, // impl // user type or block struct traits
+        TokenKeyThis, // referencing impl struct
+
+        TokenKeyStruct, // struct
+        TokenKeyInline, // For Always attribute
+
+        TokenKeyFun,    // function
+        TokenKeyExtern, // extern
+        TokenKeyReturn, // return
+
+        TokenKeyIf,   // if // Condition
+        TokenKeyElse, // else // Condition
+
+        TokenKeyFor,      // for // Looping
+        TokenKeyBreak,    // break // looping
+        TokenKeyContinue, // continue //looping
+
         TokenKeyStartDeclaration, // START DECLARATION
         TokenKeyLet,              // let
         TokenKeyFinal,            // final
         TokenKeyConst,            // const
         TokenKeyEndDeclaration,   // END DECLARATION
-        TokenKeyAssert,           // assert // debugging
-        TokenKeyDefer,            // defer
-        TokenKeyReadOnly,         // readonly
-        TokenKeyWriteOnly,        // writeonly
+
+        TokenKeyAssert,    // assert // debugging
+        TokenKeyDefer,     // defer
+        TokenKeyReadOnly,  // readonly
+        TokenKeyWriteOnly, // writeonly
+
+        // Compiler Keyword Information
+        TokenKeySizeof, // _sizeof value or _sizeof(value)
 
         // Data Literal -> Value of data type
         TokenLitNil,
@@ -58,6 +68,7 @@ namespace weasel
 
         /// Data Types -> literally name of the data type
         TokenTyVoid,    // Void No Return Value
+        TokenTyAny,     // 8 byte // Void pointer value
         TokenTyRune,    // 4 byte Unicode // Character 'utf-32'
         TokenTyString,  // Character 'utf-8' with 'utf-32' support
         TokenTyByte,    // 1 byte // Integer Character 'utf-8'
@@ -159,7 +170,6 @@ namespace weasel
         Associative associative;
         unsigned order;
     };
-
 } // namespace weasel
 
 // Token Class
@@ -172,14 +182,15 @@ namespace weasel
         bool isKind(TokenKind type) const { return type == _kind; }
         bool isKeyFunction() const { return _kind == TokenKind::TokenKeyFun; }
         bool isKeyStruct() const { return _kind == TokenKind::TokenKeyStruct; }
-        bool isIdentifier() const { return _kind == TokenKind::TokenIdentifier; }
+        bool isIdentifier() const { return _kind == TokenKind::TokenIdentifier || _kind == TokenKind::TokenKeyThis; }
         bool isKeyDefer() const { return _kind == TokenKind::TokenKeyDefer; }
         bool isKeyImpl() const { return _kind == TokenKind::TokenKeyImpl; }
         bool isKeyThis() const { return _kind == TokenKind::TokenKeyThis; }
         bool isKeyExtern() const { return _kind == TokenKind::TokenKeyExtern; }
 
         // Variable //
-        bool isDataType() const { return _kind >= TokenKind::TokenTyVoid && _kind <= TokenKind::TokenTyDecimal; }
+        bool isDataTypeSingleValue() const { return (_kind >= TokenKind::TokenTyAny && _kind <= TokenKind::TokenTyDecimal) || _kind == TokenKind::TokenIdentifier; }
+        bool isDataType() const { return (_kind >= TokenKind::TokenTyVoid && _kind <= TokenKind::TokenTyDecimal) || _kind == TokenKind::TokenOperatorStar || _kind == TokenKind::TokenOperatorAnd || _kind == TokenKind::TokenKeyFun || _kind == TokenKind::TokenDelimOpenSquareBracket; }
         bool isKeyDefinition() const { return (_kind == TokenKind::TokenKeyLet || _kind == TokenKind::TokenKeyFinal || _kind == TokenKind::TokenKeyConst); }
         bool isLiteral() const { return _kind >= TokenKind::TokenLitNil && _kind <= TokenKind::TokenLitString; }
 
@@ -259,12 +270,18 @@ namespace weasel
         bool isEnd() const { return _kind == TokenKind::TokenEOF; }
 
         // Buffer //
+        bool isValidBuffer() const { return _startBuffer != nullptr && _endBuffer != nullptr; }
         char *getStartBuffer() const { return _startBuffer; }
         char *getEndBuffer() const { return _endBuffer; }
 
-        string getValue() const { return string(getStartBuffer(), getEndBuffer()); }
+        string getValue() const { return isValidBuffer() ? string(getStartBuffer(), getEndBuffer()) : ""; }
         string getEscapeValue() const
         {
+            if (!isValidBuffer())
+            {
+                return "";
+            }
+
             string val = "";
             auto temp = getStartBuffer();
             while (temp != getEndBuffer())
@@ -313,8 +330,8 @@ namespace weasel
         Token(TokenKind kind, SourceLocation location, char *startToken, char *endToken) : _startBuffer(startToken), _endBuffer(endToken), _kind(kind), _location(location) {}
 
     private:
-        char *_startBuffer;
-        char *_endBuffer;
+        char *_startBuffer = nullptr;
+        char *_endBuffer = nullptr;
 
         TokenKind _kind;
         SourceLocation _location;

@@ -32,5 +32,5 @@ int main(int argc, char *argv[])
         rc = pthread_join(threads[i], NULL);
     }
 
-    return 1;
+    return 0;
 }

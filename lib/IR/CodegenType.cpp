@@ -5,9 +5,37 @@
 #include <llvm/IR/Module.h>
 
 #include "weasel/IR/Codegen.h"
+#include <functional>
+
+llvm::Type *Codegen::codegen(FunctionType *expr)
+{
+    auto retType = expr->getReturnType()->accept(this);
+    auto args = vector<llvm::Type *>();
+    for (auto &item : expr->getArguments())
+    {
+        if (item->isFunctionType())
+        {
+            args.push_back(llvm::PointerType::get(*getContext(), 0));
+        }
+        else
+        {
+            args.push_back(item->accept(this));
+        }
+    }
+
+    // Bacause vararg is actually a last parameter
+    // We remove the last parameter
+    // The last parameter from the ast mean to be for static type
+    if (expr->isVararg())
+    {
+        args.pop_back();
+    }
+
+    return llvm::FunctionType::get(retType, args, expr->isVararg());
+}
 
 // Weasel User Type System to llvm Type System
-llvm::Type *weasel::WeaselCodegen::codegen(weasel::StructType *structExpr)
+llvm::Type *Codegen::codegen(StructType *structExpr)
 {
     auto types = structExpr->getFields();
     auto typesVal = std::vector<llvm::Type *>();
@@ -26,13 +54,13 @@ llvm::Type *weasel::WeaselCodegen::codegen(weasel::StructType *structExpr)
         // TODO: Create more proper check for circular type
         if (item.getType()->isStructType())
         {
-            if (auto itemStructType = dynamic_pointer_cast<StructType>(item.getType()); itemStructType)
-            {
-                assert(itemStructType->getIdentifier() != identifier && "Cannot create circular struct");
-            }
+            auto itemStructType = dynamic_pointer_cast<StructType>(item.getType());
+
+            assert(itemStructType);
+            assert(itemStructType->getIdentifier() != identifier && "Cannot create circular struct");
         }
 
-        typesVal.push_back(item.getType()->codegen(this));
+        typesVal.push_back(item.getType()->accept(this));
     }
 
     structType->setBody(typesVal);
@@ -40,7 +68,7 @@ llvm::Type *weasel::WeaselCodegen::codegen(weasel::StructType *structExpr)
 }
 
 // Weasel Type System to llvm Type System
-llvm::Type *weasel::WeaselCodegen::codegen(weasel::Type *type)
+llvm::Type *Codegen::codegen(Type *type)
 {
     if (type->isVoidType())
     {
@@ -67,23 +95,20 @@ llvm::Type *weasel::WeaselCodegen::codegen(weasel::Type *type)
         auto containedType = type->getContainedType();
         assert(containedType != nullptr);
 
-        auto containedTypeV = containedType->codegen(this);
-        assert(containedTypeV != nullptr);
-
         if (type->getTypeWidth() == -1)
         {
-            return llvm::PointerType::get(containedTypeV, 0);
+            return llvm::PointerType::get(*getContext(), 0);
         }
+
+        auto containedTypeV = containedType->accept(this);
+        assert(containedTypeV != nullptr);
 
         return llvm::ArrayType::get(containedTypeV, type->getTypeWidth());
     }
 
     if (type->isPointerType() || type->isReferenceType())
     {
-        auto containedType = type->getContainedType();
-        auto containedTypeV = containedType->codegen(this);
-
-        return llvm::PointerType::get(containedTypeV, 0);
+        return llvm::PointerType::get(*getContext(), 0);
     }
 
     return nullptr;

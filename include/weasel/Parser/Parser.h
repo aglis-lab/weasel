@@ -5,7 +5,6 @@
 #include <weasel/AST/AST.h>
 #include <weasel/Lexer/Lexer.h>
 #include <weasel/Type/Type.h>
-#include <weasel/Table/ParserTable.h>
 #include <weasel/IR/Module.h>
 
 using namespace std;
@@ -13,8 +12,6 @@ using namespace weasel;
 
 namespace weasel
 {
-    class ParserAttribute;
-
     class Parser
     {
     public:
@@ -40,9 +37,12 @@ namespace weasel
         // Simple Class for handling and storing global value
         Module *_module;
 
+        // Expect Token
         Token expectToken() { return _lexer.expect(); }
         bool expectToken(TokenKind kind) { return _lexer.expect(kind); }
-        bool isExpectElse() { return expectToken(TokenKind::TokenKeyElse); }
+
+        // Check data type
+        bool isDataType() const { return getCurrentToken().isDataType() || getCurrentToken().isIdentifier(); }
 
         // Parser Helper
         Qualifier getQualifier() const { return getCurrentToken().getQualifier(); }
@@ -50,10 +50,6 @@ namespace weasel
         Token getNextToken(bool skipSpace = false);
         Token getNextTokenUntil(TokenKind kind);
         Token skipUntilNewLine() { return getNextTokenUntil(TokenKind::TokenSpaceNewline); }
-        bool isDataType();
-
-        // Operator Expression
-        ExpressionHandle createOperatorExpression(Token op, ExpressionHandle lhs, ExpressionHandle rhs);
 
         // Impl Functions
         void parseImplFunctions();
@@ -74,25 +70,35 @@ namespace weasel
         ExpressionHandle parseConditionStatement();
         ExpressionHandle parseLoopingStatement();
         ExpressionHandle parseStaticMethodCallExpression();
-        // Expression *parseMethodCallExpression(Expression *);
+        ExpressionHandle parseDeclarationStatement();
+
+        // Expression Multi Expression
+        ExpressionHandle parseCallExpression(ExpressionHandle lhs);
+        ExpressionHandle parseIndexExpression(ExpressionHandle lhs);
+        ExpressionHandle parseMethodCallExpression(ExpressionHandle lhs);
+        ExpressionHandle parseStructExpression(VariableExpressionHandle lhs);
+        ExpressionHandle parseFieldExpression(ExpressionHandle lhs);
+        ExpressionHandle parseBinaryExpression(unsigned prec, ExpressionHandle lhs);
 
         // Expression
-        ExpressionHandle parseExpression();
+        ExpressionHandle parseExpressionWithoutBlock();
+        ExpressionHandle parseExpressionWithBlock();
         ExpressionHandle parsePrimaryExpression();
-        ExpressionHandle parseDeclarationExpression();
-        ExpressionHandle parseCallExpression();
+        ExpressionHandle parseLambdaExpression();
         ExpressionHandle parseParenExpression();
         ExpressionHandle parseUnaryExpression();
         ExpressionHandle parseReturnExpression();
         ExpressionHandle parseBreakExpression();
         ExpressionHandle parseContinueExpression();
-        ExpressionHandle parseStructExpression();
-        ExpressionHandle parseFieldExpression(ExpressionHandle lhs);
+
+        // Helper Expression
+        ExpressionHandle createOperatorExpression(Token op, ExpressionHandle lhs, ExpressionHandle rhs);
 
         // Expression Literal
         ExpressionHandle parseLiteralExpression();
         ExpressionHandle parseIdentifierExpression();
-        ExpressionHandle parseExpressionOperator(unsigned prec, ExpressionHandle lhs);
-        // Expression *parseArrayExpression();
+        ExpressionHandle parseArrayExpression();
+
+        tuple<vector<ExpressionHandle>, optional<Error>> parseArguments();
     };
 } // namespace weasel

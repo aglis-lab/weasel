@@ -1,3 +1,5 @@
+package main
+
 fun main() {
     // We use keyword 'let', 'final', and 'const'
     // Stack Memory Declaration
@@ -13,4 +15,13 @@ fun main() {
     // syntax definition
     // {let, final, const} variableName [dataType] = value
     final maxValue = 120
+
+    // With multiple declaration
+    let count int; test uint
+
+    // With multiple declaraion and block
+    let count = 10; test int; {
+        // Do Something
+    }
 }
+

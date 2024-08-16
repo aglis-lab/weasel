@@ -13,6 +13,11 @@ void Function::printAsOperand(Printer *printer)
     UNIMPLEMENTED;
 }
 
+void LambdaStatement::printAsOperand(Printer *printer)
+{
+    UNIMPLEMENTED;
+}
+
 void ArgumentExpression::print(Printer *printer)
 {
     UNIMPLEMENTED;
@@ -81,7 +86,7 @@ void CharLiteralExpression::print(Printer *printer)
 }
 
 // ArrayLiteralExpression
-void ArrayLiteralExpression::print(Printer *printer)
+void ArrayExpression::print(Printer *printer)
 {
     printer->print(this);
 }
@@ -95,7 +100,7 @@ void StringLiteralExpression::print(Printer *printer)
 // NilLiteralExpression
 void NilLiteralExpression::print(Printer *printer)
 {
-    fmt::print("Unimplemented nil literal printer");
+    printer->printAsOperand(this);
 }
 
 // Statement
@@ -117,7 +122,7 @@ void FieldExpression::print(Printer *printer)
 }
 
 // ArrayExpression
-void ArrayExpression::print(Printer *printer)
+void IndexExpression::print(Printer *printer)
 {
     printer->print(this);
 }
@@ -155,6 +160,11 @@ void CallExpression::print(Printer *printer)
 void CallExpression::printAsOperand(Printer *printer)
 {
     printer->printAsOperand(this);
+}
+
+void LambdaStatement::print(Printer *printer)
+{
+    UNIMPLEMENTED;
 }
 
 // ReturnExpression
@@ -252,7 +262,7 @@ void CharLiteralExpression::printAsOperand(Printer *printer)
 }
 
 // ArrayLiteralExpression
-void ArrayLiteralExpression::printAsOperand(Printer *printer)
+void ArrayExpression::printAsOperand(Printer *printer)
 {
     printer->printAsOperand(this);
 }
@@ -266,7 +276,7 @@ void StringLiteralExpression::printAsOperand(Printer *printer)
 // NilLiteralExpression
 void NilLiteralExpression::printAsOperand(Printer *printer)
 {
-    fmt::print("Unimplemented nil literal printer");
+    printer->printAsOperand(this);
 }
 
 // Statement
@@ -288,7 +298,7 @@ void FieldExpression::printAsOperand(Printer *printer)
 }
 
 // ArrayExpression
-void ArrayExpression::printAsOperand(Printer *printer)
+void IndexExpression::printAsOperand(Printer *printer)
 {
     printer->printAsOperand(this);
 }
@@ -356,5 +366,5 @@ void UnaryExpression::printAsOperand(Printer *printer)
 // TypeCastExpression
 void TypeCastExpression::printAsOperand(Printer *printer)
 {
-    fmt::print("Unimplemented type cast printer");
+    printer->printAsOperand(this);
 }

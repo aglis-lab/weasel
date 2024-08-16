@@ -25,7 +25,7 @@ ExpressionHandle Parser::parseStatement()
     // Variable Definition Expression
     if (getCurrentToken().isKeyDefinition())
     {
-        return parseDeclarationExpression();
+        return parseDeclarationStatement();
     }
 
     // Return Expression
@@ -46,13 +46,8 @@ ExpressionHandle Parser::parseStatement()
         return parseContinueExpression();
     }
 
-    auto expr = parseExpression();
-    if (expr->isError())
-    {
-        skipUntilNewLine();
-    }
-
-    return expr;
+    // Parse Expression
+    return parseExpressionWithBlock();
 }
 
 StructTypeHandle Parser::parseStruct()
@@ -86,7 +81,7 @@ StructTypeHandle Parser::parseStruct()
 
         auto identToken = getCurrentToken();
         getNextToken(); // eat 'identifier'
-        if (!(getCurrentToken().isDataType() || getCurrentToken().isIdentifier()))
+        if (!(getCurrentToken().isDataType() || getCurrentToken().isIdentifier() || getCurrentToken().isOpenSquare()))
         {
             structType->setError(Errors::getInstance().expectedDataType.withToken(getCurrentToken()));
             return structType;
@@ -110,7 +105,7 @@ StructTypeHandle Parser::parseStruct()
 
 ExpressionHandle Parser::parseLoopingStatement()
 {
-    LOG(INFO) << "Looping Statement...";
+    LOG(INFO) << "Parse Looping Statement...";
 
     auto expr = make_shared<LoopingStatement>(getCurrentToken());
     auto isInfinity = getNextToken().isOpenCurly();
@@ -124,11 +119,11 @@ ExpressionHandle Parser::parseLoopingStatement()
             ExpressionHandle decl;
             if (getCurrentToken().isKeyDeclaration())
             {
-                decl = parseDeclarationExpression();
+                decl = parseDeclarationStatement();
             }
             else
             {
-                decl = parseExpression();
+                decl = parseExpressionWithBlock();
             }
 
             expr->getConditions().push_back(decl);
@@ -150,7 +145,7 @@ ExpressionHandle Parser::parseLoopingStatement()
             }
             else
             {
-                expr->getConditions().push_back(parseExpression());
+                expr->getConditions().push_back(parseExpressionWithBlock());
             }
 
             // Increment
@@ -166,7 +161,7 @@ ExpressionHandle Parser::parseLoopingStatement()
             }
             else
             {
-                expr->getConditions().push_back(parseExpression());
+                expr->getConditions().push_back(parseExpressionWithBlock());
             }
         }
     }
@@ -205,6 +200,8 @@ ExpressionHandle Parser::parseLoopingStatement()
 
 ExpressionHandle Parser::parseConditionStatement()
 {
+    LOG(INFO) << "Parse Condition Statement...";
+
     auto stmt = make_shared<ConditionStatement>();
     while (true)
     {
@@ -218,11 +215,11 @@ ExpressionHandle Parser::parseConditionStatement()
 
         if (!isElseCondition)
         {
-            auto expr = parseExpression();
+            auto expr = parseExpressionWithoutBlock();
             stmt->getConditions().push_back(expr);
             if (expr->isError())
             {
-                return expr;
+                return stmt;
             }
         }
 
@@ -246,11 +243,11 @@ ExpressionHandle Parser::parseConditionStatement()
 
         if (getCurrentToken().isKeyElse())
         {
-            getNextToken(true); // eat 'else'
+            getNextToken(); // eat 'else'
             continue;
         }
 
-        if (isExpectElse())
+        if (expectToken().isKeyElse())
         {
             getNextToken(true); // eat
             getNextToken(true); // eat 'else'
@@ -313,8 +310,10 @@ CompoundStatementHandle Parser::parseCompoundStatement()
     return stmt;
 }
 
-ExpressionHandle Parser::parseDeclarationExpression()
+ExpressionHandle Parser::parseDeclarationStatement()
 {
+    LOG(INFO) << "Parse Declaration Expression";
+
     auto qualifier = getQualifier();
     auto stmt = make_shared<DeclarationStatement>();
 
@@ -330,7 +329,7 @@ ExpressionHandle Parser::parseDeclarationExpression()
     stmt->setIdentifier(getCurrentToken().getValue());
 
     getNextToken(); // eat 'identifier'
-    if (isDataType() || getCurrentToken().isIdentifier())
+    if (isDataType())
     {
         stmt->setType(parseDataType());
     }
@@ -359,10 +358,10 @@ ExpressionHandle Parser::parseDeclarationExpression()
         return stmt;
     }
 
-    auto val = parseExpression();
+    auto val = parseExpressionWithBlock();
     stmt->setValue(val);
 
-    if (getCurrentToken().isOpenCurly())
+    if (getCurrentToken().isSemiColon() && expectToken().isOpenCurly())
     {
         // Insert Symbol Table
         auto compound = parseCompoundStatement();
@@ -372,4 +371,9 @@ ExpressionHandle Parser::parseDeclarationExpression()
     }
 
     return stmt;
+}
+
+ExpressionHandle Parser::parseLambdaExpression()
+{
+    LOG(INFO) << "Parse Lambda Expression";
 }

@@ -2,7 +2,7 @@
 
 #include "weasel/Lexer/Lexer.h"
 
-weasel::Token weasel::Lexer::getKeyword(char *startBuffer, char *endBuffer)
+Token Lexer::getKeyword(char *startBuffer, char *endBuffer)
 {
     uint keywordLength = endBuffer - startBuffer;
     uint column = _location.column - (keywordLength - 1);

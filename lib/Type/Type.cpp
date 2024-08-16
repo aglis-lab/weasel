@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cassert>
 
 #include <fmt/core.h>
 #include <weasel/Type/Type.h>
@@ -24,6 +25,17 @@ string Type::getManglingName()
         return "C" + getContainedType()->getManglingName();
     case TypeID::StructType:
         return dynamic_cast<StructType *>(this)->getIdentifier();
+    case TypeID::FunctionType:
+    {
+        auto type = static_cast<FunctionType *>(this);
+        auto args = string("");
+        for (auto &item : type->getArguments())
+        {
+            args += item->getManglingName();
+        }
+
+        return "F" + type->getReturnType()->getManglingName() + args;
+    }
     case TypeID::IntegerType:
     {
         if (_width == 1)
@@ -116,6 +128,11 @@ tuple<int, optional<StructTypeField>> StructType::findTypeName(const string &typ
 
 int Type::getTypeWidth()
 {
+    if (isPointerType() || isFunctionType())
+    {
+        return 64;
+    }
+
     if (isStructType())
     {
         auto val = 0;
@@ -129,11 +146,6 @@ int Type::getTypeWidth()
         return val;
     }
 
-    if (isPointerType())
-    {
-        return 64;
-    }
-
     return _width;
 }
 
@@ -144,24 +156,50 @@ bool Type::isEqual(TypeHandle type)
         return false;
     }
 
-    if (!(getTypeID() == type->getTypeID()))
+    if (getTypeID() == TypeID::AnyType || type->getTypeID() == TypeID::AnyType)
     {
-        if (getTypeID() == TypeID::PointerType && type->getTypeID() == TypeID::ReferenceType)
-        {
-            return getContainedType()->isEqual(type->getContainedType());
-        }
-
-        return false;
+        return true;
     }
 
     if (isPrimitiveType())
     {
-        return true;
+        return getTypeID() == type->getTypeID();
     }
 
     if (isStructType())
     {
         return this == type.get();
+    }
+
+    if (isFunctionType() && type->isFunctionType())
+    {
+        auto lhs = static_cast<FunctionType *>(this);
+        auto rhs = static_cast<FunctionType *>(type.get());
+
+        assert(lhs && rhs && "should be exist as a function type");
+
+        if (!lhs->getReturnType()->isEqual(rhs->getReturnType()))
+        {
+            return false;
+        }
+
+        if (lhs->getArguments().size() != rhs->getArguments().size())
+        {
+            return false;
+        }
+
+        for (size_t i = 0; i < lhs->getArguments().size(); i++)
+        {
+            auto lhsItem = lhs->getArguments()[i];
+            auto rhsItem = rhs->getArguments()[i];
+
+            if (!lhsItem->isEqual(rhsItem))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     if (isDerivedType())
@@ -218,6 +256,10 @@ TypeHandle Type::create(Token token)
     // VOID //
     case TokenKind::TokenTyVoid:
         return Type::getVoidType();
+
+    // ANY //
+    case TokenKind::TokenTyAny:
+        return Type::getAnyType(token);
 
     default:
         return Type::getUnknownType(token);
@@ -282,6 +324,10 @@ string Type::getTypeName()
     {
         return "@void";
     }
+    case TypeID::AnyType:
+    {
+        return "@any";
+    }
     case TypeID::PointerType:
     {
         return fmt::format("{}{}", '*', this->getContainedType()->getTypeName());
@@ -292,12 +338,35 @@ string Type::getTypeName()
     }
     case TypeID::ArrayType:
     {
-        return fmt::format("[]{}", this->getContainedType()->getTypeName());
+        string size;
+        if (getTypeWidth() > 0)
+        {
+            size = to_string(getTypeWidth());
+        }
+
+        return fmt::format("[{}]{}", size, getContainedType()->getTypeName());
     }
     case TypeID::StructType:
     {
-        auto val = dynamic_cast<StructType *>(this);
+        auto val = static_cast<StructType *>(this);
         return fmt::format("@{}", val->getIdentifier());
+    }
+    case TypeID::FunctionType:
+    {
+        auto val = static_cast<FunctionType *>(this);
+        auto args = string("");
+        for (size_t i = 0; i < val->getArguments().size(); i++)
+        {
+            if (i != 0)
+            {
+                args += ",";
+            }
+
+            auto item = val->getArguments()[i];
+            args += item->getTypeName();
+        }
+
+        return fmt::format("@fun({}) {}", args, val->getReturnType()->getTypeName());
     }
     default:
     {

@@ -21,6 +21,9 @@ dev.leaks: build.cmake run.leaks
 
 dev: build.cmake run
 
+dev.ir: build.cmake
+	emit_ir=true GLOG_logtostderr=1 ./build/tools/weaselc/weaselc temp/test.we
+
 ##### SPIRV #####
 spirv:
 	./config/spirv.sh

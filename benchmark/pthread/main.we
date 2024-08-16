@@ -1,16 +1,43 @@
-fun printf(msg *byte, param ...*long) int { }
+extern fun printf(msg []byte, param ...any) int
+extern fun puts(msg []byte) int
+extern fun putchar(c int) int
+extern fun malloc(size ulong) *void
+extern fun free(ptr *void)
+extern fun pthread_create(thread *Thread, attr *void, callback fun(*void) *void, args *void)
+extern fun pthread_join(thread Thread, attr *void)
+
+const PTHREAD_SIZE 8176
+
+struct PthreadHandler {
+    Routine fun(*void)
+    Arg *void
+    Next *PthreadHandler
+}
+
+struct OpaqueThread {
+    Signal long
+    Stack *PthreadHandler
+    Opaque [PTHREAD_SIZE]byte
+}
 
 struct Thread {
-    signal int
+    Thread *OpaqueThread
+}
+
+fun TestThread(arg *void) *void {
+    let tid = arg as *int
+    printf("Test Thread from thread %d\n", *tid)
+
+    return nil
 }
 
 fun main() {
-    let threads [5]Thread
-    let threadArgs [5]int
-    let rc int
+    let thread Thread
 
-    for let i = 0; i < 5; i++ {
-        threadArgs[i] = i;
-        printf("spawning thread %d\n", i);
-    }
+    let a = 1323
+    pthread_create(&thread, nil, TestThread, &a as *void)
+
+    pthread_join(thread, nil)
+
+    puts("END THREAD")
 }

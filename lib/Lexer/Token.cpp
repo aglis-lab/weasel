@@ -1,17 +1,17 @@
 #include "weasel/Lexer/Token.h"
 #include "weasel/AST/AST.h"
 
-weasel::Token weasel::Token::create()
+Token Token::create()
 {
     return Token();
 }
 
-weasel::Token weasel::Token::create(TokenKind kind, SourceLocation location, char *startToken, char *endToken)
+Token Token::create(TokenKind kind, SourceLocation location, char *startToken, char *endToken)
 {
     return Token(kind, location, startToken, endToken);
 }
 
-weasel::Qualifier weasel::Token::getQualifier() const
+Qualifier Token::getQualifier() const
 {
     switch (getTokenKind())
     {
@@ -25,7 +25,7 @@ weasel::Qualifier weasel::Token::getQualifier() const
 }
 
 // TODO: Need to add associativity
-weasel::Precedence weasel::Token::getPrecedence()
+Precedence Token::getPrecedence()
 {
     Precedence val{};
     val.associative = Associative::LeftToRight;

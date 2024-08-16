@@ -1,0 +1,21 @@
+package main
+
+import syntax::vehicle
+
+fun main() {
+    // Declaration of lambda
+    let a fun()
+
+    // Define of lambda
+    a = fun() {
+        // Do Something
+    }
+
+    // Define of lambda with capture value
+    let z ?vehicle::Car
+    let a = fun<weak z>() {
+        z.Engine()
+
+        // Do another thing
+    }
+}

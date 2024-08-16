@@ -4,14 +4,15 @@
 
 - [x] Use LLVM-13
 - [x] use LLVM-15
-- [ ] Use std::string as possible then use char\*
+- [x] use LLVM-17
+- [ ] Use uint32_t for index value
 - [ ] Use sanitize address
 - [ ] Add LLVM Debugging
-  - [ ] Location
-    - [ ] Line
-    - [ ] Column
-    - [ ] Scope
-    - [ ] inlineAt
+  - [x] Location
+    - [x] Line
+    - [x] Column
+    - [x] Scope
+    - [x] inlineAt
   - [ ] Variable
     - [ ] Name
     - [ ] Argument

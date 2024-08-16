@@ -21,17 +21,27 @@
 #include <weasel/Passes/Passes.h>
 #include <weasel/Metadata/Metadata.h>
 
-weasel::Driver::Driver(weasel::WeaselCodegen *codegen, Module *module)
+Driver::Driver(Codegen *codegen, Module *module)
 {
     _codegen = codegen;
     _module = module;
 }
 
-bool weasel::Driver::compile(std::string defTargetTriple)
+bool Driver::compile(std::string defTargetTriple)
 {
     LOG(INFO) << "Try Codegen...\n";
 
     auto pass = Passes(getModule());
+
+    // Codegen Variable
+    for (auto &item : getGlobalVariables())
+    {
+        fmt::println("GLOBAL {}", item->getIdentifier());
+        item->accept(_codegen);
+        fmt::println("END GLOBAL {}", item->getIdentifier());
+    }
+
+    // Codegen Function
     for (const auto &item : getFunctions())
     {
         // Check function conflict
@@ -44,7 +54,7 @@ bool weasel::Driver::compile(std::string defTargetTriple)
         }
 
         // Codegen Function
-        auto obj = item->codegen(_codegen);
+        auto obj = item->accept(_codegen);
         assert(obj != nullptr);
 
         // Casting function obj to llvm function
@@ -104,7 +114,7 @@ bool weasel::Driver::compile(std::string defTargetTriple)
     return true;
 }
 
-void weasel::Driver::createIR(std::string outputFile) const
+void Driver::createIR(std::string outputFile) const
 {
     std::error_code errCode;
     llvm::raw_fd_ostream dest(outputFile + ".ir", errCode, llvm::sys::fs::OF_None);
@@ -118,7 +128,7 @@ void weasel::Driver::createIR(std::string outputFile) const
     dest.flush();
 }
 
-void weasel::Driver::createObject(std::string outputFile) const
+void Driver::createObject(std::string outputFile) const
 {
     std::string err;
     std::error_code errCode;

@@ -1,7 +1,7 @@
 #include "weasel/Parser/Parser.h"
 
 // parse
-void weasel::Parser::parse()
+void Parser::parse()
 {
     while (!getNextToken().isEnd())
     {
@@ -17,11 +17,9 @@ void weasel::Parser::parse()
 
         if (getCurrentToken().isKeyStruct())
         {
-            auto structType = parseStruct();
-            getModule()->addUserType(structType);
+            getModule()->addUserType(parseStruct());
         }
-
-        if (getCurrentToken().isKeyFunction() || getCurrentToken().isKeyExtern())
+        else if (getCurrentToken().isKeyFunction() || getCurrentToken().isKeyExtern())
         {
             auto isExtern = false;
             if (getCurrentToken().isKeyExtern())
@@ -34,16 +32,19 @@ void weasel::Parser::parse()
             fun->setIsExtern(isExtern);
             getModule()->addFunction(fun);
         }
-
-        if (getCurrentToken().isKeyDeclaration())
+        else if (getCurrentToken().isKeyDeclaration())
         {
             getModule()->addGlobalVariable(parseGlobalVariable());
+        }
+        else if (getCurrentToken().isKeyImpl())
+        {
+            parseImplFunctions();
         }
     }
 }
 
 // Get Next Token Until
-weasel::Token weasel::Parser::getNextTokenUntil(weasel::TokenKind kind)
+Token Parser::getNextTokenUntil(TokenKind kind)
 {
     if (getCurrentToken().isKind(kind))
     {
@@ -71,18 +72,4 @@ weasel::Token weasel::Parser::getNextTokenUntil(weasel::TokenKind kind)
 Token Parser::getNextToken(bool skipSpace)
 {
     return _lexer.getNextToken(skipSpace);
-}
-
-bool Parser::isDataType()
-{
-    if (getCurrentToken().isDataType())
-    {
-        return true;
-    }
-
-    if ((getCurrentToken().isOperatorStar() || getCurrentToken().isOperatorAnd()) && expectToken().isDataType())
-    {
-        return true;
-    }
-    return false;
 }

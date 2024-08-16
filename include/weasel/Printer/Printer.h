@@ -34,10 +34,10 @@ namespace weasel
         void print(NumberLiteralExpression *expr);
         void print(StringLiteralExpression *expr);
         void print(FieldExpression *expr);
-        void print(ArrayExpression *expr);
+        void print(IndexExpression *expr);
         void print(LoopingStatement *expr);
         void print(ArithmeticExpression *expr);
-        void print(ArrayLiteralExpression *expr);
+        void print(ArrayExpression *expr);
         void print(StructExpression *expr);
         void print(MethodCallExpression *expr);
         void print(GlobalVariable *expr);
@@ -55,17 +55,32 @@ namespace weasel
         void printAsOperand(ReturnExpression *expr);
         void printAsOperand(UnaryExpression *expr);
         void printAsOperand(FieldExpression *expr);
-        void printAsOperand(ArrayExpression *expr);
+        void printAsOperand(IndexExpression *expr);
         void printAsOperand(DeclarationStatement *expr);
         void printAsOperand(ArithmeticExpression *expr);
         void printAsOperand(StringLiteralExpression *expr);
         void printAsOperand(CharLiteralExpression *expr);
-        void printAsOperand(ArrayLiteralExpression *expr);
+        void printAsOperand(ArrayExpression *expr);
         void printAsOperand(StructExpression *expr);
         void printAsOperand(MethodCallExpression *expr);
         void printAsOperand(GlobalVariable *expr);
         void printAsOperand(BreakExpression *expr);
         void printAsOperand(FloatLiteralExpression *expr);
+        void printAsOperand(TypeCastExpression *expr);
+        void printAsOperand(NilLiteralExpression *expr);
+
+        string printAsOperand(Qualifier val)
+        {
+            switch (val)
+            {
+            case Qualifier::QualConst:
+                return "const";
+            case Qualifier::QualRestrict:
+                return "final";
+            default:
+                return "mut";
+            }
+        }
 
     private:
         std::FILE *_out;

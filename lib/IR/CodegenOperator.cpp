@@ -7,13 +7,13 @@
 #include "weasel/IR/Codegen.h"
 
 // Unimplemented
-llvm::Value *weasel::WeaselCodegen::codegen(TypeCastExpression *expr)
+llvm::Value *Codegen::codegen(TypeCastExpression *expr)
 {
     auto type = expr->getType();
-    auto rhs = expr->getExpression();
+    auto rhs = expr->getValue();
     auto rhsType = rhs->getType();
-    auto rhsVal = rhs->codegen(this);
-    auto typeVal = type->codegen(this);
+    auto rhsVal = rhs->accept(this);
+    auto typeVal = type->accept(this);
 
     if (
         rhsType->isPointerType() || type->isPointerType() ||
@@ -46,12 +46,17 @@ llvm::Value *weasel::WeaselCodegen::codegen(TypeCastExpression *expr)
         }
     }
 
+    if (type->isIntegerType() && rhsType->isIntegerType())
+    {
+        return castInteger(rhsVal, typeVal, type->isSigned());
+    }
+
     assert(false && "Type Casting not supported");
 
     return nullptr;
 }
 
-llvm::Value *weasel::WeaselCodegen::codegen(ArithmeticExpression *expr)
+llvm::Value *Codegen::codegen(ArithmeticExpression *expr)
 {
     auto opToken = expr->getOperator();
     auto lhs = expr->getLHS();
@@ -62,14 +67,14 @@ llvm::Value *weasel::WeaselCodegen::codegen(ArithmeticExpression *expr)
 
     assert(lhsType->isEqual(rhsType) && "Data type look different");
 
-    auto lhsVal = lhs->codegen(this);
-    auto rhsVal = rhs->codegen(this);
+    auto lhsVal = lhs->accept(this);
+    auto rhsVal = rhs->accept(this);
     auto isFloat = lhsType->isFloatType() || lhsType->isDoubleType();
     auto isSigned = exprType->isSigned();
 
     if (exprType->isIntegerType())
     {
-        auto lhsTypeV = lhsType->codegen(this);
+        auto lhsTypeV = lhsType->accept(this);
 
         rhsVal = castInteger(rhsVal, lhsTypeV, isSigned);
     }
@@ -168,7 +173,7 @@ llvm::Value *weasel::WeaselCodegen::codegen(ArithmeticExpression *expr)
 
 // TODO: Understanding Logical Operator
 // && ||
-llvm::Value *weasel::WeaselCodegen::codegen(LogicalExpression *expr)
+llvm::Value *Codegen::codegen(LogicalExpression *expr)
 {
     auto lhs = expr->getLHS();
     auto rhs = expr->getRHS();
@@ -178,12 +183,12 @@ llvm::Value *weasel::WeaselCodegen::codegen(LogicalExpression *expr)
 
     assert(lhsType->isEqual(rhsType) && "Data type look different");
 
-    auto rhsVal = rhs->codegen(this);
+    auto rhsVal = rhs->accept(this);
     auto isSigned = exprType->isSigned();
 
     if (exprType->isIntegerType())
     {
-        auto lhsTypeV = lhsType->codegen(this);
+        auto lhsTypeV = lhsType->accept(this);
 
         rhsVal = castInteger(rhsVal, lhsTypeV, isSigned);
     }
@@ -191,8 +196,10 @@ llvm::Value *weasel::WeaselCodegen::codegen(LogicalExpression *expr)
     return nullptr;
 }
 
-llvm::Value *weasel::WeaselCodegen::codegen(AssignmentExpression *expr)
+llvm::Value *Codegen::codegen(AssignmentExpression *expr)
 {
+    LOG(INFO) << "Codegen Assignment Expression";
+
     auto lhs = expr->getLHS();
     auto rhs = expr->getRHS();
     auto lhsType = lhs->getType();
@@ -205,21 +212,22 @@ llvm::Value *weasel::WeaselCodegen::codegen(AssignmentExpression *expr)
     rhs->setAccess(AccessID::Load);
     lhs->setAccess(AccessID::Allocation);
 
-    auto lhsVal = lhs->codegen(this);
+    auto lhsVal = lhs->accept(this);
+
     // Check if Struct Expression
     if (rhs->isStructExpression())
     {
-        static_cast<StructExpression *>(rhs.get())->setAlloc(llvm::dyn_cast<llvm::AllocaInst, llvm::Value>(lhsVal));
-        rhs->codegen(this);
+        static_cast<StructExpression *>(rhs.get())->setAlloc(lhsVal);
+        rhs->accept(this);
     }
     else
     {
-        auto rhsVal = rhs->codegen(this);
+        auto rhsVal = rhs->accept(this);
 
         // Casting Integer
         if (rhsType->isIntegerType())
         {
-            auto lhsTypeV = lhsType->codegen(this);
+            auto lhsTypeV = lhsType->accept(this);
             rhsVal = castInteger(rhsVal, lhsTypeV, lhsType->isSigned());
         }
 
@@ -230,6 +238,9 @@ llvm::Value *weasel::WeaselCodegen::codegen(AssignmentExpression *expr)
         }
         else
         {
+            assert(lhsVal && "LHS Value should exist");
+            assert(rhsVal && "RHS Value should exist");
+
             getBuilder()->CreateStore(rhsVal, lhsVal);
         }
     }
@@ -239,11 +250,11 @@ llvm::Value *weasel::WeaselCodegen::codegen(AssignmentExpression *expr)
         return lhsVal;
     }
 
-    auto lhsTypeV = lhsType->codegen(this);
+    auto lhsTypeV = lhsType->accept(this);
     return getBuilder()->CreateLoad(lhsTypeV, lhsVal);
 }
 
-llvm::Value *weasel::WeaselCodegen::codegen(ComparisonExpression *expr)
+llvm::Value *Codegen::codegen(ComparisonExpression *expr)
 {
     auto opToken = expr->getOperator();
     auto lhs = expr->getLHS();
@@ -252,13 +263,11 @@ llvm::Value *weasel::WeaselCodegen::codegen(ComparisonExpression *expr)
     auto rhsType = rhs->getType();
     auto exprType = expr->getType();
 
-    assert(lhsType->isEqual(rhsType) && "Data type look different");
-
     lhs->setAccess(AccessID::Load);
     rhs->setAccess(AccessID::Load);
 
-    auto lhsVal = lhs->codegen(this);
-    auto rhsVal = rhs->codegen(this);
+    auto lhsVal = lhs->accept(this);
+    auto rhsVal = rhs->accept(this);
     auto isSigned = exprType->isSigned();
     auto isFloat = lhsType->isFloatType() || lhsType->isDoubleType();
 
@@ -348,20 +357,20 @@ llvm::Value *weasel::WeaselCodegen::codegen(ComparisonExpression *expr)
     }
 }
 
-llvm::Value *weasel::WeaselCodegen::codegen(UnaryExpression *expr)
+llvm::Value *Codegen::codegen(UnaryExpression *expr)
 {
     auto op = expr->getOperator();
-    auto rhs = expr->getExpression();
+    auto rhs = expr->getValue();
     auto rhsType = rhs->getType();
-    auto rhsTypeVal = rhsType->codegen(this);
+    auto rhsTypeVal = rhsType->accept(this);
 
     if (op == UnaryExpression::Borrow)
     {
         rhs->setAccess(AccessID::Allocation);
-        return rhs->codegen(this);
+        return rhs->accept(this);
     }
 
-    auto rhsVal = rhs->codegen(this);
+    auto rhsVal = rhs->accept(this);
     if (op == UnaryExpression::Dereference)
     {
         if (expr->isAccessAllocation())
@@ -369,7 +378,7 @@ llvm::Value *weasel::WeaselCodegen::codegen(UnaryExpression *expr)
             return rhsVal;
         }
 
-        auto typeV = rhsType->getContainedType()->codegen(this);
+        auto typeV = rhsType->getContainedType()->accept(this);
         return getBuilder()->CreateLoad(typeV, rhsVal);
     }
 

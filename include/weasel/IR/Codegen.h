@@ -1,7 +1,6 @@
 #pragma once
 
 #include <weasel/AST/AST.h>
-#include <weasel/Table/ContextTable.h>
 #include <weasel/Metadata/Metadata.h>
 
 #include <vector>
@@ -25,17 +24,16 @@ namespace weasel
     };
 
     // Analysis Context
-    class WeaselCodegen : public ContextTable
+    class Codegen
     {
         // Weasel Package
     private:
-        weasel::Metadata _metaData;
+        Metadata _metaData;
 
     public:
-        WeaselCodegen(llvm::LLVMContext *context, const std::string &moduleName);
+        Codegen(llvm::LLVMContext *context, const string &moduleName);
 
-        ~WeaselCodegen() {}
-
+        // Builder
         llvm::LLVMContext *getContext() const { return _context; }
         llvm::Module *getModule() { return _module; }
         llvm::IRBuilder<> *getBuilder() { return _builder; }
@@ -44,6 +42,7 @@ namespace weasel
         // Type
         llvm::Type *codegen(Type *type);
         llvm::Type *codegen(StructType *type);
+        llvm::Type *codegen(FunctionType *type);
 
         // Integer Fast Casting
         llvm::Value *castInteger(llvm::Value *val, llvm::Type *type, bool isSign = false);
@@ -55,7 +54,7 @@ namespace weasel
         llvm::Value *codegen(FloatLiteralExpression *expr);
         llvm::Value *codegen(DoubleLiteralExpression *expr);
         llvm::Value *codegen(StringLiteralExpression *expr);
-        llvm::Value *codegen(ArrayLiteralExpression *expr);
+        llvm::Value *codegen(ArrayExpression *expr);
         llvm::Value *codegen(GlobalVariable *expr);
 
         // Expression
@@ -65,7 +64,7 @@ namespace weasel
         llvm::Value *codegen(ReturnExpression *expr);
         llvm::Value *codegen(DeclarationStatement *expr);
         llvm::Value *codegen(NilLiteralExpression *expr);
-        llvm::Value *codegen(ArrayExpression *expr);
+        llvm::Value *codegen(IndexExpression *expr);
         llvm::Value *codegen(FieldExpression *expr);
         llvm::Value *codegen(MethodCallExpression *expr);
 
@@ -95,16 +94,17 @@ namespace weasel
         llvm::IRBuilder<> *_builder;
 
         // Helper Variable for Looping //
-        std::vector<llvm::BasicBlock *> _breakBlocks;
-        std::vector<llvm::BasicBlock *> _continueBlocks;
+        vector<llvm::BasicBlock *> _breakBlocks;
+        vector<llvm::BasicBlock *> _continueBlocks;
 
         // Helper For Return Function //
         llvm::AllocaInst *_returnAlloca;
         llvm::BasicBlock *_returnBlock;
         llvm::BasicBlock *_allocaBlock;
 
-        // Helper Variable for Struct Types //
-        std::map<std::string, llvm::StructType *> _structTypes;
+        // Helper Variable for Struct Types and Functions //
+        map<string, llvm::StructType *> _structTypes;
+        map<string, llvm::Function *> _functions;
 
     private:
         // Create allocation instruction at alloca block
@@ -136,8 +136,8 @@ namespace weasel
         llvm::BasicBlock *getContinueBlock() const { return _continueBlocks.back(); }
 
         // Helper for User Defined Struct //
-        void addStructType(const std::string &name, llvm::StructType *type) { _structTypes[name] = type; }
-        llvm::StructType *findStructType(const std::string &name)
+        void addStructType(const string &name, llvm::StructType *type) { _structTypes[name] = type; }
+        llvm::StructType *findStructType(const string &name)
         {
             if (_structTypes.contains(name))
             {

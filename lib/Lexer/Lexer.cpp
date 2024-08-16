@@ -1,25 +1,11 @@
 #include "weasel/Lexer/Lexer.h"
 
-bool weasel::Lexer::compareBuffer(char *startBuffer, char *endBuffer, const char *compareBuffer)
+bool Lexer::compareBuffer(char *startBuffer, char *endBuffer, const char *compareBuffer)
 {
-    auto length = endBuffer - startBuffer;
-    if (length != ((long)strlen(compareBuffer)))
-    {
-        return false;
-    }
-
-    for (auto i = 0; i < length; i++)
-    {
-        if (startBuffer[i] != compareBuffer[i])
-        {
-            return false;
-        }
-    }
-
-    return true;
+    return string_view(startBuffer, endBuffer) == compareBuffer;
 }
 
-bool weasel::Lexer::isIdentifier(char c, bool num)
+bool Lexer::isIdentifier(char c, bool num)
 {
     if (c == '_')
         return true;
@@ -31,7 +17,7 @@ bool weasel::Lexer::isIdentifier(char c, bool num)
 // ex:
 // ab\nf
 // if slide 4 that's mean newline is at a middle of slide
-char *weasel::Lexer::getNextBuffer(size_t slide)
+char *Lexer::getNextBuffer(size_t slide)
 {
     if (isLastNewline())
     {
@@ -48,7 +34,7 @@ char *weasel::Lexer::getNextBuffer(size_t slide)
     return getCurrentBuffer();
 }
 
-Token weasel::Lexer::expect()
+Token Lexer::expect()
 {
     auto lastBuffer = getCurrentBuffer();
     auto ok = true;
@@ -62,7 +48,7 @@ Token weasel::Lexer::expect()
     return token;
 }
 
-bool weasel::Lexer::expect(weasel::TokenKind kind)
+bool Lexer::expect(TokenKind kind)
 {
     auto lastBuffer = getCurrentBuffer();
     auto ok = true;
@@ -81,14 +67,14 @@ bool weasel::Lexer::expect(weasel::TokenKind kind)
     return ok;
 }
 
-weasel::Token weasel::Lexer::createToken(weasel::TokenKind kind, char *startBuffer, char *endBuffer)
+Token Lexer::createToken(TokenKind kind, char *startBuffer, char *endBuffer)
 {
     uint tokenStartColumn = _location.column - ((endBuffer - startBuffer) - 1);
 
     return Token::create(kind, SourceLocation(startBuffer - getStartBuffer(), _location.line, tokenStartColumn), startBuffer, endBuffer);
 }
 
-weasel::Token weasel::Lexer::getNextToken(bool skipSpace)
+Token Lexer::getNextToken(bool skipSpace)
 {
     do
     {
