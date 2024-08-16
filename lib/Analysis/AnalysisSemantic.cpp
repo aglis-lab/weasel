@@ -17,13 +17,13 @@ void AnalysisSemantic::semanticCheck()
             break;
         }
 
-        semantic(item.get());
+        accept(item.get());
     }
 
     // Global Variable
     for (auto &item : getModule()->getGlobalVariables())
     {
-        semantic(item.get());
+        accept(item.get());
     }
 
     // Functions
@@ -61,18 +61,18 @@ void AnalysisSemantic::semanticCheck()
         }
 
         // Check Function Body
-        semantic(fun.get());
+        accept(fun.get());
     }
 }
 
-void AnalysisSemantic::semantic(ArgumentExpression *expr)
+void AnalysisSemantic::accept(ArgumentExpression *expr)
 {
     SEMANTIC("ArgumentExpression");
 
     expr->getType()->accept(this);
 }
 
-void AnalysisSemantic::semantic(FunctionType *expr)
+void AnalysisSemantic::accept(FunctionType *expr)
 {
     SEMANTIC("FunctionType");
 
@@ -82,7 +82,7 @@ void AnalysisSemantic::semantic(FunctionType *expr)
     }
 }
 
-void AnalysisSemantic::semantic(StructType *expr)
+void AnalysisSemantic::accept(StructType *expr)
 {
     SEMANTIC("StructType") << " " << expr->getTypeName();
 
@@ -114,7 +114,7 @@ void AnalysisSemantic::semantic(StructType *expr)
     }
 }
 
-void AnalysisSemantic::semantic(Type *expr)
+void AnalysisSemantic::accept(Type *expr)
 {
     SEMANTIC("Type") << " " << expr->getTypeName();
 
@@ -153,7 +153,7 @@ TypeHandle AnalysisSemantic::unknownType(TypeHandle expr)
     return structType;
 }
 
-void AnalysisSemantic::semantic(Function *fun)
+void AnalysisSemantic::accept(Function *fun)
 {
     SEMANTIC("Function") << " " << fun->getIdentifier();
 
@@ -208,7 +208,7 @@ void AnalysisSemantic::semantic(Function *fun)
 
     if (fun->getBody())
     {
-        semantic(fun->getBody().get());
+        accept(fun->getBody().get());
     }
 
     // Find Duplicate Function
@@ -219,7 +219,7 @@ void AnalysisSemantic::semantic(Function *fun)
     }
 }
 
-void AnalysisSemantic::semantic(CompoundStatement *expr)
+void AnalysisSemantic::accept(CompoundStatement *expr)
 {
     LOG(INFO) << "Compound Statement Check";
 
@@ -242,7 +242,7 @@ void AnalysisSemantic::semantic(CompoundStatement *expr)
     }
 }
 
-void AnalysisSemantic::semantic(ConditionStatement *expr)
+void AnalysisSemantic::accept(ConditionStatement *expr)
 {
     SEMANTIC("ConditionStatement");
 
@@ -262,7 +262,7 @@ void AnalysisSemantic::semantic(ConditionStatement *expr)
 }
 
 // TODO: Add Function Type for lambda and Capture all value needed
-void AnalysisSemantic::semantic(CallExpression *expr)
+void AnalysisSemantic::accept(CallExpression *expr)
 {
     SEMANTIC("CallExpression");
 
@@ -339,7 +339,7 @@ void AnalysisSemantic::semantic(CallExpression *expr)
     assert(expr->getType() && "call expression should be have a type");
 }
 
-void AnalysisSemantic::semantic(DeclarationStatement *expr)
+void AnalysisSemantic::accept(DeclarationStatement *expr)
 {
     SEMANTIC("DeclarationStatement");
 
@@ -405,7 +405,7 @@ void AnalysisSemantic::semantic(DeclarationStatement *expr)
     addDeclaration(expr);
 }
 
-void AnalysisSemantic::semantic(VariableExpression *expr)
+void AnalysisSemantic::accept(VariableExpression *expr)
 {
     SEMANTIC("VariableExpression") << " " << expr->getIdentifier();
 
@@ -429,7 +429,7 @@ void AnalysisSemantic::semantic(VariableExpression *expr)
     expr->setDeclarationValue(decl);
 }
 
-void AnalysisSemantic::semantic(AssignmentExpression *expr)
+void AnalysisSemantic::accept(AssignmentExpression *expr)
 {
     SEMANTIC("AssignmentExpression");
 
@@ -464,7 +464,7 @@ void AnalysisSemantic::semantic(AssignmentExpression *expr)
     expr->setType(lhs->getType());
 }
 
-void AnalysisSemantic::semantic(ComparisonExpression *expr)
+void AnalysisSemantic::accept(ComparisonExpression *expr)
 {
     LOG(INFO) << "Comparison Expression Check";
 
@@ -475,7 +475,7 @@ void AnalysisSemantic::semantic(ComparisonExpression *expr)
     expr->setAccess(AccessID::Load);
 }
 
-void AnalysisSemantic::semantic(ReturnExpression *expr)
+void AnalysisSemantic::accept(ReturnExpression *expr)
 {
     LOG(INFO) << "Return Expression Check";
 
@@ -503,7 +503,7 @@ void AnalysisSemantic::semantic(ReturnExpression *expr)
     }
 }
 
-void AnalysisSemantic::semantic(BreakExpression *expr)
+void AnalysisSemantic::accept(BreakExpression *expr)
 {
     LOG(INFO) << "Break Expression Check";
 
@@ -526,7 +526,7 @@ void AnalysisSemantic::semantic(BreakExpression *expr)
     }
 }
 
-void AnalysisSemantic::semantic(LoopingStatement *expr)
+void AnalysisSemantic::accept(LoopingStatement *expr)
 {
     LOG(INFO) << "Looping Statement Check";
 
@@ -538,7 +538,7 @@ void AnalysisSemantic::semantic(LoopingStatement *expr)
     expr->getBody()->accept(this);
 }
 
-void AnalysisSemantic::semantic(ContinueExpression *expr)
+void AnalysisSemantic::accept(ContinueExpression *expr)
 {
     LOG(INFO) << "Continue Expression Check";
 
@@ -548,7 +548,7 @@ void AnalysisSemantic::semantic(ContinueExpression *expr)
     }
 }
 
-void AnalysisSemantic::semantic(ArithmeticExpression *expr)
+void AnalysisSemantic::accept(ArithmeticExpression *expr)
 {
     LOG(INFO) << "Arithmetic Expression Check";
 
@@ -572,7 +572,7 @@ void AnalysisSemantic::semantic(ArithmeticExpression *expr)
     expr->setType(lhs->getType());
 }
 
-void AnalysisSemantic::semantic(UnaryExpression *expr)
+void AnalysisSemantic::accept(UnaryExpression *expr)
 {
     LOG(INFO) << "Unary Expression Check";
 
@@ -611,7 +611,7 @@ void AnalysisSemantic::semantic(UnaryExpression *expr)
     }
 }
 
-void AnalysisSemantic::semantic(StructExpression *expr)
+void AnalysisSemantic::accept(StructExpression *expr)
 {
     LOG(INFO) << "Struct Expression Check";
 
@@ -629,7 +629,7 @@ void AnalysisSemantic::semantic(StructExpression *expr)
     }
 }
 
-void AnalysisSemantic::semantic(FieldExpression *expr)
+void AnalysisSemantic::accept(FieldExpression *expr)
 {
     SEMANTIC("FieldExpression");
 
@@ -669,7 +669,7 @@ void AnalysisSemantic::semantic(FieldExpression *expr)
     expr->setType(field->getType());
 }
 
-void AnalysisSemantic::semantic(TypeCastExpression *expr)
+void AnalysisSemantic::accept(TypeCastExpression *expr)
 {
     LOG(INFO) << "Type Cast Expression Check";
 
@@ -678,14 +678,14 @@ void AnalysisSemantic::semantic(TypeCastExpression *expr)
     expr->getType()->accept(this);
 }
 
-void AnalysisSemantic::semantic(NilLiteralExpression *expr)
+void AnalysisSemantic::accept(NilLiteralExpression *expr)
 {
     SEMANTIC("NilLiteralExpression");
 
     expr->getType()->accept(this);
 }
 
-void AnalysisSemantic::semantic(IndexExpression *expr)
+void AnalysisSemantic::accept(IndexExpression *expr)
 {
     SEMANTIC("IndexExpression");
 
@@ -699,7 +699,7 @@ void AnalysisSemantic::semantic(IndexExpression *expr)
     assert(expr->getType());
 }
 
-void AnalysisSemantic::semantic(ArrayExpression *expr)
+void AnalysisSemantic::accept(ArrayExpression *expr)
 {
     SEMANTIC("ArrayExpression");
 
@@ -709,7 +709,7 @@ void AnalysisSemantic::semantic(ArrayExpression *expr)
     }
 }
 
-void AnalysisSemantic::semantic(MethodCallExpression *expr)
+void AnalysisSemantic::accept(MethodCallExpression *expr)
 {
     SEMANTIC("MethodCallExpression") << " " << expr->getIdentifier();
 

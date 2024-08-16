@@ -13,11 +13,11 @@ namespace llvm
     class AllocaInst;
 } // namespace llvm
 
-#define BASE_CODEGEN_EXPRESSION(XX)                     \
-public:                                                 \
-    virtual llvm::Value *accept(Codegen *codegen) XX;   \
-    virtual void accept(AnalysisSemantic *semantic) XX; \
-    virtual void print(Printer *printer) XX;            \
+#define BASE_CODEGEN_EXPRESSION(XX)                   \
+public:                                               \
+    virtual llvm::Value *accept(Codegen *codegen) XX; \
+    virtual void accept(AnalysisSemantic *accept) XX; \
+    virtual void print(Printer *printer) XX;          \
     virtual void printAsOperand(Printer *printer) XX;
 
 #define VIRTUAL_CODEGEN_VALUE                      \
@@ -39,18 +39,18 @@ protected:                                                                 \
 #define VIRTUAL_CODEGEN_TYPE                      \
 public:                                           \
     virtual llvm::Type *accept(Codegen *codegen); \
-    virtual void accept(AnalysisSemantic *semantic);
+    virtual void accept(AnalysisSemantic *accept);
 
 #define OVERRIDE_CODEGEN_TYPE                      \
 public:                                            \
     llvm::Type *accept(Codegen *codegen) override; \
-    void accept(AnalysisSemantic *semantic) override;
+    void accept(AnalysisSemantic *accept) override;
 
 #define DECLARATION_EXPRESSION                                                  \
     friend class weasel::AnalysisSemantic;                                      \
                                                                                 \
 private:                                                                        \
-    Expression *_declValue;                                                     \
+    Expression *_declValue = nullptr;                                           \
                                                                                 \
     void setDeclarationValue(Expression *declValue) { _declValue = declValue; } \
     Expression *getDeclarationValue() { return _declValue; }

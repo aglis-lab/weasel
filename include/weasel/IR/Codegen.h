@@ -1,7 +1,6 @@
 #pragma once
 
 #include <weasel/AST/AST.h>
-#include <weasel/Table/ContextTable.h>
 #include <weasel/Metadata/Metadata.h>
 
 #include <vector>
@@ -25,7 +24,7 @@ namespace weasel
     };
 
     // Analysis Context
-    class Codegen : public ContextTable
+    class Codegen
     {
         // Weasel Package
     private:

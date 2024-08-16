@@ -5,15 +5,15 @@ using namespace weasel;
 
 void FunctionType::accept(AnalysisSemantic *context)
 {
-    return context->semantic(this);
+    return context->accept(this);
 }
 
 void StructType::accept(AnalysisSemantic *context)
 {
-    return context->semantic(this);
+    return context->accept(this);
 }
 
 void Type::accept(AnalysisSemantic *context)
 {
-    return context->semantic(this);
+    return context->accept(this);
 }

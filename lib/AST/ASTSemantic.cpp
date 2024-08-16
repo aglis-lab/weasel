@@ -7,7 +7,7 @@ using namespace weasel;
 
 void ArgumentExpression::accept(AnalysisSemantic *analysis)
 {
-    analysis->semantic(this);
+    analysis->accept(this);
 }
 
 void LambdaStatement::accept(AnalysisSemantic *analysis)
@@ -22,7 +22,7 @@ void GlobalVariable::accept(AnalysisSemantic *analysis)
 
 void MethodCallExpression::accept(AnalysisSemantic *analysis)
 {
-    analysis->semantic(this);
+    analysis->accept(this);
 }
 
 void NumberLiteralExpression::accept(AnalysisSemantic *analysis)
@@ -52,7 +52,7 @@ void CharLiteralExpression::accept(AnalysisSemantic *analysis)
 
 void ArrayExpression::accept(AnalysisSemantic *analysis)
 {
-    analysis->semantic(this);
+    analysis->accept(this);
 }
 
 void StringLiteralExpression::accept(AnalysisSemantic *analysis)
@@ -62,32 +62,32 @@ void StringLiteralExpression::accept(AnalysisSemantic *analysis)
 
 void NilLiteralExpression::accept(AnalysisSemantic *analysis)
 {
-    analysis->semantic(this);
+    analysis->accept(this);
 }
 
 void DeclarationStatement::accept(AnalysisSemantic *analysis)
 {
-    analysis->semantic(this);
+    analysis->accept(this);
 }
 
 void VariableExpression::accept(AnalysisSemantic *analysis)
 {
-    analysis->semantic(this);
+    analysis->accept(this);
 }
 
 void FieldExpression::accept(AnalysisSemantic *analysis)
 {
-    analysis->semantic(this);
+    analysis->accept(this);
 }
 
 void IndexExpression::accept(AnalysisSemantic *analysis)
 {
-    analysis->semantic(this);
+    analysis->accept(this);
 }
 
 void ArithmeticExpression::accept(AnalysisSemantic *analysis)
 {
-    analysis->semantic(this);
+    analysis->accept(this);
 }
 
 void LogicalExpression::accept(AnalysisSemantic *analysis)
@@ -97,37 +97,37 @@ void LogicalExpression::accept(AnalysisSemantic *analysis)
 
 void AssignmentExpression::accept(AnalysisSemantic *analysis)
 {
-    analysis->semantic(this);
+    analysis->accept(this);
 }
 
 void ComparisonExpression::accept(AnalysisSemantic *analysis)
 {
-    analysis->semantic(this);
+    analysis->accept(this);
 }
 
 void CallExpression::accept(AnalysisSemantic *analysis)
 {
-    analysis->semantic(this);
+    analysis->accept(this);
 }
 
 void ReturnExpression::accept(AnalysisSemantic *analysis)
 {
-    analysis->semantic(this);
+    analysis->accept(this);
 }
 
 void BreakExpression::accept(AnalysisSemantic *analysis)
 {
-    analysis->semantic(this);
+    analysis->accept(this);
 }
 
 void ContinueExpression::accept(AnalysisSemantic *analysis)
 {
-    analysis->semantic(this);
+    analysis->accept(this);
 }
 
 void StructExpression::accept(AnalysisSemantic *analysis)
 {
-    analysis->semantic(this);
+    analysis->accept(this);
 }
 
 void Function::accept(AnalysisSemantic *analysis)
@@ -137,25 +137,25 @@ void Function::accept(AnalysisSemantic *analysis)
 
 void UnaryExpression::accept(AnalysisSemantic *analysis)
 {
-    analysis->semantic(this);
+    analysis->accept(this);
 }
 
 void TypeCastExpression::accept(AnalysisSemantic *analysis)
 {
-    analysis->semantic(this);
+    analysis->accept(this);
 }
 
 void CompoundStatement::accept(AnalysisSemantic *analysis)
 {
-    analysis->semantic(this);
+    analysis->accept(this);
 }
 
 void ConditionStatement::accept(AnalysisSemantic *analysis)
 {
-    analysis->semantic(this);
+    analysis->accept(this);
 }
 
 void LoopingStatement::accept(AnalysisSemantic *analysis)
 {
-    analysis->semantic(this);
+    analysis->accept(this);
 }

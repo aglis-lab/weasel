@@ -5,7 +5,6 @@
 #include <weasel/AST/AST.h>
 #include <weasel/Lexer/Lexer.h>
 #include <weasel/Type/Type.h>
-#include <weasel/Table/ParserTable.h>
 #include <weasel/IR/Module.h>
 
 using namespace std;
@@ -13,8 +12,6 @@ using namespace weasel;
 
 namespace weasel
 {
-    class ParserAttribute;
-
     class Parser
     {
     public:

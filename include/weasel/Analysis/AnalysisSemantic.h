@@ -24,32 +24,32 @@ namespace weasel
         explicit AnalysisSemantic(Module *module) : _module(module) {}
 
         void semanticCheck();
-        void semantic(Function *fun);
-        void semantic(CompoundStatement *expr);
-        void semantic(CallExpression *expr);
-        void semantic(ConditionStatement *expr);
-        void semantic(DeclarationStatement *expr);
-        void semantic(VariableExpression *expr);
-        void semantic(AssignmentExpression *expr);
-        void semantic(ComparisonExpression *expr);
-        void semantic(ReturnExpression *expr);
-        void semantic(BreakExpression *expr);
-        void semantic(ContinueExpression *expr);
-        void semantic(LoopingStatement *expr);
-        void semantic(ArithmeticExpression *expr);
-        void semantic(UnaryExpression *expr);
-        void semantic(StructExpression *expr);
-        void semantic(FieldExpression *expr);
-        void semantic(TypeCastExpression *expr);
-        void semantic(ArgumentExpression *expr);
-        void semantic(NilLiteralExpression *expr);
-        void semantic(IndexExpression *expr);
-        void semantic(ArrayExpression *expr);
-        void semantic(MethodCallExpression *expr);
+        void accept(Function *fun);
+        void accept(CompoundStatement *expr);
+        void accept(CallExpression *expr);
+        void accept(ConditionStatement *expr);
+        void accept(DeclarationStatement *expr);
+        void accept(VariableExpression *expr);
+        void accept(AssignmentExpression *expr);
+        void accept(ComparisonExpression *expr);
+        void accept(ReturnExpression *expr);
+        void accept(BreakExpression *expr);
+        void accept(ContinueExpression *expr);
+        void accept(LoopingStatement *expr);
+        void accept(ArithmeticExpression *expr);
+        void accept(UnaryExpression *expr);
+        void accept(StructExpression *expr);
+        void accept(FieldExpression *expr);
+        void accept(TypeCastExpression *expr);
+        void accept(ArgumentExpression *expr);
+        void accept(NilLiteralExpression *expr);
+        void accept(IndexExpression *expr);
+        void accept(ArrayExpression *expr);
+        void accept(MethodCallExpression *expr);
 
-        void semantic(FunctionType *expr);
-        void semantic(StructType *expr);
-        void semantic(Type *expr);
+        void accept(FunctionType *expr);
+        void accept(StructType *expr);
+        void accept(Type *expr);
 
         TypeHandle unknownType(TypeHandle expr);
 

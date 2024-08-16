@@ -90,7 +90,7 @@ llvm::Value *Codegen::codegen(Function *expr)
         getBuilder()->SetInsertPoint(entryBlock);
 
         // Enter to new scope
-        enterScope();
+        // enterScope();
 
         // Allocate Arguments
         struct AllocateArgument
@@ -126,7 +126,7 @@ llvm::Value *Codegen::codegen(Function *expr)
             argExpr->setCodegen(value);
 
             // Save as an table attribute
-            addAttribute(ContextAttribute::get(argName, value, AttributeKind::Parameter));
+            // addAttribute(ContextAttribute::get(argName, value, AttributeKind::Parameter));
         }
 
         // Create Block
@@ -180,7 +180,7 @@ llvm::Value *Codegen::codegen(Function *expr)
         _returnBlock = nullptr;
 
         // Exit fromscope
-        exitScope();
+        // exitScope();
     }
 
     return funV;
@@ -485,6 +485,7 @@ llvm::Value *Codegen::codegen(DeclarationStatement *expr)
         declTypeV = llvm::PointerType::get(*getContext(), 0);
     }
 
+    // Create Allocation
     auto alloc = createAlloca(declTypeV);
 
     // Save Allocation
@@ -493,9 +494,7 @@ llvm::Value *Codegen::codegen(DeclarationStatement *expr)
     // Set Default Value if no value expression
     if (valueExpr == nullptr)
     {
-        // Add Variable Declaration to symbol table
-        addAttribute(ContextAttribute::get(varName, alloc, AttributeKind::Variable));
-
+        getBuilder()->CreateStore(llvm::ConstantAggregateZero::get(declTypeV), alloc);
         return alloc;
     }
 
@@ -512,9 +511,6 @@ llvm::Value *Codegen::codegen(DeclarationStatement *expr)
         auto temp = static_pointer_cast<StructExpression>(valueExpr);
         temp->setAlloc(alloc);
         temp->accept(this);
-
-        // Add Variable Declaration to symbol table
-        addAttribute(ContextAttribute::get(varName, alloc, AttributeKind::Variable));
 
         return alloc;
     }
@@ -537,9 +533,6 @@ llvm::Value *Codegen::codegen(DeclarationStatement *expr)
         getBuilder()->CreateStore(valueV, alloc);
     }
 
-    // Add Variable Declaration to symbol table
-    addAttribute(ContextAttribute::get(varName, alloc, AttributeKind::Variable));
-
     return alloc;
 }
 
@@ -547,16 +540,10 @@ llvm::Value *Codegen::codegen(CompoundStatement *expr)
 {
     LOG(INFO) << "Codegen Compound Statement";
 
-    // Enter to new statement
-    enterScope();
-
     for (auto &item : expr->getBody())
     {
         item->accept(this);
     }
-
-    // Exit from statement
-    exitScope();
 
     return nullptr;
 }
@@ -651,9 +638,6 @@ llvm::Value *Codegen::codegen(LoopingStatement *expr)
         }
     }
 
-    // Enter to new statement
-    enterScope();
-
     // Add Last Block to Loop Blocks
     addbreakBlock(endBlock);
     addContinueBlock(conditionBlock);
@@ -719,9 +703,6 @@ llvm::Value *Codegen::codegen(LoopingStatement *expr)
 
     removeBreakBlock();
     removeContinueBlock();
-
-    // Exit from statement
-    exitScope();
 
     return nullptr;
 }
