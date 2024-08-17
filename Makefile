@@ -56,3 +56,6 @@ test.glsl-test:
 ##### File Count #####
 count:
 	python3 file_count.py
+
+count.github:
+	curl -L https://api.codetabs.com/v1/loc?github=aglis-lab/weasel

@@ -9,6 +9,7 @@ namespace weasel
     {
     private:
         Module *_module;
+        AnalysisEvaluate *_evaluate;
 
         // TODO: Simply Use Polymorphism
         vector<Expression *> _errors;
@@ -49,7 +50,10 @@ namespace weasel
 
         void accept(FunctionType *expr);
         void accept(StructType *expr);
+        void accept(ArrayType *expr);
         void accept(Type *expr);
+
+        EvaluationValue evaluate(Expression *);
 
         TypeHandle unknownType(TypeHandle expr);
 

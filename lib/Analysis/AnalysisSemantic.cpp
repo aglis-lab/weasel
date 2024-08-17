@@ -1,10 +1,16 @@
 #include <cassert>
 #include <unordered_set>
+#include <variant>
 
 #include <weasel/Analysis/AnalysisSemantic.h>
 #include <weasel/Basic/Defer.h>
 
 #define SEMANTIC(X) LOG(INFO) << "Semantic Check " << X
+
+EvaluationValue AnalysisSemantic::evaluate(Expression *expr)
+{
+    return expr->accept(_evaluate);
+}
 
 void AnalysisSemantic::semanticCheck()
 {
@@ -67,7 +73,7 @@ void AnalysisSemantic::semanticCheck()
 
 void AnalysisSemantic::accept(ArgumentExpression *expr)
 {
-    SEMANTIC("ArgumentExpression");
+    SEMANTIC("ArgumentExpression") << " " << expr->getIdentifier();
 
     expr->getType()->accept(this);
 }
@@ -114,6 +120,40 @@ void AnalysisSemantic::accept(StructType *expr)
     }
 }
 
+void AnalysisSemantic::accept(ArrayType *expr)
+{
+    SEMANTIC("ArrayType") << " " << expr->getTypeName();
+
+    expr->getContainedType()->accept(this);
+
+    auto size = expr->getSize();
+    if (!size)
+    {
+        return;
+    }
+
+    auto sizeExpr = get<ExpressionHandle>(size.value());
+    if (sizeExpr)
+    {
+        sizeExpr->accept(this);
+
+        auto eval = evaluate(sizeExpr.get());
+        if (!eval)
+        {
+            expr->setError(Errors::getInstance().expectedConstantValue);
+            return;
+        }
+
+        if (!get<long>(eval.value()))
+        {
+            expr->setError(Errors::getInstance().expectedIntegerValue);
+            return;
+        }
+
+        expr->setWidth(get<long>(eval.value()));
+    }
+}
+
 void AnalysisSemantic::accept(Type *expr)
 {
     SEMANTIC("Type") << " " << expr->getTypeName();
@@ -126,11 +166,6 @@ void AnalysisSemantic::accept(Type *expr)
         assert(structType && "underlying type should be exist");
 
         expr->setContainedType(structType);
-    }
-
-    if (expr->isArrayType())
-    {
-        expr->getContainedType()->accept(this);
     }
 }
 
@@ -454,7 +489,7 @@ void AnalysisSemantic::accept(AssignmentExpression *expr)
         return onError(expr);
     }
 
-    if (lhs->getIsContant())
+    if (lhs->isConstant())
     {
         expr->setError(Errors::getInstance().lhsNotAssignable.withToken(lhs->getToken()));
         return onError(expr);

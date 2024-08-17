@@ -3,6 +3,11 @@
 
 using namespace weasel;
 
+llvm::Type *ArrayType::accept(Codegen *context)
+{
+    return context->codegen(this);
+}
+
 llvm::Type *FunctionType::accept(Codegen *context)
 {
     return context->codegen(this);

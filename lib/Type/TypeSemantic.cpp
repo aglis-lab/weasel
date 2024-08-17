@@ -8,6 +8,11 @@ void FunctionType::accept(AnalysisSemantic *context)
     return context->accept(this);
 }
 
+void ArrayType::accept(AnalysisSemantic *context)
+{
+    return context->accept(this);
+}
+
 void StructType::accept(AnalysisSemantic *context)
 {
     return context->accept(this);

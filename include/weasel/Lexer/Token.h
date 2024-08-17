@@ -330,11 +330,16 @@ namespace weasel
         Token(TokenKind kind, SourceLocation location, char *startToken, char *endToken) : _startBuffer(startToken), _endBuffer(endToken), _kind(kind), _location(location) {}
 
     private:
+        // TODO: Change to only include index
+        // -> _location uint
+        // -> _length uint
         char *_startBuffer = nullptr;
         char *_endBuffer = nullptr;
 
         TokenKind _kind;
+
+        // TODO: Use only index
+        // Location will be calculated onfly
         SourceLocation _location;
     };
-
 } // namespace weasel

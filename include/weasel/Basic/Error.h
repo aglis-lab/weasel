@@ -75,6 +75,8 @@ namespace weasel
         Error invalidArgumentSize = Error(111, ErrorKind::SemanticError, "not enough argument call");
         Error duplicateFunction = Error(112, ErrorKind::SemanticError, "duplicate function");
         Error unexpectedThisArgument = Error(113, ErrorKind::SemanticError, "unexpected this argument");
+        Error expectedConstantValue = Error(114, ErrorKind::SemanticError, "expected constant value");
+        Error expectedIntegerValue = Error(115, ErrorKind::SemanticError, "expected integer value");
 
         // Internal Error
         Error missingImplementation = Error(200, ErrorKind::SemanticError, "internal error, missing expression implementation");

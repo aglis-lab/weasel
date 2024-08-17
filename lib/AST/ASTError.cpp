@@ -2,202 +2,159 @@
 
 using namespace weasel;
 
-#define UNIMPLEMENTED LOG(INFO) << "Unimplemented Error Checking"
+#define UNIMPLEMENTED LOG(INFO) << "UNIMPLEMENTED; Error Analysis"
 
-bool ArgumentExpression::isError()
+void LambdaStatement::accept(AnalysisError *c)
 {
     UNIMPLEMENTED;
-    return false;
 }
 
-bool GlobalVariable::isError()
+void ArgumentExpression::accept(AnalysisError *c)
 {
-    return _error.has_value() || getValue()->isError();
+    UNIMPLEMENTED;
 }
 
-bool MethodCallExpression::isError()
+void GlobalVariable::accept(AnalysisError *c)
 {
-    for (auto &item : getArguments())
-    {
-        if (item->isError())
-        {
-            return true;
-        }
-    }
-
-    return _error.has_value();
+    UNIMPLEMENTED;
 }
 
-bool NumberLiteralExpression::isError()
+void MethodCallExpression::accept(AnalysisError *c)
 {
-    return _error.has_value();
+    UNIMPLEMENTED;
 }
 
-bool DoubleLiteralExpression::isError()
+void NumberLiteralExpression::accept(AnalysisError *c)
 {
-    return _error.has_value();
+    UNIMPLEMENTED;
 }
 
-bool FloatLiteralExpression::isError()
+void DoubleLiteralExpression::accept(AnalysisError *c)
 {
-    return _error.has_value();
+    UNIMPLEMENTED;
 }
 
-bool BoolLiteralExpression::isError()
+void FloatLiteralExpression::accept(AnalysisError *c)
 {
-    return _error.has_value();
+    UNIMPLEMENTED;
 }
 
-bool CharLiteralExpression::isError()
+void BoolLiteralExpression::accept(AnalysisError *c)
 {
-    return _error.has_value();
+    UNIMPLEMENTED;
 }
 
-bool ArrayExpression::isError()
+void CharLiteralExpression::accept(AnalysisError *c)
 {
-    return _error.has_value();
+    UNIMPLEMENTED;
 }
 
-bool StringLiteralExpression::isError()
+void ArrayExpression::accept(AnalysisError *c)
 {
-    return _error.has_value();
+    UNIMPLEMENTED;
 }
 
-bool NilLiteralExpression::isError()
+void StringLiteralExpression::accept(AnalysisError *c)
 {
-    return _error.has_value();
+    UNIMPLEMENTED;
 }
 
-bool DeclarationStatement::isError()
+void NilLiteralExpression::accept(AnalysisError *c)
 {
-    return _error.has_value() || getValue()->isError();
+    UNIMPLEMENTED;
 }
 
-bool VariableExpression::isError()
+void DeclarationStatement::accept(AnalysisError *c)
 {
-    return _error.has_value();
+    UNIMPLEMENTED;
 }
 
-bool FieldExpression::isError()
+void VariableExpression::accept(AnalysisError *c)
 {
-    return _error.has_value() || getParentField()->isError();
+    UNIMPLEMENTED;
 }
 
-bool IndexExpression::isError()
+void FieldExpression::accept(AnalysisError *c)
 {
-    return _error.has_value();
+    UNIMPLEMENTED;
 }
 
-bool ArithmeticExpression::isError()
+void IndexExpression::accept(AnalysisError *c)
 {
-    return _error.has_value() || getLHS()->isError() || getRHS()->isError();
+    UNIMPLEMENTED;
 }
 
-bool LogicalExpression::isError()
+void ArithmeticExpression::accept(AnalysisError *c)
 {
-    return _error.has_value() || getLHS()->isError() || getRHS()->isError();
+    UNIMPLEMENTED;
 }
 
-bool AssignmentExpression::isError()
+void LogicalExpression::accept(AnalysisError *c)
 {
-    return _error.has_value() || getLHS()->isError() || getRHS()->isError();
+    UNIMPLEMENTED;
 }
 
-bool ComparisonExpression::isError()
+void AssignmentExpression::accept(AnalysisError *c)
 {
-    return _error.has_value() || getLHS()->isError() || getRHS()->isError();
+    UNIMPLEMENTED;
 }
 
-bool CallExpression::isError()
+void ComparisonExpression::accept(AnalysisError *c)
 {
-    for (auto &item : getArguments())
-    {
-        if (item->isError())
-        {
-            return true;
-        }
-    }
-
-    return _error.has_value() || getFunction()->isError();
+    UNIMPLEMENTED;
 }
 
-bool ReturnExpression::isError()
+void CallExpression::accept(AnalysisError *c)
 {
-    if (getValue() && getValue()->isError())
-    {
-        return true;
-    }
-
-    return _error.has_value();
+    UNIMPLEMENTED;
 }
 
-bool BreakExpression::isError()
+void ReturnExpression::accept(AnalysisError *c)
 {
-    if (getValue() && getValue()->isError())
-    {
-        return true;
-    }
-
-    return _error.has_value();
+    UNIMPLEMENTED;
 }
 
-bool ContinueExpression::isError()
+void BreakExpression::accept(AnalysisError *c)
 {
-    if (getValue() && getValue()->isError())
-    {
-        return true;
-    }
-
-    return _error.has_value();
+    UNIMPLEMENTED;
 }
 
-bool StructExpression::isError()
+void ContinueExpression::accept(AnalysisError *c)
 {
-    for (auto &item : getFields())
-    {
-        if (item->getValue()->isError())
-        {
-            return true;
-        }
-    }
-
-    return _error.has_value();
+    UNIMPLEMENTED;
 }
 
-bool Function::isError()
+void StructExpression::accept(AnalysisError *c)
 {
-    for (auto &item : getArguments())
-    {
-        if (item->isError())
-        {
-            return true;
-        }
-    }
-
-    return _error.has_value();
+    UNIMPLEMENTED;
 }
 
-bool UnaryExpression::isError()
+void Function::accept(AnalysisError *c)
 {
-    return _error.has_value() || getValue()->isError();
+    UNIMPLEMENTED;
 }
 
-bool TypeCastExpression::isError()
+void UnaryExpression::accept(AnalysisError *c)
 {
-    return _error.has_value() || getValue()->isError();
+    UNIMPLEMENTED;
 }
 
-bool CompoundStatement::isError()
+void TypeCastExpression::accept(AnalysisError *c)
 {
-    return _error.has_value();
+    UNIMPLEMENTED;
 }
 
-bool ConditionStatement::isError()
+void CompoundStatement::accept(AnalysisError *c)
 {
-    return _error.has_value();
+    UNIMPLEMENTED;
 }
 
-bool LoopingStatement::isError()
+void ConditionStatement::accept(AnalysisError *c)
 {
-    return _error.has_value() || getBody()->isError();
+    UNIMPLEMENTED;
+}
+
+void LoopingStatement::accept(AnalysisError *c)
+{
+    UNIMPLEMENTED;
 }

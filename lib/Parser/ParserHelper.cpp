@@ -36,24 +36,25 @@ TypeHandle Parser::parseDataType()
     // Array
     if (getCurrentToken().isKind(TokenKind::TokenDelimOpenSquareBracket))
     {
-        auto arraySize = -1;
-        if (getNextToken().isKind(TokenKind::TokenLitInteger))
+        auto array = make_shared<ArrayType>();
+        getNextToken(); // eat '['
+        if (!getCurrentToken().isCloseSquare())
         {
-            auto numStr = getCurrentToken().getValue();
-
-            assert(Number::isInteger(numStr) && "Number is not a valid integer");
-
-            arraySize = (int)Number::toInteger(numStr);
-
-            getNextToken(); // eat 'integer'
+            array->setSize(parseExpressionWithoutBlock());
+        }
+        else
+        {
+            array->setWidth(-1);
         }
 
         assert(getCurrentToken().isKind(TokenKind::TokenDelimCloseSquareBracket) && "Expected ] for array type");
-
         getNextToken(); // eat ']'
-        auto containedType = parseDataType();
 
-        return Type::getArrayType(move(containedType), arraySize);
+        auto containedType = parseDataType();
+        assert(containedType);
+
+        array->setContainedType(containedType);
+        return array;
     }
 
     // Lambda Type

@@ -6,8 +6,9 @@ set(
     AST/ASTCodegen.cpp
     AST/ASTPrinter.cpp
     AST/ASTSemantic.cpp
+    AST/ASTError.cpp
+    AST/ASTEvaluate.cpp
     Analysis/AnalysisSemantic.cpp
-    Basic/Cast.cpp
     Basic/FileManager.cpp
     Basic/Number.cpp
     Driver/Driver.cpp

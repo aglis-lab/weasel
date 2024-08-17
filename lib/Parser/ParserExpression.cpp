@@ -21,6 +21,7 @@ GlobalVariableHandle Parser::parseGlobalVariable()
     expr->setIdentifier(stmt->getIdentifier());
     expr->setQualifier(stmt->getQualifier());
     expr->setValue(stmt->getValue());
+    expr->setConstant(stmt->isConstant());
     if (stmt->isError())
     {
         expr->setError(stmt->getError().value());

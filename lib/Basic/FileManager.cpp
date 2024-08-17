@@ -22,7 +22,7 @@ FileManager::FileManager(const std::string &filePath)
     _endBuffer = _startBuffer + _size;
 }
 
-char *FileManager::mapFile(const char *path, size_t *length)
+char *FileManager::mapFile(const char *path, uint *length)
 {
     char *data = NULL;
     size_t size = 0;

@@ -8,9 +8,8 @@
 
 #include <weasel/Lexer/Token.h>
 #include <weasel/Type/Type.h>
-#include <weasel/Basic/Cast.h>
 #include <weasel/Basic/Error.h>
-#include <weasel/Basic/Codegen.h>
+#include <weasel/AST/Codegen.h>
 #include <weasel/AST/LInkage.h>
 
 using namespace std;
@@ -82,10 +81,8 @@ namespace weasel
         bool isLambdaExpression() const;
         bool isVariableExpression() const;
 
-        bool isConstant() const
-        {
-            return _isConstant;
-        }
+        void setConstant(bool val) { _isConstant = val; }
+        bool isConstant() const { return _isConstant; }
 
         void setAccess(AccessID accessID) { _accessID = accessID; }
         AccessID getAccess() const { return _accessID; }
@@ -94,8 +91,6 @@ namespace weasel
 
         void setError(Error error) { _error = error; }
         bool isError() const { return _error.has_value(); }
-
-        bool getIsContant() const { return _isConstant; }
 
         optional<Error> getError() const { return _error; }
 
@@ -293,10 +288,10 @@ namespace weasel
     public:
         NumberLiteralExpression(const Token &token, long long value, unsigned width = 32) : LiteralExpression(token, Type::getIntegerType(width)), _value(value) {}
 
-        long long getValue() const { return _value; }
+        long getValue() const { return _value; }
 
     private:
-        long long _value; // 64 bit(8 bytes)
+        long _value; // 64 bit(8 bytes)
     };
 
     // Float Literal Expression
@@ -526,7 +521,11 @@ namespace weasel
         DeclarationStatement() = default;
         DeclarationStatement(Token token) : VariableExpression(token, token.getValue()) {}
 
-        void setQualifier(Qualifier qualifier) { _qualifier = qualifier; }
+        void setQualifier(Qualifier qualifier)
+        {
+            _qualifier = qualifier;
+            _isConstant = qualifier == Qualifier::QualConst;
+        }
         void setValue(ExpressionHandle value) { _value = value; }
 
         Qualifier getQualifier() const { return _qualifier; }

@@ -6,7 +6,7 @@
 
 #include <weasel/Lexer/Token.h>
 #include <weasel/Basic/Error.h>
-#include <weasel/Basic/Codegen.h>
+#include <weasel/AST/Codegen.h>
 
 namespace llvm
 {
@@ -26,6 +26,7 @@ namespace weasel
     using StructTypeHandle = shared_ptr<StructType>;
     using GlobalVariableHandle = shared_ptr<GlobalVariable>;
     using ExpressionHandle = shared_ptr<Expression>;
+    using ArraySize = optional<variant<ExpressionHandle, long>>;
 
     enum class TypeID
     {
@@ -68,8 +69,9 @@ namespace weasel
         }
 
         TypeID getTypeID() const { return _typeId; }
-        int getTypeWidth();
 
+        void setWidth(int val) { _width = val; }
+        int getTypeWidth();
         int getTypeWidthByte() { return getTypeWidth() / 8; }
 
         bool isSigned() const { return _isSigned; }
@@ -77,6 +79,7 @@ namespace weasel
         bool isBoolType() const { return isIntegerType() && _width == 1; }
         bool isFloatType() const { return _typeId == TypeID::FloatType; }
         bool isDoubleType() const { return _typeId == TypeID::DoubleType; }
+        bool isDoubleFloatType() const { return isFloatType() || isDoubleType(); }
         bool isIntegerType() const { return _typeId == TypeID::IntegerType; }
         bool isPrimitiveType() const
         {
@@ -126,7 +129,6 @@ namespace weasel
         static TypeHandle getPointerType(TypeHandle containedType) { return make_shared<Type>(TypeID::PointerType, move(containedType)); }
         static TypeHandle getOpaqueType() { return make_shared<Type>(TypeID::PointerType); }
         static TypeHandle getReferenceType(TypeHandle containedType) { return make_shared<Type>(TypeID::ReferenceType, move(containedType)); }
-        static TypeHandle getStructType() { return make_shared<Type>(TypeID::StructType, -1); }
         static TypeHandle getUnknownType(Token token) { return make_shared<Type>(token); }
 
         // Check Type
@@ -208,23 +210,24 @@ namespace weasel
     public:
         ArrayType() : Type(TypeID::ArrayType, 0, false) {}
 
+        ArrayType(ExpressionHandle size, TypeHandle containedType) : Type(TypeID::ArrayType, 0, false), _size(size)
+        {
+            setContainedType(containedType);
+        }
+
+        ~ArrayType() = default;
+
         void setSize(ExpressionHandle size) { _size = size; }
-        ExpressionHandle getSize() { return _size; }
+        ArraySize getSize() { return _size; }
 
     private:
-        ExpressionHandle _size;
+        ArraySize _size;
     };
 
     // Function Type
     class FunctionType : public Type
     {
         OVERRIDE_CODEGEN_TYPE
-
-    private:
-        vector<TypeHandle> _arguments;
-        TypeHandle _returnType;
-        bool _isVararg = false;
-        bool _isStatic = true;
 
     public:
         FunctionType() : Type(TypeID::FunctionType, 0, false) {}
@@ -239,5 +242,11 @@ namespace weasel
 
         void setIsStatic(bool val) { _isStatic = val; }
         bool getIstatic() const { return _isStatic; }
+
+    private:
+        vector<TypeHandle> _arguments;
+        TypeHandle _returnType;
+        bool _isVararg = false;
+        bool _isStatic = true;
     };
 } // namespace weasel

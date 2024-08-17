@@ -26,10 +26,6 @@ namespace weasel
     // Analysis Context
     class Codegen
     {
-        // Weasel Package
-    private:
-        Metadata _metaData;
-
     public:
         Codegen(llvm::LLVMContext *context, const string &moduleName);
 
@@ -87,6 +83,9 @@ namespace weasel
         llvm::Value *codegen(Function *func);
 
     private:
+        // Metadata //
+        Metadata _metaData;
+
         // Helper Builder //
         llvm::LLVMContext *_context;
         llvm::Module *_module;

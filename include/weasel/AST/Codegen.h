@@ -5,6 +5,10 @@ namespace weasel
     class Codegen;
     class AnalysisSemantic;
     class Printer;
+    class AnalysisError;
+    class AnalysisEvaluate;
+
+    using EvaluationValue = optional<variant<bool, long, double, string>>;
 } // namespace weasel
 
 namespace llvm
@@ -13,11 +17,13 @@ namespace llvm
     class AllocaInst;
 } // namespace llvm
 
-#define BASE_CODEGEN_EXPRESSION(XX)                   \
-public:                                               \
-    virtual llvm::Value *accept(Codegen *codegen) XX; \
-    virtual void accept(AnalysisSemantic *accept) XX; \
-    virtual void print(Printer *printer) XX;          \
+#define BASE_CODEGEN_EXPRESSION(XX)                        \
+public:                                                    \
+    virtual llvm::Value *accept(Codegen *codegen) XX;      \
+    virtual void accept(AnalysisSemantic *accept) XX;      \
+    virtual void accept(AnalysisError *) XX;               \
+    virtual EvaluationValue accept(AnalysisEvaluate *) XX; \
+    virtual void print(Printer *printer) XX;               \
     virtual void printAsOperand(Printer *printer) XX;
 
 #define VIRTUAL_CODEGEN_VALUE                      \
