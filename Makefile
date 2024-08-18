@@ -11,6 +11,12 @@ preset.release: rm.build
 build.cmake:
 	cmake --build build -j 8
 
+# run:
+# 	GLOG_logtostderr=1 ./build/tools/weaselc/weaselc temp/src
+
+# run.leaks:
+# 	leaks --atExit -- ./build/tools/weaselc/weaselc temp/src
+
 run:
 	GLOG_logtostderr=1 ./build/tools/weaselc/weaselc temp/test.we
 

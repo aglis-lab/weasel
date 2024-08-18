@@ -1,16 +1,15 @@
 set(WEASEL_LIBS
     ${WEASEL_LIBS}
     # AMD GPU
-    LLVMAMDGPUInfo
-    LLVMAMDGPUAsmParser
-    LLVMAMDGPUCodeGen
-    LLVMAMDGPUDesc
-    LLVMAMDGPUDisassembler
-    LLVMAMDGPUUtils
+    # LLVMAMDGPUInfo
+    # LLVMAMDGPUAsmParser
+    # LLVMAMDGPUCodeGen
+    # LLVMAMDGPUDesc
+    # LLVMAMDGPUDisassembler
+    # LLVMAMDGPUUtils
 
     # ARCH64
     LLVMAArch64Info
-
     LLVMAArch64AsmParser
     LLVMAArch64CodeGen
     LLVMAArch64Desc
@@ -26,91 +25,91 @@ set(WEASEL_LIBS
     LLVMARMUtils
 
     # AVR
-    LLVMAVRInfo
-    LLVMAVRAsmParser
-    LLVMAVRCodeGen
-    LLVMAVRDesc
-    LLVMAVRDisassembler
-    # LLVMAVRUtils
+    # LLVMAVRInfo
+    # LLVMAVRAsmParser
+    # LLVMAVRCodeGen
+    # LLVMAVRDesc
+    # LLVMAVRDisassembler
+    # # LLVMAVRUtils
 
     # BPF
-    LLVMBPFInfo
-    LLVMBPFAsmParser
-    LLVMBPFCodeGen
-    LLVMBPFDesc
-    LLVMBPFDisassembler
-    # LLVMBPFUtils
+    # LLVMBPFInfo
+    # LLVMBPFAsmParser
+    # LLVMBPFCodeGen
+    # LLVMBPFDesc
+    # LLVMBPFDisassembler
+    # # LLVMBPFUtils
 
     # Hexagon
-    LLVMHexagonInfo
-    LLVMHexagonAsmParser
-    LLVMHexagonCodeGen
-    LLVMHexagonDesc
-    LLVMHexagonDisassembler
-    # LLVMHexagonUtils
+    # LLVMHexagonInfo
+    # LLVMHexagonAsmParser
+    # LLVMHexagonCodeGen
+    # LLVMHexagonDesc
+    # LLVMHexagonDisassembler
+    # # LLVMHexagonUtils
 
     # Lanai
-    LLVMLanaiInfo
-    LLVMLanaiAsmParser
-    LLVMLanaiCodeGen
-    LLVMLanaiDesc
-    LLVMLanaiDisassembler
-    # LLVMLanaiUtils
+    # LLVMLanaiInfo
+    # LLVMLanaiAsmParser
+    # LLVMLanaiCodeGen
+    # LLVMLanaiDesc
+    # LLVMLanaiDisassembler
+    # # LLVMLanaiUtils
 
     # MIPS
-    LLVMMipsInfo
-    LLVMMipsAsmParser
-    LLVMMipsCodeGen
-    LLVMMipsDesc
-    LLVMMipsDisassembler
-    # LLVMMipsUtils
+    # LLVMMipsInfo
+    # LLVMMipsAsmParser
+    # LLVMMipsCodeGen
+    # LLVMMipsDesc
+    # LLVMMipsDisassembler
+    # # LLVMMipsUtils
 
     # MSP430
-    LLVMMSP430Info
-    LLVMMSP430AsmParser
-    LLVMMSP430CodeGen
-    LLVMMSP430Desc
-    LLVMMSP430Disassembler
-    # LLVMMSP430Utils
+    # LLVMMSP430Info
+    # LLVMMSP430AsmParser
+    # LLVMMSP430CodeGen
+    # LLVMMSP430Desc
+    # LLVMMSP430Disassembler
+    # # LLVMMSP430Utils
 
     # NVPTX
-    LLVMNVPTXInfo
-    # LLVMNVPTXAsmParser
-    LLVMNVPTXCodeGen
-    LLVMNVPTXDesc
-    # LLVMNVPTXDisassembler
-    # LLVMNVPTXUtils
+    # LLVMNVPTXInfo
+    # # LLVMNVPTXAsmParser
+    # LLVMNVPTXCodeGen
+    # LLVMNVPTXDesc
+    # # LLVMNVPTXDisassembler
+    # # LLVMNVPTXUtils
 
     # Power PC
-    LLVMPowerPCInfo
-    LLVMPowerPCAsmParser
-    LLVMPowerPCCodeGen
-    LLVMPowerPCDesc
-    LLVMPowerPCDisassembler
-    # LLVMPowerPCUtils
+    # LLVMPowerPCInfo
+    # LLVMPowerPCAsmParser
+    # LLVMPowerPCCodeGen
+    # LLVMPowerPCDesc
+    # LLVMPowerPCDisassembler
+    # # LLVMPowerPCUtils
 
     # RISC V
-    LLVMRISCVInfo
-    LLVMRISCVAsmParser
-    LLVMRISCVCodeGen
-    LLVMRISCVDesc
-    LLVMRISCVDisassembler
+    # LLVMRISCVInfo
+    # LLVMRISCVAsmParser
+    # LLVMRISCVCodeGen
+    # LLVMRISCVDesc
+    # LLVMRISCVDisassembler
 
     # Sparc
-    LLVMSparcInfo
-    LLVMSparcAsmParser
-    LLVMSparcCodeGen
-    LLVMSparcDesc
-    LLVMSparcDisassembler
-    # LLVMSparcUtils
+    # LLVMSparcInfo
+    # LLVMSparcAsmParser
+    # LLVMSparcCodeGen
+    # LLVMSparcDesc
+    # LLVMSparcDisassembler
+    # # LLVMSparcUtils
 
     # System Z
-    LLVMSystemZInfo
-    LLVMSystemZAsmParser
-    LLVMSystemZCodeGen
-    LLVMSystemZDesc
-    LLVMSystemZDisassembler
-    # LLVMSystemZUtils
+    # LLVMSystemZInfo
+    # LLVMSystemZAsmParser
+    # LLVMSystemZCodeGen
+    # LLVMSystemZDesc
+    # LLVMSystemZDisassembler
+    # # LLVMSystemZUtils
 
     # Web Assembly
     LLVMWebAssemblyInfo
@@ -129,10 +128,10 @@ set(WEASEL_LIBS
     # LLVMX86Utils
 
     # Core
-    LLVMXCoreInfo
-    # LLVMXCoreAsmParser
-    # LLVMXCoreCodeGen
-    # LLVMXCoreDesc
-    # LLVMXCoreDisassembler
-    # LLVMXCoreUtils
+    # LLVMXCoreInfo
+    # # LLVMXCoreAsmParser
+    # # LLVMXCoreCodeGen
+    # # LLVMXCoreDesc
+    # # LLVMXCoreDisassembler
+    # # LLVMXCoreUtils
 )

@@ -1,0 +1,3 @@
+extern fun printf(msg []byte, param ...any) int
+extern fun puts(msg []byte) int
+extern fun putchar(c int) int

@@ -1,0 +1,2 @@
+extern fun malloc(size ulong) *void
+extern fun free(ptr *void)

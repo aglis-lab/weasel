@@ -49,6 +49,41 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    // TODO: New Convention of File Manager
+    // // Deallocate all Source from File Manager
+    // defer { FileManager::GetInstance().Close(); };
+
+    // // FileManager
+    // auto sourcePath = std::string(argv[1]);
+    // FileManager::GetInstance().LoadSource(sourcePath);
+
+    // if (FileManager::GetInstance().GetSourcesCount() == 0)
+    // {
+    //     cerr << "souces file not found\n";
+    //     return -1;
+    // }
+
+    // // Multi Threading for parsing
+    // vector<thread> threads;
+    // auto package = Package();
+    // for (auto fileId : FileManager::GetInstance().GetFileIds())
+    // {
+    //     // Module
+    //     auto newModule = make_shared<Module>();
+    //     package.addModule(newModule);
+
+    //     // Parser and Lexer
+    //     auto parser = Parser(newModule, fileId);
+
+    //     threads.push_back(thread(&Parser::parse, parser));
+    // }
+
+    // // Wait for parsing finish
+    // for (auto &item : threads)
+    // {
+    //     item.join();
+    // }
+
     // auto outputExecutable = "temp/main";
     auto filePath = std::string(argv[1]);
     auto filename = splitString(filePath, "/").back();

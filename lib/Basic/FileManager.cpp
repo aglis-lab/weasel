@@ -11,34 +11,150 @@
 #endif /* !_WIN32 && !HAVE_MMAP */
 
 #include <iostream>
-#include "weasel/Basic/FileManager.h"
+#include <filesystem>
+
+#include <weasel/Basic/FileManager.h>
 
 using namespace weasel;
+
+// TODO: New File Manager Convention
+// void FileManager::LoadSource(string sourcePath)
+// {
+//     // Source Path
+//     for (auto &path : filesystem::directory_iterator(sourcePath))
+//     {
+//         currentFileId += 1;
+
+//         uint length;
+//         auto filePath = path.path();
+//         auto buffer = MapFile(filePath.c_str(), &length);
+//         auto fileDetail = SourceDetail(filePath.string(), buffer, length);
+
+//         sourceMap[currentFileId] = fileDetail;
+//     }
+
+//     // Folder Inside Source Path
+// }
+
+// vector<FileId> FileManager::GetFileIds()
+// {
+//     vector<FileId> keys;
+//     for (auto &item : sourceMap)
+//     {
+//         keys.push_back(item.first);
+//     }
+//     return keys;
+// }
+
+// void FileManager::Close()
+// {
+//     for (auto item : sourceMap)
+//     {
+//         delete (item.second.Buffer);
+//     }
+
+//     sourceMap.clear();
+// }
+
+// char *FileManager::MapFile(const char *path, uint *length)
+// {
+//     char *data = nullptr;
+//     size_t size = 0;
+
+// #ifdef _WIN32
+//     HANDLE hMap;
+//     HANDLE hFile = CreateFileA(path, GENERIC_READ, FILE_SHARE_READ, nullptr,
+//                                OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+//     if (hFile == INVALID_HANDLE_VALUE)
+//         return nullptr;
+
+//     size = GetFileSize(hFile, nullptr);
+//     if (size == INVALID_FILE_SIZE || size == 0)
+//         goto fail;
+
+//     hMap = CreateFileMappingA(hFile, nullptr, PAGE_READONLY, 0, size, nullptr);
+//     if (!hMap)
+//         goto fail;
+
+//     data = (char *)MapViewOfFile(hMap, FILE_MAP_READ, 0, 0, size);
+
+//     /* We can call CloseHandle here, but it will not be closed until
+//      * we unmap the view */
+//     CloseHandle(hMap);
+// fail:
+//     CloseHandle(hFile);
+
+// #elif HAVE_MMAP
+//     int fd = open(path, O_RDONLY);
+//     if (fd < 0)
+//         return nullptr;
+
+//     /* lseek returns the offset from the beginning of the file */
+//     size = lseek(fd, 0, SEEK_END);
+//     if (size <= 0)
+//         goto fail;
+
+//     /* we don't need to lseek again as mmap ignores the offset */
+//     data = (char *)mmap(nullptr, size, PROT_READ, MAP_SHARED, fd, 0);
+//     if (data == MAP_FAILED)
+//         data = nullptr;
+// fail:
+//     close(fd);
+
+// #else  /* !_WIN32 && !HAVE_MMAP */
+//     FILE *fd = fopen(path, "rb");
+//     if (!fd)
+//         return nullptr;
+
+//     fseek(fd, 0, SEEK_END);
+//     size = ftell(fd); /* returns the size of the file */
+//     if (size <= 0)
+//         goto fail;
+
+//     rewind(fd);
+//     data = (char *)malloc(size);
+//     if (!data)
+//         goto fail;
+
+//     /* only return the data if the read was successful */
+//     if (fread(data, size, 1, fd) != 1)
+//     {
+//         free(data);
+//         data = nullptr;
+//     }
+
+// fail:
+//     fclose(fd);
+// #endif /* !_WIN32 && !HAVE_MMAP */
+
+//     if (length)
+//         *length = size;
+//     return data;
+// }
 
 // instead of using ifstream
 FileManager::FileManager(const std::string &filePath)
 {
     _startBuffer = mapFile(filePath.c_str(), &_size);
-    _endBuffer = _startBuffer + _size;
 }
 
 char *FileManager::mapFile(const char *path, uint *length)
 {
-    char *data = NULL;
+    char *data = nullptr;
     size_t size = 0;
 
 #ifdef _WIN32
     HANDLE hMap;
-    HANDLE hFile = CreateFileA(path, GENERIC_READ, FILE_SHARE_READ, NULL,
-                               OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    HANDLE hFile = CreateFileA(path, GENERIC_READ, FILE_SHARE_READ, nullptr,
+                               OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
     if (hFile == INVALID_HANDLE_VALUE)
-        return NULL;
+        return nullptr;
 
-    size = GetFileSize(hFile, NULL);
+    size = GetFileSize(hFile, nullptr);
     if (size == INVALID_FILE_SIZE || size == 0)
         goto fail;
 
-    hMap = CreateFileMappingA(hFile, NULL, PAGE_READONLY, 0, size, NULL);
+    hMap = CreateFileMappingA(hFile, nullptr, PAGE_READONLY, 0, size, nullptr);
     if (!hMap)
         goto fail;
 
@@ -53,7 +169,7 @@ fail:
 #elif HAVE_MMAP
     int fd = open(path, O_RDONLY);
     if (fd < 0)
-        return NULL;
+        return nullptr;
 
     /* lseek returns the offset from the beginning of the file */
     size = lseek(fd, 0, SEEK_END);
@@ -61,16 +177,16 @@ fail:
         goto fail;
 
     /* we don't need to lseek again as mmap ignores the offset */
-    data = (char *)mmap(NULL, size, PROT_READ, MAP_SHARED, fd, 0);
+    data = (char *)mmap(nullptr, size, PROT_READ, MAP_SHARED, fd, 0);
     if (data == MAP_FAILED)
-        data = NULL;
+        data = nullptr;
 fail:
     close(fd);
 
 #else  /* !_WIN32 && !HAVE_MMAP */
     FILE *fd = fopen(path, "rb");
     if (!fd)
-        return NULL;
+        return nullptr;
 
     fseek(fd, 0, SEEK_END);
     size = ftell(fd); /* returns the size of the file */
@@ -86,7 +202,7 @@ fail:
     if (fread(data, size, 1, fd) != 1)
     {
         free(data);
-        data = NULL;
+        data = nullptr;
     }
 
 fail:

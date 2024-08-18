@@ -92,6 +92,6 @@ include_directories(${LLVM_INCLUDE_DIRS})
 
 # WEASEL DIRECTORIES
 add_subdirectory(lib)
-add_subdirectory(libparallel)
+# add_subdirectory(libparallel)
 add_subdirectory(tools)
-add_subdirectory(test)
+# add_subdirectory(test)

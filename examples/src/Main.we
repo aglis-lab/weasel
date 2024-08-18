@@ -1,0 +1,9 @@
+// Import from current package
+import Hello
+
+// How To Import from library
+import JSON
+
+fun main() {
+    Hello::HelloWorld()
+}

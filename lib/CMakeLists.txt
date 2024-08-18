@@ -25,6 +25,7 @@ set(
     Lexer/LexerType.cpp
     Lexer/Token.cpp
     Metadata/Metadata.cpp
+    Package/Package.cpp
     Parser/Parser.cpp
     Parser/ParserExpression.cpp
     Parser/ParserFunction.cpp

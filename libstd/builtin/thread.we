@@ -1,0 +1,20 @@
+extern fun pthread_create(thread *Thread, attr *void, callback fun(*void) *void, args *void)
+extern fun pthread_join(thread Thread, attr *void)
+
+const PTHREAD_SIZE 8176
+
+struct PthreadHandler {
+    Routine fun(*void)
+    Arg *void
+    Next *PthreadHandler
+}
+
+struct OpaqueThread {
+    Signal long
+    Stack *PthreadHandler
+    Opaque [PTHREAD_SIZE]byte
+}
+
+struct Thread {
+    Thread *OpaqueThread
+}
