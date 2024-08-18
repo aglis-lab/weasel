@@ -34,6 +34,7 @@ set(
     Printer/Printer.cpp
     Type/Type.cpp
     Type/TypeCodegen.cpp
+    Type/TypeError.cpp
     Type/TypeSemantic.cpp
 )
 

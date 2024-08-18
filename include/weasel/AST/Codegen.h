@@ -42,15 +42,17 @@ protected:                                                                 \
     virtual void setCodegen(llvm::Value *val) override { _codegen = val; } \
     virtual llvm::Value *getCodegen() override { return _codegen; }
 
-#define VIRTUAL_CODEGEN_TYPE                      \
-public:                                           \
-    virtual llvm::Type *accept(Codegen *codegen); \
-    virtual void accept(AnalysisSemantic *accept);
-
-#define OVERRIDE_CODEGEN_TYPE                      \
+#define VIRTUAL_CODEGEN_TYPE                       \
 public:                                            \
-    llvm::Type *accept(Codegen *codegen) override; \
-    void accept(AnalysisSemantic *accept) override;
+    virtual llvm::Type *accept(Codegen *codegen);  \
+    virtual void accept(AnalysisSemantic *accept); \
+    virtual void accept(AnalysisError *);
+
+#define OVERRIDE_CODEGEN_TYPE                       \
+public:                                             \
+    llvm::Type *accept(Codegen *codegen) override;  \
+    void accept(AnalysisSemantic *accept) override; \
+    virtual void accept(AnalysisError *);
 
 #define DECLARATION_EXPRESSION                                                  \
     friend class weasel::AnalysisSemantic;                                      \
