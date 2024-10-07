@@ -12,11 +12,11 @@ namespace weasel
     {
     private:
         Codegen *_codegen;
-        Module *_module;
+        FileAST *_module;
         std::string _err;
 
     public:
-        Driver(Codegen *codegen, Module *module);
+        Driver(Codegen *codegen, FileAST *module);
 
         bool compile(std::string targetTriple = "");
 

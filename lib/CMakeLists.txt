@@ -10,13 +10,13 @@ set(
     AST/ASTEvaluate.cpp
     Analysis/AnalysisSemantic.cpp
     Basic/Number.cpp
-    Driver/Driver.cpp
     IR/Codegen.cpp
     IR/CodegenLiteral.cpp
     IR/CodegenMeta.cpp
     IR/CodegenOperator.cpp
     IR/CodegenStatement.cpp
     IR/CodegenType.cpp
+    IR/Driver.cpp
     Lexer/Lexer.cpp
     Lexer/LexerKeyword.cpp
     Lexer/LexerLiteral.cpp
@@ -24,7 +24,9 @@ set(
     Lexer/LexerType.cpp
     Lexer/Token.cpp
     Metadata/Metadata.cpp
+    Package/FileAST.cpp
     Package/Package.cpp
+    Package/PackageManager.cpp
     Parser/Parser.cpp
     Parser/ParserExpression.cpp
     Parser/ParserFunction.cpp

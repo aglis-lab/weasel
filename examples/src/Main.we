@@ -2,8 +2,10 @@
 import Hello
 
 // How To Import from library
-import JSON
+import Package::Json
 
 fun main() {
     Hello::HelloWorld()
+
+    let human = Json::Parse<Human>("{'username': 'Hulk'}")
 }

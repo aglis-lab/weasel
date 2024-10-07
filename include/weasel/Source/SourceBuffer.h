@@ -14,7 +14,7 @@ namespace weasel
     class SourceBuffer
     {
     public:
-        explicit SourceBuffer(const string &filePath);
+        explicit SourceBuffer(const string &filePath, FileId fileId);
 
         bool isValid() const { return _startBuffer != nullptr; }
         uint getSize() const { return _size; }
@@ -25,5 +25,6 @@ namespace weasel
     private:
         char *_startBuffer;
         uint _size;
+        FileId _fileId;
     };
 } // namespace weasel

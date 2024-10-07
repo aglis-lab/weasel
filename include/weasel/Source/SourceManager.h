@@ -10,20 +10,15 @@ namespace weasel
 {
     class SourceManager
     {
+    private:
+        vector<SourceBuffer> _sources;
+        FileId _fileId = 1;
+
     public:
         SourceManager() {}
 
-        void closeSource()
-        {
-            for (auto item : _sources)
-            {
-                item.closeBuffer();
-            }
-        }
-
+        void closeSource();
         void loadSource(string sourcePath);
-
-    private:
-        vector<SourceBuffer> _sources;
+        vector<SourceBuffer> &getSources() { return _sources; }
     };
 } // namespace weasel

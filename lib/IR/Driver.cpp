@@ -17,11 +17,11 @@
 #include <llvm/Transforms/Scalar/MemCpyOptimizer.h>
 #include <llvm/IR/PassManager.h>
 
-#include <weasel/Driver/Driver.h>
+#include <weasel/IR/Driver.h>
 #include <weasel/Passes/Passes.h>
 #include <weasel/Metadata/Metadata.h>
 
-Driver::Driver(Codegen *codegen, Module *module)
+Driver::Driver(Codegen *codegen, FileAST *module)
 {
     _codegen = codegen;
     _module = module;
@@ -29,7 +29,7 @@ Driver::Driver(Codegen *codegen, Module *module)
 
 bool Driver::compile(std::string defTargetTriple)
 {
-    LOG(INFO) << "Try Codegen...\n";
+    LOG(INFO) << "Try Codegen";
 
     auto pass = Passes(getModule());
 
@@ -69,6 +69,7 @@ bool Driver::compile(std::string defTargetTriple)
             return false;
         }
 
+        // TODO: MemCpyOptPass
         // if (item->getType()->isStructType())
         // {
         //     auto analysis = llvm::FunctionAnalysisManager();
@@ -104,7 +105,7 @@ bool Driver::compile(std::string defTargetTriple)
         getModule()->setDataLayout(dataLayout);
     }
 
-    Metadata(getContext(), getModule()).initModule(getModule());
+    // Metadata(getContext(), getModule()).initModule(getModule());
     if (llvm::verifyModule(*getModule()))
     {
         _err = "Error when constructing module\n";

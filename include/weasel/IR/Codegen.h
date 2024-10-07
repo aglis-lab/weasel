@@ -26,6 +26,29 @@ namespace weasel
     // Analysis Context
     class Codegen
     {
+    private:
+        // Metadata //
+        Metadata _metaData;
+
+        // Helper Builder //
+        llvm::LLVMContext *_context;
+        llvm::Module *_module;
+        llvm::MDBuilder *_mdBuilder;
+        llvm::IRBuilder<> *_builder;
+
+        // Helper Variable for Looping //
+        vector<llvm::BasicBlock *> _breakBlocks;
+        vector<llvm::BasicBlock *> _continueBlocks;
+
+        // Helper For Return Function //
+        llvm::AllocaInst *_returnAlloca;
+        llvm::BasicBlock *_returnBlock;
+        llvm::BasicBlock *_allocaBlock;
+
+        // Helper Variable for Struct Types and Functions //
+        map<string, llvm::StructType *> _structTypes;
+        map<string, llvm::Function *> _functions;
+
     public:
         Codegen(llvm::LLVMContext *context, const string &moduleName);
 
@@ -81,29 +104,6 @@ namespace weasel
 
         // User Defined
         llvm::Value *codegen(Function *func);
-
-    private:
-        // Metadata //
-        Metadata _metaData;
-
-        // Helper Builder //
-        llvm::LLVMContext *_context;
-        llvm::Module *_module;
-        llvm::MDBuilder *_mdBuilder;
-        llvm::IRBuilder<> *_builder;
-
-        // Helper Variable for Looping //
-        vector<llvm::BasicBlock *> _breakBlocks;
-        vector<llvm::BasicBlock *> _continueBlocks;
-
-        // Helper For Return Function //
-        llvm::AllocaInst *_returnAlloca;
-        llvm::BasicBlock *_returnBlock;
-        llvm::BasicBlock *_allocaBlock;
-
-        // Helper Variable for Struct Types and Functions //
-        map<string, llvm::StructType *> _structTypes;
-        map<string, llvm::Function *> _functions;
 
     private:
         // Create allocation instruction at alloca block

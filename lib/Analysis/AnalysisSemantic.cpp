@@ -15,59 +15,91 @@ EvaluationValue AnalysisSemantic::evaluate(Expression *expr)
 void AnalysisSemantic::semanticCheck()
 {
     // Struct Type
-    for (auto item : getModule()->getUserTypes())
+    SEMANTIC("User Types ") << (getPackage()->getUserTypes().size());
+    if (!getPackage()->getUserTypes().empty())
     {
-        if (item->isError())
+        for (auto item : getPackage()->getUserTypes())
         {
-            onStructError(item.get());
-            break;
-        }
+            fmt::println("ITEM {}", item->getIdentifier());
+            if (item->isError())
+            {
+                onStructError(item.get());
+                break;
+            }
 
-        accept(item.get());
+            accept(item.get());
+        }
     }
 
     // Global Variable
-    for (auto &item : getModule()->getGlobalVariables())
+    SEMANTIC("Global Variables");
+    if (!getPackage()->getGlobalVariables().empty())
     {
-        accept(item.get());
+        for (auto &item : getPackage()->getGlobalVariables())
+        {
+            accept(item.get());
+        }
     }
 
     // Functions
-    for (auto fun : getModule()->getFunctions())
+    SEMANTIC("Functions");
+    if (!getPackage()->getFunctions().empty())
     {
-        if (fun->isError())
-        {
-            onError(fun.get());
-            break;
-        }
+        // Set Declaration
+        getState().setDeclaration(true);
 
-        // Check Function Type
-        for (auto &item : fun->getArguments())
+        // Initialize Function Declaration
+        for (auto &fun : getPackage()->getFunctions())
         {
-            if (item->isImplThis())
+            if (fun->isError())
             {
-                if (item->isImplThisReference())
+                onError(fun.get());
+                break;
+            }
+
+            // Check Function Type
+            for (auto &item : fun->getArguments())
+            {
+                if (item->isImplThis())
                 {
-                    item->setType(Type::getPointerType(fun->getImplType()));
+                    if (item->isImplThisReference())
+                    {
+                        item->setType(Type::getPointerType(fun->getImplType()));
+                    }
+                    else
+                    {
+                        item->setType(fun->getImplType());
+                    }
+                }
+
+                if (item->getType()->isUnknownType())
+                {
+                    item->setType(unknownType(item->getType()));
                 }
                 else
                 {
-                    item->setType(fun->getImplType());
+                    item->accept(this);
                 }
             }
 
-            if (item->getType()->isUnknownType())
-            {
-                item->setType(unknownType(item->getType()));
-            }
-            else
-            {
-                item->accept(this);
-            }
+            // Check Function Body
+            accept(fun.get());
         }
 
-        // Check Function Body
-        accept(fun.get());
+        // Set Declaration
+        getState().setDeclaration(false);
+
+        // Initialize Function Body
+        for (auto &fun : getPackage()->getFunctions())
+        {
+            if (fun->isError())
+            {
+                break;
+            }
+
+            // Check Function Body
+            accept(fun.get());
+        }
     }
 }
 
@@ -106,7 +138,7 @@ void AnalysisSemantic::accept(StructType *expr)
 
         if (item.getType()->isUnknownType())
         {
-            auto structType = getModule()->findStructType(item.getIdentifier());
+            auto structType = getPackage()->findStructType(item.getIdentifier());
             if (!structType)
             {
                 expr->setError(Errors::getInstance().userTypeNotDefined.withToken(item.getType()->getToken()));
@@ -160,7 +192,7 @@ void AnalysisSemantic::accept(Type *expr)
 
     if ((expr->isPointerType() || expr->isReferenceType()) && expr->getContainedType()->isUnknownType())
     {
-        auto structType = getModule()->findStructType(expr->getContainedType()->getToken().getValue());
+        auto structType = getPackage()->findStructType(expr->getContainedType()->getToken().getValue());
 
         // TODO: Create Better Error Handling with more generic and understanable error
         assert(structType && "underlying type should be exist");
@@ -178,7 +210,7 @@ TypeHandle AnalysisSemantic::unknownType(TypeHandle expr)
         return expr;
     }
 
-    auto structType = getModule()->findStructType(expr->getToken().getValue());
+    auto structType = getPackage()->findStructType(expr->getToken().getValue());
     if (!structType)
     {
         expr->setError(Errors::getInstance().userTypeNotDefined.withToken(expr->getToken()));
@@ -192,8 +224,8 @@ void AnalysisSemantic::accept(Function *fun)
 {
     SEMANTIC("Function") << " " << fun->getIdentifier();
 
-    saveState();
-    defer { restoreState(); };
+    getState().saveState();
+    defer { getState().restoreState(); };
 
     auto type = make_shared<FunctionType>();
     if (fun->isImplTypeExist())
@@ -231,23 +263,26 @@ void AnalysisSemantic::accept(Function *fun)
 
         type->getArguments().push_back(arg->getType());
 
-        addDeclaration(arg.get());
+        getState().addDeclaration(arg.get());
     }
 
     // Function Type
     type->accept(this);
     fun->setType(type);
 
-    // Check Compound Statement
-    setCurrentFunction(fun);
-
-    if (fun->getBody())
+    if (!getState().getDeclaration())
     {
-        accept(fun->getBody().get());
+        // Check Compound Statement
+        getState().setCurrentFunction(fun);
+
+        if (fun->getBody())
+        {
+            accept(fun->getBody().get());
+        }
     }
 
     // Find Duplicate Function
-    if (getModule()->findFunctions(fun->getIdentifier(), fun->getImplType(), type->getIstatic()).size() >= 2)
+    if (getPackage()->findFunctions(fun->getIdentifier(), fun->getImplType(), type->getIstatic()).size() >= 2)
     {
         fun->setError(Errors::getInstance().duplicateFunction.withToken(fun->getToken()));
         return onError(fun);
@@ -258,8 +293,8 @@ void AnalysisSemantic::accept(CompoundStatement *expr)
 {
     LOG(INFO) << "Compound Statement Check";
 
-    saveState();
-    defer { restoreState(); };
+    getState().saveState();
+    defer { getState().restoreState(); };
 
     if (!expr || expr->getBody().empty())
     {
@@ -417,7 +452,7 @@ void AnalysisSemantic::accept(DeclarationStatement *expr)
             expr->setValue(make_shared<DoubleLiteralExpression>(Token::create(), 0));
         }
 
-        return addDeclaration(expr);
+        return getState().addDeclaration(expr);
     }
 
     expr->getValue()->accept(this);
@@ -437,7 +472,7 @@ void AnalysisSemantic::accept(DeclarationStatement *expr)
         return onError(expr);
     }
 
-    addDeclaration(expr);
+    getState().addDeclaration(expr);
 }
 
 void AnalysisSemantic::accept(VariableExpression *expr)
@@ -447,7 +482,7 @@ void AnalysisSemantic::accept(VariableExpression *expr)
     Expression *decl = findDeclaration(expr->getIdentifier());
     if (!decl)
     {
-        auto fun = getModule()->getFunction(expr->getIdentifier());
+        auto fun = getPackage()->getFunction(expr->getIdentifier());
         if (!fun)
         {
             expr->setError(Errors::getInstance().variableNotDefined.withToken(expr->getToken()));
@@ -531,7 +566,7 @@ void AnalysisSemantic::accept(ReturnExpression *expr)
         expr->setType(Type::getVoidType());
     }
 
-    if (!expr->getType()->isEqual(getCurrentFunction()->getReturnType()))
+    if (!expr->getType()->isEqual(getState().getCurrentFunction()->getReturnType()))
     {
         expr->setError(Errors::getInstance().datatypeDifferent.withToken(expr->getType()->getToken()));
         return onError(expr);
@@ -650,7 +685,7 @@ void AnalysisSemantic::accept(StructExpression *expr)
 {
     LOG(INFO) << "Struct Expression Check";
 
-    auto newType = getModule()->findStructType(expr->getIdentifier());
+    auto newType = getPackage()->findStructType(expr->getIdentifier());
     if (!newType)
     {
         expr->setError(Errors::getInstance().userTypeNotDefined.withToken(expr->getToken()));
@@ -755,7 +790,7 @@ void AnalysisSemantic::accept(MethodCallExpression *expr)
         implType = implType->getContainedType();
     }
 
-    auto fun = getModule()->getFunction(expr->getIdentifier(), implType, false);
+    auto fun = getPackage()->getFunction(expr->getIdentifier(), implType, false);
     if (!fun)
     {
         expr->setError(Errors::getInstance().functionNotDefined.withToken(expr->getToken()));

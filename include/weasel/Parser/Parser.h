@@ -1,11 +1,12 @@
 #pragma once
 
 #include <list>
+#include <thread>
 
 #include <weasel/AST/AST.h>
 #include <weasel/Lexer/Lexer.h>
+#include <weasel/Package/FileAST.h>
 #include <weasel/Type/Type.h>
-#include <weasel/IR/Module.h>
 
 using namespace std;
 using namespace weasel;
@@ -14,8 +15,15 @@ namespace weasel
 {
     class Parser
     {
+    private:
+        // Simple Class for accessing token
+        Lexer _lexer;
+
+        // Simple Class for handling and storing global value
+        FileASTHandle _module;
+
     public:
-        Parser(SourceBuffer sourceBuffer, Module *module) : _lexer(Lexer(sourceBuffer)), _module(module) {}
+        Parser(SourceBuffer sourceBuffer, FileASTHandle module) : _lexer(Lexer(sourceBuffer)), _module(module) {}
 
         // Helper
         TypeHandle parseDataType();
@@ -27,16 +35,13 @@ namespace weasel
         // Parse
         void parse();
 
+        // Launch parse inside standalone thread
+        thread launchParse() { return thread(&Parser::parse, this); }
+
         // Module
-        Module *getModule() const { return _module; }
+        FileASTHandle getModule() const { return _module; }
 
     private:
-        // Simple Class for accessing token
-        Lexer _lexer;
-
-        // Simple Class for handling and storing global value
-        Module *_module;
-
         // Expect Token
         Token expectToken() { return _lexer.expect(); }
         bool expectToken(TokenKind kind) { return _lexer.expect(kind); }

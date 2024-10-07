@@ -14,10 +14,12 @@
 #include <weasel/AST/AST.h>
 #include <weasel/Basic/Defer.h>
 #include <weasel/Basic/String.h>
-#include <weasel/Driver/Driver.h>
+#include <weasel/IR/Driver.h>
 #include <weasel/IR/Codegen.h>
-#include <weasel/IR/Module.h>
+#include <weasel/Package/Package.h>
+#include <weasel/Package/PackageManager.h>
 #include <weasel/Parser/Parser.h>
+#include <weasel/Parser/ParserPool.h>
 #include <weasel/Printer/Printer.h>
 #include <weasel/Source/SourceManager.h>
 #include <weasel-c/BuildSystem.h>
@@ -50,116 +52,114 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    // TODO: New Convention of File Manager
-    // // Deallocate all Source from File Manager
-    // defer { FileManager::GetInstance().Close(); };
-
-    // // FileManager
-    // auto sourcePath = std::string(argv[1]);
-    // FileManager::GetInstance().LoadSource(sourcePath);
-
-    // if (FileManager::GetInstance().GetSourcesCount() == 0)
-    // {
-    //     cerr << "souces file not found\n";
-    //     return -1;
-    // }
-
-    // // Multi Threading for parsing
-    // vector<thread> threads;
-    // auto package = Package();
-    // for (auto fileId : FileManager::GetInstance().GetFileIds())
-    // {
-    //     // Module
-    //     auto newModule = make_shared<Module>();
-    //     package.addModule(newModule);
-
-    //     // Parser and Lexer
-    //     auto parser = Parser(newModule, fileId);
-
-    //     threads.push_back(thread(&Parser::parse, parser));
-    // }
-
-    // // Wait for parsing finish
-    // for (auto &item : threads)
-    // {
-    //     item.join();
-    // }
-
-    auto filePath = std::string(argv[1]);
-    auto filename = splitString(filePath, "/").back();
-    auto outputPath = filePath + ".o";
-    auto outputExecutable = filePath + ".out";
-
     auto sourceManager = SourceManager();
     defer { sourceManager.closeSource(); };
 
-    auto souceBuffer = SourceBuffer(filePath);
-    assert(souceBuffer.isValid());
+    auto sourcePath = string(argv[1]);
+    auto package = PackageManager::getInstance().createPackageApp();
+    auto parserPool = ParserPool();
 
-    // Prepare Lexer and Parser
-    LOG(INFO) << "Parsing...";
-    auto weaselModule = Module();
-    auto parser = Parser(souceBuffer, &weaselModule);
+    sourceManager.loadSource(sourcePath);
+    for (auto item : sourceManager.getSources())
+    {
+        // Prepare Lexer and Parser
+        LOG(INFO) << "Parsing";
 
-    parser.parse();
+        parserPool.createPool(item, package->createModule());
+    }
 
-    // // Analysis Semantic
-    // LOG(INFO) << "Semantic Analysis...";
-    // auto analysis = AnalysisSemantic(&weaselModule);
-    // analysis.semanticCheck();
+    // Wait Thread Finish
+    parserPool.wait();
 
-    // // TODO: Change with better Error Print
-    // if (!analysis.getTypeErrors().empty())
-    // {
-    //     for (auto item : analysis.getTypeErrors())
-    //     {
-    //         LOG(ERROR)
-    //             << item->getError()->getMessage()
-    //             << " but got '" << item->getError()->getToken().getEscapeValue() << "'"
-    //             << " type of " << item->getError()->getToken().getTokenKindToInt()
-    //             << " " << item->getError()->getToken().getLocation().toString()
-    //             << " from " << item->getToken().getValue();
-    //     }
+    // Load Package Header
+    package->loadPackageHeader();
 
-    //     return 0;
-    // }
+    // Analysis Semantic
+    LOG(INFO) << "Semantic Analysis...";
+    auto analysis = AnalysisSemantic(package);
+    analysis.semanticCheck();
 
-    // if (!analysis.getErrors().empty())
-    // {
-    //     for (auto item : analysis.getErrors())
-    //     {
-    //         LOG(ERROR)
-    //             << item->getError()->getMessage()
-    //             << " but got '" << item->getError()->getToken().getEscapeValue() << "'"
-    //             << " type of " << item->getError()->getToken().getTokenKindToInt()
-    //             << " " << item->getError()->getToken().getLocation().toString()
-    //             << " from " << item->getToken().getValue();
-    //     }
+    // TODO: Change with better Error Print
+    if (!analysis.getTypeErrors().empty())
+    {
+        for (auto item : analysis.getTypeErrors())
+        {
+            LOG(ERROR)
+                << item->getError()->getMessage()
+                << " but got '" << item->getError()->getToken().getEscapeValue() << "'"
+                << " type of " << item->getError()->getToken().getTokenKindToInt()
+                << " " << item->getError()->getToken().getLocation().toString()
+                << " from " << item->getToken().getValue();
+        }
+        return 1;
+    }
 
-    //     return 0;
-    // }
+    if (!analysis.getErrors().empty())
+    {
+        for (auto item : analysis.getErrors())
+        {
+            LOG(ERROR)
+                << item->getError()->getMessage()
+                << " but got '" << item->getError()->getToken().getEscapeValue() << "'"
+                << " type of " << item->getError()->getToken().getTokenKindToInt()
+                << " " << item->getError()->getToken().getLocation().toString()
+                << " from " << item->getToken().getValue();
+        }
+        return 1;
+    }
 
-    // // Debugging AST
-    // LOG(INFO) << "Write Weasel AST " << filename << "...";
-    // Printer(filePath + ".ir").print(&weaselModule);
+    // Debugging AST
+    LOG(INFO) << "Write Weasel AST";
+    auto sourceBuild = fmt::format("{}/_build", sourcePath);
+    if (!fs::exists(fs::path(sourceBuild)))
+    {
+        if (!fs::create_directory(fs::path(sourceBuild)))
+        {
+            cerr << "error create directory\n";
+            exit(-1);
+        }
+    }
 
-    // if (justEmitIr())
-    // {
-    //     return 0;
-    // }
+    auto printer = Printer(fmt::format("{}/{}.ir", sourceBuild, "_source"));
+    printer.print(package);
+
+    // Check only emit ir
+    if (justEmitIr())
+    {
+        return 0;
+    }
+
+    const auto processorCount = thread::hardware_concurrency();
+
+    // Every File Will Individual FileAST, Codegen, and Module
+    fmt::println("~~ Header Package ~~");
+    fmt::println("Global Variables {}", package->getGlobalVariables().size());
+    fmt::println("User Types {}", package->getUserTypes().size());
+    fmt::println("Functions {}", package->getFunctions().size());
+    fmt::println("");
+    fmt::println("FileAST {}", sizeof(FileAST));
+    fmt::println("CODEGEN {}", sizeof(Codegen));
+    fmt::println("Driver {}", sizeof(Driver));
+    fmt::println("PackageHandle {}", sizeof(PackageHandle));
+    fmt::println("PackageList {}", sizeof(PackageList));
+    fmt::println("PackageManager {}", sizeof(PackageManager));
+    fmt::println("LLVMContext {}", sizeof(llvm::LLVMContext));
+    fmt::println("Module {}", sizeof(llvm::Module));
+    fmt::println("MDBuilder {}", sizeof(llvm::MDBuilder));
+    fmt::println("IRBuilder {}", sizeof(llvm::IRBuilder<>));
+    fmt::println("Processor Count {}", processorCount);
 
     // // Initialize LLVM
-    // // llvm::InitializeAllTargetInfos();
-    // llvm::InitializeNativeTarget();
-    // llvm::InitializeNativeTargetAsmParser();
-    // llvm::InitializeNativeTargetAsmPrinter();
+    llvm::InitializeNativeTarget();
+    llvm::InitializeNativeTargetAsmParser();
+    llvm::InitializeNativeTargetAsmPrinter();
 
     // // Prepare for codegen
     // auto llvmContext = llvm::LLVMContext();
     // auto codegen = Codegen(&llvmContext, "CoreModule");
-    // auto driver = Driver(&codegen, &weaselModule);
+    // auto driver = Driver(&codegen, &package);
 
-    // LOG(INFO) << "Compiling...";
+    // LOG(INFO) << "Compiling";
     // auto isCompileSuccess = driver.compile();
     // if (!isCompileSuccess)
     // {

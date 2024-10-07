@@ -6,26 +6,18 @@ using namespace weasel;
 #define PRINT_OPERAND(X) LOG(INFO) << "Print As Operantd " << X
 #define PRINT(X) LOG(INFO) << "Print Expression " << X
 
-void Printer::print(GlobalVariable *expr)
+void Printer::print(PackageHandle package)
 {
-    PRINT("GlobalVariable");
-
-    printAsOperand(expr);
-    fmt::println(_out, "");
-}
-
-void Printer::print(Module *module)
-{
-    PRINT("Module");
+    PRINT("Package");
 
     // Print Global Value
-    for (auto &item : module->getGlobalVariables())
+    for (auto &item : package->getGlobalVariables())
     {
         item->print(this);
     }
 
     // Print user types or struct
-    for (auto item : module->getUserTypes())
+    for (auto item : package->getUserTypes())
     {
         fmt::println(_out, "@type {}:", item->getIdentifier());
 
@@ -40,13 +32,21 @@ void Printer::print(Module *module)
     }
 
     // Print it's function and it's body
-    for (auto item : module->getFunctions())
+    for (auto item : package->getFunctions())
     {
         item->print(this);
 
         // Newline after function declaration or definition
         fmt::println(_out, "");
     }
+}
+
+void Printer::print(GlobalVariable *expr)
+{
+    PRINT("GlobalVariable");
+
+    printAsOperand(expr);
+    fmt::println(_out, "");
 }
 
 void Printer::print(BreakExpression *expr)
@@ -109,7 +109,6 @@ void Printer::print(Function *expr)
         }
 
         argStr += fmt::format("{} {}", identifier, item->getType()->getTypeName());
-
         if (i != argSize - 1)
         {
             argStr += ", ";
@@ -463,7 +462,6 @@ void Printer::printAsOperand(CallExpression *expr)
 {
     PRINT_OPERAND("CallExpression");
 
-    // TODO: Print a rework call expression
     fmt::print(_out, "@call (");
     expr->getLHS()->printAsOperand(this);
     fmt::print(_out, ") (");

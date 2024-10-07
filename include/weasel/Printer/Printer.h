@@ -2,9 +2,10 @@
 
 #include <fmt/core.h>
 
-#include <weasel/AST/AST.h>
-#include <weasel/IR/Module.h>
 #include <fstream>
+
+#include <weasel/AST/AST.h>
+#include <weasel/Package/Package.h>
 
 #define DEFAULT_SHIFT 3
 
@@ -12,14 +13,15 @@ namespace weasel
 {
     class Printer
     {
+    private:
+        FILE *_out;
+        uint _currentShift = 0;
+
     public:
         Printer(std::FILE *out = stdout) : _out(out) {}
         Printer(std::string outputFile) : _out(fopen(outputFile.c_str(), "w")) {}
 
-        ~Printer() {}
-
-    public:
-        void print(Module *module);
+        void print(PackageHandle _package);
         void print(Function *expr);
         void print(DeclarationStatement *expr);
         void print(CompoundStatement *expr);
@@ -83,12 +85,7 @@ namespace weasel
         }
 
     private:
-        std::FILE *_out;
-
-    private:
         int getCurrentShift() { return _currentShift; }
         void setCurrentShift(int shift) { _currentShift = shift; }
-
-        int _currentShift = 0;
     };
 } // namespace weasel

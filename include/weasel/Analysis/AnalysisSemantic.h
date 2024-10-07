@@ -1,28 +1,61 @@
 #pragma once
 
-#include "weasel/Type/Type.h"
-#include "weasel/Parser/Parser.h"
+#include <weasel/Type/Type.h>
+#include <weasel/Package/Package.h>
+#include <weasel/Parser/Parser.h>
 
 namespace weasel
 {
-    class AnalysisSemantic
+    class SemanticState
     {
     private:
-        Module *_module;
-        AnalysisEvaluate *_evaluate;
-
-        // TODO: Simply Use Polymorphism
-        vector<Expression *> _errors;
-        vector<StructType *> _typeErrors;
-
-        // TODO: Make better State Class
         vector<uint32_t> _declarationState;
         vector<DeclarationStatement *> _declarations;
 
         Function *_currentFunction;
 
+        bool _declaration = false;
+
     public:
-        explicit AnalysisSemantic(Module *module) : _module(module) {}
+        SemanticState() = default;
+
+        void setCurrentFunction(Function *val) { _currentFunction = val; }
+        Function *getCurrentFunction() { return _currentFunction; }
+
+        void addDeclaration(DeclarationStatement *expr)
+        {
+            _declarations.push_back(expr);
+        }
+        vector<DeclarationStatement *> &getDeclarations() { return _declarations; }
+
+        void saveState()
+        {
+            _declarationState.push_back(_declarations.size());
+        }
+
+        void restoreState()
+        {
+            _declarations.resize(_declarationState.back());
+            _declarationState.pop_back();
+        }
+
+        bool getDeclaration() const { return _declaration; }
+        void setDeclaration(bool val) { _declaration = val; }
+    };
+
+    class AnalysisSemantic
+    {
+    private:
+        PackageHandle _package;
+        AnalysisEvaluate *_evaluate;
+        SemanticState _state;
+
+        // TODO: Simply Use Polymorphism
+        vector<Expression *> _errors;
+        vector<StructType *> _typeErrors;
+
+    public:
+        explicit AnalysisSemantic(PackageHandle package) : _package(package) {}
 
         void semanticCheck();
         void accept(Function *fun);
@@ -54,9 +87,25 @@ namespace weasel
         void accept(Type *expr);
 
         EvaluationValue evaluate(Expression *);
+        SemanticState &getState() { return _state; }
 
         TypeHandle unknownType(TypeHandle expr);
+        PackageHandle getPackage() { return _package; }
 
+        DeclarationStatement *findDeclaration(string_view variableName)
+        {
+            for (int i = _state.getDeclarations().size() - 1; i >= 0; i--)
+            {
+                if (_state.getDeclarations()[i]->getIdentifier() == variableName)
+                {
+                    return _state.getDeclarations()[i];
+                }
+            }
+
+            return nullptr;
+        }
+
+        // TODO: Change from vector of error into accept(AnalysisError)
         void onError(Expression *expr)
         {
             getErrors().push_back(expr);
@@ -65,45 +114,6 @@ namespace weasel
         void onStructError(StructType *expr)
         {
             getTypeErrors().push_back(expr);
-        }
-
-        Module *getModule() const { return _module; }
-
-        void setCurrentFunction(Function *fun) { _currentFunction = fun; }
-        Function *getCurrentFunction() { return _currentFunction; }
-
-        void saveState()
-        {
-            _declarationState.push_back(_declarations.size());
-        }
-
-        void restoreState()
-        {
-            _declarations.resize(_declarationState.back());
-            _declarationState.pop_back();
-        }
-
-        vector<DeclarationStatement *> &getDeclarations()
-        {
-            return _declarations;
-        }
-
-        void addDeclaration(DeclarationStatement *expr)
-        {
-            _declarations.push_back(expr);
-        }
-
-        DeclarationStatement *findDeclaration(string_view variableName)
-        {
-            for (int i = getDeclarations().size() - 1; i >= 0; i--)
-            {
-                if (getDeclarations()[i]->getIdentifier() == variableName)
-                {
-                    return getDeclarations()[i];
-                }
-            }
-
-            return nullptr;
         }
 
         vector<Expression *> &getErrors() { return _errors; }
