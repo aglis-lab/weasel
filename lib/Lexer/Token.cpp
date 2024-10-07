@@ -6,9 +6,9 @@ Token Token::create()
     return Token();
 }
 
-Token Token::create(TokenKind kind, SourceLocation location, char *startToken, char *endToken)
+Token Token::create(TokenKind kind, char *startToken, char *endToken)
 {
-    return Token(kind, location, startToken, endToken);
+    return Token(kind, startToken, endToken);
 }
 
 Qualifier Token::getQualifier() const

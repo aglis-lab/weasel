@@ -150,7 +150,7 @@ ExpressionHandle Parser::createOperatorExpression(Token op, ExpressionHandle lhs
 
             assert(tokenKind != TokenKind::TokenUnknown);
 
-            auto token = Token::create(tokenKind, op.getLocation(), startBuffer, endBuffer);
+            auto token = Token::create(tokenKind, startBuffer, endBuffer);
 
             rhs = make_shared<ArithmeticExpression>(token, lhs, rhs);
         }

@@ -20,12 +20,12 @@ namespace weasel
      * */
     struct SourceLocation
     {
-        uint loc = 0;     // Location or index of the character
-        uint line = 0;    // Row
-        uint column = -1; // Because we increment when we get first character
+        uint loc = 0;       // Location or index of the character
+        ushort line = 0;    // Row
+        ushort column = -1; // Because we increment when we get first character
 
         // We need to track the last value
-        void incrementColumn(uint val)
+        void incrementColumn(ushort val)
         {
             column += val;
         }
@@ -43,7 +43,7 @@ namespace weasel
 
         SourceLocation() {}
 
-        SourceLocation(uint loc, uint line, uint column)
+        SourceLocation(uint loc, ushort line, ushort column)
         {
             this->loc = loc;
             this->line = line;

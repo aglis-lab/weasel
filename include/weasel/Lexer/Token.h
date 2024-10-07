@@ -177,6 +177,12 @@ namespace weasel
 {
     class Token
     {
+    private:
+        // TODO: Change to only include index
+        char *_startBuffer = nullptr;
+        ushort _length = 0;
+        TokenKind _kind;
+
     public:
         // Keyword Checking //
         bool isKind(TokenKind type) const { return type == _kind; }
@@ -270,9 +276,9 @@ namespace weasel
         bool isEnd() const { return _kind == TokenKind::TokenEOF; }
 
         // Buffer //
-        bool isValidBuffer() const { return _startBuffer != nullptr && _endBuffer != nullptr; }
+        bool isValidBuffer() const { return _startBuffer != nullptr && _length != 0; }
         char *getStartBuffer() const { return _startBuffer; }
-        char *getEndBuffer() const { return _endBuffer; }
+        char *getEndBuffer() const { return _startBuffer + _length; }
 
         string getValue() const { return isValidBuffer() ? string(getStartBuffer(), getEndBuffer()) : ""; }
         string getEscapeValue() const
@@ -310,7 +316,7 @@ namespace weasel
             return val;
         }
 
-        SourceLocation getLocation() const { return _location; }
+        SourceLocation getLocation() const { return SourceLocation(); }
         TokenKind getTokenKind() const { return _kind; }
         int getTokenKindToInt() const { return enumToInt(_kind); }
 
@@ -323,23 +329,10 @@ namespace weasel
 
     public:
         static Token create();
-        static Token create(TokenKind kind, SourceLocation location, char *startToken, char *endToken);
+        static Token create(TokenKind kind, char *startToken, char *endToken);
 
     protected:
         Token() : _kind(TokenKind::TokenUnknown) {}
-        Token(TokenKind kind, SourceLocation location, char *startToken, char *endToken) : _startBuffer(startToken), _endBuffer(endToken), _kind(kind), _location(location) {}
-
-    private:
-        // TODO: Change to only include index
-        // -> _location uint
-        // -> _length uint
-        char *_startBuffer = nullptr;
-        char *_endBuffer = nullptr;
-
-        TokenKind _kind;
-
-        // TODO: Use only index
-        // Location will be calculated onfly
-        SourceLocation _location;
+        Token(TokenKind kind, char *startToken, char *endToken) : _startBuffer(startToken), _length(endToken - startToken), _kind(kind) {}
     };
 } // namespace weasel

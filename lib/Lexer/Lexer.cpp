@@ -71,7 +71,7 @@ Token Lexer::createToken(TokenKind kind, char *startBuffer, char *endBuffer)
 {
     uint tokenStartColumn = _location.column - ((endBuffer - startBuffer) - 1);
 
-    return Token::create(kind, SourceLocation(startBuffer - getStartBuffer(), _location.line, tokenStartColumn), startBuffer, endBuffer);
+    return Token::create(kind, startBuffer, endBuffer);
 }
 
 Token Lexer::getNextToken(bool skipSpace)

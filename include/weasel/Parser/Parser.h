@@ -15,7 +15,7 @@ namespace weasel
     class Parser
     {
     public:
-        Parser(const Lexer &lexer, Module *module) : _lexer(lexer), _module(module) {}
+        Parser(SourceBuffer sourceBuffer, Module *module) : _lexer(Lexer(sourceBuffer)), _module(module) {}
 
         // Helper
         TypeHandle parseDataType();

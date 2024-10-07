@@ -11,24 +11,24 @@ preset.release: rm.build
 build.cmake:
 	cmake --build build -j 8
 
-# run:
-# 	GLOG_logtostderr=1 ./build/tools/weaselc/weaselc temp/src
-
-# run.leaks:
-# 	leaks --atExit -- ./build/tools/weaselc/weaselc temp/src
-
 run:
-	GLOG_logtostderr=1 ./build/tools/weaselc/weaselc temp/test.we
+	GLOG_logtostderr=1 ./build/tools/weaselc/weaselc ./temp/src
 
 run.leaks:
-	leaks --atExit -- ./build/tools/weaselc/weaselc temp/test.we
+	leaks --atExit -- ./build/tools/weaselc/weaselc ./temp/src
+
+# run:
+# 	GLOG_logtostderr=1 ./build/tools/weaselc/weaselc temp/test.we
+
+# run.leaks:
+# 	leaks --atExit -- ./build/tools/weaselc/weaselc temp/test.we
 
 dev.leaks: build.cmake run.leaks
 
 dev: build.cmake run
 
 dev.ir: build.cmake
-	emit_ir=true GLOG_logtostderr=1 ./build/tools/weaselc/weaselc temp/test.we
+	emit_ir=true GLOG_logtostderr=1 ./build/tools/weaselc/weaselc ./temp/src
 
 ##### SPIRV #####
 spirv:

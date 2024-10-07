@@ -9,7 +9,6 @@ set(
     AST/ASTError.cpp
     AST/ASTEvaluate.cpp
     Analysis/AnalysisSemantic.cpp
-    Basic/FileManager.cpp
     Basic/Number.cpp
     Driver/Driver.cpp
     IR/Codegen.cpp
@@ -33,6 +32,8 @@ set(
     Parser/ParserStatement.cpp
     Passes/Passes.cpp
     Printer/Printer.cpp
+    Source/SourceBuffer.cpp
+    Source/SourceManager.cpp
     Type/Type.cpp
     Type/TypeCodegen.cpp
     Type/TypeError.cpp

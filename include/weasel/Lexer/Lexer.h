@@ -3,7 +3,7 @@
 #include <list>
 
 #include <weasel/Lexer/Token.h>
-#include <weasel/Basic/FileManager.h>
+#include <weasel/Source/SourceBuffer.h>
 
 using namespace weasel;
 
@@ -12,7 +12,7 @@ namespace weasel
     class Lexer
     {
     public:
-        explicit Lexer(FileManager fileManager) : _currentBuffer(fileManager.getStartBuffer()), _fileManager(fileManager) {}
+        explicit Lexer(SourceBuffer sourceBuffer) : _currentBuffer(sourceBuffer.getStartBuffer()), _sourceBuffer(sourceBuffer) {}
 
         Token getNextToken(bool skipSpace = false);
         Token getCurrentToken() const { return _currentToken; }
@@ -21,20 +21,16 @@ namespace weasel
 
     private: // Private variable for creating currrent token and buffer
         char *_currentBuffer;
-        FileManager _fileManager;
+        SourceBuffer _sourceBuffer;
 
         Token _currentToken = Token::create();
-        // check last token
-        // if last token is newline and current token is newline
-        // we just ignore the current token and continue into next token
-        Token _lastToken = Token::create();
         SourceLocation _location;
 
     private: // Private Function
         // Get and Next Buffer
-        char *getStartBuffer() const { return _fileManager.getStartBuffer(); }
+        char *getStartBuffer() const { return _sourceBuffer.getStartBuffer(); }
         char *getCurrentBuffer() const { return _currentBuffer; }
-        char *getEndBuffer() const { return _fileManager.getEndBuffer(); }
+        char *getEndBuffer() const { return _sourceBuffer.getEndBuffer(); }
         char *getNextBuffer(size_t slide = 1);
         char checkNextBuffer() const { return *(_currentBuffer + 1); }
         void setCurrentBuffer(const char *buffer) { _currentBuffer -= _currentBuffer - buffer; }
